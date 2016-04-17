@@ -1,8 +1,8 @@
 /*
  ============================================================================
  Name        : CPU.c
- Author      : 
- Version     :
+ Author      : Ezequiel Martinez
+ Version     : 1.0
  Copyright   : Your copyright notice
  Description : Hello World in C, Ansi-style
  ============================================================================
