@@ -13,7 +13,14 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <pthread.h>
 
+//Variables Globales//
+
+int nucleo = 0;
+int umn = 0;
+
+//Funcion para obtener un socket//
 int cpuDameSocket (void){
 	//EML: Las IP y Puerto recibirlo por parametro.
 	struct sockaddr_in direccionServidor;
@@ -45,9 +52,27 @@ int cpuConectarseAlUmc(void){
 	return idUMC;
 }
 
+void mensajesDesdeNucleo(){
+	int bytesRecibidos=0;
+	char* buffer = malloc(1000);
+
+	while(1){
+		bytesRecibidos = recv(nucleo, buffer,1000,0);
+
+		if (bytesRecibidos <=0){
+			perror("No hay nadie conectado o se desconeto.");
+		}
+
+		buffer[bytesRecibidos]='\0';
+		printf("Me llegaron %d bytes con %s \n", bytesRecibidos, buffer);
+	}
+
+}
+
 int main(void) {
-	int nucleo = 0;
-	//int umc = 0;
+
+	pthread_t hiloNucleo;
+
 	puts("CPU Application"); /* prints CPU Application */
 
 	nucleo = cpuConectarseAlNucleo(); //EML: Pendiente- Leer un .conf y pasar ip y puerto.
@@ -55,6 +80,11 @@ int main(void) {
 
 	if (nucleo != 0){
 		puts("Conectado con el nucleo.");
+
+		//Lanzo el hilo del Nucleo una vez establecida la conexion
+
+		pthread_create(&hiloNucleo,NULL,(void*)mensajesDesdeNucleo, NULL);
+
 		while(1){
 			char mensaje[1000];
 			scanf("%s", mensaje);
