@@ -4,31 +4,11 @@
 /*                --------------------------------------------                */
 /*----------------------------------------------------------------------------*/
 
+#include "sockets.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
-/*----------------------------------------------------------------------------*/
-/*                     Definiciones y Declaraciones                           */
-/*----------------------------------------------------------------------------*/
-
-#define LONGITUD_MAXIMA_DE_CONTENIDO 8000
-#define CONNECT_TIMEOUT 1
-
-typedef struct
-{
-	char id[16];
-	unsigned char tipo;
-	char ttl;
-	char hops;
-	int largo;
-} __attribute__((packed)) stHeader;
-
-typedef struct
-{
-	stHeader header;
-	char contenido[LONGITUD_MAXIMA_DE_CONTENIDO];
-} __attribute__((packed)) stMensaje;
 
 /*----------------------------------------------------------------------------*/
 /*                         Funciones Privadas                                 */
@@ -98,25 +78,6 @@ char *stringAddress(const struct sockaddr *unSA)
 	strcat(unStringAddress,"]");
 	/*Retorno el stringAddress.*/
 	return(unStringAddress);
-}
-
-/*----------------------------------------------------------------------------*/
-
-char *nuevoID()
-/*Devuelve una cadena que representa un numero aleatorio de 15 cifras.*/
-{
-	int i;
-	char strAux[11];
-	char *unVector = (char*) malloc(16);
-	srand(time(NULL));
-	for(i=0;i<15;i++)
-	{
-		
-		sprintf(strAux,"%d",rand());
-		unVector[i] = *strAux;
-	}
-	unVector[i] = '\0';
-	return(unVector);
 }
 
 /*----------------------------------------------------------------------------*/

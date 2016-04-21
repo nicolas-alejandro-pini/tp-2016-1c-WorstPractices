@@ -10,45 +10,36 @@
 /*               Modificacion para trabajar con otro tipo de mensajes		*/
 /*------------------------------------------------------------------------------*/
 
-/*
-	#include <dirent.h>
-	#include <signal.h>
-	#include <sys/time.h>
-	#include <sys/stat.h>
-	#include <stdio.h>
-	#include <stdlib.h>
-	#include <string.h>
-	#include <unistd.h>
-	#include <sys/types.h>
-	#include <sys/socket.h>
-	#include <netinet/in.h>
-	#include <arpa/inet.h>
-	#include <errno.h>
-*/
+#include "socketsIPCIRC.h"
 
-/*----------------------------------------------------------------------------*/
-/*                     Definiciones y Declaraciones                           */
-/*----------------------------------------------------------------------------*/
-
-typedef struct
-{
-	char id[16];
-	char tipo;
-	int largo;
-/*} __attribute__((packed)) stHeaderIPC; */
-} stHeaderIPC; 
-
-typedef struct
-{
-	stHeaderIPC header;
-	char contenido[LONGITUD_MAXIMA_DE_CONTENIDO];/* } __attribute__((packed)) stMensajeIPC;*/
-}stMensajeIPC;	
+#include <stddef.h>
 
 /*----------------------------------------------------------------------------*/
 /*                         Funciones Privadas                                 */
 /*----------------------------------------------------------------------------*/
 
-stHeaderIPC nuevoHeaderIPC(const char unTipo)
+/*
+ * Devuelve una cadena que representa un numero aleatorio de 15 cifras
+ *
+ * @return Devuelve una nueva cadena con el ID. Debe liberarse con free!
+ */
+char *nuevoID()
+{
+	int i;
+	char strAux[11];
+	char *unVector = (char*) malloc(16);
+	srand(time(NULL));
+	for(i=0;i<15;i++)
+	{
+
+		sprintf(strAux,"%d",rand());
+		unVector[i] = *strAux;
+	}
+	unVector[i] = '\0';
+	return(unVector);
+}
+
+stHeaderIPC nuevoHeaderIPC(const unsigned int unTipo)
 /* Devuelve un nuevo header con los campos cargados. */
 {
 	int i;
@@ -188,7 +179,7 @@ int enviarMensajeIPC(int unSocket,stHeaderIPC unHeader, char* unContenido)
 	unHeader.largo = unLargo;
 	if (!enviarHeaderIPC(unSocket, unHeader))
 		return(0);
-	/*printf("ENVIO HEADER:%d\n",unHeader.tipo);*/	
+	/*printf("ENVIO HEADER:%d\n",unHeader.tipo);*/
 	return(enviarContenido(unSocket,unContenido));
 }
 

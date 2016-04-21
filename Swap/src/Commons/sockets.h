@@ -73,4 +73,5 @@
 	/*----------------------------------------------------------------------------*/
 
 	int enviarTodoMensaje(int unSocket, stHeader *unPtrAHeader, char *unContenido);
+
 #endif /* SOCKETS_H_ */
