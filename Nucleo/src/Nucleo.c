@@ -19,15 +19,20 @@
 
 typedef struct{
 	char* miIP;             /* Mi direccion de IP. Ej: <"127.0.0.1"> */
-	int puertoProg;			/* Puerto de escucha Consola */
-	int sockProg;			/* Socket de escucha Consola */
-	int puertoCpu;			/* Puerto de escucha CPU */
-	int sockCpu;			/* Socket de escucha CPU */
+	int miPuerto;			/* Mi Puerto de escucha */
+	int sockEscuchador;		/* Socket con el que escucho. */
+	int quantum;			/* Quantum de tiempo para ejecucion de rafagas. */
+	int quantumSleep;		/* Retardo en milisegundos que el nucleo esperara luego de ejecutar cada sentencia. */
+	char** ioIds;			/* Array con los dispositivos conectados*/
+	char** ioSleep;			/* Array con los retardos por cada dispositivo conectados (en milisegundos)*/
+	char** semIds;			/* Array con identificadores por cada semaforo*/
+	char** semInit;			/* Array con los valores iniciales de los semaforos conectados*/
+	char** sharedVars;		/* Array con las variables compartidas*/
 	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
-	int fdMax2;             /* Numero que representa al mayor socket de fds_master. */
 	int salir;              /* Indica si debo o no salir de la aplicacion. */
 } stEstado;
 
+/* Listas globales */
 fd_set fds_master;			/* Lista de todos mis sockets.*/
 fd_set read_fds;	  		/* Sublista de fds_master.*/
 
@@ -39,26 +44,68 @@ fd_set read_fds;	  		/* Sublista de fds_master.*/
  */
 void loadInfo (stEstado* info,char* file_name){
 
-	t_config* miConf = config_create ("nucleo.conf"); /*Estructura de configuracion*/
+	t_config* miConf = config_create (CFGFILE); /*Estructura de configuracion*/
 
-	if (config_has_property(miConf,"NUCLEO_IP")) {
-		info->miIP = config_get_string_value(miConf,"NUCLEO_IP");
+	if (config_has_property(miConf,"IP")) {
+		info->miIP = config_get_string_value(miConf,"IP");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","NUCLEO_IP");
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IP");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"PUERTO_PROG")) {
-		info->puertoProg = config_get_int_value(miConf,"PUERTO_PROG");
+	if (config_has_property(miConf,"PUERTO")) {
+		info->miPuerto = config_get_int_value(miConf,"PUERTO");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_PROG");
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"PUERTO_CPU")) {
-		info->puertoCpu= config_get_int_value(miConf,"PUERTO_CPU");
+	if (config_has_property(miConf,"QUANTUM")) {
+		info->quantum = config_get_int_value(miConf,"QUANTUM");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_CPU");
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","QUANTUM");
+		exit(-2);
+	}
+
+	if (config_has_property(miConf,"QUANTUM_SLEEP")) {
+		info->quantumSleep = config_get_int_value(miConf,"QUANTUM_SLEEP");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","QUANTUM_SLEEP");
+		exit(-2);
+	}
+
+	if (config_has_property(miConf,"SEM_IDS")) {
+		info->semIds = config_get_array_value(miConf,"SEM_IDS");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","SEM_IDS");
+		exit(-2);
+	}
+
+	if (config_has_property(miConf,"SEM_INIT")) {
+		info->semInit = config_get_array_value(miConf,"SEM_INIT");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","SEM_INIT");
+		exit(-2);
+	}
+
+	if (config_has_property(miConf,"IO_IDS")) {
+		info->ioIds = config_get_array_value(miConf,"IO_IDS");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IO_IDS");
+		exit(-2);
+	}
+
+	if (config_has_property(miConf,"IO_SLEEP")) {
+		info->semInit = config_get_array_value(miConf,"IO_SLEEP");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IO_SLEEP");
+		exit(-2);
+	}
+
+	if (config_has_property(miConf,"SHARED_VARS")) {
+		info->sharedVars = config_get_array_value(miConf,"SHARED_VARS");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","SHARED_VARS");
 		exit(-2);
 	}
 }
@@ -67,10 +114,6 @@ void cerrarSockets(stEstado *elEstadoActual){
 
 	int unSocket;
 	for(unSocket=3; unSocket <= elEstadoActual->fdMax; unSocket++)
-		if(FD_ISSET(unSocket,&(fds_master)))
-			close(unSocket);
-
-	for(unSocket=3; unSocket <= elEstadoActual->fdMax2; unSocket++)
 		if(FD_ISSET(unSocket,&(fds_master)))
 			close(unSocket);
 
@@ -84,25 +127,27 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stEstado *unEstado){
 	unMensaje->header.tipo = -1;
 }
 
+
 /*
  ============================================================================
  Funcion principal
  ============================================================================
  */
 int main(int argc, char *argv[]) {
+
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
 
-	int unClienteConsola = 0, unSocket;
-	int unClienteCpu = 0;
+	int unCliente = 0, unSocket;
 	struct sockaddr addressAceptado;
 	int maximoAnterior;
-	int agregarSockConsola, agregarSockCpu;
+	int agregarSock;
 
 	printf("----------------------------------Elestac------------------------------------\n");
 	printf("-----------------------------------Nucleo------------------------------------\n");
 	printf("------------------------------------v0.1-------------------------------------\n\n");
 	fflush(stdout);
+
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
 	loadInfo(&elEstadoActual,CFGFILE);
@@ -112,24 +157,19 @@ int main(int argc, char *argv[]) {
 	FD_ZERO(&(fds_master));
 	FD_ZERO(&(read_fds));
 
-	/*Inicializacion de sockets de escucha*/
+	/*Inicializacion de socket de escucha*/
 	elEstadoActual.salir = 0;
-	elEstadoActual.sockCpu= -1;
-	elEstadoActual.sockProg = -1;
+	elEstadoActual.sockEscuchador= -1;
 
 	/*Iniciando escucha en el socket escuchador de Consola*/
-	printf("Estableciendo conexion con socket escuchador de Consola...");
-	elEstadoActual.sockProg = escuchar(elEstadoActual.puertoProg);
-	FD_SET(elEstadoActual.sockProg,&(fds_master));
-	elEstadoActual.fdMax =	elEstadoActual.sockProg;
+	printf("Estableciendo conexion con socket escuchador...");
+	elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
+	FD_SET(elEstadoActual.sockEscuchador,&(fds_master));
 	printf("OK\n");
 
-	/*Iniciando escucha en el socket escuchador de Consola*/
-	printf("Estableciendo conexion con socket escuchador de CPU...");
-	elEstadoActual.sockCpu = escuchar(elEstadoActual.puertoCpu);
-	FD_SET(elEstadoActual.sockCpu,&(fds_master));
-	elEstadoActual.fdMax2 =	elEstadoActual.sockCpu;
-	printf("OK\n");
+	/*Seteamos el maximo socket*/
+	elEstadoActual.fdMax = elEstadoActual.sockEscuchador;
+
 
 	/*Ciclo Principal del Nucleo*/
 	printf(".............................................................................\n");
@@ -146,50 +186,76 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
-		if(seleccionar(elEstadoActual.fdMax2,&read_fds,1) == -1){
-			printf("SELECT ERROR - Error Preparando el Select\n");
-			return 1;
-		}
+		for(unSocket=0;unSocket<=elEstadoActual.fdMax;unSocket++){
 
-		for(unSocket=0;unSocket<=elEstadoActual.fdMax2;unSocket++){
-			unClienteCpu = aceptar(elEstadoActual.sockCpu,&addressAceptado);
-			printf("Nuevo pedido de conexion...\n");
+			/*Nueva conexion*/
+			if(unSocket == elEstadoActual.sockEscuchador){
+				unCliente = aceptar(elEstadoActual.sockEscuchador,&addressAceptado);
+				printf("Nuevo pedido de conexion...\n");
 
-			if(!enviarMensajeIPC(unClienteConsola,nuevoHeaderIPC(QUIENSOS),"MSGQUIENSOS")){
-				printf("No se pudo enviar el MensajeIPC\n");
-			}
-
-			if(!recibirMensajeIPC(unClienteConsola,&unMensaje)){
-				printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
-				fflush(stdout);
-				close(unClienteConsola);
-			 }
-
-			/*Identifico quien se conecto y procedo*/
-			if(unMensaje.header.tipo=="CONNECTCPU"){
-				if(!enviarMensajeIPC(unClienteCpu,nuevoHeaderIPC(OK),"MSGOK")){
-					printf("No se pudo enviar el MensajeIPC al cliente\n");
-					return 0;
+				if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(QUIENSOS),"MSGQUIENSOS")){
+					printf("No se pudo enviar el MensajeIPC\n");
 				}
 
-				printf("Conexion con modulo cliente establecida\n");
-				agregarSockCpu=1;
+				if(!recibirMensajeIPC(unCliente,&unMensaje)){
+					printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+					fflush(stdout);
+					close(unCliente);
+				 }
 
-				/*Agrego el socket conectado A la lista Master*/
-				if(agregarSockCpu==1){
-					FD_SET(unClienteCpu,&(fds_master));
-					if (unClienteCpu > elEstadoActual.fdMax){
-						maximoAnterior = elEstadoActual.fdMax;
-						elEstadoActual.fdMax = unClienteCpu;
-					}
-					agregarSockCpu=0;
+				/*Identifico quien se conecto y procedo*/
+				switch (unMensaje.header.tipo) {
+					case CONNECTCONSOLA:
+
+						if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
+							printf("No se pudo enviar el MensajeIPC al cliente\n");
+							return 0;
+						}
+
+						printf("Nueva consola conectada\n");
+						agregarSock=1;
+
+						/*Agrego el socket conectado A la lista Master*/
+						if(agregarSock==1){
+							FD_SET(unCliente,&(fds_master));
+							if (unCliente > elEstadoActual.fdMax){
+								maximoAnterior = elEstadoActual.fdMax;
+								elEstadoActual.fdMax = unCliente;
+							}
+							agregarSock=0;
+						}
+						break;
+
+					case CONNECTCPU:
+
+						if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
+							printf("No se pudo enviar el MensajeIPC al cliente\n");
+							return 0;
+						}
+
+						printf("Nueva consola conectada\n");
+						agregarSock=1;
+
+						/*Agrego el socket conectado A la lista Master*/
+						if(agregarSock==1){
+							FD_SET(unCliente,&(fds_master));
+							if (unCliente > elEstadoActual.fdMax){
+								maximoAnterior = elEstadoActual.fdMax;
+								elEstadoActual.fdMax = unCliente;
+							}
+							agregarSock=0;
+						}
+						break;
+					default:
+						break;
 				}
-			}else{
-				memset(unMensaje.contenido,'\0',"LONGITUD_MAX_DE_CONTENIDO");
-
+			}else
+			{
+				/*Conexion existente*/
+				memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 				if (!recibirMensajeIPC(unSocket,&unMensaje)){
-					if(unSocket==elEstadoActual.sockProg){
-						printf("Se perdio conexion con el cpu conectado...\n ");
+					if(unSocket==elEstadoActual.sockEscuchador){
+						printf("Se perdio conexion...\n ");
 					}
 
 					/*Saco el socket de la lista Master*/
@@ -202,12 +268,15 @@ int main(int argc, char *argv[]) {
 					}
 
 					fflush(stdout);
-
 				}else{
-					/*Agregar en una lista de CPU  */
+					/*Recibo con mensaje de conexion existente*/
+
+
 				}
 
+
 			}
+
 		}
 
 	}
