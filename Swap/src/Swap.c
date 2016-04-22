@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <sockets.h>
 
 int main(void) {
 	puts("Swap Application"); /* prints Swap Application */
