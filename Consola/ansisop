@@ -1,0 +1,6 @@
+#!/usr/bin/ansisop
+begin
+# primero declaro las variables
+17
+variables a, b a=20
+print a end
