@@ -26,6 +26,7 @@
 #define QUIENSOS			102
 #define CONNECTCONSOLA		103
 #define CONNECTCPU			104
+#define EXECANSISOP			105
 
 /*Definicion de Parametros para el Archivo Log*/
 #define OK_LOG		51
