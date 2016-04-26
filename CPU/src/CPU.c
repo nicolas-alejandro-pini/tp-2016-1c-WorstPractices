@@ -8,207 +8,297 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <pthread.h>
-#include <commons/config.h>
-
-//Definiciones CPU//
-
-#define CFGFILE		"cpu.conf"
+#include "../lib/librerias.h"
+#include "../lib/sockets.c"
+#include "../lib/socketsIPCIRC.c"
 
 //Estructuras del CPU//
 
 typedef struct{
-	char* miIP;			//Mi direccion de IP. Ej: <"127.0.0.1"> */
-	int puertoCpu;		// Puerto de CPU //
 	char* ipNucleo;		// Ip del Nucleo para conectarme //
 	int puertoNucleo;	// Puerto del Nucleo //
 	char* ipUmc;		// Ip del UMC //
 	int puertoUmc;		// Puerto del UMC //
 	int quantum;		// Quamtum del CPU //
+	int sockNucleo;		// Socket para conexion con el nucleo //
+	int sockUmc;		// Socket para conexion con el umc //
+	int socketMax;		// Contiene el ultimo socket conectado//
+	int salir;			// Flaf para indicar el fin del programa //
 } t_configCPU;
 
 //Variables Globales//
 
+fd_set fds_master;		/* Lista de todos mis sockets. */
+fd_set read_fds;		/* Sublista de fds_master. */
+
+
 int nucleo = 0;
 int umc = 0;
+int pistaActual = 0;
+int sectorActual = 1;
+int SocketAnterior = 0;
 
-//Funcion para cargar los parametros del archivo de configuración//
-
+/*
+ ============================================================================
+ Name        : cargarConf
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe archivo de configuracion y nombre del archivo.
+ Outputs     : N/A
+ Description : Funcion para cargar los parametros del archivo de configuración
+ ============================================================================
+ */
 void cargarConf(t_configCPU* config,char* file_name){
 
 	t_config* miConf = config_create ("cpu.conf"); /*Estructura de configuracion*/
 
-		if (config_has_property(miConf,"CPU_IP")) {
-			config->miIP = config_get_string_value(miConf,"CPU_IP");
+		if (config_has_property(miConf,"NUCLEO_IP")) {
+			config->ipNucleo = config_get_string_value(miConf,"NUCLEO_IP");
 		} else {
 			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","NUCLEO_IP");
-			exit(-2);
-		}
-
-		if (config_has_property(miConf,"PUERTO_CPU")) {
-			config->puertoCpu = config_get_int_value(miConf,"PUERTO_CPU");
-		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_PROG");
-			exit(-2);
-		}
-
-		if (config_has_property(miConf,"NUCLEO_IP")) {
-			config->ipNucleo= config_get_int_value(miConf,"NUCLEO_IP");
-		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_CPU");
 			exit(-2);
 		}
 
 		if (config_has_property(miConf,"PUERTO_NUCLEO")) {
 			config->puertoNucleo = config_get_int_value(miConf,"PUERTO_NUCLEO");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_PROG");
+			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_NUCLEO");
 			exit(-2);
 		}
 
 		if (config_has_property(miConf,"UMC_IP")) {
-			config->ipUmc= config_get_int_value(miConf,"UMC_IP");
+			config->ipUmc= config_get_string_value(miConf,"UMC_IP");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_CPU");
+			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","UMC_IP");
 			exit(-2);
 		}
 
-		if (config_has_property(miConf,"PUERTO_NUCLEO")) {
-			config->puertoUmc = config_get_int_value(miConf,"PUERTO_NUCLEO");
+		if (config_has_property(miConf,"PUERTO_UMC")) {
+			config->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_PROG");
+			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
 			exit(-2);
 		}
 
 		if (config_has_property(miConf,"QUANTUM")) {
 			config->quantum = config_get_int_value(miConf,"QUANTUM");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_PROG");
+			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","QUANTUM");
 			exit(-2);
 		}
 
 }
 
-//Funcion para obtener un socket//
-int cpuDameSocket (char* IP, int puerto){
-	//EML: Las IP y Puerto recibirlo por parametro.
-	struct sockaddr_in direccionServidor;
-		direccionServidor.sin_family = AF_INET;
-		direccionServidor.sin_addr.s_addr = inet_addr(IP);
-		direccionServidor.sin_port = htons(puerto); //Le indico el puerto en el que escucha.
+/*
+ =========================================================================================
+ Name        : cpuHandShake
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe el socket, un mensaje para identificarse y un tipo para el header.
+ Outputs     : Retorna -1 en caso de error y si no hay error devuelve el socket.
+ Description : Funcion para cargar los parametros del archivo de configuración
+ =========================================================================================
+ */
+int cpuHandShake (int socket, char* mensaje, int tipoHeader)
+{
+	stMensajeIPC unMensaje;
 
-		int cliente = socket(AF_INET, SOCK_STREAM, 0);
-
-		if(connect(cliente, (void*)&direccionServidor, sizeof(direccionServidor))!=0)
-			return 0;//El connect si devuelve 0 es por un error.
-		else
-			return cliente;
-}
-
-int cpuConectarseAlNucleo(char* IP, int puerto){
-
-	int idNucleo = 0;
-	puts("Conectando al nucleo...\n");
-	idNucleo = cpuDameSocket(IP, puerto);
-	return idNucleo;
-}
-
-int cpuConectarseAlUmc(char* IP, int puerto){
-
-	int idUMC = 0;
-	puts("Conectando al UMC...\n");
-	idUMC = cpuDameSocket(IP, puerto);
-	return idUMC;
-}
-
-void mensajesDesdeNucleo(void){
-	int bytesRecibidos=0;
-	char* buffer = malloc(1000);
-
-	while(1){
-		bytesRecibidos = recv(nucleo, buffer,1000,0);
-
-		if (bytesRecibidos <=0){
-			perror("No hay nadie conectado o se desconeto.");
-		}
-
-		buffer[bytesRecibidos]='\0';
-		printf("Me llegaron %d bytes con %s \n", bytesRecibidos, buffer);
+	if(!recibirMensajeIPC(socket,&unMensaje)){
+		printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+		fflush(stdout);
 	}
 
-}
+	printf("HandShake mensaje recibido %d",unMensaje.header.tipo);
 
-void mensajesDesdeUmc(void){
-	int bytesRecibidos=0;
-	char* buffer = malloc(1000);
-
-	while(1){
-		bytesRecibidos = recv(nucleo, buffer,1000,0);
-
-		if (bytesRecibidos <=0){
-			perror("No hay nadie conectado o se desconeto.");
+	if (unMensaje.header.tipo == QUIENSOS)
+	{
+		if(!enviarMensajeIPC(socket,nuevoHeaderIPC(tipoHeader),mensaje)){
+			printf("No se pudo enviar el MensajeIPC\n");
+			return (-1);
 		}
-
-		buffer[bytesRecibidos]='\0';
-		printf("Me llegaron %d bytes con %s \n", bytesRecibidos, buffer);
 	}
 
+	if(!recibirMensajeIPC(socket,&unMensaje)){
+			printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+			fflush(stdout);
+			return (-1);
+	}
+
+	printf("HandShake: mensaje recibido %d",unMensaje.header.tipo);
+	fflush(stdout);
+
+	if(unMensaje.header.tipo == OK)
+	{
+		printf("Conexión establecida con id: %d...\n",tipoHeader);
+		fflush(stdout);
+		return socket;
+	}
+	else
+		return (-1);
 }
 
+/*
+ =========================================================================================
+ Name        : cpuConectarse()
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe IP y Puerto.
+ Outputs     : Retorna -1 en caso de error y si no hay error devuelve el socket.
+ Description : Realiza la conexión con un servidor.
+ =========================================================================================
+ */
+int cpuConectarse(char* IP, int puerto, char* aQuien){
+
+	int socket = 0;
+
+	printf("Conectando con %s...\n",aQuien);
+	fflush(stdout);
+	socket = conectar(IP, puerto);
+
+	// Inicio el handShake con el servidor //
+	if (socket != -1)
+	{
+		if (cpuHandShake(socket, "SOYCPU", CONNECTCPU) != -1)
+			return socket;
+	}
+
+	return (-1); // Retorna -1 si no se pudo crear el socket o fallo el handshake
+
+}
+
+
+/*
+ =========================================================================================
+ Name        : main()
+ Author      : Ezequiel Martinez
+ Inputs      : N/A.
+ Outputs     : N/A.
+ Description : Proceso principal del programa.
+ =========================================================================================
+ */
 int main(void) {
 
-	pthread_t hiloNucleo;
-	pthread_t hiloUmc;
 	t_configCPU configuracionInicial;
+	stMensajeIPC unMensaje;
+	int unSocket;
 
-	puts("CPU Application"); /* prints CPU Application */
+	printf("CPU Application"); /* prints CPU Application */
+	fflush(stdout);
 
-	cargarConf(&configuracionInicial, CFGFILE); // Cargo la configuracion desde el archivo cpu.conf
+	// Limpio las liastas //
+	FD_ZERO(&(fds_master));
+	FD_ZERO(&(read_fds));
 
-	// Lanzo conexion con el nucleo //
+	/***** Cargo la configuracion desde el archivo cpu.conf ********/
+	cargarConf(&configuracionInicial, CFGFILE);
 
-	nucleo = cpuConectarseAlNucleo(configuracionInicial.ipNucleo, configuracionInicial.puertoNucleo); //EML: Pendiente- Leer un .conf y pasar ip y puerto.
+	/***** Lanzo conexión con el Nucleo ********/
 
-	if (nucleo != 0){
-		puts("Conectado con el nucleo.");
+	configuracionInicial.sockNucleo = cpuConectarse(configuracionInicial.ipNucleo, configuracionInicial.puertoNucleo, "Nucleo");
 
-		//Lanzo el hilo del Nucleo una vez establecida la conexion
+	if (configuracionInicial.sockNucleo != -1){
+		FD_SET(configuracionInicial.sockNucleo,&(fds_master));
+		configuracionInicial.socketMax = configuracionInicial.sockNucleo;
+		SocketAnterior = configuracionInicial.socketMax;
+		printf("OK - Nucleo conectado. \n");
+		fflush(stdout);
+		//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
 
-		pthread_create(&hiloNucleo,NULL,(void*)mensajesDesdeNucleo, NULL);
+	}	//Fin de conexion al Nucleo//
 
-		while(1){
-			char mensaje[1000];
-			scanf("%s", mensaje);
-			send (nucleo, mensaje, strlen(mensaje), 0); //Pruebo comunicacion con un server.
+
+	/***** Lanzo conexión con el UMC ********/
+
+	configuracionInicial.sockUmc = cpuConectarse(configuracionInicial.ipUmc, configuracionInicial.puertoUmc, "UMC");
+
+	if (configuracionInicial.sockUmc > 0){
+
+		FD_SET(configuracionInicial.sockUmc,&(fds_master));
+		configuracionInicial.socketMax = configuracionInicial.sockUmc;
+		SocketAnterior = configuracionInicial.socketMax;
+		printf("OK - UMC conectada. \n");
+		fflush(stdout);
+		//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
+
+	}
+		//Fin de conexion al UMC//
+
+	while(configuracionInicial.salir == 0)
+	{
+		read_fds = fds_master;
+		if(seleccionar(configuracionInicial.socketMax,&read_fds,1) == -1)
+		{
+			printf("Error Preparando el Select\n");
+			//loguear(ERROR_LOG,"Error preparando el select","CPU"); //TODO Funciones de logueo
+			configuracionInicial.salir = 1;
 		}
-	}else
-		perror("Error al conectarme con el nucleo.");
-	//Fin de conexion al Nucleo//
 
-	//Lanzo conexión con el umc//
+		for(unSocket=0;unSocket<=configuracionInicial.socketMax;unSocket++)
+		{
+			if(FD_ISSET(unSocket,&read_fds))
+			{
+				if (!recibirMensajeIPC(unSocket,&unMensaje))/* Si se cerro un Cliente. */
+				{
+					if (configuracionInicial.sockNucleo == unSocket)
+					{
+						printf("Se desconecto el Servidor\n"); fflush(stdout);
+						//loguear(INFO_LOG,"Se perdio la conexion con el Nucleo","Nucleo");//TODO Funciones de logueo
+						configuracionInicial.sockNucleo = -1;
+						configuracionInicial.salir=1;
 
-	umc = cpuConectarseAlUmc(configuracionInicial.ipUmc, configuracionInicial.ipUmc);
+						FD_CLR(unSocket,&fds_master);
+						close (unSocket);
 
-	if (umc != 0){
-			puts("Conectado con el umc.");
+						if (unSocket > configuracionInicial.socketMax){
+							SocketAnterior = configuracionInicial.socketMax;
+							configuracionInicial.socketMax = unSocket;
+						}
 
-			//Lanzo el hilo del Nucleo una vez establecida la conexion
+						//loguear(INFO_LOG,"Se perdio conexion con Nucleo","Nucleo");//TODO Funciones de logueo
 
-			pthread_create(&hiloUmc,NULL,(void*)mensajesDesdeUmc, NULL);
+					}else if (configuracionInicial.sockUmc == unSocket)
+					{
+						printf("Se desconecto el UMC\n"); fflush(stdout);
+						//loguear(INFO_LOG,"Se perdio la conexion con el UMC","UMC");//TODO Funciones de logueo
+						configuracionInicial.sockUmc = -1;
+						configuracionInicial.salir = 1;
 
-			while(1){
-				char mensaje[1000];
-				scanf("%s", mensaje);
-				send (umc, mensaje, strlen(mensaje), 0); //Pruebo comunicacion con un server.
+						FD_CLR(unSocket,&fds_master);
+						close (unSocket);
+
+						if (unSocket > configuracionInicial.socketMax){
+							SocketAnterior = configuracionInicial.socketMax;
+							configuracionInicial.socketMax = unSocket;
+						}
+
+						//loguear(INFO_LOG,"Se perdio la conexion con el UMC","UMC");//TODO Funciones de logueo
+					}
+				}
+				else
+				{
+					switch(unMensaje.header.tipo)
+					{
+						case ANSIPROG:
+
+							printf("Respondiendo solicitud ANSIPROG...");
+
+							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(OK),"CPU: Programa recibido.");
+
+						break;
+
+
+						case UMCINSTRUCCION:
+						{
+							printf("Respondiendo solicitud UMCINSTRUCCION...");
+
+							enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(OK),"CPU: Recibi del UMC.");
+
+						}
+						break;
+					}
+				}
+
 			}
-		}else
-			perror("Error al conectarme con el umc.");
-		//Fin de conexion al Nucleo//
+
+		}
+	}
 
 	return EXIT_SUCCESS;
 }
