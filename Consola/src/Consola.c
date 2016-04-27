@@ -10,6 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "consola.h"
+#include "../lib/librerias.h"
+#include "../lib/sockets.c"
+#include "../lib/socketsIPCIRC.c"
+#include "../lib/fComunes.c"
 
 int create_console(t_console* tConsole){
 
@@ -47,6 +51,7 @@ int create_console(t_console* tConsole){
 	(tConsole->tDest_addr->sin_addr).s_addr = inet_addr(config_get_string_value(tConsole->tConfigFile, PARAM_IP));
 	memset(tConsole->tDest_addr->sin_zero, '\0', 8);
 
+	//printf("Consola creada.\n");
 	return 0;
 }
 
@@ -60,6 +65,62 @@ int connect_console(t_console* tConsole){
 		perror("connect");
 		return -1;
 	}
+
+	return 0;
+}
+
+int handshake_console(t_console* tConsole){
+	stMensajeIPC handshake;
+
+    if(!recibirMensajeIPC(*(tConsole->pSockfd), &handshake))
+    {
+    	perror("Handshake: Error. se cerro la coneccion.");
+    	return -1;
+    }
+
+	if(handshake.header.tipo != QUIENSOS)
+	{
+		perror("Handshake: Error. Mensaje desconocido");
+		return -1;
+	}
+
+	if(!enviarMensajeIPC(*(tConsole->pSockfd),nuevoHeaderIPC(CONNECTCONSOLA),"MSGOK")){
+		perror("Handshake: Error. no se pudo responder al Nucleo.");
+		return -1;
+	}
+
+	printf("Conectado al Nucleo...\n");
+    return 0;
+}
+
+int send_program(t_console* tConsole){
+
+	// Envio a bloques de LONGITUD_MAX_DE_CONTENIDO
+	int program_length = strlen(tConsole->pProgram);
+	int program_sent = 0;
+
+	// Defino header
+	stHeaderIPC header = nuevoHeaderIPC(CONNECTCONSOLA);
+	header.largo = LONGITUD_MAX_DE_CONTENIDO;
+
+	while(program_sent < program_length)
+	{
+		if(enviarHeaderIPC(*(tConsole->pSockfd),header) < 0)
+		{
+			perror("Error enviando header del programa.");
+			return -1;
+		}
+
+		// for 1 a LONGITUD_MAX_DE_CONTENIDO
+		// {
+		//   malloc buffer LONGITUD_MAX_DE_CONTENIDO
+		//   buffer[i] = tConsole->pProgram[i]
+		// }
+		// buffer[LONGITUD_MAX_DE_CONTENIDO] = '\0';
+		// if(enviarMensajeIPC(*(tConsole->pSockfd), char);
+	}
+
+	printf("Programa enviado...\n");
 	return 0;
 }
 
@@ -75,6 +136,7 @@ void destroy_console(t_console* tConsole){
 		free(tConsole->tDest_addr);
 	if(tConsole->pProgram)
 		free(tConsole->pProgram);
+
 }
 
 int load_program(t_console* tConsole, int argc, char* argv[])
@@ -83,26 +145,28 @@ int load_program(t_console* tConsole, int argc, char* argv[])
 	char *program = (char*) malloc(10);
 	char buffer[BUFFERSIZE];
 
-	//for(i=0; i< argc; argc++)
-	//	printf("[%d][%s]", i, argv[i]);
+	if(argc < 2)
+		body = fopen(argv[0], "r");    // Hashbang
+	else
+		body = fopen(argv[1], "r");    // Consola <path>
 
-	printf("INICIO Programa Ansisop: \n");
-	//body = fopen(argv[0], "r");
-	while(fgets(buffer, BUFFERSIZE, stdin)){
+	while(fgets(buffer, BUFFERSIZE, body)){
 		program = (char*) realloc( program, strlen(program)+1+strlen(buffer));
-		if(!program)
+		if(program)
 			strcat(program, buffer);  /* concatena un salto de linea cada vez */
-		printf("[%s]", *program);
 	}
-	//fclose(body);
-	printf("\nPrograma [%s]\n", *program);
+	fclose(body);
 
 	// Agrego el programa a t_console
 	if(!tConsole)
+	{
+		free(program);
 		return -1;
+	}
 	tConsole->pProgram = program;
 
-	printf("FIN Programa Ansisop: \n");
+	// Imprimo programa por stdout
+	printf("\nPrograma: \n[%s]\n", program);
 	return 0;
 }
 
