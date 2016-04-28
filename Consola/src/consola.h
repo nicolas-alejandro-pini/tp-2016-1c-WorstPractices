@@ -54,12 +54,25 @@ int connect_console(t_console* tConsole);
 void destroy_console(t_console* tConsole);
 
 /**
- * @NAME: setConsole_mode
- * @PRE:  un puntero a una estructura tipo t_console, cantidad de argumentos, array de argumentos
- * @POST: setea estado INPUT o FILE de la consola.
+ * @NAME: load_program
+ * @PRE:  un puntero a una estructura tipo t_console, program ansisop por argumento
+ * @POST: Lee archivo ansiop en modo interprete, o por parametro (path completo del archivo)
  */
 int load_program(t_console* tConsole, int argc, char* argv[]);
 
+/**
+ * @NAME: handshake_console
+ * @PRE:
+ * @POST:
+ */
+int handshake_console(t_console* tConsole);
+
+/**
+ * @NAME: send_program
+ * @PRE:
+ * @POST:
+ */
+int send_program(t_console* tConsole);
 
 /* AUXILIAR
  */

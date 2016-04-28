@@ -71,20 +71,11 @@ int main(int argc, char *argv[]) {
 	t_console tConsola;
 	load_program(&tConsola, argc, argv);
 	create_console(&tConsola);
-
-	// Para probar la consola como server
-	if(argc > 1)
-	{
-		printf("servermode: \n");
-		if(server_test())
-			printf("error server.. \n");
-	}
-	else
-	{
-		connect_console(&tConsola);
-	}
-
+	connect_console(&tConsola);
+	handshake_console(&tConsola);
+	// send_program(&tConsola);
 	destroy_console(&tConsola);
+
 	puts("Console Application"); /* prints Console Application */
 	return EXIT_SUCCESS;
 }

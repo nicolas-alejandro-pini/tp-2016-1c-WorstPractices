@@ -10,10 +10,8 @@
 
 #include "UMC.h"
 
-
-
 /*
- ============================================================================
+ ====o========================================================================
  Funciones
  ============================================================================
  */
@@ -23,7 +21,7 @@ int verificarNombreArchivo(char* file_name){
 
 void loadInfo (stParametro* info, char* file_name){
 
-	// TODO realizar verificacines sobre lo cargadop desde el archivo
+	/* TODO realizar verificacines sobre lo cargadop desde el archivo */
 	t_config* miConf = config_create (file_name); /*Estructura de configuracion*/
 
 	if (config_has_property(miConf, "PUERTO")) {
@@ -101,6 +99,15 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstad
 	unMensaje->header.tipo = -1;
 }
 
+/*
+ =========================================================================================
+ Name        : cpuConectarse()
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe IP y Puerto.
+ Outputs     : Retorna -1 en caso de error y si no hay error devuelve el socket.
+ Description : Realiza la conexión con un servidor.
+ =========================================================================================
+ */
 
 int main(int argc, char *argv[]) {
 
@@ -114,7 +121,7 @@ int main(int argc, char *argv[]) {
 	int agregarSock;
 
 	memset(&enviolog,'\0',TAMDATOS);
-	//elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro));
+	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
 
 	printf("-----------------------------------------------------------------------------\n");
 	printf("------------------------------------UMC--------------------------------------\n");
@@ -122,16 +129,17 @@ int main(int argc, char *argv[]) {
 
 	/* ----------------------------------------Se carga el archivo de configuracion--------------------------- */
 
-		//loguear(INFO_LOG,"*****INICIO UMC*****\n","UMC");
+		/*loguear(INFO_LOG,"*****INICIO UMC*****\n","UMC"); */
 		printf("Obteniendo configuracion...");
 		if(verificarNombreArchivo(argv[1])==0){ /* TODO implementar funcion verificarNombreArchivo() */
 			printf("\nSELECT ERROR - Error accediendo al archivo de configuracion\n");
-			//loguear(ERROR_LOG,"SELECT ERROR - accediendo al archivo de configuracion","UMC");
+			/*loguear(ERROR_LOG,"SELECT ERROR - accediendo al archivo de configuracion","UMC");*/
 			return 1;
 		}
 		loadInfo(&elEstadoActual,argv[1]);
 		printf("OK\n\n");
-		//loguear(INFO_LOG,"Configuración OK","SERVER");
+		/*loguear(INFO_LOG,"Configuración OK","SERVER");*/
+
 
 
 	/* ----------------------------------------Se realiza la Inicializacion----------------------------------- */
@@ -149,7 +157,22 @@ int main(int argc, char *argv[]) {
 		FD_SET(elEstadoActual.sockEscuchador,&(fds_master));
 		elEstadoActual.fdMax =	elEstadoActual.sockEscuchador;
 		printf("OK\n");
-		//loguear(INFO_LOG,"Esperando conexiones...","SERVER");
+		/*loguear(INFO_LOG,"Esperando conexiones...","SERVER");*/
+
+		/***** Lanzo conexión con el Nucleo ********
+
+		configuracionInicial.sockNucleo = cpuConectarse(configuracionInicial.ipNucleo, configuracionInicial.puertoNucleo, "Nucleo");
+
+		if (configuracionInicial.sockNucleo != -1){
+			FD_SET(configuracionInicial.sockNucleo,&(fds_master));
+			configuracionInicial.socketMax = configuracionInicial.sockNucleo;
+			SocketAnterior = configuracionInicial.socketMax;
+			printf("OK - Nucleo conectado. \n");
+			fflush(stdout);
+			//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
+
+		}	//Fin de conexion al Nucleo//
+
 
 	/* ........................................Ciclo Principal SERVER........................................ */
 
@@ -165,7 +188,7 @@ int main(int argc, char *argv[]) {
 			if(seleccionar(elEstadoActual.fdMax,&read_fds,1) == -1)
 				{
 					printf("\nSELECT ERROR - Error Preparando el Select\n");
-					//loguear(ERROR_LOG,"SELECT ERROR - Error Preparando el Select","SERVER");
+					/*loguear(INFO_LOG,"SELECT ERROR - Error Preparando el Select","SERVER");*/
 					return 1;
 				}
 
@@ -188,7 +211,7 @@ int main(int argc, char *argv[]) {
 		        		if(!recibirMensajeIPC(unCliente,&unMensaje)){
 		        			printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
 		        			fflush(stdout);
-		        			//loguear(ERROR_LOG,"SOCKET_ERROR - No se recibe un mensaje correcto","SERVER");
+		        			/*loguear(ERROR_LOG,"SOCKET_ERROR - No se recibe un mensaje correcto","SERVER");*/
 		        			close(unCliente);
 		        		}
 
@@ -200,7 +223,7 @@ int main(int argc, char *argv[]) {
 									return 0;
 								}
 								printf("Conexion con modulo cliente establecida\n");
-								//loguear(INFO_LOG,"Conexion con modulo cliente establecida\n","SERVER");
+								/*loguear(INFO_LOG,"Conexion con modulo cliente establecida\n","SERVER");*/
 								agregarSock=1;
 
 								/*Agrego el socket conectado A la lista Master*/
@@ -217,14 +240,14 @@ int main(int argc, char *argv[]) {
 
 	/*--------------------------------------Conexion de un cliente existente-------------------------------------*/
 					else {
-						memset(unMensaje.contenido,'\0',LONGITUD_MAXIMA_DE_CONTENIDO);
+						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
-						if (!recibirMensajeIPC(unSocket,&unMensaje)){/*SisecerrounWSrv,veo que el socket siga abierto*/
+						if (!recibirMensajeIPC(unSocket,&unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
 
 							if(unSocket==elEstadoActual.sockEscuchador){
 								printf("Se perdio conexion con el cliente conectado...\n ");
 								sprintf(enviolog,"SOCKET ERROR - Conexion perdida: %d",unSocket);
-								//loguear(INFO_LOG,"SOCKET ERROR - Conexion perdida:\n","CLIENTE");
+								/*loguear(INFO_LOG,"SOCKET ERROR - Conexion perdida:\n","CLIENTE");*/
 							}
 
 							/*Saco el socket de la lista Master*/
@@ -241,9 +264,9 @@ int main(int argc, char *argv[]) {
 	        	        else{
 
 	        	        	/*Se sigue comunicado con el cliente, podría recibir otros mensajes */
-	        	        	// TODO Realizar instrucciones de acuerdo alo que nos diga el nucleo
+	        	        	/* TODO Realizar instrucciones de acuerdo a lo que nos diga el nucleo*/
 
-	        	        	// TODO Realizar instrucciones de acuerdo alo que nos diga el CPU
+	        	        	/* TODO Realizar instrucciones de acuerdo a lo que nos diga el CPU*/
 
 							/*Cierro switch(unMensaje.header.tipo)*/
 
@@ -262,7 +285,7 @@ int main(int argc, char *argv[]) {
 	/* ............................................Finalizacion............................................. */
 		cerrarSockets(&elEstadoActual);
 		printf("\nSERVER: Fin del programa\n");
-		//loguear(INFO_LOG,"Fin del programa","SERVER");
+		/*loguear(INFO_LOG,"Fin del programa","SERVER");*/
 		return EXIT_SUCCESS;
 
 }
