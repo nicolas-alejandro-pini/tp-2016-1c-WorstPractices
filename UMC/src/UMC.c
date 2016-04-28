@@ -208,25 +208,25 @@ int main(int argc, char *argv[]) {
 		printf("OK\n");
 		/*loguear(INFO_LOG,"Esperando conexiones...","SERVER");*/
 
-		/***** Lanzo conexión con el Swap ********/
+		/********************************* Lanzo conexión con el Swap ********************************************/
 
 
 		elEstadoActual.sockSwap = conectar(elEstadoActual.ipSwap, elEstadoActual.puertoSwap);
 		/* Inicio el handShake con el servidor */
 		if (elEstadoActual.sockSwap != -1){
-			if (cpuHandShake(elEstadoActual.sockSwap, "SOYUMC", CONNECTSWAP) != -1)
+		/*	if (cpuHandShake(elEstadoActual.sockSwap, "SOYUMC", CONNECTSWAP) != -1)
 			{
 				printf("CONNECTION_ERROR - No se recibe un mensaje correcto en Handshake con Swap\n");
 				fflush(stdout);
-				/*loguear(ERROR_LOG,"SOCKET_ERROR - No se recibe un mensaje correcto","SERVER");*/
-				close(elEstadoActual.sockSwap);
+		*/		/*loguear(ERROR_LOG,"SOCKET_ERROR - No se recibe un mensaje correcto","SERVER");*/
+		/*		close(elEstadoActual.sockSwap);
 			}
 			else
-			{
+			{*/
 				printf("OK - Swap conectado. \n");
 				fflush(stdout);
 				/*loguear(OK_LOG,"Swap conectado","Swap"); TODO Agregar funcion de logueo.*/
-			}
+	/*		} */
 		}	/*Fin de conexion al Swap*/
 
 
