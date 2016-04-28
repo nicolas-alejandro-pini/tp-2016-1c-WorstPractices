@@ -1,10 +1,10 @@
 /*
  ============================================================================
  Name        : UMC.c
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
+ Author      : Diego Laib
+ Version     : 0.3
+ Copyright   : Mine
+ Description : Programa pricipal de UMC - Servidor hacia CPU & Nucleo; Cliente con Swap
  ============================================================================
  */
 
@@ -88,6 +88,8 @@ void cerrarSockets(stParametro *elEstadoActual){
 	for(unSocket=3; unSocket <= elEstadoActual->fdMax; unSocket++)
 		if(FD_ISSET(unSocket,&(fds_master)))
 			close(unSocket);
+
+	close(elEstadoActual->sockSwap);
 
 	FD_ZERO(&(fds_master));
 	FD_ZERO(&(read_fds));

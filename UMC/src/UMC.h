@@ -2,7 +2,7 @@
  * UMC.h
  *
  *  Created on: 21/4/2016
- *      Author: utnso
+ *      Author: Diego Laib
  */
 
 #ifndef UMC_H_
