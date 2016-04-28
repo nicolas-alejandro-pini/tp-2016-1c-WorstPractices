@@ -38,14 +38,15 @@ fd_set read_fds;	  		/* Sublista de fds_master.*/
 
 typedef struct{
 	int miPuerto;		/* Puerto por el que escucho. */
-	char* ipSwap;
-	int puertoSwap;
-	int frames;			/* Socket con el que escucho. */
-	int frameSize;      /* Numero que representa al mayor socket de fds_master. */
-	int frameByProc;    /* Numero que representa al mayor socket de fds_master. */
-	int entradasTLB;    /* Numero que representa al mayor socket de fds_master. */
-	int delay;          /* Indica si debo o no salir de la aplicacion. */
+	char* ipSwap;		/* ip para conectarse a Swap. */
+	int puertoSwap;		/* Puerto para conectarse a Swap. */
+	int frames;			/* Cantidad de marcos a usar. */
+	int frameSize;      /* Tamaño de marcos a usar. */
+	int frameByProc;    /* Numero de marcos por proceso. */
+	int entradasTLB;    /* Numero de entradas en cache. */
+	int delay;          /* Retardo para la respuesta de UMC. */
 	int sockEscuchador;		/* Socket con el que escucho. */
+	int sockSwap;			/* Socket con el que hablo con Swap. */
 	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
 	int salir;              /* Indica si debo o no salir de la aplicacion. */
 } stParametro;

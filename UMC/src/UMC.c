@@ -119,6 +119,7 @@ int main(int argc, char *argv[]) {
 	char enviolog[TAMDATOS];
 	char elsocket[10];
 	int agregarSock;
+	int sockSwap;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -159,19 +160,17 @@ int main(int argc, char *argv[]) {
 		printf("OK\n");
 		/*loguear(INFO_LOG,"Esperando conexiones...","SERVER");*/
 
-		/***** Lanzo conexión con el Nucleo ********
+		/***** Lanzo conexión con el Swap ********/
 
-		configuracionInicial.sockNucleo = cpuConectarse(configuracionInicial.ipNucleo, configuracionInicial.puertoNucleo, "Nucleo");
 
-		if (configuracionInicial.sockNucleo != -1){
-			FD_SET(configuracionInicial.sockNucleo,&(fds_master));
-			configuracionInicial.socketMax = configuracionInicial.sockNucleo;
-			SocketAnterior = configuracionInicial.socketMax;
-			printf("OK - Nucleo conectado. \n");
+		elEstadoActual.sockSwap = conectar(elEstadoActual.ipSwap, elEstadoActual.puertoSwap);
+
+		if (elEstadoActual.sockSwap != -1){
+			printf("OK - Swap conectado. \n");
 			fflush(stdout);
-			//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
+			/*loguear(OK_LOG,"Swap conectado","Swap"); TODO Agregar funcion de logueo.*/
 
-		}	//Fin de conexion al Nucleo//
+		}	/*Fin de conexion al Swap*/
 
 
 	/* ........................................Ciclo Principal SERVER........................................ */
@@ -268,6 +267,15 @@ int main(int argc, char *argv[]) {
 
 	        	        	/* TODO Realizar instrucciones de acuerdo a lo que nos diga el CPU*/
 
+	        	        	switch(unMensaje.header.tipo)
+	        	        	{
+	        	        		default:
+	        	        			printf("\nRespondiendo solicitud Pedido CPU...\n");
+	        	        			enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");
+	        	        			enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");
+	        	        			break;
+
+	        	        	}
 							/*Cierro switch(unMensaje.header.tipo)*/
 
 			  			fflush(stdout);
