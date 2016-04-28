@@ -60,11 +60,13 @@ typedef struct{
 #define OK				103
 #define QUIENSOS		105
 #define CONNECTCLIENTE	116
+#define CPUHSK			600
 
 
 /*Definicion de Parametros de Respuesta*/
 
-/*#define CONNECT		0x01	*/    /* Usa este tipo para el connect*/
+#define CONNECTSWAP	501
+#define CPUREQ		602
 /*#define SEARCH		0x04
 
 #define NOTFOUND	60
@@ -117,5 +119,6 @@ int verificarNombreArchivo(char* );
 void loadInfo (stParametro*, char*);
 void cerrarSockets(stParametro* );
 void finalizarSistema(stMensajeIPC*, int, stParametro* );
+int cpuHandShake (int socket, char* mensaje, int tipoHeader);
 
 #endif /* UMC_H_ */
