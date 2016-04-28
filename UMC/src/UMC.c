@@ -273,8 +273,8 @@ int main(int argc, char *argv[]) {
 
 	/*------------------------------------Identifico quien se conecto y procedo--------------------------------*/
 
-						if(unMensaje.header.tipo==CPUHSK){
-								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
+						if(unMensaje.header.tipo==SOYCPUHSK){
+								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OKCPUHSK),"MSGOK")){
 									printf("No se pudo enviar el MensajeIPC al cliente\n");
 									return 0;
 								}
@@ -291,6 +291,25 @@ int main(int argc, char *argv[]) {
 									}
 									agregarSock=0;
 								}
+						}
+						if(unMensaje.header.tipo==SOYNCLHSK){
+							if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OKNCLHSK),"MSGOK")){
+								printf("No se pudo enviar el MensajeIPC al cliente\n");
+								return 0;
+							}
+							printf("Conexion con modulo cliente establecida\n");
+							/*loguear(INFO_LOG,"Conexion con modulo cliente establecida\n","SERVER");*/
+							agregarSock=1;
+
+							/*Agrego el socket conectado A la lista Master*/
+							if(agregarSock==1){
+								FD_SET(unCliente,&(fds_master));
+								if (unCliente > elEstadoActual.fdMax){
+									maximoAnterior = elEstadoActual.fdMax;
+									elEstadoActual.fdMax = unCliente;
+								}
+								agregarSock=0;
+							}
 						}
 					}/*-Cierro if-Conexion Nueva-*/
 

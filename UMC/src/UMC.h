@@ -60,8 +60,14 @@ typedef struct{
 #define OK				103
 #define QUIENSOS		105
 #define CONNECTCLIENTE	116
-#define CPUHSK			600
 
+#define QUIENSOSNCL		400
+#define SOYNCLHSK		401
+#define OKNCLHSK		402
+
+#define QUIENSOSCPU		600
+#define SOYCPUHSK		601
+#define OKCPUHSK		602
 
 /*Definicion de Parametros de Respuesta*/
 
