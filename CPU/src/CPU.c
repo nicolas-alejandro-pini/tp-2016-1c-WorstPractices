@@ -163,6 +163,25 @@ int cpuConectarse(char* IP, int puerto, char* aQuien){
 
 }
 
+/*
+ =========================================================================================
+ Name        : cerrarSockets()
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe puntero a estructura.
+ Outputs     : Retorna -1 en caso de error y si no hay error devuelve el socket.
+ Description : Cierra todos los sockets existentes en la lista.
+ =========================================================================================
+ */
+void cerrarSockets(t_configCPU *configuracionInicial){
+
+	int unSocket;
+	for(unSocket=3; unSocket <= configuracionInicial->socketMax; unSocket++)
+		if(FD_ISSET(unSocket,&(fds_master)))
+			close(unSocket);
+
+	FD_ZERO(&(fds_master));
+	FD_ZERO(&(read_fds));
+}
 
 /*
  =========================================================================================
@@ -299,6 +318,9 @@ int main(void) {
 
 		}
 	}
+
+	cerrarSockets(&configuracionInicial);
+	printf("\nCPU: Fin del programa\n");
 
 	return EXIT_SUCCESS;
 }
