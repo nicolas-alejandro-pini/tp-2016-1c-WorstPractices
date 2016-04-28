@@ -20,11 +20,21 @@
 /*Archivos de Configuracion*/
 #define CFGFILE		"nucleo.conf"
 
-/*Definicion de Parametros de Conexiones*/
+/*Definicion de Parametros de Conexiones comunes*/
 #define OK					100
 #define ERROR				101
 #define QUIENSOS			102
+
+/*Definicion de Parametros de Conexiones Consola*/
 #define CONNECTCONSOLA		103
+#define SENDANSISOP         106
+
+/*Definicion de Parametros de Conexiones UMC*/
+#define CONNECTNUCLEO		400
+#define UMCOK				401
+#define UMCQUIENSOS			402
+
+/*Definicion de Parametros de Conexiones CPU*/
 #define CONNECTCPU			104
 #define EXECANSISOP			105
 
@@ -45,6 +55,9 @@
  Estructuras del nucleo
  ============================================================================
  */
+typedef struct {
+	int socket;	/* Socket de CPU. */
+}stCPUConectado;
 
 
 
