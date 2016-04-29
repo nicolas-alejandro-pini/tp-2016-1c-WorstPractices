@@ -10,6 +10,7 @@
 #include "../lib/sockets.c"
 #include "../lib/socketsIPCIRC.c"
 #include "../lib/fComunes.c"
+#include "../lib/listas.c"
 
 /*
  ============================================================================
@@ -35,6 +36,12 @@ typedef struct{
 /* Listas globales */
 fd_set fds_master;			/* Lista de todos mis sockets.*/
 fd_set read_fds;	  		/* Sublista de fds_master.*/
+
+lista CPU_Conectados=NULL;   /*Lista de todos los CPU conectados al Nucleo*/
+
+/*Listas de estados de planificacion*/
+lista PCB_ready=NULL;   	 /*Lista de todos los CPU conectados al Nucleo*/
+lista PCB_exit=NULL;		 /*Lista de todos los CPU listos para salir*/
 
 
 /*
@@ -127,6 +134,39 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stEstado *unEstado){
 	unMensaje->header.tipo = -1;
 }
 
+int enviarAEjecutar(lista listaCPU, char* unPrograma){
+
+	stCPUConectado* unCPU;
+	stMensajeIPC unMensaje;
+
+	if (!isEmpty(listaCPU)) {
+			unCPU=(stCPUConectado*)primerDato(listaCPU);
+			quitarDeLista(&listaCPU,NULL,quitarDeAdelante);
+				/*Para la primera entrega se manda unPrograma que representa un PCB*/
+				if(!enviarMensajeIPC(unCPU->socket,nuevoHeaderIPC(EXECANSISOP),unPrograma)){
+					printf("No se pudo enviar el MensajeIPC al CPU disponible\n");
+					return 0;
+				}
+				memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
+				if(!recibirMensajeIPC(unCPU->socket,&unMensaje)){
+					printf("No se recibio el mensaje del CPU disponible\n");
+					return 0;
+				}
+				if(!unMensaje.header.tipo==OK){
+					printf("El CPU no responde\n");
+				}else{
+					agregarALista(&listaCPU,unCPU,agregarAtras);
+					return 1;
+		}
+
+	}else{
+		printf("No hay CPU disponible\n");
+		return 0;
+	}
+}
+
+
+
 
 /*
  ============================================================================
@@ -137,6 +177,7 @@ int main(int argc, char *argv[]) {
 
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
+	stCPUConectado* unNodoCPU;
 
 	int unCliente = 0, unSocket;
 	struct sockaddr addressAceptado;
@@ -224,16 +265,30 @@ int main(int argc, char *argv[]) {
 							}
 							agregarSock=0;
 						}
+
+						 if(!recibirMensajeIPC(unCliente,&unMensaje)){
+							 printf("Error:No se recibio el mensaje de la consola\n");
+							 break;
+						 }else{
+							 if (unMensaje.header.tipo == SENDANSISOP) {
+								if (!enviarAEjecutar(CPU_Conectados,unMensaje.contenido)){
+									printf("No se pudo enviar el programa\n");
+								}
+							}
+
+						 }
+
+
 						break;
 
 					case CONNECTCPU:
 
 						if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
-							printf("No se pudo enviar el MensajeIPC al cliente\n");
+							printf("No se pudo enviar el MensajeIPC al CPU\n");
 							return 0;
 						}
 
-						printf("Nueva consola conectada\n");
+						printf("Nuevo CPU conectado\n");
 						agregarSock=1;
 
 						/*Agrego el socket conectado A la lista Master*/
@@ -245,6 +300,11 @@ int main(int argc, char *argv[]) {
 							}
 							agregarSock=0;
 						}
+
+						unNodoCPU = (stCPUConectado*)malloc(sizeof(stCPUConectado));
+						unNodoCPU -> socket = unCliente;
+						agregarALista(&CPU_Conectados,(stCPUConectado*)unNodoCPU,agregarAdelante);
+
 						break;
 					default:
 						break;
@@ -257,7 +317,7 @@ int main(int argc, char *argv[]) {
 					if(unSocket==elEstadoActual.sockEscuchador){
 						printf("Se perdio conexion...\n ");
 					}
-
+					/*TODO: Sacar de la lista de cpu conectados si hay alguna desconexion.*/
 					/*Saco el socket de la lista Master*/
 					FD_CLR(unSocket,&fds_master);
 					close (unSocket);
