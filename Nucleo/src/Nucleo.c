@@ -21,7 +21,10 @@
 typedef struct{
 	char* miIP;             /* Mi direccion de IP. Ej: <"127.0.0.1"> */
 	int miPuerto;			/* Mi Puerto de escucha */
+	char* ipUmc;            /* direccion IP de conexion a la UMC.*/
+	int puertoUmc;			/* Puerto de escucha */
 	int sockEscuchador;		/* Socket con el que escucho. */
+	int sockUmc;			/* Socket de comunicacion con la UMC. */
 	int quantum;			/* Quantum de tiempo para ejecucion de rafagas. */
 	int quantumSleep;		/* Retardo en milisegundos que el nucleo esperara luego de ejecutar cada sentencia. */
 	char** ioIds;			/* Array con los dispositivos conectados*/
@@ -66,6 +69,21 @@ void loadInfo (stEstado* info,char* file_name){
 		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO");
 		exit(-2);
 	}
+
+	if (config_has_property(miConf,"IP_UMC")) {
+		info->ipUmc = config_get_string_value(miConf,"IP_UMC");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IP_UMC");
+		exit(-2);
+	}
+
+	if (config_has_property(miConf,"PUERTO_UMC")) {
+		info->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
+		exit(-2);
+	}
+
 
 	if (config_has_property(miConf,"QUANTUM")) {
 		info->quantum = config_get_int_value(miConf,"QUANTUM");
@@ -164,10 +182,6 @@ int enviarAEjecutar(lista listaCPU, char* unPrograma){
 		return 0;
 	}
 }
-
-
-
-
 /*
  ============================================================================
  Funcion principal
@@ -206,11 +220,47 @@ int main(int argc, char *argv[]) {
 	printf("Estableciendo conexion con socket escuchador...");
 	elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
 	FD_SET(elEstadoActual.sockEscuchador,&(fds_master));
-	printf("OK\n");
+	printf("OK\n\n");
 
 	/*Seteamos el maximo socket*/
 	elEstadoActual.fdMax = elEstadoActual.sockEscuchador;
 
+	/*Conexion con el proceso UMC*/
+	printf("Estableciendo conexion con la UMC...");
+	elEstadoActual.sockUmc= conectar(elEstadoActual.ipUmc,elEstadoActual.puertoUmc);
+
+	if (elEstadoActual.sockUmc != -1){
+			FD_SET(elEstadoActual.sockUmc,&(fds_master));
+
+			memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
+
+			recibirMensajeIPC(elEstadoActual.sockUmc,&unMensaje);
+
+			if(unMensaje.header.tipo == UMCQUIENSOS)
+			{
+				if(!enviarMensajeIPC(elEstadoActual.sockUmc,nuevoHeaderIPC(CONNECTNUCLEO),"")){
+					printf("No se envio CONNECTNUCLEO a la UMC\n");
+				}
+			}
+
+			memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
+			recibirMensajeIPC(elEstadoActual.sockUmc,&unMensaje);
+
+			if(unMensaje.header.tipo == UMCOK)
+			{
+				elEstadoActual.fdMax =	elEstadoActual.sockUmc;
+				maximoAnterior = elEstadoActual.fdMax;
+				printf("OK\n\n");
+			}
+			else
+			{
+				printf("No se pudo establecer la conexion con la UMC\n");
+			}
+
+		}
+		else{
+			printf("No se pudo establecer la conexion con la UMC\n");
+		}
 
 	/*Ciclo Principal del Nucleo*/
 	printf(".............................................................................\n");
