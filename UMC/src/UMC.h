@@ -2,7 +2,7 @@
  * UMC.h
  *
  *  Created on: 21/4/2016
- *      Author: utnso
+ *      Author: Diego Laib
  */
 
 #ifndef UMC_H_
@@ -38,14 +38,15 @@ fd_set read_fds;	  		/* Sublista de fds_master.*/
 
 typedef struct{
 	int miPuerto;		/* Puerto por el que escucho. */
-	char* ipSwap;
-	int puertoSwap;
-	int frames;			/* Socket con el que escucho. */
-	int frameSize;      /* Numero que representa al mayor socket de fds_master. */
-	int frameByProc;    /* Numero que representa al mayor socket de fds_master. */
-	int entradasTLB;    /* Numero que representa al mayor socket de fds_master. */
-	int delay;          /* Indica si debo o no salir de la aplicacion. */
+	char* ipSwap;		/* ip para conectarse a Swap. */
+	int puertoSwap;		/* Puerto para conectarse a Swap. */
+	int frames;			/* Cantidad de marcos a usar. */
+	int frameSize;      /* Tamaño de marcos a usar. */
+	int frameByProc;    /* Numero de marcos por proceso. */
+	int entradasTLB;    /* Numero de entradas en cache. */
+	int delay;          /* Retardo para la respuesta de UMC. */
 	int sockEscuchador;		/* Socket con el que escucho. */
+	int sockSwap;			/* Socket con el que hablo con Swap. */
 	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
 	int salir;              /* Indica si debo o no salir de la aplicacion. */
 } stParametro;
@@ -59,11 +60,13 @@ typedef struct{
 #define OK				103
 #define QUIENSOS		105
 #define CONNECTCLIENTE	116
+#define CPUHSK			600
 
 
 /*Definicion de Parametros de Respuesta*/
 
-/*#define CONNECT		0x01	*/    /* Usa este tipo para el connect*/
+#define CONNECTSWAP	501
+#define CPUREQ		602
 /*#define SEARCH		0x04
 
 #define NOTFOUND	60
@@ -116,5 +119,6 @@ int verificarNombreArchivo(char* );
 void loadInfo (stParametro*, char*);
 void cerrarSockets(stParametro* );
 void finalizarSistema(stMensajeIPC*, int, stParametro* );
+int cpuHandShake (int socket, char* mensaje, int tipoHeader);
 
 #endif /* UMC_H_ */

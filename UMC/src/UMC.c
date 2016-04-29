@@ -1,10 +1,10 @@
 /*
  ============================================================================
  Name        : UMC.c
- Author      : 
- Version     :
- Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
+ Author      : Diego Laib
+ Version     : 0.3
+ Copyright   : Mine
+ Description : Programa pricipal de UMC - Servidor hacia CPU & Nucleo; Cliente con Swap
  ============================================================================
  */
 
@@ -89,8 +89,56 @@ void cerrarSockets(stParametro *elEstadoActual){
 		if(FD_ISSET(unSocket,&(fds_master)))
 			close(unSocket);
 
+	close(elEstadoActual->sockSwap);
+
 	FD_ZERO(&(fds_master));
 	FD_ZERO(&(read_fds));
+}
+/*
+ =========================================================================================
+ Name        : cpuHandShake
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe el socket, un mensaje para identificarse y un tipo para el header.
+ Outputs     : Retorna -1 en caso de error y si no hay error devuelve el socket.
+ Description : Funcion para cargar los parametros del archivo de configuración
+ =========================================================================================
+ */
+int cpuHandShake (int socket, char* mensaje, int tipoHeader)
+{
+	stMensajeIPC unMensaje;
+
+	if(!recibirMensajeIPC(socket,&unMensaje)){
+		printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+		fflush(stdout);
+	}
+
+	printf("HandShake mensaje recibido %d",unMensaje.header.tipo);
+
+	if (unMensaje.header.tipo == QUIENSOS)
+	{
+		if(!enviarMensajeIPC(socket,nuevoHeaderIPC(tipoHeader),mensaje)){
+			printf("No se pudo enviar el MensajeIPC\n");
+			return (-1);
+		}
+	}
+
+	if(!recibirMensajeIPC(socket,&unMensaje)){
+			printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+			fflush(stdout);
+			return (-1);
+	}
+
+	printf("HandShake: mensaje recibido %d",unMensaje.header.tipo);
+	fflush(stdout);
+
+	if(unMensaje.header.tipo == OK)
+	{
+		printf("Conexión establecida con id: %d...\n",tipoHeader);
+		fflush(stdout);
+		return socket;
+	}
+	else
+		return (-1);
 }
 
 void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstado){
@@ -119,6 +167,7 @@ int main(int argc, char *argv[]) {
 	char enviolog[TAMDATOS];
 	char elsocket[10];
 	int agregarSock;
+	int sockSwap;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -159,19 +208,26 @@ int main(int argc, char *argv[]) {
 		printf("OK\n");
 		/*loguear(INFO_LOG,"Esperando conexiones...","SERVER");*/
 
-		/***** Lanzo conexión con el Nucleo ********
+		/***** Lanzo conexión con el Swap ********/
 
-		configuracionInicial.sockNucleo = cpuConectarse(configuracionInicial.ipNucleo, configuracionInicial.puertoNucleo, "Nucleo");
 
-		if (configuracionInicial.sockNucleo != -1){
-			FD_SET(configuracionInicial.sockNucleo,&(fds_master));
-			configuracionInicial.socketMax = configuracionInicial.sockNucleo;
-			SocketAnterior = configuracionInicial.socketMax;
-			printf("OK - Nucleo conectado. \n");
-			fflush(stdout);
-			//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
-
-		}	//Fin de conexion al Nucleo//
+		elEstadoActual.sockSwap = conectar(elEstadoActual.ipSwap, elEstadoActual.puertoSwap);
+		/* Inicio el handShake con el servidor */
+		if (elEstadoActual.sockSwap != -1){
+			if (cpuHandShake(elEstadoActual.sockSwap, "SOYUMC", CONNECTSWAP) != -1)
+			{
+				printf("CONNECTION_ERROR - No se recibe un mensaje correcto en Handshake con Swap\n");
+				fflush(stdout);
+				/*loguear(ERROR_LOG,"SOCKET_ERROR - No se recibe un mensaje correcto","SERVER");*/
+				close(elEstadoActual.sockSwap);
+			}
+			else
+			{
+				printf("OK - Swap conectado. \n");
+				fflush(stdout);
+				/*loguear(OK_LOG,"Swap conectado","Swap"); TODO Agregar funcion de logueo.*/
+			}
+		}	/*Fin de conexion al Swap*/
 
 
 	/* ........................................Ciclo Principal SERVER........................................ */
@@ -217,7 +273,7 @@ int main(int argc, char *argv[]) {
 
 	/*------------------------------------Identifico quien se conecto y procedo--------------------------------*/
 
-						if(unMensaje.header.tipo==CONNECTCLIENTE){
+						if(unMensaje.header.tipo==CPUHSK){
 								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
 									printf("No se pudo enviar el MensajeIPC al cliente\n");
 									return 0;
@@ -268,6 +324,16 @@ int main(int argc, char *argv[]) {
 
 	        	        	/* TODO Realizar instrucciones de acuerdo a lo que nos diga el CPU*/
 
+	        	        	switch(unMensaje.header.tipo)
+	        	        	{
+
+	        	        		default:
+	        	        			printf("\nRespondiendo solicitud Pedido CPU...\n");
+	        	        			enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");
+	        	        			enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");
+	        	        			break;
+
+	        	        	}
 							/*Cierro switch(unMensaje.header.tipo)*/
 
 			  			fflush(stdout);
