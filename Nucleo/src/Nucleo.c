@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
 
 			recibirMensajeIPC(elEstadoActual.sockUmc,&unMensaje);
 
-			if(unMensaje.header.tipo == UMCQUIENSOS)
+			if(unMensaje.header.tipo == QUIENSOS)
 			{
 				if(!enviarMensajeIPC(elEstadoActual.sockUmc,nuevoHeaderIPC(CONNECTNUCLEO),"")){
 					printf("No se envio CONNECTNUCLEO a la UMC\n");
@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
 			memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 			recibirMensajeIPC(elEstadoActual.sockUmc,&unMensaje);
 
-			if(unMensaje.header.tipo == UMCOK)
+			if(unMensaje.header.tipo == OK)
 			{
 				elEstadoActual.fdMax =	elEstadoActual.sockUmc;
 				maximoAnterior = elEstadoActual.fdMax;
@@ -327,7 +327,6 @@ int main(int argc, char *argv[]) {
 							}
 
 						 }
-
 
 						break;
 

@@ -31,8 +31,6 @@
 
 /*Definicion de Parametros de Conexiones UMC*/
 #define CONNECTNUCLEO		400
-#define UMCOK				401
-#define UMCQUIENSOS			402
 
 /*Definicion de Parametros de Conexiones CPU*/
 #define CONNECTCPU			104
