@@ -57,13 +57,13 @@ typedef struct{
 /*Definicion de Parametros de Conexiones*/
 
 #define ERROR			101
-#define OK				103
-#define QUIENSOS		105
+#define OK				100
+#define QUIENSOS		102
 #define CONNECTCLIENTE	116
 
-#define QUIENSOSNCL		400
-#define SOYNCLHSK		401
-#define OKNCLHSK		402
+#define QUIENSOSNCL		402
+#define SOYNCLHSK		400
+#define OKNCLHSK		401
 
 #define QUIENSOSCPU		600
 #define SOYCPUHSK		601

@@ -24,6 +24,11 @@ void loadInfo (stParametro* info, char* file_name){
 	/* TODO realizar verificacines sobre lo cargadop desde el archivo */
 	t_config* miConf = config_create (file_name); /*Estructura de configuracion*/
 
+	if(miConf == NULL){
+		printf("Algo va mal con el config...");
+		exit(-1);
+	}
+
 	if (config_has_property(miConf, "PUERTO")) {
 		info->miPuerto = config_get_int_value(miConf, "PUERTO");
 	} else {
@@ -201,16 +206,19 @@ int main(int argc, char *argv[]) {
 
 	/* ---------------------------------Me pongo a escuchar mi puerto escuchador------------------------------- */
 
-		printf("Estableciendo conexion con socket escuchador...");
+		printf("Creando el socket de escucha...");
 		elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
+		if(elEstadoActual.sockEscuchador < 0){
+			printf("No puede crear el socket de escucha...");
+			exit(-1);
+		}
 		FD_SET(elEstadoActual.sockEscuchador,&(fds_master));
 		elEstadoActual.fdMax =	elEstadoActual.sockEscuchador;
-		printf("OK\n");
+		printf("Socket de escucha OK\n");
 		/*loguear(INFO_LOG,"Esperando conexiones...","SERVER");*/
 
 		/********************************* Lanzo conexión con el Swap ********************************************/
-
-
+		printf("Conectando con el Swap\n");
 		elEstadoActual.sockSwap = conectar(elEstadoActual.ipSwap, elEstadoActual.puertoSwap);
 		/* Inicio el handShake con el servidor */
 		if (elEstadoActual.sockSwap != -1){
@@ -228,7 +236,9 @@ int main(int argc, char *argv[]) {
 				/*loguear(OK_LOG,"Swap conectado","Swap"); TODO Agregar funcion de logueo.*/
 	/*		} */
 		}	/*Fin de conexion al Swap*/
-
+		else{
+			printf("No se pudo conectar con el Swap\n");
+		}
 
 	/* ........................................Ciclo Principal SERVER........................................ */
 
@@ -274,7 +284,7 @@ int main(int argc, char *argv[]) {
 	/*------------------------------------Identifico quien se conecto y procedo--------------------------------*/
 
 						if(unMensaje.header.tipo==SOYCPUHSK){
-								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OKCPUHSK),"MSGOK")){
+								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
 									printf("No se pudo enviar el MensajeIPC al cliente\n");
 									return 0;
 								}
@@ -293,7 +303,7 @@ int main(int argc, char *argv[]) {
 								}
 						}
 						if(unMensaje.header.tipo==SOYNCLHSK){
-							if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OKNCLHSK),"MSGOK")){
+							if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
 								printf("No se pudo enviar el MensajeIPC al cliente\n");
 								return 0;
 							}
