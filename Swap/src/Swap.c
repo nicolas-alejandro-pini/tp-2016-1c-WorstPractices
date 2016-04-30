@@ -17,7 +17,7 @@
 #include "commons/sockets.h"
 
 int main(void) {
-    char* temp_file = tmpnam(NULL);
+    char* temp_file = "swap.log";
     t_config *config = NULL;
     char *configPath = "swap.config";
     int sockId;
