@@ -3,7 +3,7 @@
 #include "consola.h"
 #include <sys/wait.h>
 #include <signal.h>
-#define SERVER_TEST_PORT 3990
+#define SERVER_TEST_PORT 50001
 #define SERVER_BACKLOG 10
 
 void sigchld_handler(int s)
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 	create_console(&tConsola);
 	connect_console(&tConsola);
 	handshake_console(&tConsola);
-	// send_program(&tConsola);
+	send_program(&tConsola);
 	destroy_console(&tConsola);
 
 	puts("Console Application"); /* prints Console Application */

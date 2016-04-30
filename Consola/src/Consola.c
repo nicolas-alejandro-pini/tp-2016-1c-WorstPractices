@@ -98,6 +98,7 @@ int send_program(t_console* tConsole){
 	// Envio a bloques de LONGITUD_MAX_DE_CONTENIDO
 	int program_length = strlen(tConsole->pProgram);
 	int program_sent = 0;
+	char str[LONGITUD_MAX_DE_CONTENIDO+1];
 
 	// Defino header
 	stHeaderIPC header = nuevoHeaderIPC(CONNECTCONSOLA);
@@ -105,19 +106,16 @@ int send_program(t_console* tConsole){
 
 	while(program_sent < program_length)
 	{
-		if(enviarHeaderIPC(*(tConsole->pSockfd),header) < 0)
+		strncpy(str, tConsole->pProgram + program_sent, LONGITUD_MAX_DE_CONTENIDO);
+		str[LONGITUD_MAX_DE_CONTENIDO] = '\0';
+
+		if(!enviarMensajeIPC(*(tConsole->pSockfd),nuevoHeaderIPC(SENDANSISOP),str))
 		{
-			perror("Error enviando header del programa.");
+			perror("send_program: Error. no se pudo enviar el programa al Nucleo.");
 			return -1;
 		}
-
-		// for 1 a LONGITUD_MAX_DE_CONTENIDO
-		// {
-		//   malloc buffer LONGITUD_MAX_DE_CONTENIDO
-		//   buffer[i] = tConsole->pProgram[i]
-		// }
-		// buffer[LONGITUD_MAX_DE_CONTENIDO] = '\0';
-		// if(enviarMensajeIPC(*(tConsole->pSockfd), char);
+		else
+			program_sent+=LONGITUD_MAX_DE_CONTENIDO;
 	}
 
 	printf("Programa enviado...\n");
