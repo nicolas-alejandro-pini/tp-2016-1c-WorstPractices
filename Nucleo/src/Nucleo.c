@@ -52,7 +52,7 @@ lista PCB_exit=NULL;		 /*Lista de todos los CPU listos para salir*/
  Funciones
  ============================================================================
  */
-void loadInfo (stEstado* info,char* file_name){
+void loadInfo (stEstado* info){
 
 	t_config* miConf = config_create (CFGFILE); /*Estructura de configuracion*/
 
@@ -135,6 +135,32 @@ void loadInfo (stEstado* info,char* file_name){
 	}
 }
 
+void monitoreoConfiguracion(stEstado* info){
+
+		char buffer[BUF_LEN];
+
+		// Al inicializar inotify este nos devuelve un descriptor de archivo
+		int file_descriptor = inotify_init();
+		if (file_descriptor < 0) {
+			perror("inotify_init");
+		}
+
+		// Creamos un monitor sobre un path indicando que eventos queremos escuchar
+		int watch_descriptor = inotify_add_watch(file_descriptor, CFGFILE, IN_MODIFY | IN_CREATE | IN_DELETE);
+		int length = read(file_descriptor, buffer, BUF_LEN);
+		if (length < 0) {
+			perror("read");
+		}
+		int offset = 0;
+		loadInfo(info);
+		printf("\nEl archivo de configuracion se ha modificado\n");
+		inotify_rm_watch(file_descriptor, watch_descriptor);
+		close(file_descriptor);
+		monitoreoConfiguracion(info);
+		pthread_exit(NULL);
+}
+
+
 void cerrarSockets(stEstado *elEstadoActual){
 
 	int unSocket;
@@ -193,10 +219,11 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	stCPUConectado* unNodoCPU;
 
-	int unCliente = 0, unSocket;
+	int unCliente = 0, unSocket, maximoAnterior;
 	struct sockaddr addressAceptado;
-	int maximoAnterior;
 	int agregarSock;
+
+	pthread_t  p_thread;
 
 	printf("----------------------------------Elestac------------------------------------\n");
 	printf("-----------------------------------Nucleo------------------------------------\n");
@@ -205,8 +232,11 @@ int main(int argc, char *argv[]) {
 
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
-	loadInfo(&elEstadoActual,CFGFILE);
+	loadInfo(&elEstadoActual);
 	printf("OK\n");
+
+	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
+	pthread_create(&p_thread, NULL, monitoreoConfiguracion, (void*)&elEstadoActual);
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
@@ -228,6 +258,8 @@ int main(int argc, char *argv[]) {
 	/*Conexion con el proceso UMC*/
 	printf("Estableciendo conexion con la UMC...");
 	elEstadoActual.sockUmc= conectar(elEstadoActual.ipUmc,elEstadoActual.puertoUmc);
+
+
 
 	if (elEstadoActual.sockUmc != -1){
 			FD_SET(elEstadoActual.sockUmc,&(fds_master));

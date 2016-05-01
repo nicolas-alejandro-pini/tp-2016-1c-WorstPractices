@@ -15,10 +15,12 @@
 #include <time.h>
 #include <math.h>
 #include <fcntl.h>
+#include <sys/inotify.h>
 #include <commons/config.h>
+#include <pthread.h>
 
 /*Archivos de Configuracion*/
-#define CFGFILE		"nucleo.conf"
+#define CFGFILE		"./nucleo.conf"
 
 /*Definicion de Parametros de Conexiones comunes*/
 #define OK					100
@@ -30,7 +32,7 @@
 #define SENDANSISOP         106
 
 /*Definicion de Parametros de Conexiones UMC*/
-#define CONNECTNUCLEO		400
+#define CONNECTNUCLEO		115
 
 /*Definicion de Parametros de Conexiones CPU*/
 #define CONNECTCPU			104
@@ -47,6 +49,10 @@
 #define LONGITUD_MAX_DE_CONTENIDO 	1024
 #define UNLARGO 					255
 #define LARGOLOG					2500
+
+/*Definicion de macros para Inotify*/
+#define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 )
+#define BUF_LEN     ( 1024 * EVENT_SIZE )
 
 /*
  ============================================================================
