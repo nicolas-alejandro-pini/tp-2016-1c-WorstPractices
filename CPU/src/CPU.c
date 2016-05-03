@@ -9,8 +9,8 @@
  */
 
 #include "../lib/librerias.h"
-#include "../lib/sockets.c"
-#include "../lib/socketsIPCIRC.c"
+#include "commons/sockets.h"
+#include "commons/socketsIPCIRC.h"
 
 //Estructuras del CPU//
 
