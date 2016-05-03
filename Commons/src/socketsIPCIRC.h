@@ -12,7 +12,7 @@
 #ifndef SOCKETSIPCIRC_H_
 #define SOCKETSIPCIRC_H_
 
-	#include <ipctypes.h>
+	#include "ipctypes.h"
 
 	/*----------------------------------------------------------------------------*/
 	/*                     Definiciones y Declaraciones                           */
@@ -47,7 +47,7 @@
 	/*                         Funciones Privadas                                 */
 	/*----------------------------------------------------------------------------*/
 
-	stHeaderIPC nuevoHeaderIPC(const char unTipo);
+	stHeaderIPC nuevoHeaderIPC(const unsigned int unTipo);
 
 	/*----------------------------------------------------------------------------*/
 
