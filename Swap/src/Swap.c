@@ -8,13 +8,12 @@
  ============================================================================
  */
 
+#include <commons/config.h>
+#include <commons/sockets.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-
-#include "commons/log.h"
-#include "commons/config.h"
-#include "commons/sockets.h"
+#include <commons/log.h>
 
 int main(void) {
     char* temp_file = "swap.log";
@@ -34,7 +33,7 @@ int main(void) {
     int retardoCompactacion;
 
     //Primero instancio el log
-    t_log* logger = log_create(temp_file, "SWAP",true, LOG_LEVEL_INFO);
+    t_log* logger = log_create(temp_file, "SWAP",-1, LOG_LEVEL_INFO);
 
     log_info(logger, "Arancando el proceso SWAP...");
 
