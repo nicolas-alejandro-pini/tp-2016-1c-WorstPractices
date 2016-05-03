@@ -14,17 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../commons/error.h"
 
-#include "process.h"
+#include <stdlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/syscall.h>
+#include "../commons/string.h"
 
-unsigned int process_get_thread_id() {
-	return syscall(SYS_gettid);
-}
 
-unsigned int process_getpid() {
-	return getpid();
+void error_show(char *message, ...) {
+	va_list arguments;
+	va_start(arguments, message);
+
+	char *error_message = string_duplicate("[[ERROR]]");
+	string_append(&error_message, message);
+
+	vprintf(error_message, arguments);
+
+	free(error_message);
+	va_end(arguments);
 }

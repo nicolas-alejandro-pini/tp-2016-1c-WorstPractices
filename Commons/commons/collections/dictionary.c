@@ -21,9 +21,10 @@
  *      Author: fviale
  */
 
+#include "../../commons/collections/dictionary.h"
+
 #include <stdlib.h>
 #include <string.h>
-#include "dictionary.h"
 
 static unsigned int dictionary_hash(char *key, int key_len);
 static void dictionary_resize(t_dictionary *, int new_max_size);

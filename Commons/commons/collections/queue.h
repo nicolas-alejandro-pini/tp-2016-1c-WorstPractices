@@ -17,7 +17,7 @@
 #ifndef QUEUE_H_
 #define QUEUE_H_
 
-	#include "list.h"
+	#include "../../commons/collections/list.h"
 
 	typedef struct {
 		t_list* elements;

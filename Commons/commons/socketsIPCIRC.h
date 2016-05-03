@@ -12,7 +12,7 @@
 #ifndef SOCKETSIPCIRC_H_
 #define SOCKETSIPCIRC_H_
 
-	#include "ipctypes.h"
+	#include "../commons/ipctypes.h"
 
 	/*----------------------------------------------------------------------------*/
 	/*                     Definiciones y Declaraciones                           */

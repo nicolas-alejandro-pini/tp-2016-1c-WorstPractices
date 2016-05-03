@@ -14,14 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../commons/config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 
-#include "config.h"
-#include "string.h"
-#include "collections/dictionary.h"
+#include "../commons/collections/dictionary.h"
+#include "../commons/string.h"
 
 t_config *config_create(char *path) {
 	FILE* file = fopen(path, "r");

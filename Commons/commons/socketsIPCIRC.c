@@ -10,7 +10,7 @@
 /*               Modificacion para trabajar con otro tipo de mensajes		*/
 /*------------------------------------------------------------------------------*/
 
-#include "socketsIPCIRC.h"
+#include "../commons/socketsIPCIRC.h"
 
 #include <stddef.h>
 
