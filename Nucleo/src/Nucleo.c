@@ -7,10 +7,11 @@
  ============================================================================
  */
 #include "../lib/librerias.h"
-#include "../lib/sockets.c"
-#include "../lib/socketsIPCIRC.c"
 #include "../lib/fComunes.c"
 #include "../lib/listas.c"
+#include "commons/config.h"
+#include "commons/sockets.h"
+#include "commons/socketsIPCIRC.h"
 
 /*
  ============================================================================
