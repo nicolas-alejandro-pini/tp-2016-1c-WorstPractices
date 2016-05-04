@@ -15,9 +15,6 @@
  Funciones
  ============================================================================
  */
-int verificarNombreArchivo(char* file_name){
-	return 1;
-}
 
 void loadInfo (stParametro* info, char* file_name){
 
@@ -25,7 +22,8 @@ void loadInfo (stParametro* info, char* file_name){
 	t_config* miConf = config_create (file_name); /*Estructura de configuracion*/
 
 	if(miConf == NULL){
-		printf("Algo va mal con el config...");
+		printf("\nCONFIG ERROR - Error accediendo al archivo de configuracion\n");
+		/*loguear(ERROR_LOG,"SELECT ERROR - accediendo al archivo de configuracion","UMC");*/
 		exit(-1);
 	}
 
@@ -172,7 +170,7 @@ int main(int argc, char *argv[]) {
 	char enviolog[TAMDATOS];
 	char elsocket[10];
 	int agregarSock;
-	int sockSwap;
+
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -185,18 +183,18 @@ int main(int argc, char *argv[]) {
 
 		/*loguear(INFO_LOG,"*****INICIO UMC*****\n","UMC"); */
 		printf("Obteniendo configuracion...");
-		if(verificarNombreArchivo(argv[1])==0){ /* TODO implementar funcion verificarNombreArchivo() */
-			printf("\nSELECT ERROR - Error accediendo al archivo de configuracion\n");
-			/*loguear(ERROR_LOG,"SELECT ERROR - accediendo al archivo de configuracion","UMC");*/
-			return 1;
-		}
 		loadInfo(&elEstadoActual,argv[1]);
 		printf("OK\n\n");
-		/*loguear(INFO_LOG,"Configuración OK","SERVER");*/
+		/*loguear(INFO_LOG,"Configuración OK","UMC");*/
 
 
 
-	/* ----------------------------------------Se realiza la Inicializacion----------------------------------- */
+		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
+
+		memoriaPrincipal = inicializarMemoriaDisponible(elEstadoActual.frameSize*elEstadoActual.frames);
+
+
+		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */
 
 		FD_ZERO(&(fds_master));
 		FD_ZERO(&(read_fds));
@@ -204,7 +202,7 @@ int main(int argc, char *argv[]) {
 		elEstadoActual.salir = 0;
 		elEstadoActual.sockEscuchador = -1;
 
-	/* ---------------------------------Me pongo a escuchar mi puerto escuchador------------------------------- */
+		/* ---------------------------------Me pongo a escuchar mi puerto escuchador------------------------------- */
 
 		printf("Creando el socket de escucha...");
 		elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
@@ -251,7 +249,7 @@ int main(int argc, char *argv[]) {
 		{
 			read_fds = fds_master;
 
-			if(seleccionar(elEstadoActual.fdMax,&read_fds,1) == -1)
+			if(seleccionar(elEstadoActual.fdMax,&read_fds,0) == -1)
 				{
 					printf("\nSELECT ERROR - Error Preparando el Select\n");
 					/*loguear(INFO_LOG,"SELECT ERROR - Error Preparando el Select","SERVER");*/
@@ -283,7 +281,7 @@ int main(int argc, char *argv[]) {
 
 	/*------------------------------------Identifico quien se conecto y procedo--------------------------------*/
 
-						if(unMensaje.header.tipo==SOYCPUHSK){
+						if(unMensaje.header.tipo==CONNECTCPU){
 								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
 									printf("No se pudo enviar el MensajeIPC al cliente\n");
 									return 0;
@@ -302,7 +300,9 @@ int main(int argc, char *argv[]) {
 									agregarSock=0;
 								}
 						}
-						if(unMensaje.header.tipo==SOYNCLHSK){
+						if(unMensaje.header.tipo==CONNECTNUCLEO){
+							/* TODO enviar mensaje con cantidad de paginas al Nucleo */
+
 							if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
 								printf("No se pudo enviar el MensajeIPC al cliente\n");
 								return 0;
@@ -349,23 +349,14 @@ int main(int argc, char *argv[]) {
 	        	        else{
 
 	        	        	/*Se sigue comunicado con el cliente, podría recibir otros mensajes */
-	        	        	/* TODO Realizar instrucciones de acuerdo a lo que nos diga el nucleo*/
+	        	        	/* TODO Realizar instrucciones de acuerdo a lo que nos diga la consola*/
 
-	        	        	/* TODO Realizar instrucciones de acuerdo a lo que nos diga el CPU*/
+	        	        	/* Aplico demora definida en archivo de configuracion */
+	        	        	sleep(elEstadoActual.delay);
 
-	        	        	switch(unMensaje.header.tipo)
-	        	        	{
+	        	        	realizarAccionUMC(unMensaje.header.tipo,unMensaje.contenido);
 
-	        	        		default:
-	        	        			printf("\nRespondiendo solicitud Pedido CPU...\n");
-	        	        			enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");
-	        	        			enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");
-	        	        			break;
-
-	        	        	}
-							/*Cierro switch(unMensaje.header.tipo)*/
-
-			  			fflush(stdout);
+	        	        	fflush(stdout);
 
 	        	        }/*Ciero Else comunicacion con el servidor*/
 
@@ -384,4 +375,11 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 
 }
-
+int inicializarMemoriaDisponible(long tamanio, long cantidad){
+	void* r;
+	if((r=calloc(cantidad, tamanio))==NULL){
+		printf("No hay memoria disponible...");
+		exit(-1);
+	}
+	return r;
+}

@@ -27,6 +27,13 @@
 #define CONNECTCONSOLA		103
 #define CONNECTCPU			104
 #define EXECANSISOP			105
+#define CONNECTNUCLEO		106
+
+#define INICIALIZAR_PROGRAMA	151
+#define READ_BTYES_PAGE			152
+#define WRITE_BYTES_PAGE		153
+#define FIN_PROGRAMA			154
+
 
 /*Definicion de Parametros para el Archivo Log*/
 #define OK_LOG		51
@@ -39,7 +46,7 @@
 #define LONGITUD_MAX_DE_CONTENIDO 	1024
 #define UNLARGO 					255
 #define LARGOLOG					2500
-
+#define TAMDATOS 					100
 /*
  ============================================================================
  Estructuras del nucleo
