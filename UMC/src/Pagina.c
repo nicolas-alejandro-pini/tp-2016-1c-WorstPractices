@@ -34,7 +34,7 @@ void realizarAccionUMC(unsigned int tipo, char* contenido){
 	uint16_t unProcessId;
 
 	pthread_attr_init(&attr);
-	pthread_attr_getdetachstate(attr,PTHREAD_CREATE_DETACHED);
+	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
 	pthread_attr_setscope(&attr,PTHREAD_SCOPE_SYSTEM);
 
 	switch(tipo){
@@ -42,19 +42,19 @@ void realizarAccionUMC(unsigned int tipo, char* contenido){
 		/* TODO incluir pedidos de la consola UMC */
 		case INICIALIZAR_PROGRAMA:
 
-			pthread_create(tid,&attr,(void*)inicializarPrograma,contenido);
+			pthread_create(&tid,&attr,(void*)inicializarPrograma,contenido);
 			break;
 
 		case READ_BTYES_PAGE:
-			pthread_create(tid,&attr,(void*)leerBytes,contenido);
+			pthread_create(&tid,&attr,(void*)leerBytes,contenido);
 			break;
 
 		case WRITE_BYTES_PAGE:
-			pthread_create(tid,&attr,(void*)escribirBytes,contenido);
+			pthread_create(&tid,&attr,(void*)escribirBytes,contenido);
 			break;
 
 		case FIN_PROGRAMA:
-			pthread_create(tid,&attr,(void*)finalizarPrograma,contenido);
+			pthread_create(&tid,&attr,(void*)finalizarPrograma,contenido);
 			break;
 
 		default:

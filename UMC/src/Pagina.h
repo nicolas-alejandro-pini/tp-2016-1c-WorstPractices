@@ -9,12 +9,7 @@
 #define PAGINA_H_
 
 #include "../lib/librerias.h"
-
-int inicializarPrograma(stPageIni*);
-int leerBytes(stPageRead*);
-int escribirBytes(stPageWrite*);
-int finalizarPrograma(uint16_t unProcessId);
-void realizarAccionUMC(unsigned int tipo, char* contenido);
+#include <pthread.h>
 
 typedef struct{
 	uint16_t processId;		/* identificador del proceso del PCB. */
@@ -37,5 +32,11 @@ typedef struct{
 typedef struct{
 	uint16_t processId;		/* identificador del proceso del PCB. */
 }  __attribute__((packed))stPageEnd;
+
+int inicializarPrograma(stPageIni*);
+int leerBytes(stPageRead*);
+int escribirBytes(stPageWrite*);
+int finalizarPrograma(uint16_t unProcessId);
+void realizarAccionUMC(unsigned int tipo, char* contenido);
 
 #endif /* PAGINA_H_ */

@@ -14,7 +14,7 @@
 #include <sys/select.h>
 #include <stddef.h>
 #include <unistd.h>
-#include <pthread.h>
+
 
 /*#include "../lib/librerias.h"*/
 #include "commons/sockets.h"
@@ -101,7 +101,6 @@ void loadInfo (stParametro*, char*);
 void cerrarSockets(stParametro* );
 void finalizarSistema(stMensajeIPC*, int, stParametro* );
 int cpuHandShake (int socket, char* mensaje, int tipoHeader);
-void* realizarAccionUMC(int* tipo);
 int inicializarMemoriaDisponible(long tamanio, long cantidad);
 
 #endif /* UMC_H_ */

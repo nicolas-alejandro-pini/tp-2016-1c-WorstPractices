@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
 
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
 
-		memoriaPrincipal = inicializarMemoriaDisponible(elEstadoActual.frameSize*elEstadoActual.frames);
+		memoriaPrincipal = inicializarMemoriaDisponible(elEstadoActual.frameSize, elEstadoActual.frames);
 
 
 		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */
@@ -354,7 +354,7 @@ int main(int argc, char *argv[]) {
 	        	        	/* Aplico demora definida en archivo de configuracion */
 	        	        	sleep(elEstadoActual.delay);
 
-	        	        	realizarAccionUMC(unMensaje.header.tipo,unMensaje.contenido);
+	        	        	realizarAccionUMC(unMensaje.header.tipo, unMensaje.contenido);
 
 	        	        	fflush(stdout);
 
