@@ -11,11 +11,11 @@ int inicializarPrograma(stPageIni* ini){
 	/* TODO inicializarPrograma */
 	return 0;
 }
-int leerBytes(stPageRead* unaLectura){
+int leerBytes(stPosicion* unaLectura){
 	/* TODO leerBytes */
 	return 0;
 }
-int escribirBytes(stPageWrite* unaEscritura){
+int escribirBytes(stEscrituraPagina* unaEscritura){
 	/* TODO escribirBytes */
 	return 0;
 }
