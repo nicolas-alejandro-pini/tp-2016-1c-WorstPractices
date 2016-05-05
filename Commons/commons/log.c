@@ -38,14 +38,14 @@ static t_log *logId;
 /**
  * Private Functions
  */
-static void _log_write_in_level(t_log* logger, t_log_level level, const char* message_template, va_list arguments);
+static void _log_write_in_level(t_log_level level, const char* message_template, va_list arguments);
 static bool _isEnableLevelInLogger(t_log* logger, t_log_level level);
 
 #define log_impl_template(log_function, level_enum) 									\
 		void log_function(t_log* logger, const char* message_template, ...) { 			\
 			va_list arguments;															\
 			va_start(arguments, message_template);										\
-			_log_write_in_level(logger, level_enum, message_template, arguments);		\
+			_log_write_in_level(level_enum, message_template, arguments);		\
 			va_end(arguments);															\
 		}																				\
 
