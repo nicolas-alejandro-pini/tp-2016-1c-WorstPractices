@@ -25,10 +25,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <pthread.h>
 
 #define LOG_ENUM_SIZE 5
 
 static char *enum_names[LOG_ENUM_SIZE] = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
+
+static pthread_mutex_t lock;
 
 /**
  * Private Functions
@@ -130,7 +133,9 @@ static void _log_write_in_level(t_log* logger, t_log_level level, const char* me
                                 message);
 
 		if (logger->file != NULL) {
+			pthread_mutex_lock(&lock);
 			txt_write_in_file(logger->file, buffer);
+			pthread_mutex_unlock(&lock);
 		}
 
 		if (logger->is_active_console) {
