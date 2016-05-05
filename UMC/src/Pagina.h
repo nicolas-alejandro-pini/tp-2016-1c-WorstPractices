@@ -9,6 +9,7 @@
 #define PAGINA_H_
 
 #include <commons/elestaclibrary.h>
+#include <commons/ipctypes.h>
 #include <pthread.h>
 
 int inicializarPrograma(stPageIni*);
