@@ -8,12 +8,12 @@
  ============================================================================
  */
 
-#include <commons/config.h>
-#include <commons/sockets.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <commons/log.h>
+#include <commons/config.h>
+#include <commons/sockets.h>
 
 int main(void) {
     char* temp_file = "swap.log";
@@ -35,15 +35,15 @@ int main(void) {
     //Primero instancio el log
     t_log* logger = log_create(temp_file, "SWAP",-1, LOG_LEVEL_INFO);
 
-    log_info(logger, "Arancando el proceso SWAP...");
+    log_info("Arancando el proceso SWAP...");
 
     config = config_create(configPath);
     if(config == NULL){
-        log_error(logger, "Error arracando la configuracion...");
+        log_error("Error arracando la configuracion...");
         log_destroy(logger);
     	return EXIT_FAILURE;
     }
-    log_info(logger, "Configuracion cargada satisfactoriamente...");
+    log_info("Configuracion cargada satisfactoriamente...");
 
     //Cargo la configuracion del proceso y la imprimo en el log
     puertoEscucha = config_get_int_value(config, "PUERTO_ESCUCHA");
@@ -52,26 +52,26 @@ int main(void) {
     tamanioPagina = config_get_int_value(config, "TAMANIO_PAGINA");
     retardoCompactacion = config_get_int_value(config, "RETARDO_COMPACTACION");
 
-    log_info(logger, "Puerto de escucha: %d", puertoEscucha);
-    log_info(logger, "Nombre del archivo Swap: %s", nombreSwap);
-    log_info(logger, "Cantidad de paginas: %d", cantidadPaginas);
-    log_info(logger, "Tamanio de pagina: %d", tamanioPagina);
-    log_info(logger, "Retardo de compactacion: %d", retardoCompactacion);
+    log_info("Puerto de escucha: %d", puertoEscucha);
+    log_info("Nombre del archivo Swap: %s", nombreSwap);
+    log_info("Cantidad de paginas: %d", cantidadPaginas);
+    log_info("Tamanio de pagina: %d", tamanioPagina);
+    log_info("Retardo de compactacion: %d", retardoCompactacion);
 
     //Creo el socket de escucha
     sockId = escuchar(puertoEscucha);
     if(sockId == -1){
-        log_error(logger, "Error creando el socket de escucha...");
+        log_error("Error creando el socket de escucha...");
         log_destroy(logger);
         config_destroy(config);
     	return EXIT_FAILURE;
     }
     //Arranco a escuchar mensajes
-    log_info(logger, "Esperando conexiones..");
+    log_info("Esperando conexiones..");
     while(!terminar){
     	r = aceptar(sockId, (struct sockAddress *)&sockAddress);
     	if(r == -1){
-            log_error(logger, "Error aceptando la conexion del cliente...");
+            log_error("Error aceptando la conexion del cliente...");
             continue;
     	}
     	//clientIPAddress = inet_ntoa(sockAddress.sin_addr);
