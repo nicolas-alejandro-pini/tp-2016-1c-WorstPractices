@@ -33,6 +33,8 @@ static char *enum_names[LOG_ENUM_SIZE] = {"TRACE", "DEBUG", "INFO", "WARNING", "
 
 static pthread_mutex_t lock;
 
+static t_log *logId;
+
 /**
  * Private Functions
  */
@@ -77,6 +79,7 @@ t_log* log_create(char* file, char *program_name, bool is_active_console, t_log_
 	logger->detail = detail;
 	logger->pid = process_getpid();
 	logger->program_name = string_duplicate(program_name);
+	logId = logger;
 	return logger;
 }
 
@@ -114,9 +117,9 @@ t_log_level log_level_from_string(char *level) {
 
 /** PRIVATE FUNCTIONS **/
 
-static void _log_write_in_level(t_log* logger, t_log_level level, const char* message_template, va_list list_arguments) {
+static void _log_write_in_level(t_log_level level, const char* message_template, va_list list_arguments) {
 
-	if (_isEnableLevelInLogger(logger, level)) {
+	if (_isEnableLevelInLogger(logId, level)) {
 		char *message, *time, *buffer;
 		unsigned int thread_id;
 
@@ -127,18 +130,18 @@ static void _log_write_in_level(t_log* logger, t_log_level level, const char* me
 		buffer = string_from_format("[%s] %s %s/(%d:%d): %s\n",
                                 log_level_as_string(level),
                                 time,
-                                logger->program_name,
-				logger->pid,
+								logId->program_name,
+								logId->pid,
                                 thread_id,
                                 message);
 
-		if (logger->file != NULL) {
+		if (logId->file != NULL) {
 			pthread_mutex_lock(&lock);
-			txt_write_in_file(logger->file, buffer);
+			txt_write_in_file(logId->file, buffer);
 			pthread_mutex_unlock(&lock);
 		}
 
-		if (logger->is_active_console) {
+		if (logId->is_active_console) {
 			txt_write_in_stdout(buffer);
 		}
 
