@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../commons/txt.h"
+#include "txt.h"
 
 #include <stdio.h>
 

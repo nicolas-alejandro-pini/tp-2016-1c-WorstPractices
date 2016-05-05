@@ -15,7 +15,7 @@
  */
 
 
-#include "../commons/process.h"
+#include "process.h"
 
 #include <sys/types.h>
 #include <unistd.h>

@@ -14,9 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../commons/bitarray.h"
-
 #include <stdlib.h>
+#include "bitarray.h"
 
 t_bitarray *bitarray_create(char *bitarray, size_t size) {
 	t_bitarray *self = malloc(sizeof(t_bitarray));

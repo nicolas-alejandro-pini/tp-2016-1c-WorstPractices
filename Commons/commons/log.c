@@ -14,16 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../commons/log.h"
+#include "log.h"
+
+#include "temporal.h"
+#include "error.h"
+#include "string.h"
+#include "txt.h"
+#include "process.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include "../commons/error.h"
-#include "../commons/process.h"
-#include "../commons/string.h"
-#include "../commons/temporal.h"
-#include "../commons/txt.h"
 
 #define LOG_ENUM_SIZE 5
 

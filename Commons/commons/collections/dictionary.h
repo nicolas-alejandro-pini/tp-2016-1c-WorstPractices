@@ -19,7 +19,7 @@
 
 	#define DEFAULT_DICTIONARY_INITIAL_SIZE 20
 
-	#include "../../commons/collections/node.h"
+	#include "node.h"
 	#include <stdbool.h>
 
 	typedef struct {

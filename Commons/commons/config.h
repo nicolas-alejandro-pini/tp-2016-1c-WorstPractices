@@ -17,7 +17,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-	#include "../commons/collections/dictionary.h"
+	#include "collections/dictionary.h"
 
 	typedef struct {
 		char *path;
