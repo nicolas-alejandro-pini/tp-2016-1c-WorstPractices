@@ -38,14 +38,14 @@ static t_log *logId;
 /**
  * Private Functions
  */
-static void _log_write_in_level(t_log_level level, const char* message_template, va_list arguments);
+static void _log_write_in_level(t_log* logger, t_log_level level, const char* message_template, va_list arguments);
 static bool _isEnableLevelInLogger(t_log* logger, t_log_level level);
 
 #define log_impl_template(log_function, level_enum) 									\
-		void log_function(t_log* logger, const char* message_template, ...) { 			\
+		void log_function(const char* message_template, ...) { 			\
 			va_list arguments;															\
 			va_start(arguments, message_template);										\
-			_log_write_in_level(level_enum, message_template, arguments);		\
+			_log_write_in_level(logId, level_enum, message_template, arguments);		\
 			va_end(arguments);															\
 		}																				\
 
@@ -117,9 +117,9 @@ t_log_level log_level_from_string(char *level) {
 
 /** PRIVATE FUNCTIONS **/
 
-static void _log_write_in_level(t_log_level level, const char* message_template, va_list list_arguments) {
+static void _log_write_in_level(t_log* logger, t_log_level level, const char* message_template, va_list list_arguments) {
 
-	if (_isEnableLevelInLogger(logId, level)) {
+	if (_isEnableLevelInLogger(logger, level)) {
 		char *message, *time, *buffer;
 		unsigned int thread_id;
 
@@ -130,18 +130,18 @@ static void _log_write_in_level(t_log_level level, const char* message_template,
 		buffer = string_from_format("[%s] %s %s/(%d:%d): %s\n",
                                 log_level_as_string(level),
                                 time,
-								logId->program_name,
-								logId->pid,
+								logger->program_name,
+								logger->pid,
                                 thread_id,
                                 message);
 
-		if (logId->file != NULL) {
+		if (logger->file != NULL) {
 			pthread_mutex_lock(&lock);
-			txt_write_in_file(logId->file, buffer);
+			txt_write_in_file(logger->file, buffer);
 			pthread_mutex_unlock(&lock);
 		}
 
-		if (logId->is_active_console) {
+		if (logger->is_active_console) {
 			txt_write_in_stdout(buffer);
 		}
 
