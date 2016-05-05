@@ -270,9 +270,9 @@ int main(int argc, char *argv[]) {
 		        		printf("Nuevo pedido de conexion...\n");
 
 		        		unaCabecera = nuevoHeaderIPC(QUIENSOS);
-		        		if(!enviarHeaderIPC(unCliente,stHeaderIPC)){
+		        		if(!enviarHeaderIPC(unCliente,unaCabecera)){
 		        			printf("HandShake Error - No se pudo enviar mensaje QUIENSOS\n");
-		        			liberarHeaderIPC(stHeaderIPC);
+		        			liberarHeaderIPC(unaCabecera);
 		        			close(unCliente);
 		        			continue;
 		        		}
@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
 								unaCabecera = nuevoHeaderIPC(OK);
 								if(!enviarHeaderIPC(unCliente, unaCabecera)){
 									printf("No se pudo enviar un mensaje de confirmacion a la consola conectada\n");
-									liberarHeaderIPC(stHeaderIPC);
+									liberarHeaderIPC(unaCabecera);
 									close(unCliente);
 									continue;
 								}
@@ -320,7 +320,7 @@ int main(int argc, char *argv[]) {
 								unaCabecera = nuevoHeaderIPC(OK);
 								if(!enviarHeaderIPC(unCliente, unaCabecera)){
 									printf("No se pudo enviar un mensaje de confirmacion al Nucleo conectado\n");
-									liberarHeaderIPC(stHeaderIPC);
+									liberarHeaderIPC(unaCabecera);
 									close(unCliente);
 									continue;
 								}
@@ -342,9 +342,9 @@ int main(int argc, char *argv[]) {
 
 	/*--------------------------------------Conexion de un cliente existente-------------------------------------*/
 					else {
-						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
+						memset(unMensaje->contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
-						if (!recibirMensajeIPC(unSocket,&unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
+						if (!recibirMensajeIPC(unSocket,unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
 
 							if(unSocket==elEstadoActual.sockEscuchador){
 								printf("Se perdio conexion con el cliente conectado...\n ");
@@ -371,7 +371,7 @@ int main(int argc, char *argv[]) {
 	        	        	/* Aplico demora definida en archivo de configuracion */
 	        	        	sleep(elEstadoActual.delay);
 
-	        	        	realizarAccionUMC(unMensaje.header.tipo, unMensaje.contenido);
+	        	        	realizarAccionUMC(unMensaje->header.tipo, unMensaje->contenido);
 
 	        	        	fflush(stdout);
 
