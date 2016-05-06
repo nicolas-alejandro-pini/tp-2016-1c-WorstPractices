@@ -28,7 +28,7 @@
 		<link>
 			<name>commons</name>
 			<type>2</type>
-			<location>/home/nico/git/tp-2016-1c-WorstPractices/Commons/commons</location>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Commons/commons</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
