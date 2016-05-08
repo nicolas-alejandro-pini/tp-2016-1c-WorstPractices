@@ -11,8 +11,10 @@
 #include <stdlib.h>
 #include "consola.h"
 #include "../lib/librerias.h"
-#include "commons/sockets.h"
-#include "commons/socketsIPCIRC.h"
+#include <commons/config.h>
+#include <commons/sockets.h>
+#include <commons/socketsIPCIRC.h>
+#include <commons/ipctypes.h>
 #include "../lib/fComunes.c"
 
 int create_console(t_console* tConsole){
@@ -96,26 +98,16 @@ int handshake_console(t_console* tConsole){
 int send_program(t_console* tConsole){
 
 	// Envio a bloques de LONGITUD_MAX_DE_CONTENIDO
-	int program_length = strlen(tConsole->pProgram);
-	int program_sent = 0;
-	char str[LONGITUD_MAX_DE_CONTENIDO+1];
+	unsigned long program_length = strlen(tConsole->pProgram);
 
 	// Defino header
-	stHeaderIPC header = nuevoHeaderIPC(CONNECTCONSOLA);
-	header.largo = LONGITUD_MAX_DE_CONTENIDO;
+	stHeaderIPC header = nuevoHeaderIPC(SENDANSISOP);
+	header.largo = program_length;
 
-	while(program_sent < program_length)
+	if(!enviarMensajeIPC(*(tConsole->pSockfd),header,tConsole->pProgram))
 	{
-		strncpy(str, tConsole->pProgram + program_sent, LONGITUD_MAX_DE_CONTENIDO);
-		str[LONGITUD_MAX_DE_CONTENIDO] = '\0';
-
-		if(!enviarMensajeIPC(*(tConsole->pSockfd),nuevoHeaderIPC(SENDANSISOP),str))
-		{
-			perror("send_program: Error. no se pudo enviar el programa al Nucleo.");
-			return -1;
-		}
-		else
-			program_sent+=LONGITUD_MAX_DE_CONTENIDO;
+		perror("send_program: Error. no se pudo enviar el programa al Nucleo.");
+		return -1;
 	}
 
 	printf("Programa enviado...\n");
