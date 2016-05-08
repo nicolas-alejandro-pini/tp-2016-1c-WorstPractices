@@ -7,7 +7,7 @@
  Description : Hello World in C, Ansi-style
  ============================================================================
  */
-
+#include <commons/log.h>
 #include "../lib/librerias.h"
 #include "commons/sockets.h"
 #include "commons/socketsIPCIRC.h"
@@ -197,18 +197,28 @@ int main(void) {
 	t_configCPU configuracionInicial;
 	stMensajeIPC unMensaje;
 	int unSocket;
+	char* temp_file = "swap.log";
 
-	printf("CPU Application"); /* prints CPU Application */
-	fflush(stdout);
+	 //Primero instancio el log
+	 t_log* logger = log_create(temp_file, "CPU",-1, LOG_LEVEL_INFO);
+
+	log_info("Iniciando el proceo CPU..."); /* prints CPU Application */
+
 
 	// Limpio las liastas //
 	FD_ZERO(&(fds_master));
 	FD_ZERO(&(read_fds));
 
 	/***** Cargo la configuracion desde el archivo cpu.conf ********/
+	log_info("Cargando configuracion de CPU.");
+
 	cargarConf(&configuracionInicial, CFGFILE);
 
+	log_info("Configuración OK.");
+
 	/***** Lanzo conexión con el Nucleo ********/
+
+	log_info("Conectando al Nucleo...");
 
 	configuracionInicial.sockNucleo = cpuConectarse(configuracionInicial.ipNucleo, configuracionInicial.puertoNucleo, "Nucleo");
 
@@ -216,7 +226,7 @@ int main(void) {
 		FD_SET(configuracionInicial.sockNucleo,&(fds_master));
 		configuracionInicial.socketMax = configuracionInicial.sockNucleo;
 		SocketAnterior = configuracionInicial.socketMax;
-		printf("OK - Nucleo conectado. \n");
+		log_info("OK - Nucleo conectado.");
 		fflush(stdout);
 		//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
 
@@ -225,6 +235,8 @@ int main(void) {
 
 	/***** Lanzo conexión con el UMC ********/
 
+	log_info("Conectando al UMC...");
+
 	configuracionInicial.sockUmc = cpuConectarse(configuracionInicial.ipUmc, configuracionInicial.puertoUmc, "UMC");
 
 	if (configuracionInicial.sockUmc > 0){
@@ -232,7 +244,7 @@ int main(void) {
 		FD_SET(configuracionInicial.sockUmc,&(fds_master));
 		configuracionInicial.socketMax = configuracionInicial.sockUmc;
 		SocketAnterior = configuracionInicial.socketMax;
-		printf("OK - UMC conectada. \n");
+		log_info("OK - UMC conectada.");
 		fflush(stdout);
 		//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
 
@@ -244,7 +256,7 @@ int main(void) {
 		read_fds = fds_master;
 		if(seleccionar(configuracionInicial.socketMax,&read_fds,1) == -1)
 		{
-			printf("Error Preparando el Select\n");
+			log_info("Error Preparando el Select\n");
 			//loguear(ERROR_LOG,"Error preparando el select","CPU"); //TODO Funciones de logueo
 			configuracionInicial.salir = 1;
 		}
@@ -257,7 +269,7 @@ int main(void) {
 				{
 					if (configuracionInicial.sockNucleo == unSocket)
 					{
-						printf("Se desconecto el Servidor\n"); fflush(stdout);
+						log_info("Se desconecto el Servidor\n"); fflush(stdout);
 						//loguear(INFO_LOG,"Se perdio la conexion con el Nucleo","Nucleo");//TODO Funciones de logueo
 						configuracionInicial.sockNucleo = -1;
 						configuracionInicial.salir=1;
@@ -274,7 +286,7 @@ int main(void) {
 
 					}else if (configuracionInicial.sockUmc == unSocket)
 					{
-						printf("Se desconecto el UMC\n"); fflush(stdout);
+						log_info("Se desconecto el UMC\n"); fflush(stdout);
 						//loguear(INFO_LOG,"Se perdio la conexion con el UMC","UMC");//TODO Funciones de logueo
 						configuracionInicial.sockUmc = -1;
 						configuracionInicial.salir = 1;
@@ -296,7 +308,7 @@ int main(void) {
 					{
 						case ANSIPROG:
 
-							printf("Respondiendo solicitud ANSIPROG...");
+							log_info("Respondiendo solicitud ANSIPROG...");
 
 							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(OK),"CPU: Programa recibido.");
 
@@ -305,7 +317,7 @@ int main(void) {
 
 						case UMCINSTRUCCION:
 						{
-							printf("Respondiendo solicitud UMCINSTRUCCION...");
+							log_info("Respondiendo solicitud UMCINSTRUCCION...");
 
 							enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(OK),"CPU: Recibi del UMC.");
 
@@ -320,7 +332,7 @@ int main(void) {
 	}
 
 	cerrarSockets(&configuracionInicial);
-	printf("\nCPU: Fin del programa\n");
+	log_info("CPU: Fin del programa");
 
 	return EXIT_SUCCESS;
 }
