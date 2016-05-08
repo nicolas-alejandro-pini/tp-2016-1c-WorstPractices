@@ -1,5 +1,5 @@
 /*Archivos de Configuracion*/
-#define CFGFILE		"./nucleo.conf"
+#define CFGFILE		"nucleo.conf"
 
 /*Definicion de MACROS*/
 #define LONGITUD_MAX_DE_CONTENIDO 	1024

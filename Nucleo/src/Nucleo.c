@@ -247,7 +247,7 @@ int main(int argc, char *argv[]) {
 	printf("OK\n");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
-	pthread_create(&p_thread, NULL, &monitoreoConfiguracion, (void*)&elEstadoActual);
+	pthread_create(&p_thread, NULL, monitoreoConfiguracion, (void*)&elEstadoActual);
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
@@ -322,6 +322,7 @@ int main(int argc, char *argv[]) {
 
 		for(unSocket=0;unSocket<=elEstadoActual.fdMax;unSocket++){
 
+			if(FD_ISSET(unSocket,&read_fds)){
 			/*Nueva conexion*/
 			if(unSocket == elEstadoActual.sockEscuchador){
 				unCliente = aceptar(elEstadoActual.sockEscuchador,&addressAceptado);
@@ -424,13 +425,16 @@ int main(int argc, char *argv[]) {
 					/*Recibo con mensaje de conexion existente*/
 
 
+					}
+
+
 				}
+
 
 
 			}
 
 		}
-
 	}
 			cerrarSockets(&elEstadoActual);
 			finalizarSistema(&unMensaje,unSocket,&elEstadoActual);
