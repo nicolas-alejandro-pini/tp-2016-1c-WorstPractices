@@ -6,12 +6,22 @@
  Description : Elestac - Nucleo
  ============================================================================
  */
-#include "../lib/librerias.h"
-#include "../lib/fComunes.c"
+
+#include <commons/config.h>
+#include <commons/sockets.h>
+#include <commons/socketsIPCIRC.h>
+#include <commons/ipctypes.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/inotify.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include "../lib/nucleo.h"
 #include "../lib/listas.c"
-#include "commons/config.h"
-#include "commons/sockets.h"
-#include "commons/socketsIPCIRC.h"
 
 /*
  ============================================================================
@@ -152,7 +162,6 @@ void monitoreoConfiguracion(stEstado* info){
 		if (length < 0) {
 			perror("read");
 		}
-		int offset = 0;
 		loadInfo(info);
 		printf("\nEl archivo de configuracion se ha modificado\n");
 		inotify_rm_watch(file_descriptor, watch_descriptor);
@@ -220,7 +229,8 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	stCPUConectado* unNodoCPU;
 
-	int unCliente = 0, unSocket, maximoAnterior;
+	int unCliente = 0, unSocket;
+	int maximoAnterior = 0;
 	struct sockaddr addressAceptado;
 	int agregarSock;
 
@@ -237,7 +247,7 @@ int main(int argc, char *argv[]) {
 	printf("OK\n");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
-	pthread_create(&p_thread, NULL, monitoreoConfiguracion, (void*)&elEstadoActual);
+	pthread_create(&p_thread, NULL, &monitoreoConfiguracion, (void*)&elEstadoActual);
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
