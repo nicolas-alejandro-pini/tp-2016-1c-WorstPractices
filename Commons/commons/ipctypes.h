@@ -9,17 +9,17 @@
 #define COMMONS_IPCTYPES_H_
 
 /*Definicion de Parametros de Conexiones comunes*/
-#define OK					100ui
-#define ERROR				101ui
-#define QUIENSOS			102ui
+#define OK					100ul
+#define ERROR				101ul
+#define QUIENSOS			102ul
 
 /*Definicion de Parametros de Consola - Nucleo*/
-#define CONNECTCONSOLA		103ui
-#define SENDANSISOP         104ui
-#define IMPRIMIR			105ui
-#define IMPRIMIRTEXTO		106ui
-#define SENDPID				107ui
-#define KILLPID				108ui
+#define CONNECTCONSOLA		103ul
+#define SENDANSISOP         104ul
+#define IMPRIMIR			105ul
+#define IMPRIMIRTEXTO		106ul
+#define SENDPID				107ul
+#define KILLPID				108ul
 
 /*Definicion de Parametros de Nucleo - UMC*/
 #define CONNECTNUCLEO		115ui
