@@ -22,10 +22,10 @@
 #define KILLPID				108ul
 
 /*Definicion de Parametros de Nucleo - UMC*/
-#define CONNECTNUCLEO		115ui
+#define CONNECTNUCLEO		115ul
 
 /*Definicion de Parametros de Nucleo - CPU*/
-#define CONNECTCPU			104ui
-#define EXECANSISOP			105ui
+#define CONNECTCPU			104ul
+#define EXECANSISOP			105ul
 
 #endif /* COMMONS_IPCTYPES_H_ */
