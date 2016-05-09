@@ -14,18 +14,18 @@
 #define QUIENSOS			102ul
 
 /*Definicion de Parametros de Consola - Nucleo*/
-#define CONNECTCONSOLA		103ul
-#define SENDANSISOP         104ul
-#define IMPRIMIR			105ul
-#define IMPRIMIRTEXTO		106ul
-#define SENDPID				107ul
-#define KILLPID				108ul
+#define CONNECTCONSOLA		103ui
+#define SENDANSISOP         104ui
+#define IMPRIMIR			105ui
+#define IMPRIMIRTEXTO		106ui
+#define SENDPID				107ui
+#define KILLPID				108ui
 
 /*Definicion de Parametros de Nucleo - UMC*/
-#define CONNECTNUCLEO		115ul
+#define CONNECTNUCLEO		115ui
 
 /*Definicion de Parametros de Nucleo - CPU*/
-#define CONNECTCPU			104ul
-#define EXECANSISOP			105ul
+#define CONNECTCPU			104ui
+#define EXECANSISOP			105ui
 
 #endif /* COMMONS_IPCTYPES_H_ */
