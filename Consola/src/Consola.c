@@ -10,12 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "consola.h"
-#include "../lib/librerias.h"
 #include <commons/config.h>
 #include <commons/sockets.h>
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
-#include "../lib/fComunes.c"
 
 int create_console(t_console* tConsole){
 
@@ -73,6 +71,7 @@ int connect_console(t_console* tConsole){
 
 int handshake_console(t_console* tConsole){
 	stMensajeIPC handshake;
+	stMensajeIPC handshakeOK;
 
     if(!recibirMensajeIPC(*(tConsole->pSockfd), &handshake))
     {
@@ -89,6 +88,17 @@ int handshake_console(t_console* tConsole){
 	if(!enviarMensajeIPC(*(tConsole->pSockfd),nuevoHeaderIPC(CONNECTCONSOLA),"MSGOK")){
 		perror("Handshake: Error. no se pudo responder al Nucleo.");
 		return -1;
+	}
+
+	if(!recibirMensajeIPC(*(tConsole->pSockfd), &handshakeOK))
+	{
+		perror("Handshake: Error, de comunicacion.");
+		return -1;
+	}
+
+	if(handshake.header.tipo != OK)
+	{
+		perror("Handshake: Error, se esperaba confirmacion del handshake");
 	}
 
 	printf("Conectado al Nucleo...\n");
