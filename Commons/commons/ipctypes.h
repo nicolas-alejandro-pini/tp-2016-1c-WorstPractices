@@ -9,9 +9,9 @@
 #define COMMONS_IPCTYPES_H_
 
 /*Definicion de Parametros de Conexiones comunes*/
-#define OK					100ul
-#define ERROR				101ul
-#define QUIENSOS			102ul
+#define OK					100ui
+#define ERROR				101ui
+#define QUIENSOS			102ui
 
 /*Definicion de Parametros de Consola - Nucleo*/
 #define CONNECTCONSOLA		103ui
