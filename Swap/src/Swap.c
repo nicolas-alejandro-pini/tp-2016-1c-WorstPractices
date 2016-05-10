@@ -23,7 +23,8 @@ int main(void) {
     char *configPath = "swap.config";
     int srvSock;
     int cliSock;
-    unsigned char terminar = 0;
+    char terminar = 0;
+
     struct sockaddr sockAddress;
 
     stHeaderIPC *ipcHeader;
@@ -86,19 +87,28 @@ int main(void) {
 
     	if(recibirHeaderIPC(cliSock, ipcHeader) <= 0){
     		log_error("Cliente desconectado antes de saber quien era");
+    		liberarHeaderIPC(ipcHeader);
     		continue;
     	}
 
     	if(ipcHeader->tipo == SOYUMC){
     		// Se me conecto un UMC
-        	if(recibirHeaderIPC(cliSock, ipcHeader) <= 0){
-        		log_error("La UMC se desconecto u ocurrio un error de comunicacion");
-        		continue;
+
+        	while(1){
+            	if(recibirHeaderIPC(cliSock, ipcHeader) <= 0){
+            		log_error("La UMC se desconecto u ocurrio un error de comunicacion");
+            		liberarHeaderIPC(ipcHeader);
+            		break;
+            	}
+
+
+
         	}
 
-
+        	liberarHeaderIPC(ipcHeader);
     	} else {
     		// Se me conecto cualquiera, lo tengo que rechazar
+    		liberarHeaderIPC(ipcHeader);
     		close(cliSock);
     	}
     }
