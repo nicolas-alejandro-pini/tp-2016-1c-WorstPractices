@@ -21,9 +21,9 @@
 	{
 		char id[16];
 		unsigned long int tipo;
-		char ttl;
-		char hops;
-		int largo;
+		unsigned char ttl;
+		unsigned char hops;
+		unsigned long int largo;
 	} __attribute__((packed)) stHeader;
 
 	typedef struct
@@ -55,6 +55,10 @@
 	int enviarMensaje(int unSocket,stHeader unHeader, char* unContenido);
 
 	int enviarMensajeA(int unSocket,stHeader unHeader, char* unContenido);
+
+	int enviarContenido(int unSocket, char* unContenido);
+
+	int recibirContenido(int unSocket, char* unNuevoContenido, int unLargo);
 
 	/*----------------------------------------------------------------------------*/
 
