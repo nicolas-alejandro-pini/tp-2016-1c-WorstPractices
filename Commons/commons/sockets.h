@@ -20,7 +20,7 @@
 	typedef struct
 	{
 		char id[16];
-		unsigned char tipo;
+		unsigned long int tipo;
 		char ttl;
 		char hops;
 		int largo;
@@ -29,10 +29,8 @@
 	typedef struct
 	{
 		stHeader header;
-		char contenido[LONGITUD_MAXIMA_DE_CONTENIDO];
+		char *contenido;
 	} __attribute__((packed)) stMensaje;
-
-	static int sTimeout = 0;
 
 	/*----------------------------------------------------------------------------*/
 	/*                         Funciones Basicas                                  */
