@@ -11,6 +11,8 @@
 #include "../lib/librerias.h"
 #include "commons/sockets.h"
 #include "commons/socketsIPCIRC.h"
+#include "parser/parser.h"
+#include "parser/metadata_program.h"
 
 //Estructuras del CPU//
 
@@ -26,6 +28,14 @@ typedef struct{
 	int salir;			// Flaf para indicar el fin del programa //
 } t_configCPU;
 
+
+typedef struct{
+	int nroPagina;		// Indica el numero de pagina //
+	int size;			// Tamaño//
+	int offSet;			// offSet //
+} t_posicion;
+
+
 //Variables Globales//
 
 fd_set fds_master;		/* Lista de todos mis sockets. */
@@ -37,6 +47,46 @@ int umc = 0;
 int pistaActual = 0;
 int sectorActual = 1;
 int SocketAnterior = 0;
+
+
+
+/*
+ ============================================================================
+ Name        : Funciones Primitivas para ANSISOP Program.
+ Author      : Ezequiel Martinez
+ Inputs      : N/A
+ Outputs     : N/A
+ Description : Se declaran todas las funciones primitivas.
+ ============================================================================
+ */
+
+t_posicion definirVariable(t_nombre_variable identificador_variable);
+
+t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable );
+
+t_valor_variable dereferenciar(t_posicion direccion_variable);
+
+void asignar(t_posicion direccion_variable, t_valor_variable valor );
+
+t_valor_variable obtenerValorCompartida(t_nombre_compartida variable);
+
+t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor);
+
+t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta) ;
+
+t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, t_posicion donde_retornar, t_puntero_instruccion linea_en_ejecuccion);
+
+t_puntero_instruccion retornar(t_valor_variable retorno);
+
+int imprimir(t_valor_variable valor_mostrar);
+
+int imprimirTexto(char* texto);
+
+int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
+
+int wait(t_nombre_semaforo identificador_semaforo);
+
+int signal(t_nombre_semaforo identificador_semaforo);
 
 /*
  ============================================================================
@@ -312,6 +362,11 @@ int main(void) {
 
 							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(OK),"CPU: Programa recibido.");
 
+							if (cargarPCB(unMensaje.contenido) == -1)
+							{
+								log_info("Error en lectura ANSIPROG...");
+							}
+
 						break;
 
 
@@ -333,7 +388,7 @@ int main(void) {
 
 	cerrarSockets(&configuracionInicial);
 	log_info("CPU: Fin del programa");
-
+	log_destroy(logger);
 	return EXIT_SUCCESS;
 }
 
