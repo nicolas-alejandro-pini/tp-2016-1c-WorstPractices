@@ -4,12 +4,16 @@
 /*                --------------------------------------------                */
 /*----------------------------------------------------------------------------*/
 
-#include "../commons/sockets.h"
+#include "sockets.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
 
 /*----------------------------------------------------------------------------*/
 /*                         Funciones Privadas                                 */

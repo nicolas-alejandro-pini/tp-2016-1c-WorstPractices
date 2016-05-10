@@ -10,9 +10,14 @@
 /*               Modificacion para trabajar con otro tipo de mensajes		*/
 /*------------------------------------------------------------------------------*/
 
-#include "../commons/socketsIPCIRC.h"
+#include "socketsIPCIRC.h"
 
+#include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
+#include <time.h>
 
 /*----------------------------------------------------------------------------*/
 /*                         Funciones Privadas                                 */
@@ -39,7 +44,7 @@ char *nuevoID()
 	return(unVector);
 }
 
-stHeaderIPC nuevoHeaderIPC(const unsigned int unTipo)
+stHeaderIPC nuevoHeaderIPC(const unsigned long int unTipo)
 /* Devuelve un nuevo header con los campos cargados. */
 {
 	int i;
@@ -56,7 +61,7 @@ stHeaderIPC nuevoHeaderIPC(const unsigned int unTipo)
 char *stringHeaderIPC(void* elHeader)
 {
     stHeaderIPC *unPtrAHeader;
-    int i = 1, j;
+    int i = 1;
     char *unTipo, *unLargo, *unID, *unString = (char *) malloc (200);
 /*    for(j=0; j<200; j++)
 	unString[j]='\0'; */
@@ -68,7 +73,7 @@ char *stringHeaderIPC(void* elHeader)
 
     unID = unPtrAHeader->id;
     sprintf(unTipo,"%03d",unPtrAHeader->tipo);
-    sprintf(unLargo,"%03d",unPtrAHeader->largo);
+    sprintf(unLargo,"%03u",unPtrAHeader->largo);
 
     unString[0] = '[';
     while(*unID)
@@ -76,7 +81,6 @@ char *stringHeaderIPC(void* elHeader)
         unString[i] = *unID++; i++;
     }
     unString[i++] = '|';
-    j = 0;
     while(*unTipo)
     {
         unString[i] = *unTipo++; i++;

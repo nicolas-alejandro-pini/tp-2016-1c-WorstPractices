@@ -32,7 +32,7 @@
 		char id[16];
 		char respuesta_a_id[16]; 	//No se si va a ser necesario, pero a veces esto
 									//ayuda en la comunicacion asincronica
-		unsigned int tipo;
+		unsigned long int tipo;
 		unsigned long largo;
 	/*} __attribute__((packed)) stHeaderIPC; */
 	} stHeaderIPC;
@@ -47,7 +47,7 @@
 	/*                         Funciones Privadas                                 */
 	/*----------------------------------------------------------------------------*/
 
-	stHeaderIPC nuevoHeaderIPC(const unsigned int unTipo);
+	stHeaderIPC nuevoHeaderIPC(const unsigned long int unTipo);
 
 	/*----------------------------------------------------------------------------*/
 
