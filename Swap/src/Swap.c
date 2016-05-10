@@ -14,16 +14,16 @@
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/sockets.h>
+#include <commons/ipctypes.h>
 
 int main(void) {
     char* temp_file = "swap.log";
     t_config *config = NULL;
     char *configPath = "swap.config";
-    int sockId;
+    int srvSock;
+    int cliSock;
     unsigned char terminar = 0;
-    struct sockaddr_in sockAddress;
-    char * clientIPAddress;
-    int r;
+    struct sockaddr sockAddress;
 
     //Configuracion cargada
     int puertoEscucha;
@@ -59,25 +59,26 @@ int main(void) {
     log_info("Retardo de compactacion: %d", retardoCompactacion);
 
     //Creo el socket de escucha
-    sockId = escuchar(puertoEscucha);
-    if(sockId == -1){
+    srvSock = escuchar(puertoEscucha);
+    if(srvSock == -1){
         log_error("Error creando el socket de escucha...");
         log_destroy(logger);
         config_destroy(config);
     	return EXIT_FAILURE;
     }
     //Arranco a escuchar mensajes
-    log_info("Esperando conexiones..");
+    log_info("Esperando conexiones...");
     while(!terminar){
-    	r = aceptar(sockId, (struct sockAddress *)&sockAddress);
-    	if(r == -1){
+    	cliSock = aceptar(srvSock, (struct sockaddr *)&sockAddress);
+    	if(cliSock == -1){
             log_error("Error aceptando la conexion del cliente...");
             continue;
     	}
     	//clientIPAddress = inet_ntoa(sockAddress.sin_addr);
         //log_info(logger, "Nuevo cliente conectado desde la IP: %s", clientIPAddress);
-    	log_info(logger, "Nuevo cliente conectado");
+    	log_info("Nuevo cliente conectado");
 
+    	enviarHeaderIPC(cliSock, nuevoHeaderIPC(QUIENSOS));
 
 
     }
