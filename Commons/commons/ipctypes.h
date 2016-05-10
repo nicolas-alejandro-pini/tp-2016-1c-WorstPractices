@@ -9,9 +9,9 @@
 #define COMMONS_IPCTYPES_H_
 
 /*Definicion de Parametros de Conexiones comunes*/
-#define OK					100ul
-#define ERROR				101ul
-#define QUIENSOS			102ul
+#define OK					0ul
+#define ERROR				1ul
+#define QUIENSOS			2ul
 
 /*Definicion de Parametros de Consola - Nucleo*/
 #define CONNECTCONSOLA		103ul
@@ -27,5 +27,8 @@
 /*Definicion de Parametros de Nucleo - CPU*/
 #define CONNECTCPU			104ul
 #define EXECANSISOP			105ul
+
+/*Definicion de tipos de mensaje enre la UMC y el Swap*/
+#define SOYUMC				200ul
 
 #endif /* COMMONS_IPCTYPES_H_ */

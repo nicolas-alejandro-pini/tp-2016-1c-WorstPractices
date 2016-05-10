@@ -15,6 +15,7 @@
 #include <commons/config.h>
 #include <commons/sockets.h>
 #include <commons/ipctypes.h>
+#include <commons/socketsIPCIRC.h>
 
 int main(void) {
     char* temp_file = "swap.log";
@@ -24,6 +25,8 @@ int main(void) {
     int cliSock;
     unsigned char terminar = 0;
     struct sockaddr sockAddress;
+
+    stHeaderIPC *ipcHeader;
 
     //Configuracion cargada
     int puertoEscucha;
@@ -78,9 +81,26 @@ int main(void) {
         //log_info(logger, "Nuevo cliente conectado desde la IP: %s", clientIPAddress);
     	log_info("Nuevo cliente conectado");
 
-    	enviarHeaderIPC(cliSock, nuevoHeaderIPC(QUIENSOS));
+    	ipcHeader = nuevoHeaderIPC(QUIENSOS);
+    	enviarHeaderIPC(cliSock, ipcHeader);
+
+    	if(recibirHeaderIPC(cliSock, ipcHeader) <= 0){
+    		log_error("Cliente desconectado antes de saber quien era");
+    		continue;
+    	}
+
+    	if(ipcHeader->tipo == SOYUMC){
+    		// Se me conecto un UMC
+        	if(recibirHeaderIPC(cliSock, ipcHeader) <= 0){
+        		log_error("La UMC se desconecto u ocurrio un error de comunicacion");
+        		continue;
+        	}
 
 
+    	} else {
+    		// Se me conecto cualquiera, lo tengo que rechazar
+    		close(cliSock);
+    	}
     }
 
     //Libero lo reservado

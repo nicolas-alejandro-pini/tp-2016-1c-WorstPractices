@@ -45,22 +45,26 @@ void nuevoID(char *id)
  *  Devuelve un nuevo header con los campos cargados.
  *
  */
-stHeaderIPC nuevoHeaderIPC(unsigned long unTipo){
+stHeaderIPC * nuevoHeaderIPC(unsigned long unTipo){
 
-	stHeaderIPC unHeader;
-	nuevoID(unHeader.id);
-	unHeader.tipo = unTipo;
-	unHeader.largo = 0;
+	stHeaderIPC * unHeader = malloc(sizeof(stHeaderIPC));
+	nuevoID(unHeader->id);
+	unHeader->tipo = unTipo;
+	unHeader->largo = 0;
 	return (unHeader);
+}
+
+void liberarHeaderIPC(stHeaderIPC *unHeader){
+	free(unHeader);
 }
 
 /*----------------------------------------------------------------------------*/
 
-int enviarHeaderIPC(int unSocket, const stHeaderIPC unHeader)
+int enviarHeaderIPC(int unSocket, stHeaderIPC *unHeader)
 /*Envía unHeader por el socket que recibe como parametro y devuelve la cantidad enviada.*/
 {
 	int resultado;
-	if((resultado = send(unSocket, &unHeader, sizeof(stHeaderIPC),0)) == -1)
+	if((resultado = send(unSocket, unHeader, sizeof(stHeaderIPC),0)) == -1)
 		log_error("No se pudo enviar el header!");
 	/*printf("MANDE:%d\n",unHeader.tipo);*/
 	return(resultado);
@@ -68,30 +72,21 @@ int enviarHeaderIPC(int unSocket, const stHeaderIPC unHeader)
 
 /*----------------------------------------------------------------------------*/
 
-int recibirHeaderIPC(int unSocket, stHeaderIPC* nuevoPtrAHeader)
 /*Devuelve el tamaño del header recibido atraves de unSocket y 0 si se cerró.*/
-{
-	int resultado, tamanioHeader = sizeof(stHeaderIPC);
-	resultado = recv(unSocket, nuevoPtrAHeader,tamanioHeader,0);
-
-	if(resultado == -1)
-		return -1;
-	/*printf("recibi:%d\n",nuevoPtrAHeader->tipo);	*/
-	return(resultado);
+int recibirHeaderIPC(int unSocket, stHeaderIPC* nuevoPtrAHeader){
+	return recv(unSocket, nuevoPtrAHeader,sizeof(stHeaderIPC),0);
 }
 
 /*----------------------------------------------------------------------------*/
 /*                         Funciones Basicas                                  */
 /*----------------------------------------------------------------------------*/
 
-int enviarMensajeIPC(int unSocket,stHeaderIPC unHeader, char* unContenido)
+int enviarMensajeIPC(int unSocket,stHeaderIPC *unHeader, char* unContenido)
 /*Envía primero unHeader y luego unContenido por el socket que recibe como parametro. Devuelve 0 si hubieron errores y el tamaño del contenido enviado -sin contar el header- si no.*/
 {
-	int unLargo = strlen(unContenido)+1;
-	unHeader.largo = unLargo;
-	if (!enviarHeaderIPC(unSocket, unHeader))
+	if (enviarHeaderIPC(unSocket, unHeader) <= 0)
 		return(0);
-	/*printf("ENVIO HEADER:%d\n",unHeader.tipo);*/
+
 	return(enviarContenido(unSocket,unContenido));
 }
 

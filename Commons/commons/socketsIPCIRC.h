@@ -47,11 +47,11 @@
 	/*                         Funciones Privadas                                 */
 	/*----------------------------------------------------------------------------*/
 
-	stHeaderIPC nuevoHeaderIPC(const unsigned long int unTipo);
+	stHeaderIPC * nuevoHeaderIPC(unsigned long unTipo);
 
 	/*----------------------------------------------------------------------------*/
 
-	int enviarHeaderIPC(int unSocket, const stHeaderIPC unHeader);
+	int enviarHeaderIPC(int unSocket, stHeaderIPC *unHeader);
 
 	/*----------------------------------------------------------------------------*/
 
@@ -61,9 +61,7 @@
 	/*                         Funciones Basicas                                  */
 	/*----------------------------------------------------------------------------*/
 
-	int enviarMensajeIPCA(int unSocket,stHeaderIPC unHeader, char* unContenido);
-
-	int enviarMensajeIPC(int unSocket,stHeaderIPC unHeader, char* unContenido);
+	int enviarMensajeIPC(int unSocket,stHeaderIPC * unHeader, char* unContenido);
 
 	/*----------------------------------------------------------------------------*/
 	
