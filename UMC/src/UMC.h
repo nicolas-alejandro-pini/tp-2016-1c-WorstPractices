@@ -15,7 +15,8 @@
 #include <stddef.h>
 #include <unistd.h>
 
-#include "../lib/librerias.h"
+
+/*#include "../lib/librerias.h"*/
 #include "commons/sockets.h"
 #include "commons/socketsIPCIRC.h"
 #include "../lib/fComunes.c"
@@ -35,6 +36,8 @@ typedef struct{
 
 fd_set fds_master;			/* Lista de todos mis sockets.*/
 fd_set read_fds;	  		/* Sublista de fds_master.*/
+int sockSwap;
+void *memoriaPrincipal;
 
 typedef struct{
 	int miPuerto;		/* Puerto por el que escucho. */
@@ -54,49 +57,22 @@ typedef struct{
 
 /*Archivos de Configuracion*/
 /*define CFGFILE		"configuracion.conf"*/
-/*Definicion de Parametros de Conexiones*/
 
-#define ERROR			101
-#define OK				100
-#define QUIENSOS		102
-#define CONNECTCLIENTE	116
-
-#define QUIENSOSNCL		402
-#define SOYNCLHSK		400
-#define OKNCLHSK		401
-
-#define QUIENSOSCPU		600
-#define SOYCPUHSK		601
-#define OKCPUHSK		602
 
 /*Definicion de Parametros de Respuesta*/
-
+/*
 #define CONNECTSWAP	501
 #define CPUREQ		602
-/*#define SEARCH		0x04
-
-#define NOTFOUND	60
-#define ADD		0x07
-#define EXIT		0x14
 */
-/*Definicion de Parametros para el Archivo Log*/
 
-#define OK_LOG		51
-#define ERROR_LOG	52
-#define WARNING_LOG	53
-#define INFO_LOG	54
-#define DEBUG_LOG	55
 
 /*Definicion de MACROS*/
 
-/*#define TAMANIOMAXPALABRAS 2048*/
+/*
 #define TAMDATOS 100
-/*#define TAMBUFFER 255*/
 #define LONGITUD_MAX_DE_CONTENIDO 1024
-/*#define UNLARGO 2048
-#define TAMSECTOR 512
-#define TAMID 10
 */
+
 /*--------------------------------------------Estructuras----------------------------------------*/
 /*												 */
 
@@ -121,10 +97,10 @@ typedef struct{
 }stSectorOFT;
 */
 
-int verificarNombreArchivo(char* );
 void loadInfo (stParametro*, char*);
 void cerrarSockets(stParametro* );
 void finalizarSistema(stMensajeIPC*, int, stParametro* );
 int cpuHandShake (int socket, char* mensaje, int tipoHeader);
+int inicializarMemoriaDisponible(long tamanio, long cantidad);
 
 #endif /* UMC_H_ */

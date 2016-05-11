@@ -32,7 +32,7 @@
 		char id[16];
 		char respuesta_a_id[16]; 	//No se si va a ser necesario, pero a veces esto
 									//ayuda en la comunicacion asincronica
-		unsigned int tipo;
+		unsigned long int tipo;
 		unsigned long largo;
 	/*} __attribute__((packed)) stHeaderIPC; */
 	} stHeaderIPC;
@@ -47,19 +47,11 @@
 	/*                         Funciones Privadas                                 */
 	/*----------------------------------------------------------------------------*/
 
-	stHeaderIPC nuevoHeaderIPC(const unsigned int unTipo);
+	stHeaderIPC * nuevoHeaderIPC(unsigned long unTipo);
 
 	/*----------------------------------------------------------------------------*/
 
-	char *stringHeaderIPC(void* elHeader);
-
-	/*----------------------------------------------------------------------------*/
-
-	stHeaderIPC HeaderStringIPC(const char *cadena);
-
-	/*----------------------------------------------------------------------------*/
-
-	int enviarHeaderIPC(int unSocket, const stHeaderIPC unHeader);
+	int enviarHeaderIPC(int unSocket, stHeaderIPC *unHeader);
 
 	/*----------------------------------------------------------------------------*/
 
@@ -69,9 +61,7 @@
 	/*                         Funciones Basicas                                  */
 	/*----------------------------------------------------------------------------*/
 
-	int enviarMensajeIPCA(int unSocket,stHeaderIPC unHeader, char* unContenido);
-
-	int enviarMensajeIPC(int unSocket,stHeaderIPC unHeader, char* unContenido);
+	int enviarMensajeIPC(int unSocket,stHeaderIPC * unHeader, char* unContenido);
 
 	/*----------------------------------------------------------------------------*/
 	

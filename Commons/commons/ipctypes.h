@@ -9,23 +9,26 @@
 #define COMMONS_IPCTYPES_H_
 
 /*Definicion de Parametros de Conexiones comunes*/
-#define OK					100
-#define ERROR				101
-#define QUIENSOS			102
+#define OK					0ul
+#define ERROR				1ul
+#define QUIENSOS			2ul
 
 /*Definicion de Parametros de Consola - Nucleo*/
-#define CONNECTCONSOLA		103
-#define SENDANSISOP         104
-#define IMPRIMIR			105
-#define IMPRIMIRTEXTO		106
-#define SENDPID				107
-#define KILLPID				108
+#define CONNECTCONSOLA		103ul
+#define SENDANSISOP         104ul
+#define IMPRIMIR			105ul
+#define IMPRIMIRTEXTO		106ul
+#define SENDPID				107ul
+#define KILLPID				108ul
 
 /*Definicion de Parametros de Nucleo - UMC*/
-#define CONNECTNUCLEO		115
+#define CONNECTNUCLEO		115ul
 
 /*Definicion de Parametros de Nucleo - CPU*/
-#define CONNECTCPU			104
-#define EXECANSISOP			105
+#define CONNECTCPU			104ul
+#define EXECANSISOP			105ul
+
+/*Definicion de tipos de mensaje enre la UMC y el Swap*/
+#define SOYUMC				200ul
 
 #endif /* COMMONS_IPCTYPES_H_ */

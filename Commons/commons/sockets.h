@@ -20,19 +20,17 @@
 	typedef struct
 	{
 		char id[16];
-		unsigned char tipo;
-		char ttl;
-		char hops;
-		int largo;
+		unsigned long int tipo;
+		unsigned char ttl;
+		unsigned char hops;
+		unsigned long int largo;
 	} __attribute__((packed)) stHeader;
 
 	typedef struct
 	{
 		stHeader header;
-		char contenido[LONGITUD_MAXIMA_DE_CONTENIDO];
+		char *contenido;
 	} __attribute__((packed)) stMensaje;
-
-	static int sTimeout = 0;
 
 	/*----------------------------------------------------------------------------*/
 	/*                         Funciones Basicas                                  */
@@ -57,6 +55,10 @@
 	int enviarMensaje(int unSocket,stHeader unHeader, char* unContenido);
 
 	int enviarMensajeA(int unSocket,stHeader unHeader, char* unContenido);
+
+	int enviarContenido(int unSocket, char* unContenido);
+
+	int recibirContenido(int unSocket, char* unNuevoContenido, int unLargo);
 
 	/*----------------------------------------------------------------------------*/
 

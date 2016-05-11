@@ -10,9 +10,17 @@
 /*               Modificacion para trabajar con otro tipo de mensajes		*/
 /*------------------------------------------------------------------------------*/
 
-#include "../commons/socketsIPCIRC.h"
+#include "socketsIPCIRC.h"
 
+#include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <time.h>
+#include "log.h"
+#include "sockets.h"
 
 /*----------------------------------------------------------------------------*/
 /*                         Funciones Privadas                                 */
@@ -21,165 +29,64 @@
 /*
  * Devuelve una cadena que representa un numero aleatorio de 15 cifras
  *
- * @return Devuelve una nueva cadena con el ID. Debe liberarse con free!
  */
-char *nuevoID()
+void nuevoID(char *id)
 {
-	int i;
-	char strAux[11];
-	char *unVector = (char*) malloc(16);
-	srand(time(NULL));
-	for(i=0;i<15;i++)
-	{
+	char i;
 
-		sprintf(strAux,"%d",rand());
-		unVector[i] = *strAux;
+	srand(time(NULL));
+	for(i=0;i<15;i++){
+		*(id + i) = (char)rand();
 	}
-	unVector[i] = '\0';
-	return(unVector);
+	id[15] = '\0';
 }
 
-stHeaderIPC nuevoHeaderIPC(const unsigned int unTipo)
-/* Devuelve un nuevo header con los campos cargados. */
-{
-	int i;
-	stHeaderIPC unHeader;
-	char *unID = nuevoID();
-	for(i = 0;i <16;i++) unHeader.id[i] = *(unID+i);
-	unHeader.tipo = unTipo;
-	unHeader.largo = 0;
+/**
+ *  Devuelve un nuevo header con los campos cargados.
+ *
+ */
+stHeaderIPC * nuevoHeaderIPC(unsigned long unTipo){
+
+	stHeaderIPC * unHeader = malloc(sizeof(stHeaderIPC));
+	nuevoID(unHeader->id);
+	unHeader->tipo = unTipo;
+	unHeader->largo = 0;
 	return (unHeader);
 }
 
-/*----------------------------------------------------------------------------*/
-
-char *stringHeaderIPC(void* elHeader)
-{
-    stHeaderIPC *unPtrAHeader;
-    int i = 1, j;
-    char *unTipo, *unLargo, *unID, *unString = (char *) malloc (200);
-/*    for(j=0; j<200; j++)
-	unString[j]='\0'; */
-	memset(unString,'\0',200);
-
-    unPtrAHeader = (stHeaderIPC*) elHeader;
-    unTipo = (char *) malloc(10);
-    unLargo = (char *) malloc(10);
-
-    unID = unPtrAHeader->id;
-    sprintf(unTipo,"%03d",unPtrAHeader->tipo);
-    sprintf(unLargo,"%03d",unPtrAHeader->largo);
-
-    unString[0] = '[';
-    while(*unID)
-    {
-        unString[i] = *unID++; i++;
-    }
-    unString[i++] = '|';
-    j = 0;
-    while(*unTipo)
-    {
-        unString[i] = *unTipo++; i++;
-    }
-    unString[i++] = '|';
-    while(*unLargo)
-    {
-        unString[i] = *unLargo++; i++;
-    }
-    unString[i++] = ']';
-    unString[i++] = '\n';    
-    unString[i++] = '\0';
-    return (unString);
+void liberarHeaderIPC(stHeaderIPC *unHeader){
+	free(unHeader);
 }
 
 /*----------------------------------------------------------------------------*/
 
-stHeaderIPC HeaderStringIPC(const char *cadena)
-{
-	char temp[10];
-	int i = 1,s= 0;
-	stHeaderIPC unHeader;
-
-	while (cadena[i] != '|')
-	  {
-	   unHeader.id[i-1] = cadena[i];
-	   i++;
-	  }
-
-	i++;
-
-	while (cadena[i] != '|')
-	  {
-	    temp[s] = (cadena[i]);
-	    s++;
-            i++;
-	  }
-
-	temp[s] = '\0';
-	
-	unHeader.tipo = atoi(temp);
-
-	i++;
-
-	s = 0;
-	while (cadena[i] != ']')
-	  {
-	    temp[s] = (cadena[i]);
-	    s++;
-	    i++;
-          }
-	temp[s] = '\0';
-	unHeader.largo = atoi(temp);
-return unHeader;
-}
-
-/*----------------------------------------------------------------------------*/
-
-int enviarHeaderIPC(int unSocket, const stHeaderIPC unHeader)
+int enviarHeaderIPC(int unSocket, stHeaderIPC *unHeader)
 /*Envía unHeader por el socket que recibe como parametro y devuelve la cantidad enviada.*/
 {
 	int resultado;
-	if((resultado = send(unSocket, &unHeader, sizeof(stHeaderIPC),0)) == -1)
-		error("No se pudo enviar el header!");
+	if((resultado = send(unSocket, unHeader, sizeof(stHeaderIPC),0)) == -1)
+		log_error("No se pudo enviar el header!");
 	/*printf("MANDE:%d\n",unHeader.tipo);*/
 	return(resultado);
 }
 
 /*----------------------------------------------------------------------------*/
 
-int recibirHeaderIPC(int unSocket, stHeaderIPC* nuevoPtrAHeader)
 /*Devuelve el tamaño del header recibido atraves de unSocket y 0 si se cerró.*/
-{
-	int resultado, tamanioHeader = sizeof(stHeaderIPC);
-	resultado = recv(unSocket, nuevoPtrAHeader,tamanioHeader,0);
-
-	if(resultado == -1)
-		return -1;
-	/*printf("recibi:%d\n",nuevoPtrAHeader->tipo);	*/
-	return(resultado);
+int recibirHeaderIPC(int unSocket, stHeaderIPC* nuevoPtrAHeader){
+	return recv(unSocket, nuevoPtrAHeader,sizeof(stHeaderIPC),0);
 }
 
 /*----------------------------------------------------------------------------*/
 /*                         Funciones Basicas                                  */
 /*----------------------------------------------------------------------------*/
 
-int enviarMensajeIPCA(int unSocket,stHeaderIPC unHeader, char* unContenido)
+int enviarMensajeIPC(int unSocket,stHeaderIPC *unHeader, char* unContenido)
 /*Envía primero unHeader y luego unContenido por el socket que recibe como parametro. Devuelve 0 si hubieron errores y el tamaño del contenido enviado -sin contar el header- si no.*/
 {
-	if (!enviarHeaderIPC(unSocket, unHeader))
+	if (enviarHeaderIPC(unSocket, unHeader) <= 0)
 		return(0);
 
-	return(enviarContenidoA(unSocket,unContenido,unHeader.largo));
-}
-
-int enviarMensajeIPC(int unSocket,stHeaderIPC unHeader, char* unContenido)
-/*Envía primero unHeader y luego unContenido por el socket que recibe como parametro. Devuelve 0 si hubieron errores y el tamaño del contenido enviado -sin contar el header- si no.*/
-{
-	int unLargo = strlen(unContenido)+1;
-	unHeader.largo = unLargo;
-	if (!enviarHeaderIPC(unSocket, unHeader))
-		return(0);
-	/*printf("ENVIO HEADER:%d\n",unHeader.tipo);*/
 	return(enviarContenido(unSocket,unContenido));
 }
 
