@@ -70,33 +70,34 @@ int connect_console(t_console* tConsole){
 }
 
 int handshake_console(t_console* tConsole){
-	stMensajeIPC handshake;
-	stMensajeIPC handshakeOK;
+	stHeaderIPC *hQuienSos = NULL;
+	stHeaderIPC *hConnectConsola = nuevoHeaderIPC(CONNECTCONSOLA);
+	stHeaderIPC *hConfirm = NULL;
 
-    if(!recibirMensajeIPC(*(tConsole->pSockfd), &handshake))
+    if(!recibirHeaderIPC(*(tConsole->pSockfd), hQuienSos))
     {
     	perror("Handshake: Error. se cerro la coneccion.");
     	return -1;
     }
 
-	if(handshake.header.tipo != QUIENSOS)
+	if(hQuienSos->tipo != QUIENSOS)
 	{
 		perror("Handshake: Error. Mensaje desconocido");
 		return -1;
 	}
 
-	if(!enviarMensajeIPC(*(tConsole->pSockfd),nuevoHeaderIPC(CONNECTCONSOLA),"MSGOK")){
+	if(!enviarHeaderIPC(*(tConsole->pSockfd), hConnectConsola)){
 		perror("Handshake: Error. no se pudo responder al Nucleo.");
 		return -1;
 	}
 
-	if(!recibirMensajeIPC(*(tConsole->pSockfd), &handshakeOK))
+	if(!recibirHeaderIPC(*(tConsole->pSockfd), hConfirm))
 	{
 		perror("Handshake: Error, de comunicacion.");
 		return -1;
 	}
 
-	if(handshake.header.tipo != OK)
+	if(hConfirm->tipo != OK)
 	{
 		perror("Handshake: Error, se esperaba confirmacion del handshake");
 	}
@@ -111,8 +112,8 @@ int send_program(t_console* tConsole){
 	unsigned long program_length = strlen(tConsole->pProgram);
 
 	// Defino header
-	stHeaderIPC header = nuevoHeaderIPC(SENDANSISOP);
-	header.largo = program_length;
+	stHeaderIPC *header = nuevoHeaderIPC(SENDANSISOP);
+	header->largo = program_length;
 
 	if(!enviarMensajeIPC(*(tConsole->pSockfd),header,tConsole->pProgram))
 	{
@@ -169,7 +170,3 @@ int load_program(t_console* tConsole, int argc, char* argv[])
 	printf("\nPrograma: \n[%s]\n", program);
 	return 0;
 }
-
-
-
-
