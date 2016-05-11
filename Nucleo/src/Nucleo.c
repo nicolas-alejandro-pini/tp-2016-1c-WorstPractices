@@ -224,7 +224,9 @@ int enviarAEjecutar(lista listaCPU, char* unPrograma){
  ============================================================================
  */
 int main(int argc, char *argv[]) {
-
+	stHeaderIPC *hQuienSos = nuevoHeaderIPC(QUIENSOS);
+	stHeaderIPC *hQuienSosRta = nuevoHeaderIPC(ERROR);
+	stHeaderIPC *hConfirm = nuevoHeaderIPC(OK);
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
 	stCPUConectado* unNodoCPU;
@@ -328,21 +330,21 @@ int main(int argc, char *argv[]) {
 				unCliente = aceptar(elEstadoActual.sockEscuchador,&addressAceptado);
 				printf("Nuevo pedido de conexion...\n");
 
-				if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(QUIENSOS),"MSGQUIENSOS")){
+				if(!enviarHeaderIPC(unCliente,hQuienSos)){
 					printf("No se pudo enviar el MensajeIPC\n");
 				}
 
-				if(!recibirMensajeIPC(unCliente,&unMensaje)){
+				if(!recibirHeaderIPC(unCliente,hQuienSosRta)){
 					printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
 					fflush(stdout);
 					close(unCliente);
 				 }
 
 				/*Identifico quien se conecto y procedo*/
-				switch (unMensaje.header.tipo) {
+				switch (hQuienSosRta->tipo) {
 					case CONNECTCONSOLA:
 
-						if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
+						if(!enviarHeaderIPC(unCliente, hConfirm)){
 							printf("No se pudo enviar el MensajeIPC al cliente\n");
 							return 0;
 						}
@@ -365,6 +367,7 @@ int main(int argc, char *argv[]) {
 							 break;
 						 }else{
 							 if (unMensaje.header.tipo == SENDANSISOP) {
+								printf("Programa: \n [%s]\n", unMensaje.contenido);
 								if (!enviarAEjecutar(CPU_Conectados,unMensaje.contenido)){
 									printf("No se pudo enviar el programa\n");
 								}

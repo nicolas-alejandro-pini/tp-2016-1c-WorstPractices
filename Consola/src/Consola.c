@@ -70,9 +70,9 @@ int connect_console(t_console* tConsole){
 }
 
 int handshake_console(t_console* tConsole){
-	stHeaderIPC *hQuienSos = NULL;
+	stHeaderIPC *hQuienSos = nuevoHeaderIPC(ERROR);
 	stHeaderIPC *hConnectConsola = nuevoHeaderIPC(CONNECTCONSOLA);
-	stHeaderIPC *hConfirm = NULL;
+	stHeaderIPC *hConfirm = nuevoHeaderIPC(ERROR);
 
     if(!recibirHeaderIPC(*(tConsole->pSockfd), hQuienSos))
     {
