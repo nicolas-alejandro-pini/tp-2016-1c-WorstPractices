@@ -21,6 +21,7 @@
  *
  * Salida  : Devuelve 0 si se grabo bien el suceso sino retorna -1. 
 /*----------------------------------------------------------------------------------------------*/
+/*
 int loguear(int itipo, const char *sdata,const char *proceso) 
 {
    FILE *flog;
@@ -76,13 +77,15 @@ int loguear(int itipo, const char *sdata,const char *proceso)
    fclose(flog);
    return(0);
 }
-
+*/
 /*----------------------------------------------------------------------------------------------*/
 /*Automatizacion de la función fork(). Devuelve 0 si es el hijo y 1 si es el padre.*/
+/*
 int partir(){
 	int resultado;
 	if((resultado = fork()) == -1)
 		return -1;
 	return(resultado);
 }
+*/
 
