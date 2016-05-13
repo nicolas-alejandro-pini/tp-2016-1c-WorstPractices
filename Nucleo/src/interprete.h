@@ -11,8 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pcb.h"
-#include "nucleo.h"
+#include <commons/elestaclibrary.h>
+#include "nucleo.h"   // estructura stEstado
+
 #define SALTO_DE_LINEA '\n'
 
 typedef struct stNodoIndiceDeCodigo {
@@ -29,17 +30,17 @@ typedef struct stInterprete {
 
 /**
  * @NAME: interprete
+ * @PRE:  programa, estado Actual del UMC, un PCB
+ * @POST: Carga el indice de codigo en una lista y envia el programa al UMC
+ */
+int interprete(stPCB *unPCB, const stEstado elEstadoActual, char *programa);
+
+/**
+ * @NAME: interprete
  * @PRE:  unPCB->indiceDeCodigo vacio.
  * @POST: lista indice de codigo cargada , envio de sentencias al UMC
  */
 void iniciarInterprete(t_Interprete *tInterprete, char *programa);
-
-/**
- * @NAME: crearInterprete
- * @PRE:  estructura tInterprete vacia
- * @POST: programa cargado y contadores inicializados.
- */
-int crearInterprete(t_Interprete *tInterprete, char *programa);
 
 /**
  * @NAME: existeProxSentencia

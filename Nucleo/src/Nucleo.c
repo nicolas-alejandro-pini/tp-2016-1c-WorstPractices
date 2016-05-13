@@ -11,6 +11,7 @@
 #include <commons/sockets.h>
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
+#include <commons/elestaclibrary.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +22,6 @@
 #include <unistd.h>
 
 #include "nucleo.h"
-#include "pcb.h"
 #include "interprete.h"
 #include "../lib/listas.c"
 
