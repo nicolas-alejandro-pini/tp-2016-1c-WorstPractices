@@ -224,9 +224,7 @@ int enviarAEjecutar(lista listaCPU, char* unPrograma){
  ============================================================================
  */
 int main(int argc, char *argv[]) {
-	stHeaderIPC *hQuienSos = nuevoHeaderIPC(QUIENSOS);
-	stHeaderIPC *hQuienSosRta = nuevoHeaderIPC(ERROR);
-	stHeaderIPC *hConfirm = nuevoHeaderIPC(OK);
+	stHeaderIPC *stHeaderIPC;
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
 	stCPUConectado* unNodoCPU;
@@ -330,23 +328,31 @@ int main(int argc, char *argv[]) {
 				unCliente = aceptar(elEstadoActual.sockEscuchador,&addressAceptado);
 				printf("Nuevo pedido de conexion...\n");
 
-				if(!enviarHeaderIPC(unCliente,hQuienSos)){
-					printf("No se pudo enviar el MensajeIPC\n");
+				stHeaderIPC = nuevoHeaderIPC(QUIENSOS);
+				if(!enviarHeaderIPC(unCliente,stHeaderIPC)){
+					printf("HandShake Error - No se pudo enviar mensaje QUIENSOS\n");
+					liberarHeaderIPC(stHeaderIPC);
+					close(unCliente);
+					continue;
 				}
 
-				if(!recibirHeaderIPC(unCliente,hQuienSosRta)){
-					printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
-					fflush(stdout);
+				if(!recibirHeaderIPC(unCliente,stHeaderIPC)){
+					printf("HandShake Error - No se pudo recibir mensaje de respuesta\n");
+					liberarHeaderIPC(stHeaderIPC);
 					close(unCliente);
+					continue;
 				 }
 
 				/*Identifico quien se conecto y procedo*/
-				switch (hQuienSosRta->tipo) {
+				switch (stHeaderIPC->tipo) {
 					case CONNECTCONSOLA:
 
-						if(!enviarHeaderIPC(unCliente, hConfirm)){
-							printf("No se pudo enviar el MensajeIPC al cliente\n");
-							return 0;
+						stHeaderIPC = nuevoHeaderIPC(OK);
+						if(!enviarHeaderIPC(unCliente, stHeaderIPC)){
+							printf("No se pudo enviar un mensaje de confirmacion a la consola conectada\n");
+							liberarHeaderIPC(stHeaderIPC);
+							close(unCliente);
+							continue;
 						}
 
 						printf("Nueva consola conectada\n");
@@ -366,8 +372,10 @@ int main(int argc, char *argv[]) {
 							 printf("Error:No se recibio el mensaje de la consola\n");
 							 break;
 						 }else{
+
 							 if (unMensaje.header.tipo == SENDANSISOP) {
 								printf("Programa: \n [%s]\n", unMensaje.contenido);
+
 								if (!enviarAEjecutar(CPU_Conectados,unMensaje.contenido)){
 									printf("No se pudo enviar el programa\n");
 								}
