@@ -163,7 +163,8 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstad
 int main(int argc, char *argv[]) {
 
 	stParametro elEstadoActual;
-	stMensajeIPC unMensaje;
+	stMensajeIPC *unMensaje;
+	stHeaderIPC *unaCabecera;
 	int unCliente = 0, unSocket;
 	struct sockaddr addressAceptado;
 	int maximoAnterior;
@@ -268,23 +269,60 @@ int main(int argc, char *argv[]) {
 
 		        		printf("Nuevo pedido de conexion...\n");
 
-		        		if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(QUIENSOS),"MSGQUIENSOS")){
-		        			printf("No se pudo enviar el MensajeIPC\n");
-						}
-
-		        		if(!recibirMensajeIPC(unCliente,&unMensaje)){
-		        			printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
-		        			fflush(stdout);
-		        			/*loguear(ERROR_LOG,"SOCKET_ERROR - No se recibe un mensaje correcto","SERVER");*/
+		        		unaCabecera = nuevoHeaderIPC(QUIENSOS);
+		        		if(!enviarHeaderIPC(unCliente,unaCabecera)){
+		        			printf("HandShake Error - No se pudo enviar mensaje QUIENSOS\n");
+		        			liberarHeaderIPC(unaCabecera);
 		        			close(unCliente);
+		        			continue;
+		        		}
+
+		        		if(!recibirHeaderIPC(unCliente,unaCabecera)){
+		        			printf("HandShake Error - No se pudo recibir mensaje de respuesta\n");
+		        			liberarHeaderIPC(unaCabecera);
+		        			close(unCliente);
+		        			continue;
 		        		}
 
 	/*------------------------------------Identifico quien se conecto y procedo--------------------------------*/
 
-						if(unMensaje.header.tipo==CONNECTCPU){
+						switch(unaCabecera->tipo){
+							case CONNECTCPU:
+
+								unaCabecera = nuevoHeaderIPC(OK);
+								if(!enviarHeaderIPC(unCliente, unaCabecera)){
+									printf("No se pudo enviar un mensaje de confirmacion a la consola conectada\n");
+									liberarHeaderIPC(unaCabecera);
+									close(unCliente);
+									continue;
+								}
+								printf("Conexion con CPU establecida\n");
+								/*loguear(INFO_LOG,"Conexion con modulo cliente establecida\n","SERVER");*/
+								agregarSock=1;
+
+								/*Agrego el socket conectado A la lista Master*/
+								if(agregarSock==1){
+									FD_SET(unCliente,&(fds_master));
+									if (unCliente > elEstadoActual.fdMax){
+										maximoAnterior = elEstadoActual.fdMax;
+										elEstadoActual.fdMax = unCliente;
+									}
+									agregarSock=0;
+								}
+								break;
+							case CONNECTNUCLEO:
+							/* TODO enviar mensaje con cantidad de paginas al Nucleo */
+
 								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
 									printf("No se pudo enviar el MensajeIPC al cliente\n");
 									return 0;
+								}
+								unaCabecera = nuevoHeaderIPC(OK);
+								if(!enviarHeaderIPC(unCliente, unaCabecera)){
+									printf("No se pudo enviar un mensaje de confirmacion al Nucleo conectado\n");
+									liberarHeaderIPC(unaCabecera);
+									close(unCliente);
+									continue;
 								}
 								printf("Conexion con modulo cliente establecida\n");
 								/*loguear(INFO_LOG,"Conexion con modulo cliente establecida\n","SERVER");*/
@@ -300,34 +338,13 @@ int main(int argc, char *argv[]) {
 									agregarSock=0;
 								}
 						}
-						if(unMensaje.header.tipo==CONNECTNUCLEO){
-							/* TODO enviar mensaje con cantidad de paginas al Nucleo */
-
-							if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
-								printf("No se pudo enviar el MensajeIPC al cliente\n");
-								return 0;
-							}
-							printf("Conexion con modulo cliente establecida\n");
-							/*loguear(INFO_LOG,"Conexion con modulo cliente establecida\n","SERVER");*/
-							agregarSock=1;
-
-							/*Agrego el socket conectado A la lista Master*/
-							if(agregarSock==1){
-								FD_SET(unCliente,&(fds_master));
-								if (unCliente > elEstadoActual.fdMax){
-									maximoAnterior = elEstadoActual.fdMax;
-									elEstadoActual.fdMax = unCliente;
-								}
-								agregarSock=0;
-							}
-						}
 					}/*-Cierro if-Conexion Nueva-*/
 
 	/*--------------------------------------Conexion de un cliente existente-------------------------------------*/
 					else {
-						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
+						memset(unMensaje->contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
-						if (!recibirMensajeIPC(unSocket,&unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
+						if (!recibirMensajeIPC(unSocket,unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
 
 							if(unSocket==elEstadoActual.sockEscuchador){
 								printf("Se perdio conexion con el cliente conectado...\n ");
@@ -354,7 +371,7 @@ int main(int argc, char *argv[]) {
 	        	        	/* Aplico demora definida en archivo de configuracion */
 	        	        	sleep(elEstadoActual.delay);
 
-	        	        	realizarAccionUMC(unMensaje.header.tipo, unMensaje.contenido);
+	        	        	realizarAccionUMC(unMensaje->header.tipo, unMensaje->contenido);
 
 	        	        	fflush(stdout);
 
