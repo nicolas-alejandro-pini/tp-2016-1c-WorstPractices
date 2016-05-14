@@ -16,10 +16,9 @@
 #include <unistd.h>
 
 
-/*#include "../lib/librerias.h"*/
+#include "commons/elestaclibrary.h"
 #include "commons/sockets.h"
 #include "commons/socketsIPCIRC.h"
-#include "../lib/fComunes.c"
 
 #include <commons/config.h>
 
@@ -68,10 +67,10 @@ typedef struct{
 
 /*Definicion de MACROS*/
 
-/*
+
 #define TAMDATOS 100
 #define LONGITUD_MAX_DE_CONTENIDO 1024
-*/
+
 
 /*--------------------------------------------Estructuras----------------------------------------*/
 /*												 */

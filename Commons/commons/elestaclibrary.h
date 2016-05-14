@@ -9,6 +9,7 @@
 #define COMMONS_ELESTACLIBRARY_H_
 
 #include <commons/collections/list.h>
+#include <stdint.h>
 
 typedef struct{
 	uint16_t processId;		/* identificador del proceso del PCB. */
