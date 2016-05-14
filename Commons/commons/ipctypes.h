@@ -25,8 +25,8 @@
 #define CONNECTNUCLEO		115ul
 
 /*Definicion de Parametros de Nucleo - CPU*/
-#define CONNECTCPU			104ul
-#define EXECANSISOP			105ul
+#define CONNECTCPU			124ul
+#define EXECANSISOP			125ul
 
 /*Definicion de tipos de mensaje enre la UMC y el Swap*/
 #define SOYUMC				200ul
@@ -34,7 +34,7 @@
 #endif /* COMMONS_IPCTYPES_H_ */
 
 /*Definicion de tipos de mensaje de interfaz UMC */
-#define INICIALIZAR_PROGRAMA	151
-#define READ_BTYES_PAGE			152
-#define WRITE_BYTES_PAGE		153
-#define FIN_PROGRAMA			154
+#define INICIALIZAR_PROGRAMA	151ul
+#define READ_BTYES_PAGE			152ul
+#define WRITE_BYTES_PAGE		153ul
+#define FIN_PROGRAMA			154ul
