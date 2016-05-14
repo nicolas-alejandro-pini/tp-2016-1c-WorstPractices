@@ -8,6 +8,8 @@
 #ifndef COMMONS_ELESTACLIBRARY_H_
 #define COMMONS_ELESTACLIBRARY_H_
 
+#include <commons/collections/list.h>
+
 typedef struct {
 	int  offset;
 	int  size;
@@ -34,11 +36,23 @@ typedef struct {
 	int  pid;	 					/*Numero identificador del proceso unico en el sistema */
 	int  pc; 	  					/*Numero de la próxima instrucción del Programa que se debe ejecutar*/
 	int  paginas; 					/*Cantidad de páginas utilizadas por el código del Programa AnSISOP, empezando por la página cero*/
-	t_list indicesCodigo;   		/*Contiene el offset del inicio y del fin de cada sentencia del Programa (lista de stPosicion)*/
+	t_list *indicesCodigo;   		/*Contiene el offset del inicio y del fin de cada sentencia del Programa (lista de stPosicion)*/
 	t_list etiquetas;   			/*Utilizada para conocer las líneas de código correspondientes al inicio de los procedimientos y a las etiquetas (lista de stEtiquetas)*/
 
 }stPCB;
 
+/**
+ * @NAME: crearPCB
+ * @PRE:  un puntero PCB
+ * @POST: memoria reservada para la estructura PCB
+ */
+int crearPCB(stPCB *unPCB);
 
+/**
+ * @NAME: liberarPCB
+ * @PRE:  una estructura PCB con memoria reservada
+ * @POST: libera la estructura stPCB
+ */
+void liberarPCB(stPCB *unPCB);
 
 #endif /* COMMONS_ELESTACLIBRARY_H_ */

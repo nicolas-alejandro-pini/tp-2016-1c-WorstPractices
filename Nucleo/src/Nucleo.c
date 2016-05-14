@@ -12,6 +12,7 @@
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
 #include <commons/collections/list.h>
+#include <commons/elestaclibrary.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +22,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "../lib/nucleo.h"
+#include "nucleo.h"
+#include "interprete.h"
 
 /*
  ============================================================================
@@ -29,27 +31,9 @@
  ============================================================================
  */
 
-typedef struct{
-	char* miIP;             /* Mi direccion de IP. Ej: <"127.0.0.1"> */
-	int miPuerto;			/* Mi Puerto de escucha */
-	char* ipUmc;            /* direccion IP de conexion a la UMC.*/
-	int puertoUmc;			/* Puerto de escucha */
-	int sockEscuchador;		/* Socket con el que escucho. */
-	int sockUmc;			/* Socket de comunicacion con la UMC. */
-	int quantum;			/* Quantum de tiempo para ejecucion de rafagas. */
-	int quantumSleep;		/* Retardo en milisegundos que el nucleo esperara luego de ejecutar cada sentencia. */
-	char** ioIds;			/* Array con los dispositivos conectados*/
-	char** ioSleep;			/* Array con los retardos por cada dispositivo conectados (en milisegundos)*/
-	char** semIds;			/* Array con identificadores por cada semaforo*/
-	char** semInit;			/* Array con los valores iniciales de los semaforos conectados*/
-	char** sharedVars;		/* Array con las variables compartidas*/
-	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
-	int salir;              /* Indica si debo o no salir de la aplicacion. */
-} stEstado;
-
 /* Listas globales */
-fd_set fds_master;				/* Lista de todos mis sockets.*/
-fd_set read_fds;	  			/* Sublista de fds_master.*/
+fd_set fds_master;			/* Lista de todos mis sockets.*/
+fd_set read_fds;	  		/* Sublista de fds_master.*/
 
 t_list *colaReady;   	 	/*Cola de todos los PCB listos para ejecutar*/
 t_list *colaExit;		 	/*Cola de todos los PCB listos para liberar*/
@@ -378,12 +362,26 @@ int main(int argc, char *argv[]) {
 							agregarSock=0;
 						}
 
-						 if(!recibirMensajeIPC(unCliente,&unMensaje)){
-							 printf("Error:No se recibio el mensaje de la consola\n");
-							 break;
-						 }else{
+						/* Recibo Programa */
+						if(!recibirMensajeIPC(unCliente,&unMensaje)){
+							printf("Error:No se recibio el mensaje de la consola\n");
+							break;
+						}else{
+							if (unMensaje.header.tipo == SENDANSISOP) {
 
-							 if (unMensaje.header.tipo == SENDANSISOP) {
+								/* Genero estructura PCB */
+								stPCB unPCB;
+								crearPCB(&unPCB);
+
+								/* Interprete del programa */
+								if(!interprete(&unPCB, elEstadoActual, unMensaje.contenido))
+								{
+									printf("Error: no se pudo interpretar el programa");
+									return 0;
+								}
+
+								liberarPCB(&unPCB);
+
 								printf("Programa: \n [%s]\n", unMensaje.contenido);
 
 								//TODO: Crear nueva estructura PCB a partir del interprete y alojarla en la cola de listos
@@ -412,6 +410,8 @@ int main(int argc, char *argv[]) {
 							}
 							agregarSock=0;
 						}
+
+						
 
 						break;
 					default:
