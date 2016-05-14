@@ -22,9 +22,9 @@ typedef struct stNodoIndiceDeCodigo {
 } t_NodoICodigo;
 
 typedef struct stInterprete {
-	int posActual;
-	int posMaxima;
+	int longPrograma;
 	char *programa;
+	char *posActual;
 	int cantSentencias;
 } t_Interprete;
 
@@ -41,13 +41,6 @@ int interprete(stPCB *unPCB, const stEstado elEstadoActual, char *programa);
  * @POST: lista indice de codigo cargada , envio de sentencias al UMC
  */
 void iniciarInterprete(t_Interprete *tInterprete, char *programa);
-
-/**
- * @NAME: existeProxSentencia
- * @PRE:  -
- * @POST: (posicion) TRUE, 0 FALSE
- */
-int existeProxSentencia(t_Interprete *tInterprete);
 
 /**
  * @NAME: proximaSentencia

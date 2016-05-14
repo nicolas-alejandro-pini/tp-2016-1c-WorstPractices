@@ -12,14 +12,8 @@ int interprete(stPCB *unPCB, const stEstado elEstadoActual, char *programa){
 
 	iniciarInterprete(&tInterprete, programa);
 
-	/*
-	if(!(crearInterprete(&tInterprete, programa))){
-		printf("Interprete: Error al crear el interprete");
-		return -1;
-	}
-	*/
 
-	while(existeProxSentencia(&tInterprete)){
+	while(proximaSentencia(&tInterprete)){
 
 	}
 
@@ -28,20 +22,21 @@ int interprete(stPCB *unPCB, const stEstado elEstadoActual, char *programa){
 }
 
 void iniciarInterprete(t_Interprete *tInterprete, char *programa){
-
-	tInterprete->programa = programa;
-	tInterprete->posMaxima = strlen(programa);
-	tInterprete->posActual = 0;
+	strcpy(tInterprete->programa, programa);
+	tInterprete->longPrograma = strlen(programa);
+	tInterprete->posActual = tInterprete->programa;
 	tInterprete->cantSentencias = 0;
 }
 
-int existeProxSentencia(t_Interprete *tInterprete){
-	//SALTO_DE_LINEA
-	//memchr()
-	if(tInterprete->posMaxima < tInterprete->posMaxima)
-	return 0;
+int proximaSentencia(t_Interprete *tInterprete){
+	char *proxSentencia = strchr(tInterprete->posActual, SALTO_DE_LINEA);
+
+	if(proxSentencia == NULL)
+		return 0;
+
+	tInterprete->cantSentencias += 1;
+	tInterprete->posActual = proxSentencia;
+	return 1;
 }
 
-int proximaSentencia(t_Interprete *tInterprete){
-	return 0;
-}
+
