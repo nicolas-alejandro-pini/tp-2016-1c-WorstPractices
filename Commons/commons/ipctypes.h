@@ -32,3 +32,9 @@
 #define SOYUMC				200ul
 
 #endif /* COMMONS_IPCTYPES_H_ */
+
+/*Definicion de tipos de mensaje de interfaz UMC */
+#define INICIALIZAR_PROGRAMA	151
+#define READ_BTYES_PAGE			152
+#define WRITE_BYTES_PAGE		153
+#define FIN_PROGRAMA			154
