@@ -11,9 +11,9 @@
 #include <commons/collections/list.h>
 
 typedef struct {
-	int  offset;
-	int  size;
-	int  pagina;
+	uint16_t  offset;
+	uint16_t  size;
+	uint16_t  pagina;
 
 }stPosicion;						/*Representa a el Indice de Codigo propuesto por el TP*/
 

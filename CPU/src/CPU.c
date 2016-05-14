@@ -306,8 +306,7 @@ int main(void) {
 		read_fds = fds_master;
 		if(seleccionar(configuracionInicial.socketMax,&read_fds,1) == -1)
 		{
-			log_info("Error Preparando el Select\n");
-			//loguear(ERROR_LOG,"Error preparando el select","CPU"); //TODO Funciones de logueo
+			log_info("Error Preparando el Select con CPU.\n");
 			configuracionInicial.salir = 1;
 		}
 
@@ -319,8 +318,7 @@ int main(void) {
 				{
 					if (configuracionInicial.sockNucleo == unSocket)
 					{
-						log_info("Se desconecto el Servidor\n"); fflush(stdout);
-						//loguear(INFO_LOG,"Se perdio la conexion con el Nucleo","Nucleo");//TODO Funciones de logueo
+						log_info("Se desconecto el Servidor Nucleo.\n"); fflush(stdout);
 						configuracionInicial.sockNucleo = -1;
 						configuracionInicial.salir=1;
 
@@ -336,8 +334,6 @@ int main(void) {
 
 					}else if (configuracionInicial.sockUmc == unSocket)
 					{
-						log_info("Se desconecto el UMC\n"); fflush(stdout);
-						//loguear(INFO_LOG,"Se perdio la conexion con el UMC","UMC");//TODO Funciones de logueo
 						configuracionInicial.sockUmc = -1;
 						configuracionInicial.salir = 1;
 
@@ -349,7 +345,8 @@ int main(void) {
 							configuracionInicial.socketMax = unSocket;
 						}
 
-						//loguear(INFO_LOG,"Se perdio la conexion con el UMC","UMC");//TODO Funciones de logueo
+						log_info("Se desconecto el UMC.\n");
+						fflush(stdout);
 					}
 				}
 				else
