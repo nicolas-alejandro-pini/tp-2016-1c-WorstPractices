@@ -11,11 +11,11 @@ int inicializarPrograma(stPageIni* ini){
 	/* TODO inicializarPrograma */
 	return 0;
 }
-int leerBytes(stPageRead* unaLectura){
+int leerBytes(stPosicion* unaLectura){
 	/* TODO leerBytes */
 	return 0;
 }
-int escribirBytes(stPageWrite* unaEscritura){
+int escribirBytes(stEscrituraPagina* unaEscritura){
 	/* TODO escribirBytes */
 	return 0;
 }
@@ -28,10 +28,12 @@ void realizarAccionUMC(unsigned int tipo, char* contenido){
 
 	pthread_t tid;
 	pthread_attr_t attr;
+	/*
 	stPageIni* ini;
-	stPageRead* unaLectura;
-	stPageWrite* unaEscritura;
+	stPosicion* unaLectura;
+	stEscrituraPagina* unaEscritura;
 	uint16_t unProcessId;
+*/
 
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
