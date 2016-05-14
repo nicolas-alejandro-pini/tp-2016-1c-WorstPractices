@@ -70,6 +70,7 @@ int pistaActual = 0;
 int sectorActual = 1;
 int SocketAnterior = 0;
 
+stPCB unPCB;
 
 
 /*
@@ -262,6 +263,24 @@ void cerrarSockets(t_configCPU *configuracionInicial){
 
 /*
  =========================================================================================
+ Name        : cargarPCB()
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe el contenido del mensaje PCB.
+ Outputs     : Retorna -1 en caso de no poder cargar el PCB.
+ Description : Funcion para cargar el PCB del progracma ANSISOP.
+ =========================================================================================
+ */
+int cargarPCB(char* stringPCB){
+
+	unPCB = (stPCB) stringPCB;
+
+
+	return (-1);
+}
+
+
+/*
+ =========================================================================================
  Name        : main()
  Author      : Ezequiel Martinez
  Inputs      : N/A.
@@ -274,6 +293,7 @@ int main(void) {
 	t_configCPU configuracionInicial;
 	stMensajeIPC unMensaje;
 	int unSocket;
+	int quantum=0;
 	char* temp_file = "swap.log";
 
 	 //Primero instancio el log
@@ -391,6 +411,23 @@ int main(void) {
 							{
 								log_info("Error en lectura ANSIPROG...");
 							}
+
+							log_info("PCB de ANSIPROG cargado. /n");
+
+							quantum = unPCB.quamtum;
+
+							if (quantum <= 0)
+								log_info("Error en Quantum definido. /n");
+
+							//Ejecuto las instrucciones defidas por quamtum
+
+							while (quantum > 0){
+								ejecutarInstruccion();
+								quantum --;
+							}
+
+							devolverPCBalNucleo(unPCB);
+
 
 						break;
 

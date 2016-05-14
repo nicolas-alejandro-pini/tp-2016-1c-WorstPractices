@@ -50,9 +50,10 @@ typedef struct {
 }stIndiceStack;
 
 typedef struct {
-	int  pid;	 					/*Numero identificador del proceso unico en el sistema */
-	int  pc; 	  					/*Numero de la próxima instrucción del Programa que se debe ejecutar*/
-	int  paginas; 					/*Cantidad de páginas utilizadas por el código del Programa AnSISOP, empezando por la página cero*/
+	int	pid;	 					/*Numero identificador del proceso unico en el sistema */
+	int	pc; 	  					/*Numero de la próxima instrucción del Programa que se debe ejecutar*/
+	int	paginas; 					/*Cantidad de páginas utilizadas por el código del Programa AnSISOP, empezando por la página cero*/
+	int	quamtum;					/*Cantidad de quamtum definido par el proceso */
 	t_list *indicesCodigo;   		/*Contiene el offset del inicio y del fin de cada sentencia del Programa (lista de stPosicion)*/
 	t_list etiquetas;   			/*Utilizada para conocer las líneas de código correspondientes al inicio de los procedimientos y a las etiquetas (lista de stEtiquetas)*/
 
