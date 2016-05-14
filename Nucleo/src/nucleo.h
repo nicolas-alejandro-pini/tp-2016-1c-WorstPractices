@@ -18,7 +18,7 @@
  Estructuras del nucleo
  ============================================================================
  */
-typedef struct stEstado{
+typedef struct {
 	char* miIP;             /* Mi direccion de IP. Ej: <"127.0.0.1"> */
 	int miPuerto;			/* Mi Puerto de escucha */
 	char* ipUmc;            /* direccion IP de conexion a la UMC.*/

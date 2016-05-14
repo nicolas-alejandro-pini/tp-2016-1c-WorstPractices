@@ -12,6 +12,7 @@
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
 #include <commons/collections/list.h>
+#include <commons/collections/queue.h>
 #include <commons/elestaclibrary.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -35,9 +36,9 @@
 fd_set fds_master;			/* Lista de todos mis sockets.*/
 fd_set read_fds;	  		/* Sublista de fds_master.*/
 
-t_list *colaReady;   	 	/*Cola de todos los PCB listos para ejecutar*/
-t_list *colaExit;		 	/*Cola de todos los PCB listos para liberar*/
-t_list *colaBlock;		 	/*Cola de todos los PCB listos para liberar*/
+t_queue *colaReady;   	 	/*Cola de todos los PCB listos para ejecutar*/
+t_queue *colaExit;		 	/*Cola de todos los PCB listos para liberar*/
+t_queue *colaBlock;		 	/*Cola de todos los PCB listos para liberar*/
 
 
 pthread_mutex_t mutexColaReady;
@@ -52,7 +53,7 @@ void loadInfo (stEstado* info){
 	t_config* miConf = config_create (CFGFILE); /*Estructura de configuracion*/
 
 	if (config_has_property(miConf,"IP")) {
-		info->miIP = config_get_string_value(miConf,"IP");
+		info->miIP  = config_get_string_value(miConf,"IP");
 	} else {
 		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IP");
 		exit(-2);
@@ -151,7 +152,7 @@ void monitoreoConfiguracion(stEstado* info){
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
 	monitoreoConfiguracion(info);
-	pthread_exit(NULL);
+	pthread_exit(id);
 }
 
 
@@ -173,7 +174,7 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stEstado *unEstado){
 }
 
 void threadCPU(int unCpu){
-	stHeaderIPC *stHeader;
+	stHeaderIPC *stHeaderIPC;
 	pthread_t id = pthread_self();
 
 	while(1){
@@ -185,11 +186,13 @@ void threadCPU(int unCpu){
 		pthread_mutex_unlock(&mutexColaReady);
 
 		stHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
+
 		if(!enviarHeaderIPC(unCpu, stHeaderIPC)){
 			printf("Se perdio la conexion con el CPU conectado\n");
 			close(unCpu);
 			break;
 		}
+
 		/*TODO: para recibir desde el CPU: recv(unCliente, (char *) &stPCB, sizeof(stPCB), NULL);*/
 		if(send(unCpu, (const char *) &stPCB, sizeof(stPCB),0)==-1){
 			printf("No se pudo enviar el PCB porque se desconecto el CPU\n");
@@ -204,7 +207,7 @@ void threadCPU(int unCpu){
 
 	}
 	liberarHeaderIPC(stHeaderIPC);
-	pthread_exit();
+	pthread_exit(NULL);
 }
 /*
  ============================================================================
@@ -217,10 +220,9 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 
 	/*Inicializamos las listas todo:liberarlas luego*/
-	t_list listaExec = list_create();
-	t_list colaReady = queue_create();
-	t_list colaExit  = queue_create();
-	t_list colaBlock = queue_create();
+	colaReady = queue_create();
+	colaExit  = queue_create();
+	colaBlock = queue_create();
 
 
 	int unCliente = 0, unSocket;
