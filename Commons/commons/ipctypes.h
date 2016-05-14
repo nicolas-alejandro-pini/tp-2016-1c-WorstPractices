@@ -27,6 +27,7 @@
 /*Definicion de Parametros de Nucleo - CPU*/
 #define CONNECTCPU			104ul
 #define EXECANSISOP			105ul
+#
 
 /*Definicion de tipos de mensaje enre la UMC y el Swap*/
 #define SOYUMC				200ul

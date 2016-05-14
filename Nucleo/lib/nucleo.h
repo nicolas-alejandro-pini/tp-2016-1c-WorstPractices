@@ -15,9 +15,7 @@
  Estructuras del nucleo
  ============================================================================
  */
-typedef struct {
-	int socket;	/* Socket de CPU. */
-}stCPUConectado;
+
 
 
 

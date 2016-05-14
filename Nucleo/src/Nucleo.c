@@ -11,6 +11,7 @@
 #include <commons/sockets.h>
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
+#include <commons/collections/list.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +22,6 @@
 #include <unistd.h>
 
 #include "../lib/nucleo.h"
-#include "../lib/listas.c"
 
 /*
  ============================================================================
@@ -48,15 +48,15 @@ typedef struct{
 } stEstado;
 
 /* Listas globales */
-fd_set fds_master;			/* Lista de todos mis sockets.*/
-fd_set read_fds;	  		/* Sublista de fds_master.*/
+fd_set fds_master;				/* Lista de todos mis sockets.*/
+fd_set read_fds;	  			/* Sublista de fds_master.*/
 
-lista CPU_Conectados=NULL;   /*Lista de todos los CPU conectados al Nucleo*/
+t_list *colaReady;   	 	/*Cola de todos los PCB listos para ejecutar*/
+t_list *colaExit;		 	/*Cola de todos los PCB listos para liberar*/
+t_list *colaBlock;		 	/*Cola de todos los PCB listos para liberar*/
 
-/*Listas de estados de planificacion*/
-lista PCB_ready=NULL;   	 /*Lista de todos los CPU conectados al Nucleo*/
-lista PCB_exit=NULL;		 /*Lista de todos los CPU listos para salir*/
 
+pthread_mutex_t mutexColaReady;
 
 /*
  ============================================================================
@@ -147,27 +147,27 @@ void loadInfo (stEstado* info){
 }
 
 void monitoreoConfiguracion(stEstado* info){
+	pthread_t id = pthread_self();
+	char buffer[BUF_LEN];
 
-		char buffer[BUF_LEN];
+	// Al inicializar inotify este nos devuelve un descriptor de archivo
+	int file_descriptor = inotify_init();
+	if (file_descriptor < 0) {
+		perror("inotify_init");
+	}
 
-		// Al inicializar inotify este nos devuelve un descriptor de archivo
-		int file_descriptor = inotify_init();
-		if (file_descriptor < 0) {
-			perror("inotify_init");
-		}
-
-		// Creamos un monitor sobre un path indicando que eventos queremos escuchar
-		int watch_descriptor = inotify_add_watch(file_descriptor, CFGFILE, IN_MODIFY | IN_CREATE | IN_DELETE);
-		int length = read(file_descriptor, buffer, BUF_LEN);
-		if (length < 0) {
-			perror("read");
-		}
-		loadInfo(info);
-		printf("\nEl archivo de configuracion se ha modificado\n");
-		inotify_rm_watch(file_descriptor, watch_descriptor);
-		close(file_descriptor);
-		monitoreoConfiguracion(info);
-		pthread_exit(NULL);
+	// Creamos un monitor sobre un path indicando que eventos queremos escuchar
+	int watch_descriptor = inotify_add_watch(file_descriptor, CFGFILE, IN_MODIFY | IN_CREATE | IN_DELETE);
+	int length = read(file_descriptor, buffer, BUF_LEN);
+	if (length < 0) {
+		perror("read");
+	}
+	loadInfo(info);
+	printf("\nEl archivo de configuracion se ha modificado\n");
+	inotify_rm_watch(file_descriptor, watch_descriptor);
+	close(file_descriptor);
+	monitoreoConfiguracion(info);
+	pthread_exit(NULL);
 }
 
 
@@ -188,35 +188,39 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stEstado *unEstado){
 	unMensaje->header.tipo = -1;
 }
 
-int enviarAEjecutar(lista listaCPU, char* unPrograma){
+void threadCPU(int unCpu){
+	stHeaderIPC *stHeader;
+	pthread_t id = pthread_self();
 
-	stCPUConectado* unCPU;
-	stMensajeIPC unMensaje;
+	while(1){
+		if(queue_size(colaReady)==0){
+			continue;
+		}
+		pthread_mutex_lock(&mutexColaReady);
+		stPCB *stPCB = queue_pop(colaReady);
+		pthread_mutex_unlock(&mutexColaReady);
 
-	if (!isEmpty(listaCPU)) {
-			unCPU=(stCPUConectado*)primerDato(listaCPU);
-			quitarDeLista(&listaCPU,NULL,quitarDeAdelante);
-				/*Para la primera entrega se manda unPrograma que representa un PCB*/
-				if(!enviarMensajeIPC(unCPU->socket,nuevoHeaderIPC(EXECANSISOP),unPrograma)){
-					printf("No se pudo enviar el MensajeIPC al CPU disponible\n");
-					return 0;
-				}
-				memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
-				if(!recibirMensajeIPC(unCPU->socket,&unMensaje)){
-					printf("No se recibio el mensaje del CPU disponible\n");
-					return 0;
-				}
-				if(!unMensaje.header.tipo==OK){
-					printf("El CPU no responde\n");
-				}else{
-					agregarALista(&listaCPU,unCPU,agregarAtras);
-					return 1;
+		stHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
+		if(!enviarHeaderIPC(unCpu, stHeaderIPC)){
+			printf("Se perdio la conexion con el CPU conectado\n");
+			close(unCpu);
+			break;
+		}
+		/*TODO: para recibir desde el CPU: recv(unCliente, (char *) &stPCB, sizeof(stPCB), NULL);*/
+		if(send(unCpu, (const char *) &stPCB, sizeof(stPCB),0)==-1){
+			printf("No se pudo enviar el PCB porque se desconecto el CPU\n");
+			/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
+			pthread_mutex_lock(&mutexColaReady);
+			queue_push(colaReady,stPCB);
+			pthread_mutex_unlock(&mutexColaReady);
+			printf("Se replanifica el PCB\n");
+			break;
 		}
 
-	}else{
-		printf("No hay CPU disponible\n");
-		return 0;
+
 	}
+	liberarHeaderIPC(stHeaderIPC);
+	pthread_exit();
 }
 /*
  ============================================================================
@@ -227,7 +231,13 @@ int main(int argc, char *argv[]) {
 	stHeaderIPC *stHeaderIPC;
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
-	stCPUConectado* unNodoCPU;
+
+	/*Inicializamos las listas todo:liberarlas luego*/
+	t_list listaExec = list_create();
+	t_list colaReady = queue_create();
+	t_list colaExit  = queue_create();
+	t_list colaBlock = queue_create();
+
 
 	int unCliente = 0, unSocket;
 	int maximoAnterior = 0;
@@ -247,7 +257,7 @@ int main(int argc, char *argv[]) {
 	printf("OK\n");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
-	pthread_create(&p_thread, NULL, monitoreoConfiguracion, (void*)&elEstadoActual);
+	pthread_create(&p_thread, NULL,(void*)&monitoreoConfiguracion,(void*)&elEstadoActual);
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
@@ -376,9 +386,7 @@ int main(int argc, char *argv[]) {
 							 if (unMensaje.header.tipo == SENDANSISOP) {
 								printf("Programa: \n [%s]\n", unMensaje.contenido);
 
-								if (!enviarAEjecutar(CPU_Conectados,unMensaje.contenido)){
-									printf("No se pudo enviar el programa\n");
-								}
+								//TODO: Crear nueva estructura PCB a partir del interprete y alojarla en la cola de listos
 							}
 
 						 }
@@ -404,10 +412,6 @@ int main(int argc, char *argv[]) {
 							}
 							agregarSock=0;
 						}
-
-						unNodoCPU = (stCPUConectado*)malloc(sizeof(stCPUConectado));
-						unNodoCPU -> socket = unCliente;
-						agregarALista(&CPU_Conectados,(stCPUConectado*)unNodoCPU,agregarAdelante);
 
 						break;
 					default:
