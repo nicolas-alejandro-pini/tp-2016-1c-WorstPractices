@@ -40,6 +40,5 @@
 #define INICIALIZAR_PROGRAMA	151ul
 #define READ_BTYES_PAGE			152ul
 #define WRITE_BYTES_PAGE		153ul
-#define FIN_PROGRAMA			154ul
 
 #endif /* COMMONS_IPCTYPES_H_ */

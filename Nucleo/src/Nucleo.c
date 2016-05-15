@@ -14,6 +14,7 @@
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include <commons/elestaclibrary.h>
+#include <commons/parser/metadata_program.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -152,7 +153,7 @@ void monitoreoConfiguracion(stEstado* info){
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
 	monitoreoConfiguracion(info);
-	pthread_exit(id);
+	pthread_exit(NULL);
 }
 
 
@@ -173,16 +174,16 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stEstado *unEstado){
 	unMensaje->header.tipo = -1;
 }
 
+
 void threadCPU(int unCpu){
 	stHeaderIPC *stHeaderIPC;
-	pthread_t id = pthread_self();
 
 	while(1){
 		if(queue_size(colaReady)==0){
 			continue;
 		}
 		pthread_mutex_lock(&mutexColaReady);
-		stPCB *stPCB = queue_pop(colaReady);
+//		stPCB *stPCB = queue_pop(colaReady);
 		pthread_mutex_unlock(&mutexColaReady);
 
 		stHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
@@ -194,15 +195,33 @@ void threadCPU(int unCpu){
 		}
 
 		/*TODO: para recibir desde el CPU: recv(unCliente, (char *) &stPCB, sizeof(stPCB), NULL);*/
-		if(send(unCpu, (const char *) &stPCB, sizeof(stPCB),0)==-1){
-			printf("No se pudo enviar el PCB porque se desconecto el CPU\n");
-			/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
+//		if(send(unCpu, (const char *) &stPCB, sizeof(stPCB),0)==-1){
+//			printf("No se pudo enviar el PCB porque se desconecto el CPU\n");
+//			/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
+//			pthread_mutex_lock(&mutexColaReady);
+//			queue_push(colaReady,stPCB);
+//			pthread_mutex_unlock(&mutexColaReady);
+//			printf("Se replanifica el PCB\n");
+//			break;
+//		}
+
+		if(!recibirHeaderIPC(unCpu,stHeaderIPC)){
+			printf("HandShake Error - No se pudo recibir mensaje de respuesta\n");
 			pthread_mutex_lock(&mutexColaReady);
-			queue_push(colaReady,stPCB);
+//			queue_push(colaReady,stPCB);
 			pthread_mutex_unlock(&mutexColaReady);
-			printf("Se replanifica el PCB\n");
+			close(unCpu);
 			break;
-		}
+		 }else{
+			 switch (stHeaderIPC->tipo) {
+				case IOANSISOP:
+					/*Pide I/O*/
+					break;
+
+			}
+		 }
+
+
 
 
 	}
@@ -228,6 +247,7 @@ int main(int argc, char *argv[]) {
 	int unCliente = 0, unSocket;
 	int maximoAnterior = 0;
 	struct sockaddr addressAceptado;
+
 	int agregarSock;
 
 	pthread_t  p_thread;
@@ -372,19 +392,11 @@ int main(int argc, char *argv[]) {
 							if (unMensaje.header.tipo == SENDANSISOP) {
 
 								/* Genero estructura PCB */
-								stPCB unPCB;
-								crearPCB(&unPCB);
+
 
 								/* Interprete del programa */
-								if(!interprete(&unPCB, elEstadoActual, unMensaje.contenido))
-								{
-									printf("Error: no se pudo interpretar el programa");
-									return 0;
-								}
 
-								liberarPCB(&unPCB);
 
-								printf("Programa: \n [%s]\n", unMensaje.contenido);
 
 								//TODO: Crear nueva estructura PCB a partir del interprete y alojarla en la cola de listos
 							}
@@ -413,7 +425,7 @@ int main(int argc, char *argv[]) {
 							agregarSock=0;
 						}
 
-						
+
 
 						break;
 					default:
