@@ -6,13 +6,5 @@
  */
 #include "elestaclibrary.h"
 
-int crearPCB(stPCB *unPCB) {
-	unPCB->indicesCodigo = list_create();
-	return 0;
-}
-
-void liberarPCB(stPCB *unPCB) {
-	list_destroy(unPCB->indicesCodigo);
-}
 
 
