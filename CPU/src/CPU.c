@@ -7,12 +7,34 @@
  Description : Hello World in C, Ansi-style
  ============================================================================
  */
+#include <dirent.h>
+#include <signal.h>
+#include <sys/time.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <errno.h>
+#include <sys/sysinfo.h>
+#include <time.h>
+#include <math.h>
+#include <fcntl.h>
 #include <commons/log.h>
-#include "../lib/librerias.h"
 #include "commons/sockets.h"
-#include "commons/socketsIPCIRC.h"
+#include <commons/socketsIPCIRC.h>
+#include <commons/ipctypes.h>
+#include <commons/elestaclibrary.h>
+#include <commons/config.h>
 #include "parser/parser.h"
 #include "parser/metadata_program.h"
+
+/*Archivos de Configuracion*/
+#define CFGFILE		"cpu.conf"
 
 //Estructuras del CPU//
 
@@ -86,7 +108,7 @@ int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
 
 int wait(t_nombre_semaforo identificador_semaforo);
 
-int signal(t_nombre_semaforo identificador_semaforo);
+int signal_cpu(t_nombre_semaforo identificador_semaforo);
 
 /*
  ============================================================================
@@ -147,42 +169,47 @@ void cargarConf(t_configCPU* config,char* file_name){
  Description : Funcion para cargar los parametros del archivo de configuración
  =========================================================================================
  */
-int cpuHandShake (int socket, char* mensaje, int tipoHeader)
+int cpuHandShake (int socket, int tipoHeader)
 {
-	stMensajeIPC unMensaje;
+	stHeaderIPC *stHeaderIPC;
 
-	if(!recibirMensajeIPC(socket,&unMensaje)){
+	if(!recibirHeaderIPC(socket,stHeaderIPC)){
 		printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
 		fflush(stdout);
 	}
 
-	printf("HandShake mensaje recibido %d",unMensaje.header.tipo);
+	printf("HandShake mensaje recibido %d",stHeaderIPC->tipo);
 
-	if (unMensaje.header.tipo == QUIENSOS)
+	if (stHeaderIPC->tipo == QUIENSOS)
 	{
-		if(!enviarMensajeIPC(socket,nuevoHeaderIPC(tipoHeader),mensaje)){
+		stHeaderIPC = nuevoHeaderIPC(tipoHeader);
+		if(!enviarHeaderIPC(socket,stHeaderIPC)){
 			printf("No se pudo enviar el MensajeIPC\n");
+			liberarHeaderIPC(stHeaderIPC);
 			return (-1);
 		}
 	}
 
-	if(!recibirMensajeIPC(socket,&unMensaje)){
+	if(!recibirHeaderIPC(socket,stHeaderIPC)){
 			printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
 			fflush(stdout);
+			liberarHeaderIPC(stHeaderIPC);
 			return (-1);
 	}
 
-	printf("HandShake: mensaje recibido %d",unMensaje.header.tipo);
+	printf("HandShake: mensaje recibido %d",stHeaderIPC->tipo);
 	fflush(stdout);
 
-	if(unMensaje.header.tipo == OK)
+	if(stHeaderIPC->tipo == OK)
 	{
 		printf("Conexión establecida con id: %d...\n",tipoHeader);
 		fflush(stdout);
+		liberarHeaderIPC(stHeaderIPC);
 		return socket;
 	}
-	else
-		return (-1);
+
+	liberarHeaderIPC(stHeaderIPC);
+	return (-1);
 }
 
 /*
@@ -205,7 +232,7 @@ int cpuConectarse(char* IP, int puerto, char* aQuien){
 	// Inicio el handShake con el servidor //
 	if (socket != -1)
 	{
-		if (cpuHandShake(socket, "SOYCPU", CONNECTCPU) != -1)
+		if (cpuHandShake(socket, CONNECTCPU) != -1)
 			return socket;
 	}
 
@@ -318,7 +345,8 @@ int main(void) {
 				{
 					if (configuracionInicial.sockNucleo == unSocket)
 					{
-						log_info("Se desconecto el Servidor Nucleo.\n"); fflush(stdout);
+						log_info("Se desconecto el Servidor Nucleo.\n");
+						fflush(stdout);
 						configuracionInicial.sockNucleo = -1;
 						configuracionInicial.salir=1;
 
@@ -353,7 +381,7 @@ int main(void) {
 				{
 					switch(unMensaje.header.tipo)
 					{
-						case ANSIPROG:
+						case EXECANSISOP:
 
 							log_info("Respondiendo solicitud ANSIPROG...");
 
@@ -366,7 +394,7 @@ int main(void) {
 
 						break;
 
-
+/*
 						case UMCINSTRUCCION:
 						{
 							log_info("Respondiendo solicitud UMCINSTRUCCION...");
@@ -375,6 +403,7 @@ int main(void) {
 
 						}
 						break;
+						*/
 					}
 				}
 

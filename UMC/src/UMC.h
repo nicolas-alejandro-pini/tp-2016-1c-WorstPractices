@@ -19,8 +19,9 @@
 #include "commons/elestaclibrary.h"
 #include "commons/sockets.h"
 #include "commons/socketsIPCIRC.h"
-
 #include <commons/config.h>
+
+#include "Pagina.h"
 
 typedef struct{
 	char* miIP;             /* Mi direccion de IP. Ej: <"127.0.0.1"> */
