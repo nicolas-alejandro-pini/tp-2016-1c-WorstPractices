@@ -8,7 +8,6 @@
  */
 
 #include <commons/config.h>
-#include <commons/sockets.h>
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
 #include <commons/collections/list.h>
@@ -237,6 +236,7 @@ int main(int argc, char *argv[]) {
 	stHeaderIPC *stHeaderIPC;
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
+	t_metadata_program *metadata_program;
 
 	/*Inicializamos las listas todo:liberarlas luego*/
 	colaReady = queue_create();
@@ -391,14 +391,8 @@ int main(int argc, char *argv[]) {
 						}else{
 							if (unMensaje.header.tipo == SENDANSISOP) {
 
-								/* Genero estructura PCB */
+								metadata_program = metadata_desde_literal(unMensaje.contenido);
 
-
-								/* Interprete del programa */
-
-
-
-								//TODO: Crear nueva estructura PCB a partir del interprete y alojarla en la cola de listos
 							}
 
 						 }
