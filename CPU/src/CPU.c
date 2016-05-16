@@ -63,11 +63,6 @@ typedef struct{
 fd_set fds_master;		/* Lista de todos mis sockets. */
 fd_set read_fds;		/* Sublista de fds_master. */
 
-
-int nucleo = 0;
-int umc = 0;
-int pistaActual = 0;
-int sectorActual = 1;
 int SocketAnterior = 0;
 
 stPCB unPCB;
@@ -149,13 +144,6 @@ void cargarConf(t_configCPU* config,char* file_name){
 			config->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
 		} else {
 			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
-			exit(-2);
-		}
-
-		if (config_has_property(miConf,"QUANTUM")) {
-			config->quantum = config_get_int_value(miConf,"QUANTUM");
-		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","QUANTUM");
 			exit(-2);
 		}
 
@@ -272,8 +260,8 @@ void cerrarSockets(t_configCPU *configuracionInicial){
  */
 int cargarPCB(char* stringPCB){
 
-	unPCB = (stPCB) stringPCB;
-
+	if (stringPCB != NULL)
+		unPCB = (stPCB) stringPCB;
 
 	return (-1);
 }
