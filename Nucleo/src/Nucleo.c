@@ -14,6 +14,7 @@
 #include <commons/collections/queue.h>
 #include <commons/elestaclibrary.h>
 #include <commons/parser/metadata_program.h>
+#include <commons/pcb.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +23,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
 
 #include "nucleo.h"
 #include "interprete.h"
@@ -182,7 +184,7 @@ void threadCPU(int unCpu){
 			continue;
 		}
 		pthread_mutex_lock(&mutexColaReady);
-//		stPCB *stPCB = queue_pop(colaReady);
+		stPCB *stPCB = queue_pop(colaReady);
 		pthread_mutex_unlock(&mutexColaReady);
 
 		stHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
@@ -194,20 +196,20 @@ void threadCPU(int unCpu){
 		}
 
 		/*TODO: para recibir desde el CPU: recv(unCliente, (char *) &stPCB, sizeof(stPCB), NULL);*/
-//		if(send(unCpu, (const char *) &stPCB, sizeof(stPCB),0)==-1){
-//			printf("No se pudo enviar el PCB porque se desconecto el CPU\n");
-//			/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
-//			pthread_mutex_lock(&mutexColaReady);
-//			queue_push(colaReady,stPCB);
-//			pthread_mutex_unlock(&mutexColaReady);
-//			printf("Se replanifica el PCB\n");
-//			break;
-//		}
+		if(send(unCpu, (const char *) &stPCB, sizeof(stPCB),0)==-1){
+			printf("No se pudo enviar el PCB porque se desconecto el CPU\n");
+			/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
+			pthread_mutex_lock(&mutexColaReady);
+			queue_push(colaReady,stPCB);
+			pthread_mutex_unlock(&mutexColaReady);
+			printf("Se replanifica el PCB\n");
+			break;
+		}
 
 		if(!recibirHeaderIPC(unCpu,stHeaderIPC)){
 			printf("HandShake Error - No se pudo recibir mensaje de respuesta\n");
 			pthread_mutex_lock(&mutexColaReady);
-//			queue_push(colaReady,stPCB);
+			queue_push(colaReady,stPCB);
 			pthread_mutex_unlock(&mutexColaReady);
 			close(unCpu);
 			break;
