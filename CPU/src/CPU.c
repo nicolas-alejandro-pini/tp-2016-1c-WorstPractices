@@ -35,6 +35,12 @@
 
 /*Archivos de Configuracion*/
 #define CFGFILE		"cpu.conf"
+#define NUEVAVARIABLE 170
+#define RESPONSENUEVAVARIABLE 171
+#define POSICIONVARIABLE 172
+#define RESPONSEPOSICIONVARIABLE 173
+#define VALORVARIABLE 174
+#define RESPONSEVALORVARIABLE 175
 
 //Estructuras del CPU//
 
@@ -63,14 +69,36 @@ typedef struct{
 fd_set fds_master;		/* Lista de todos mis sockets. */
 fd_set read_fds;		/* Sublista de fds_master. */
 
-
-int nucleo = 0;
-int umc = 0;
-int pistaActual = 0;
-int sectorActual = 1;
 int SocketAnterior = 0;
 
+t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
+stPCB unPCB; /* Estructura del pcb para ejecutar las instrucciones */
+
+
+/*
+ ============================================================================
+ Name        : sendResponseMessage.
+ Author      : Ezequiel Martinez
+ Inputs      : N/A
+ Outputs     : N/A
+ Description : funcion para enviar y recibir mensajes ipc para primitivas.
+ ============================================================================
+ */
+
+stMensajeIPC sendResponseMessages(int socket, int header, char* mensaje){
+
+	stMensajeIPC unMensajeToSend;
+
+	enviarMensajeIPC(socket,nuevoHeaderIPC(header),mensaje);
+
+		if(!recibirMensajeIPC(socket,&unMensajeToSend)){
+			printf("Error: No se recibio mensaje.\n");
+			return NULL;
+		}
+
+	return stMensajeIPC;
+}
 
 /*
  ============================================================================
@@ -82,11 +110,76 @@ int SocketAnterior = 0;
  ============================================================================
  */
 
-t_posicion definirVariable(t_nombre_variable identificador_variable);
+t_posicion definirVariable(t_nombre_variable identificador_variable){
 
-t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable );
+	stMensajeIPC mensajePrimitiva;
 
-t_valor_variable dereferenciar(t_posicion direccion_variable);
+	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, NUEVAVARIABLE, identificador_variable);
+
+	if (mensajePrimitiva != NULL){
+
+		if (mensajePrimitiva.header.tipo == RESPONSENUEVAVARIABLE) {
+
+				/*TODO Deserializar el mensaje*/
+
+			}
+	}else{
+		printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
+		return NULL;
+	}
+
+	return t_posicion;
+}
+
+t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
+
+	stMensajeIPC mensajePrimitiva;
+
+	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, POSICIONVARIABLE, identificador_variable);
+
+		if (mensajePrimitiva != NULL){
+
+			if (mensajePrimitiva.header.tipo == RESPONSEPOSICIONVARIABLE) {
+
+					/*TODO Deserializar el mensaje*/
+
+				}
+		}else{
+			printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
+			return NULL;
+		}
+
+		return t_posicion;
+
+}
+
+
+t_valor_variable dereferenciar(t_posicion direccion_variable){
+
+	stMensajeIPC mensajePrimitiva;
+	t_valor_variable valor;
+
+		/*TODO Serializar el mensaje de estructura */
+		char* estructuraSerializada;
+
+		mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, VALORVARIABLE, estructuraSerializada);
+
+		if (mensajePrimitiva != NULL){
+
+			if (mensajePrimitiva.header.tipo == RESPONSEVALORVARIABLE) {
+
+					/*TODO Deserializar el mensaje*/
+
+				}
+		}else{
+			printf("Error: Fallo en obtener valor de la variable.\n");
+			return NULL;
+		}
+
+		return valor;
+
+
+}
 
 void asignar(t_posicion direccion_variable, t_valor_variable valor );
 
@@ -148,13 +241,6 @@ void cargarConf(t_configCPU* config,char* file_name){
 			config->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
 		} else {
 			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
-			exit(-2);
-		}
-
-		if (config_has_property(miConf,"QUANTUM")) {
-			config->quantum = config_get_int_value(miConf,"QUANTUM");
-		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","QUANTUM");
 			exit(-2);
 		}
 
@@ -262,6 +348,24 @@ void cerrarSockets(t_configCPU *configuracionInicial){
 
 /*
  =========================================================================================
+ Name        : cargarPCB()
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe el contenido del mensaje PCB.
+ Outputs     : Retorna -1 en caso de no poder cargar el PCB.
+ Description : Funcion para cargar el PCB del progracma ANSISOP.
+ =========================================================================================
+ */
+int cargarPCB(char* stringPCB){
+
+	if (stringPCB != NULL)
+		unPCB = (stPCB) stringPCB;
+
+	return (-1);
+}
+
+
+/*
+ =========================================================================================
  Name        : main()
  Author      : Ezequiel Martinez
  Inputs      : N/A.
@@ -271,9 +375,9 @@ void cerrarSockets(t_configCPU *configuracionInicial){
  */
 int main(void) {
 
-	t_configCPU configuracionInicial;
 	stMensajeIPC unMensaje;
 	int unSocket;
+	int quantum=0;
 	char* temp_file = "swap.log";
 
 	 //Primero instancio el log
@@ -391,6 +495,23 @@ int main(void) {
 							{
 								log_info("Error en lectura ANSIPROG...");
 							}
+
+							log_info("PCB de ANSIPROG cargado. /n");
+
+							quantum = ""; /*TODO recibir el quantum en mensajeIPC*/
+
+							if (quantum <= 0)
+								log_info("Error en Quantum definido. /n");
+
+							//Ejecuto las instrucciones defidas por quamtum
+
+							while (quantum > 0){
+								ejecutarInstruccion();
+								quantum --;
+							}
+
+							devolverPCBalNucleo(unPCB);
+
 
 						break;
 
