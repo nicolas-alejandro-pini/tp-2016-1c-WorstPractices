@@ -35,6 +35,12 @@
 
 /*Archivos de Configuracion*/
 #define CFGFILE		"cpu.conf"
+#define NUEVAVARIABLE 170
+#define RESPONSENUEVAVARIABLE 171
+#define POSICIONVARIABLE 172
+#define RESPONSEPOSICIONVARIABLE 173
+#define VALORVARIABLE 174
+#define RESPONSEVALORVARIABLE 175
 
 //Estructuras del CPU//
 
@@ -65,8 +71,34 @@ fd_set read_fds;		/* Sublista de fds_master. */
 
 int SocketAnterior = 0;
 
-stPCB unPCB;
+t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
+stPCB unPCB; /* Estructura del pcb para ejecutar las instrucciones */
+
+
+/*
+ ============================================================================
+ Name        : sendResponseMessage.
+ Author      : Ezequiel Martinez
+ Inputs      : N/A
+ Outputs     : N/A
+ Description : funcion para enviar y recibir mensajes ipc para primitivas.
+ ============================================================================
+ */
+
+stMensajeIPC sendResponseMessages(int socket, int header, char* mensaje){
+
+	stMensajeIPC unMensajeToSend;
+
+	enviarMensajeIPC(socket,nuevoHeaderIPC(header),mensaje);
+
+		if(!recibirMensajeIPC(socket,&unMensajeToSend)){
+			printf("Error: No se recibio mensaje.\n");
+			return NULL;
+		}
+
+	return stMensajeIPC;
+}
 
 /*
  ============================================================================
@@ -78,11 +110,76 @@ stPCB unPCB;
  ============================================================================
  */
 
-t_posicion definirVariable(t_nombre_variable identificador_variable);
+t_posicion definirVariable(t_nombre_variable identificador_variable){
 
-t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable );
+	stMensajeIPC mensajePrimitiva;
 
-t_valor_variable dereferenciar(t_posicion direccion_variable);
+	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, NUEVAVARIABLE, identificador_variable);
+
+	if (mensajePrimitiva != NULL){
+
+		if (mensajePrimitiva.header.tipo == RESPONSENUEVAVARIABLE) {
+
+				/*TODO Deserializar el mensaje*/
+
+			}
+	}else{
+		printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
+		return NULL;
+	}
+
+	return t_posicion;
+}
+
+t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
+
+	stMensajeIPC mensajePrimitiva;
+
+	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, POSICIONVARIABLE, identificador_variable);
+
+		if (mensajePrimitiva != NULL){
+
+			if (mensajePrimitiva.header.tipo == RESPONSEPOSICIONVARIABLE) {
+
+					/*TODO Deserializar el mensaje*/
+
+				}
+		}else{
+			printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
+			return NULL;
+		}
+
+		return t_posicion;
+
+}
+
+
+t_valor_variable dereferenciar(t_posicion direccion_variable){
+
+	stMensajeIPC mensajePrimitiva;
+	t_valor_variable valor;
+
+		/*TODO Serializar el mensaje de estructura */
+		char* estructuraSerializada;
+
+		mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, VALORVARIABLE, estructuraSerializada);
+
+		if (mensajePrimitiva != NULL){
+
+			if (mensajePrimitiva.header.tipo == RESPONSEVALORVARIABLE) {
+
+					/*TODO Deserializar el mensaje*/
+
+				}
+		}else{
+			printf("Error: Fallo en obtener valor de la variable.\n");
+			return NULL;
+		}
+
+		return valor;
+
+
+}
 
 void asignar(t_posicion direccion_variable, t_valor_variable valor );
 
@@ -278,7 +375,6 @@ int cargarPCB(char* stringPCB){
  */
 int main(void) {
 
-	t_configCPU configuracionInicial;
 	stMensajeIPC unMensaje;
 	int unSocket;
 	int quantum=0;

@@ -33,7 +33,7 @@ typedef struct stInterprete {
  * @PRE:  programa, estado Actual del UMC, un PCB
  * @POST: Carga el indice de codigo en una lista y envia el programa al UMC
  */
-int interprete(stPCB *unPCB, const stEstado elEstadoActual, char *programa);
+//int interprete(stPCB *unPCB, const stEstado elEstadoActual, char *programa);
 
 /**
  * @NAME: interprete

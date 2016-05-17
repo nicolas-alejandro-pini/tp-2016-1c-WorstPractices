@@ -7,19 +7,19 @@
 
 #include "interprete.h"
 
-int interprete(stPCB *unPCB, const stEstado elEstadoActual, char *programa){
-	t_Interprete tInterprete;
+//int interprete(stPCB *unPCB, const stEstado elEstadoActual, char *programa){
+//	t_Interprete tInterprete;
+//
+//	iniciarInterprete(&tInterprete, programa);
+//
+//
+//	while(proximaSentencia(&tInterprete)){
+//
+//	}
 
-	iniciarInterprete(&tInterprete, programa);
 
-
-	while(proximaSentencia(&tInterprete)){
-
-	}
-
-
-	return 0;
-}
+//	return 0;
+//}
 
 void iniciarInterprete(t_Interprete *tInterprete, char *programa){
 	strcpy(tInterprete->programa, programa);

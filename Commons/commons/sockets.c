@@ -239,7 +239,7 @@ int enviarContenido(int unSocket, char* unContenido)
 /*Envía un string por el socket que recibe como parametro y devuelve la cantidad enviada.*/
 {
 	int resultado;
-	if((resultado = send(unSocket, unContenido, strlen(unContenido)+1,0)) == -1)
+	if((resultado = send(unSocket, unContenido, strlen(unContenido),0)) == -1)
 		error("No se pudo enviar el contenido!");
 	return(resultado);
 }
