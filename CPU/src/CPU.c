@@ -498,7 +498,7 @@ int main(void) {
 
 							log_info("PCB de ANSIPROG cargado. /n");
 
-							quantum = unPCB.quamtum;
+							quantum = ""; /*TODO recibir el quantum en mensajeIPC*/
 
 							if (quantum <= 0)
 								log_info("Error en Quantum definido. /n");
