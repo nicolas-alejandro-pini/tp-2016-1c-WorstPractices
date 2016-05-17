@@ -113,7 +113,7 @@ int send_program(t_console* tConsole){
 
 	// Defino header
 	stHeaderIPC *header = nuevoHeaderIPC(SENDANSISOP);
-	header->largo = program_length;
+	header->largo = program_length + 1;
 
 	if(!enviarMensajeIPC(*(tConsole->pSockfd),header,tConsole->pProgram))
 	{
