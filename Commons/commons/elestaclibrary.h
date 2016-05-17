@@ -9,11 +9,18 @@
 #define COMMONS_ELESTACLIBRARY_H_
 
 #include <stdint.h>
+#include <sys/types.h>
 
 typedef struct{
 	uint16_t processId;		/* identificador del proceso del PCB. */
 	uint16_t cantidadPaginas;/* cantidad de paginas que necesita el programa. */
 } __attribute__((packed)) stPageIni;
+
+typedef struct {
+	u_int32_t pagina;
+	u_int32_t offset;
+	u_int32_t size;
+} stPosicion;
 
 typedef struct{
 	uint16_t nroPagina;	/* numero de pagina a escribir. */
