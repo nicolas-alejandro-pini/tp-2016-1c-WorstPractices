@@ -511,6 +511,7 @@ int main(void) {
 	stMensajeIPC unMensaje;
 	int unSocket;
 	int quantum=0;
+	int quantumSleep=0;
 	char* temp_file = "cpu.log";
 
 	 //Primero instancio el log
@@ -631,16 +632,40 @@ int main(void) {
 
 							log_info("PCB de ANSIPROG cargado. /n");
 
-							quantum = 10; /*TODO recibir el quantum en mensajeIPC*/
+							/* Envio mensaje para obtener el quantum del programa */
+
+							enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUM));
+
+							if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
+								log_error("Error al recibir el quantum desde el Nucleo./n");
+								configuracionInicial.salir = 0;
+							}else{
+
+								quantum = unMensaje.contenido ; /*TODO recibir el quantum en mensajeIPC*/
+							}
 
 							if (quantum <= 0)
 								log_info("Error en Quantum definido. /n");
+
+
+							/* Envio mensaje para obtener el quantum sleep del programa */
+
+							enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUMSLEEP));
+
+							if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
+								log_error("Error al recibir el quantum sleep desde el Nucleo./n");
+								configuracionInicial.salir = 0;
+							}else{
+
+								quantum = unMensaje.contenido ; /*TODO recibir el quantum en mensajeIPC*/
+							}
 
 							//Ejecuto las instrucciones defidas por quamtum
 
 							while (quantum > 0){
 								if(ejecutarInstruccion() == OK)
 								{
+									sleep(quantumSleep);
 									quantum --; 	/* descuento un quantum para proxima ejecución */
 									unPCB.pc ++; 	/* actualizo el program counter a la siguiente posición */
 
