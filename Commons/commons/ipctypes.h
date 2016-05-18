@@ -36,6 +36,8 @@
 #define GRABARVALOR			128ul
 #define WAIT				129ul
 #define SIGNAL				130ul
+#define QUANTUM				131ul
+#define QUANTUMSLEEP		132ul
 
 /*Definicion de tipos de mensaje enre la UMC y el Swap*/
 #define SOYUMC				140ul
