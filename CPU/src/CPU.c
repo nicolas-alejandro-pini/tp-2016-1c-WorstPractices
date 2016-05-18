@@ -429,7 +429,7 @@ char* getInstruccion (int start, int size){
 
 	if (mensajeUMC != NULL){
 
-		if (mensajeUMC.header.tipo == RESPONSEINSTRUCCION) {
+		if (mensajeUMC.header.tipo == OK) {
 
 				/*TODO Deserializar el mensaje*/
 
