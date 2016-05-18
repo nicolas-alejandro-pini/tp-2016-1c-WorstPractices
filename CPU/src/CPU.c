@@ -35,16 +35,7 @@
 
 /*Archivos de Configuracion*/
 #define CFGFILE		"cpu.conf"
-#define NUEVAVARIABLE 170				/* Mensaje para definir nueva variable en la UMC */
-#define RESPONSENUEVAVARIABLE 171		/* Mensaje de respuesta a definicion de nueva variable en la UMC */
-#define POSICIONVARIABLE 172			/* Mensaje para obtener posicion de una variable */
-#define RESPONSEPOSICIONVARIABLE 173	/* Mensaje de respuesta a obtener posicion de una variable */
-#define VALORVARIABLE 174				/* Mensaje para obtener el valor de una variable */
-#define RESPONSEVALORVARIABLE 175		/* Mensaje de respuesta a obtener el valor */
-#define ASIGNARVARIABLE 176				/* Mensaje para asignar un valor a una variable en una posicion de la UMC*/
-#define RESPONSEASIGNARVARIABLE 177		/* Mensaje de respuesta a la asignacacion de valor */
-#define GETINSTRUCCION 178				/* Mensaje para obtener una nueva instruccion */
-#define RESPONSEINSTRUCCION 179			/* Mensaje de respuesta a instruccion */
+
 
 //Estructuras del CPU//
 
@@ -121,7 +112,7 @@ t_posicion definirVariable(t_nombre_variable identificador_variable){
 
 	if (mensajePrimitiva != NULL){
 
-		if (mensajePrimitiva.header.tipo == RESPONSENUEVAVARIABLE) {
+		if (mensajePrimitiva.header.tipo == OK) {
 
 				/*TODO Deserializar el mensaje*/
 
@@ -142,13 +133,13 @@ t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 		if (mensajePrimitiva != NULL){
 
-			if (mensajePrimitiva.header.tipo == RESPONSEPOSICIONVARIABLE) {
+			if (mensajePrimitiva.header.tipo == OK) {
 
 					/*TODO Deserializar el mensaje*/
 
 				}
 		}else{
-			printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
+			printf("Error: Falló la obtencion de posicion de la variable %s.\n", identificador_variable);
 			return NULL;
 		}
 
@@ -169,13 +160,13 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 		if (mensajePrimitiva != NULL){
 
-			if (mensajePrimitiva.header.tipo == RESPONSEVALORVARIABLE) {
+			if (mensajePrimitiva.header.tipo == OK) {
 
 					/*TODO Deserializar el mensaje*/
 
 				}
 		}else{
-			printf("Error: Fallo en obtener valor de la variable.\n");
+			printf("Error: Fallo en deferenciar variable.\n");
 			return NULL;
 		}
 
@@ -195,13 +186,13 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 
 	if (mensajePrimitiva != NULL){
 
-		if (mensajePrimitiva.header.tipo == RESPONSEVALORVARIABLE) {
+		if (mensajePrimitiva.header.tipo == OK) {
 
 				/*TODO Deserializar el mensaje*/
 
 			}
 	}else{
-		printf("Error: Fallo en obtener valor de la variable.\n");
+		printf("Error: Fallo en asignacion de la variable.\n");
 	}
 
 }

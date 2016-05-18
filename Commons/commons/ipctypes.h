@@ -42,4 +42,11 @@
 #define WRITE_BYTES_PAGE		142ul
 #define FINPROGRAMA				143ul
 
+/*Definicion de tipos de mensaje entre CPU y UMC */
+#define NUEVAVARIABLE 170ul				/* Mensaje para definir nueva variable en la UMC */
+#define POSICIONVARIABLE 171ul			/* Mensaje para obtener posicion de una variable */
+#define VALORVARIABLE 172ul				/* Mensaje para obtener el valor de una variable */
+#define ASIGNARVARIABLE 173ul			/* Mensaje para asignar un valor a una variable en una posicion de la UMC*/
+#define GETINSTRUCCION 174ul			/* Mensaje para obtener una nueva instruccion */
+
 #endif /* COMMONS_IPCTYPES_H_ */
