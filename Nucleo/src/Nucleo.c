@@ -15,6 +15,7 @@
 #include <commons/elestaclibrary.h>
 #include <commons/parser/metadata_program.h>
 #include <commons/pcb.h>
+#include <commons/log.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,85 +51,110 @@ pthread_mutex_t mutexColaReady;
  Funciones
  ============================================================================
  */
-void loadInfo (stEstado* info){
+void loadInfo(stEstado* info) {
 
-	t_config* miConf = config_create (CFGFILE); /*Estructura de configuracion*/
+	t_config* miConf = config_create(CFGFILE); /*Estructura de configuracion*/
+	if (miConf == NULL) {
+		log_error("Error iniciando la configuracion...\n");
+		return exit(-2);;
+	}
 
-	if (config_has_property(miConf,"IP")) {
-		info->miIP  = config_get_string_value(miConf,"IP");
+	if (config_has_property(miConf, "IP")) {
+		info->miIP = config_get_string_value(miConf, "IP");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IP");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"IP");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"PUERTO")) {
-		info->miPuerto = config_get_int_value(miConf,"PUERTO");
+	if (config_has_property(miConf, "PUERTO")) {
+		info->miPuerto = config_get_int_value(miConf, "PUERTO");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"PUERTO");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"IP_UMC")) {
-		info->ipUmc = config_get_string_value(miConf,"IP_UMC");
+	if (config_has_property(miConf, "IP_UMC")) {
+		info->ipUmc = config_get_string_value(miConf, "IP_UMC");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IP_UMC");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"IP_UMC");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"PUERTO_UMC")) {
-		info->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
+	if (config_has_property(miConf, "PUERTO_UMC")) {
+		info->puertoUmc = config_get_int_value(miConf, "PUERTO_UMC");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"PUERTO_UMC");
 		exit(-2);
 	}
 
-
-	if (config_has_property(miConf,"QUANTUM")) {
-		info->quantum = config_get_int_value(miConf,"QUANTUM");
+	if (config_has_property(miConf, "QUANTUM")) {
+		info->quantum = config_get_int_value(miConf, "QUANTUM");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","QUANTUM");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"QUANTUM");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"QUANTUM_SLEEP")) {
-		info->quantumSleep = config_get_int_value(miConf,"QUANTUM_SLEEP");
+	if (config_has_property(miConf, "QUANTUM_SLEEP")) {
+		info->quantumSleep = config_get_int_value(miConf, "QUANTUM_SLEEP");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","QUANTUM_SLEEP");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"QUANTUM_SLEEP");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"SEM_IDS")) {
-		info->semIds = config_get_array_value(miConf,"SEM_IDS");
+	if (config_has_property(miConf, "SEM_IDS")) {
+		info->semIds = config_get_array_value(miConf, "SEM_IDS");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","SEM_IDS");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"SEM_IDS");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"SEM_INIT")) {
-		info->semInit = config_get_array_value(miConf,"SEM_INIT");
+	if (config_has_property(miConf, "SEM_INIT")) {
+		info->semInit = config_get_array_value(miConf, "SEM_INIT");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","SEM_INIT");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"SEM_INIT");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"IO_IDS")) {
-		info->ioIds = config_get_array_value(miConf,"IO_IDS");
+	if (config_has_property(miConf, "IO_IDS")) {
+		info->ioIds = config_get_array_value(miConf, "IO_IDS");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IO_IDS");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"IO_IDS");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"IO_SLEEP")) {
-		info->semInit = config_get_array_value(miConf,"IO_SLEEP");
+	if (config_has_property(miConf, "IO_SLEEP")) {
+		info->semInit = config_get_array_value(miConf, "IO_SLEEP");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IO_SLEEP");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"IO_SLEEP");
 		exit(-2);
 	}
 
-	if (config_has_property(miConf,"SHARED_VARS")) {
-		info->sharedVars = config_get_array_value(miConf,"SHARED_VARS");
+	if (config_has_property(miConf, "SHARED_VARS")) {
+		info->sharedVars = config_get_array_value(miConf, "SHARED_VARS");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","SHARED_VARS");
+		printf(
+				"Parametro no cargado en el archivo de configuracion\n \"%s\"  \n",
+				"SHARED_VARS");
 		exit(-2);
 	}
 }
@@ -176,11 +202,11 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stEstado *unEstado){
 }
 
 
-void threadCPU(int unCpu){
+void threadCPU(int unCpu,stEstado* info){
 	stHeaderIPC *stHeaderIPC;
 
-	while(1){
-		if(queue_size(colaReady)==0){
+	while (1) {
+		if (queue_size(colaReady) == 0) {
 			continue;
 		}
 		pthread_mutex_lock(&mutexColaReady);
@@ -189,40 +215,69 @@ void threadCPU(int unCpu){
 
 		stHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
 
-		if(!enviarHeaderIPC(unCpu, stHeaderIPC)){
+		if (!enviarMensajeIPC(unCpu, stHeaderIPC, info->quantum)) {
 			printf("Se perdio la conexion con el CPU conectado\n");
 			close(unCpu);
 			break;
 		}
 
-		/*TODO: para recibir desde el CPU: recv(unCliente, (char *) &stPCB, sizeof(stPCB), NULL);*/
+		/*TODO: Esto no funciona, hay que implementar la serializacion para mandarlo por enviarMensajeIPC*/
 		if(send(unCpu, (const char *) &stPCB, sizeof(stPCB),0)==-1){
-			printf("No se pudo enviar el PCB porque se desconecto el CPU\n");
+			printf("CPU error - No se pudo enviar el PCB[%s] porque se desconecto el CPU\n",stPCB->pid);
+			log_error("CPU error - No se pudo enviar el PCB[%s]",stPCB->pid);
 			/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
 			pthread_mutex_lock(&mutexColaReady);
 			queue_push(colaReady,stPCB);
 			pthread_mutex_unlock(&mutexColaReady);
-			printf("Se replanifica el PCB\n");
-			break;
+			printf("PCB[%s] vuelve a ingresar a la cola de Ready \n",stPCB->pid);
+			log_info("PCB[%s] vuelve a ingresar a la cola de Ready \n",stPCB->pid);
+			continue;
 		}
 
 		if(!recibirHeaderIPC(unCpu,stHeaderIPC)){
-			printf("HandShake Error - No se pudo recibir mensaje de respuesta\n");
+			printf("CPU error - No se pudo recibir confirmacion de recepcion de PCB[%s]\n",stPCB->pid);
+			log_error("CPU error - No se pudo recibir confirmacion de recepcion de PCB[%s]\n",stPCB->pid);
 			pthread_mutex_lock(&mutexColaReady);
 			queue_push(colaReady,stPCB);
 			pthread_mutex_unlock(&mutexColaReady);
 			close(unCpu);
 			break;
-		 }else{
-			 switch (stHeaderIPC->tipo) {
-				case IOANSISOP:
-					/*Pide I/O*/
-					break;
+		} else {
+			switch (stHeaderIPC->tipo) {
+			case IOANSISOP:
+				/*Pide I/O*/
+				/*Deberia poner el PCB en ponerlo en la cola de bloqueado del correspondiente dispositivo (TODO: hacer que la configuracion los lea)
+				 * y hacer un continue para que el CPU existente tome otro PCB de la cola de listos*/
+				break;
+			case FINANSISOP:
+				/*Termina de ejecutar el PCB, en este caso deberia moverlo a la cola de EXIT para que luego sea liberada la memoria*/
+				break;
+			case QUANTUMFIN:
+				/*Termina de ejecutar su quantum hay que hacer un push en la cola de ready nuevamente*/
+				break;
+			case EXECERROR:
+				/*Se produjo una excepcion por acceso a una posicion de memoria invalida (segmentation fault), imprimir error
+				 * y bajar la consola tambien close (cliente)*/
+				break;
+			case SIGUSR1:
+				/*Se cayo el CPU, se debe replanificar, (continue) */
+				break;
+			case OBTENERVALOR:
+				/*Valor de la variable compartida, devolver el valor para que el CPU siga ejecutando*/
+				break;
+			case GRABARVALOR:
+				/*Me pasa la variable compartida y el valor*/
+				break;
+			case WAIT:
+				/*Bloquea con el semaforo que pasa por parametro*/
+				break;
+			case SIGNAL:
+				/*libera con el semaforo que pasa por parametro*/
+				break;
 
 			}
-		 }
 
-
+		}
 
 
 	}
@@ -238,13 +293,14 @@ int main(int argc, char *argv[]) {
 	stHeaderIPC *stHeaderIPC;
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
-	t_metadata_program *metadata_program;
+	t_metadata_program *unPrograma;
+	stPCB *unPCB;
+	char* temp_file = "nucleo.log";
 
 	/*Inicializamos las listas todo:liberarlas luego*/
 	colaReady = queue_create();
 	colaExit  = queue_create();
 	colaBlock = queue_create();
-
 
 	int unCliente = 0, unSocket;
 	int maximoAnterior = 0;
@@ -259,10 +315,14 @@ int main(int argc, char *argv[]) {
 	printf("------------------------------------v0.1-------------------------------------\n\n");
 	fflush(stdout);
 
+	/*Logger*/
+	t_log* logger = log_create(temp_file, "NUCLEO",-1, LOG_LEVEL_INFO);
+
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
 	loadInfo(&elEstadoActual);
 	printf("OK\n");
+	log_info("Configuracion cargada satisfactoriamente...");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
 	pthread_create(&p_thread, NULL,(void*)&monitoreoConfiguracion,(void*)&elEstadoActual);
@@ -276,10 +336,11 @@ int main(int argc, char *argv[]) {
 	elEstadoActual.sockEscuchador= -1;
 
 	/*Iniciando escucha en el socket escuchador de Consola*/
-	printf("Estableciendo conexion con socket escuchador...");
+	printf("Estableciendo conexion con el socket de escucha..");
 	elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
 	FD_SET(elEstadoActual.sockEscuchador,&(fds_master));
 	printf("OK\n\n");
+	log_info("Se establecio conexion con el socket de escucha...");
 
 	/*Seteamos el maximo socket*/
 	elEstadoActual.fdMax = elEstadoActual.sockEscuchador;
@@ -289,43 +350,52 @@ int main(int argc, char *argv[]) {
 	elEstadoActual.sockUmc= conectar(elEstadoActual.ipUmc,elEstadoActual.puertoUmc);
 
 
+	if (elEstadoActual.sockUmc != -1) {
+		FD_SET(elEstadoActual.sockUmc, &(fds_master));
 
-	if (elEstadoActual.sockUmc != -1){
-			FD_SET(elEstadoActual.sockUmc,&(fds_master));
+		stHeaderIPC = nuevoHeaderIPC(ERROR);
+		if(!recibirHeaderIPC(elEstadoActual.sockUmc,stHeaderIPC)){
+			printf("UMC handshake error - No se pudo recibir mensaje de respuesta\n");
+			log_error("UMC handshake error - No se pudo recibir mensaje de respuesta");
+			liberarHeaderIPC(stHeaderIPC);
+			close(unCliente);
+		 }
 
-			memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
-
-			recibirMensajeIPC(elEstadoActual.sockUmc,&unMensaje);
-
-			if(unMensaje.header.tipo == QUIENSOS)
-			{
-				if(!enviarMensajeIPC(elEstadoActual.sockUmc,nuevoHeaderIPC(CONNECTNUCLEO),"")){
-					printf("No se envio CONNECTNUCLEO a la UMC\n");
-				}
+		if (stHeaderIPC->tipo == QUIENSOS) {
+			stHeaderIPC = nuevoHeaderIPC(CONNECTNUCLEO);
+			if (!enviarHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
+				printf("UMC handshake error - No se pudo enviar mensaje de conexion\n");
+				log_error("UMC handshake error - No se pudo enviar mensaje de conexion");
+				liberarHeaderIPC(stHeaderIPC);
+				close(unCliente);
 			}
-
-			memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
-			recibirMensajeIPC(elEstadoActual.sockUmc,&unMensaje);
-
-			if(unMensaje.header.tipo == OK)
-			{
-				elEstadoActual.fdMax =	elEstadoActual.sockUmc;
-				maximoAnterior = elEstadoActual.fdMax;
-				printf("OK\n\n");
-			}
-			else
-			{
-				printf("No se pudo establecer la conexion con la UMC\n");
-			}
-
 		}
-		else{
-			printf("No se pudo establecer la conexion con la UMC\n");
+
+		stHeaderIPC = nuevoHeaderIPC(OK);
+		if(!recibirHeaderIPC(elEstadoActual.sockUmc,stHeaderIPC)){
+			printf("UMC handshake error - No se pudo recibir mensaje de confirmacion\n");
+			log_error("UMC handshake error - No se pudo recibir mensaje de confirmacion");
+			liberarHeaderIPC(stHeaderIPC);
+			close(unCliente);
+		 }
+
+		if (stHeaderIPC->tipo == OK) {
+			elEstadoActual.fdMax = elEstadoActual.sockUmc;
+			maximoAnterior = elEstadoActual.fdMax;
+			log_info("UMC Conectada...");
+			printf("OK\n\n");
+		} else {
+			printf("UMC handshake error - Tipo de mensaje de confirmacion incorrecto\n");
+			log_error("UMC handshake error - Tipo de mensaje de confirmacion incorrecto");
 		}
+
+	} else {
+		printf("No se pudo conectar\n");
+		log_error("UMC connection error - No se pudo realizar el binding");
+	}
 
 	/*Ciclo Principal del Nucleo*/
 	printf(".............................................................................\n");
-	fflush(stdout);
 	printf("..............................Esperando Conexion.............................\n\n");
 	fflush(stdout);
 
@@ -334,7 +404,8 @@ int main(int argc, char *argv[]) {
 		read_fds = fds_master;
 
 		if(seleccionar(elEstadoActual.fdMax,&read_fds,1) == -1){
-			printf("SELECT ERROR - Error Preparando el Select\n");
+			printf("Select error - Error Preparando el Select\n");
+			log_error("Select error - Error Preparando el Select");
 			return 1;
 		}
 
@@ -345,17 +416,20 @@ int main(int argc, char *argv[]) {
 			if(unSocket == elEstadoActual.sockEscuchador){
 				unCliente = aceptar(elEstadoActual.sockEscuchador,&addressAceptado);
 				printf("Nuevo pedido de conexion...\n");
+				log_info("Se recibe un pedido de conexion...");
 
 				stHeaderIPC = nuevoHeaderIPC(QUIENSOS);
 				if(!enviarHeaderIPC(unCliente,stHeaderIPC)){
-					printf("HandShake Error - No se pudo enviar mensaje QUIENSOS\n");
+					printf("Handshake error - No se puede enviar el mensaje de reconocimiento de cliente\n");
+					log_error("Handshake error - No se puede enviar el mensaje de reconocimiento de cliente");
 					liberarHeaderIPC(stHeaderIPC);
 					close(unCliente);
 					continue;
 				}
 
 				if(!recibirHeaderIPC(unCliente,stHeaderIPC)){
-					printf("HandShake Error - No se pudo recibir mensaje de respuesta\n");
+					printf("Handshake error - No se puede recibir el mensaje de reconocimiento de cliente\n");
+					log_error("Handshake error - No se puede recibir el mensaje de reconocimiento de cliente");
 					liberarHeaderIPC(stHeaderIPC);
 					close(unCliente);
 					continue;
@@ -367,18 +441,21 @@ int main(int argc, char *argv[]) {
 
 						stHeaderIPC = nuevoHeaderIPC(OK);
 						if(!enviarHeaderIPC(unCliente, stHeaderIPC)){
-							printf("No se pudo enviar un mensaje de confirmacion a la consola conectada\n");
+							printf("Handshake Consola - No se puede recibir el mensaje de reconocimiento de cliente\n");
+							log_error("Handshake Consola - No se puede recibir el mensaje de reconocimiento de cliente");
 							liberarHeaderIPC(stHeaderIPC);
 							close(unCliente);
 							continue;
 						}
 
 						printf("Nueva consola conectada\n");
+						log_info("Nueva consola conectada");
 						agregarSock=1;
 
-						/*Agrego el socket conectado A la lista Master*/
+						/*Agrego el socket conectado a la lista Master*/
 						if(agregarSock==1){
 							FD_SET(unCliente,&(fds_master));
+							log_info("Se agrega la consola conectada a la lista FDS_MASTER");
 							if (unCliente > elEstadoActual.fdMax){
 								maximoAnterior = elEstadoActual.fdMax;
 								elEstadoActual.fdMax = unCliente;
@@ -388,13 +465,23 @@ int main(int argc, char *argv[]) {
 
 						/* Recibo Programa */
 						if(!recibirMensajeIPC(unCliente,&unMensaje)){
-							printf("Error:No se recibio el mensaje de la consola\n");
-							break;
+							printf("Consola error - No se puede recibir el programa a procesar\n");
+							log_error("No se puede recibir el programa a procesar");
+							continue;
 						}else{
 							if (unMensaje.header.tipo == SENDANSISOP) {
+								unPrograma = metadata_desde_literal(unMensaje.contenido);
+								unPCB = crearPCB(unPrograma,unCliente);
+								log_info("Se ha creado un PCB con PID[%s]",unPCB->pid);
 
-								metadata_program = metadata_desde_literal(unMensaje.contenido);
+								/*TODO: Calcular paginas y pedirlas a la UMC*/
 
+
+
+								/*Lo almaceno en la cola de PCB listo para ejecutar*/
+								queue_push(colaReady,unPCB);
+								printf("PCB[PID:%s] - ha ingresado a la cola de Ready",unPCB->pid);
+								log_info("PCB[PID:%s] - ha ingresado a la cola de Ready",unPCB->pid);
 							}
 
 						 }
@@ -402,13 +489,16 @@ int main(int argc, char *argv[]) {
 						break;
 
 					case CONNECTCPU:
-
-						if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
-							printf("No se pudo enviar el MensajeIPC al CPU\n");
-							return 0;
+						stHeaderIPC = nuevoHeaderIPC(OK);
+						if(!enviarHeaderIPC(unCliente,stHeaderIPC)){
+							liberarHeaderIPC(stHeaderIPC);
+							printf("CPU error - No se pudo enviar confirmacion de recepcion\n");
+							log_error("CPU error - No se pudo enviar confirmacion de recepcion");
+							continue;
 						}
 
-						printf("Nuevo CPU conectado\n");
+						printf("Nuevo CPU conectado...\n");
+						log_info("Nuevo CPU conectado");
 						agregarSock=1;
 
 						/*Agrego el socket conectado A la lista Master*/

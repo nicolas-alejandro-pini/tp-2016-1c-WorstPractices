@@ -9,6 +9,8 @@
 #define COMMONS_PCB_H_
 
 #include "parser/metadata_program.h"
+#include "commons/collections/list.h"
+#include "elestaclibrary.h"
 
 typedef struct {
 	u_int32_t id; /*Variable*/
@@ -31,8 +33,11 @@ typedef struct {
 } stIndiceStack;
 
 typedef struct {
-	u_int32_t pid; /*Numero identificador del proceso unico en el sistema */
+	char pid[16]; /*Numero identificador del proceso unico en el sistema */
 	u_int32_t pc; /*Numero de la próxima instrucción del Programa que se debe ejecutar*/
+	u_int32_t paginaInicial; /*Numero de pagina inicial*/
+	u_int32_t cantidadPaginas; /*Numero de pagina inicial*/
+	u_int32_t tamanioPaginas; /*Tamanio de paginas*/
 	u_int32_t socketConsola; /*Numero de socket de la consola a la cual le devolvemos las salidas del programa en ejecucion*/
 	u_int32_t socketCPU; /*Numero de socket de la CPU que esta ejecutando en ese momento el pcb*/
 	t_metadata_program* metadata_program;
@@ -44,7 +49,7 @@ typedef struct {
  * @PRE:  un puntero PCB
  * @POST: memoria reservada para la estructura PCB
  */
-int crearPCB(stPCB *unPCB);
+stPCB * crearPCB(t_metadata_program *unPrograma, int socketConsola);
 
 /**
  * @NAME: liberarPCB

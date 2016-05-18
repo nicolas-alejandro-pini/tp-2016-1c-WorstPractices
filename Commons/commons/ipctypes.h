@@ -32,14 +32,18 @@
 #define QUANTUMFIN			124ul
 #define EXECERROR			125ul
 #define SIGUSR1				126ul
+#define OBTENERVALOR		127ul
+#define GRABARVALOR			128ul
+#define WAIT				129ul
+#define SIGNAL				130ul
 
 /*Definicion de tipos de mensaje enre la UMC y el Swap*/
-#define SOYUMC				130ul
+#define SOYUMC				140ul
 
 /*Definicion de tipos de mensaje de interfaz UMC */
-#define INICIALIZAR_PROGRAMA	140ul
-#define READ_BTYES_PAGE			141ul
-#define WRITE_BYTES_PAGE		142ul
-#define FINPROGRAMA				143ul
+#define INICIALIZAR_PROGRAMA	150ul
+#define READ_BTYES_PAGE			151ul
+#define WRITE_BYTES_PAGE		152ul
+#define FINPROGRAMA				153ul
 
 #endif /* COMMONS_IPCTYPES_H_ */
