@@ -417,6 +417,7 @@ char* getInstruccion (int start, int size){
 
 
 	char* estructuraSerializada;
+	char* instruccion;
 	t_posicion posicionInstruccion;
 
 	posicionInstruccion.size = size;
@@ -432,12 +433,16 @@ char* getInstruccion (int start, int size){
 		if (mensajeUMC.header.tipo == OK) {
 
 				/*TODO Deserializar el mensaje*/
-
+				free(estructuraSerializada);
+				return instruccion;
 			}
 	}else{
-		printf("Error: Fallo en obtener valor de la variable.\n");
-	}
+		printf("Error: Fallo en obtener instrucción.\n");
 
+		free(instruccion);
+		free(estructuraSerializada);
+		return NULL;
+	}
 }
 
 /*
@@ -453,15 +458,42 @@ int ejecutarInstruccion(void){
 
 	int programCounter = unPCB.pc;
 	char* instruccion = NULL;
-	//instruccion = subString(estructuraPrograma->instrucciones_serializado[i].start, estructuraPrograma->instrucciones_serializado[i].offset);
 
 	instruccion = getInstruccion(unPCB.metadata_program->instrucciones_serializado[programCounter].start, unPCB.metadata_program->instrucciones_serializado[programCounter].offset);
 
+	if (instruccion != NULL){
+		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
+	}else{
+		printf("Error: fallo la ejecución de instrucción.\n");
+		return (-1);
+	}
 
+	free(instruccion);
+	return 0;
 
-	analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
+}
 
+int devolverPCBalNucleo(void){
 
+	char* serializadoPCB;
+
+	/*TODO serrializar PCB */
+
+	stMensajeIPC mensajePrimitiva;
+
+	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockNucleo, SENDANSISOP, serializadoPCB);
+
+	if (mensajePrimitiva != NULL){
+
+		if (mensajePrimitiva.header.tipo != OK) {
+
+			printf("Error: Falló enviar PCB al Nucleo.\n");
+			free(serializadoPCB);
+			return (-1);
+
+		}
+	}
+	free(serializadoPCB);
 	return 0;
 }
 
@@ -599,7 +631,7 @@ int main(void) {
 
 							log_info("PCB de ANSIPROG cargado. /n");
 
-							quantum = ""; /*TODO recibir el quantum en mensajeIPC*/
+							quantum = 10; /*TODO recibir el quantum en mensajeIPC*/
 
 							if (quantum <= 0)
 								log_info("Error en Quantum definido. /n");
@@ -607,11 +639,16 @@ int main(void) {
 							//Ejecuto las instrucciones defidas por quamtum
 
 							while (quantum > 0){
-								ejecutarInstruccion();
-								quantum --;
+								if(ejecutarInstruccion() == OK)
+								{
+									quantum --; 	/* descuento un quantum para proxima ejecución */
+									unPCB.pc ++; 	/* actualizo el program counter a la siguiente posición */
+
+								}
+
 							}
 
-							devolverPCBalNucleo(unPCB);
+							devolverPCBalNucleo();
 
 
 						break;
