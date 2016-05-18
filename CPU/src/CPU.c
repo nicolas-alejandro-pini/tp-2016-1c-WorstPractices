@@ -35,12 +35,16 @@
 
 /*Archivos de Configuracion*/
 #define CFGFILE		"cpu.conf"
-#define NUEVAVARIABLE 170
-#define RESPONSENUEVAVARIABLE 171
-#define POSICIONVARIABLE 172
-#define RESPONSEPOSICIONVARIABLE 173
-#define VALORVARIABLE 174
-#define RESPONSEVALORVARIABLE 175
+#define NUEVAVARIABLE 170				/* Mensaje para definir nueva variable en la UMC */
+#define RESPONSENUEVAVARIABLE 171		/* Mensaje de respuesta a definicion de nueva variable en la UMC */
+#define POSICIONVARIABLE 172			/* Mensaje para obtener posicion de una variable */
+#define RESPONSEPOSICIONVARIABLE 173	/* Mensaje de respuesta a obtener posicion de una variable */
+#define VALORVARIABLE 174				/* Mensaje para obtener el valor de una variable */
+#define RESPONSEVALORVARIABLE 175		/* Mensaje de respuesta a obtener el valor */
+#define ASIGNARVARIABLE 176				/* Mensaje para asignar un valor a una variable en una posicion de la UMC*/
+#define RESPONSEASIGNARVARIABLE 177		/* Mensaje de respuesta a la asignacacion de valor */
+#define GETINSTRUCCION 178				/* Mensaje para obtener una nueva instruccion */
+#define RESPONSEINSTRUCCION 179			/* Mensaje de respuesta a instruccion */
 
 //Estructuras del CPU//
 
@@ -75,7 +79,6 @@ t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de
 
 stPCB unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 
-
 /*
  ============================================================================
  Name        : sendResponseMessage.
@@ -97,7 +100,7 @@ stMensajeIPC sendResponseMessages(int socket, int header, char* mensaje){
 			return NULL;
 		}
 
-	return stMensajeIPC;
+	return unMensajeToSend;
 }
 
 /*
@@ -181,7 +184,27 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 }
 
-void asignar(t_posicion direccion_variable, t_valor_variable valor );
+void asignar(t_posicion direccion_variable, t_valor_variable valor ){
+
+	stMensajeIPC mensajePrimitiva;
+
+	/*TODO Serializar el mensaje de estructura */
+	char* estructuraSerializada;
+
+	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, ASIGNARVARIABLE, estructuraSerializada);
+
+	if (mensajePrimitiva != NULL){
+
+		if (mensajePrimitiva.header.tipo == RESPONSEVALORVARIABLE) {
+
+				/*TODO Deserializar el mensaje*/
+
+			}
+	}else{
+		printf("Error: Fallo en obtener valor de la variable.\n");
+	}
+
+}
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable);
 
@@ -202,6 +225,28 @@ int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
 int wait(t_nombre_semaforo identificador_semaforo);
 
 int signal_cpu(t_nombre_semaforo identificador_semaforo);
+
+
+AnSISOP_funciones AnSISOP_functions = {
+		.AnSISOP_definirVariable		= definirVariable,
+		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
+		.AnSISOP_dereferenciar			= dereferenciar,
+		.AnSISOP_asignar				= asignar,
+		.AnSISOP_imprimir				= imprimir,
+		.AnSISOP_imprimirTexto			= imprimirTexto,
+		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
+		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
+		.AnSISOP_irAlLabel				= irAlLabel,
+		.AnSISOP_llamarConRetorno		= llamarFuncion,
+		.AnSISOP_retornar				= retornar,
+		.AnSISOP_entradaSalida			= entradaSalida
+};
+
+AnSISOP_kernel kernel_functions = {
+		.AnSISOP_signal		= wait,
+		.AnSISOP_signal		= signal_cpu
+};
+
 
 /*
  ============================================================================
@@ -350,7 +395,7 @@ void cerrarSockets(t_configCPU *configuracionInicial){
  =========================================================================================
  Name        : cargarPCB()
  Author      : Ezequiel Martinez
- Inputs      : Recibe el contenido del mensaje PCB.
+ Inputs      : Recibe el contenido del mensaje serializado del PCB.
  Outputs     : Retorna -1 en caso de no poder cargar el PCB.
  Description : Funcion para cargar el PCB del progracma ANSISOP.
  =========================================================================================
@@ -358,11 +403,76 @@ void cerrarSockets(t_configCPU *configuracionInicial){
 int cargarPCB(char* stringPCB){
 
 	if (stringPCB != NULL)
+
+		/*TODO Deserealizar la estructura del PCB */
+
 		unPCB = (stPCB) stringPCB;
 
 	return (-1);
 }
 
+/*
+ =========================================================================================
+ Name        : getInstruccion()
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe el comienzo de la instruccion y el size.
+ Outputs     : Retorna string de la instruccion.
+ Description : Funcion para obtener instruccion del progracma ANSISOP en memoria.
+ =========================================================================================
+ */
+char* getInstruccion (int start, int size){
+
+	stMensajeIPC mensajeUMC;
+
+
+	char* estructuraSerializada;
+	t_posicion posicionInstruccion;
+
+	posicionInstruccion.size = size;
+	posicionInstruccion.offSet = start;
+	// posicionInstruccion.nroPagina = unPCB.Numero de Pagina  ----> Falta cargar el numero de pagina inicial.
+
+	/*TODO Serializar el mensaje de estructura */
+
+	mensajeUMC = sendResponseMessages (configuracionInicial.sockUmc, GETINSTRUCCION, estructuraSerializada);
+
+	if (mensajeUMC != NULL){
+
+		if (mensajeUMC.header.tipo == RESPONSEINSTRUCCION) {
+
+				/*TODO Deserializar el mensaje*/
+
+			}
+	}else{
+		printf("Error: Fallo en obtener valor de la variable.\n");
+	}
+
+}
+
+/*
+ =========================================================================================
+ Name        : ejecutarInstruccion()
+ Author      : Ezequiel Martinez
+ Inputs      : N/A
+ Outputs     : Retorna -1 en caso de haber algun error.
+ Description : Ejecuta una instrucción del PCB.
+ =========================================================================================
+ */
+int ejecutarInstruccion(void){
+
+	int programCounter = unPCB.pc;
+	char* instruccion = NULL;
+	//instruccion = subString(estructuraPrograma->instrucciones_serializado[i].start, estructuraPrograma->instrucciones_serializado[i].offset);
+
+	instruccion = getInstruccion(unPCB.metadata_program->instrucciones_serializado[programCounter].start, unPCB.metadata_program->instrucciones_serializado[programCounter].offset);
+
+
+
+	analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
+
+
+	return 0;
+}
 
 /*
  =========================================================================================
@@ -378,7 +488,7 @@ int main(void) {
 	stMensajeIPC unMensaje;
 	int unSocket;
 	int quantum=0;
-	char* temp_file = "swap.log";
+	char* temp_file = "cpu.log";
 
 	 //Primero instancio el log
 	 t_log* logger = log_create(temp_file, "CPU",-1, LOG_LEVEL_INFO);
