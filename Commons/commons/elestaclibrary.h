@@ -48,5 +48,7 @@ typedef struct {
 
 t_stream* serializarConfigUMC(stUMCConfig *self);
 stUMCConfig* deserializarConfigUMC(t_stream *stream);
+int recibirConfigUMC(int unSocket, stUMCConfig *UMCConfig);
+int enviarConfigUMC(int unSocket, stUMCConfig *UMCConfig);
 
 #endif /* COMMONS_ELESTACLIBRARY_H_ */
