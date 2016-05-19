@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "sockets.h"
 
 typedef struct{
@@ -41,14 +42,16 @@ typedef struct{
 	uint16_t tamanioPagina;
 } __attribute__((packed))stUMCConfig;
 
+typedef uint16_t t_data;
+
 typedef struct {
 	uint16_t length;
-	char *data;
+	t_data *data;
 }t_stream;
 
 t_stream* serializarConfigUMC(stUMCConfig *self);
 stUMCConfig* deserializarConfigUMC(t_stream *stream);
 int recibirConfigUMC(int unSocket, stUMCConfig *UMCConfig);
-int enviarConfigUMC(int unSocket, stUMCConfig *UMCConfig);
+int enviarConfigUMC(int unSocket, int frameSize, int frameByProc);
 
 #endif /* COMMONS_ELESTACLIBRARY_H_ */

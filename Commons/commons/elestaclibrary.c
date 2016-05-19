@@ -44,12 +44,14 @@ int recibirConfigUMC(int unSocket, stUMCConfig *UMCConfig){
 	return 0;
 }
 
-int enviarConfigUMC(int unSocket, stUMCConfig *UMCConfig){
-	t_stream *stream = serializarConfigUMC(UMCConfig);
-	int ret = -1;
-	int segundos_reinicio = 20;
+int enviarConfigUMC(int unSocket, int frameSize, int frameByProc){
+	stUMCConfig UMCConfig;
+	UMCConfig.paginasXProceso = frameByProc;
+	UMCConfig.tamanioPagina = frameSize;
 
-	ret = send(unSocket, stream->data, sizeof(stream->length) + stream->length, 0);
+	t_stream *stream = serializarConfigUMC(&UMCConfig);
+	int ret = -1;
+	ret = send(unSocket, stream->data, stream->length, 0);
 	if(ret == -1){
 		perror("Error al enviar la config UMC");
 		free(stream);
@@ -60,13 +62,13 @@ int enviarConfigUMC(int unSocket, stUMCConfig *UMCConfig){
 }
 
 t_stream* serializarConfigUMC(stUMCConfig *self){
-	char *data = malloc( sizeof(uint16_t) + sizeof(uint16_t));
+	t_data *data = malloc( sizeof(uint16_t) + sizeof(uint16_t));
 	t_stream *stream = malloc( sizeof(t_stream));
 	int offset = 0, tmp_size = 0;
 
 	memcpy(data, &self->paginasXProceso, tmp_size = sizeof(uint16_t));
 	offset = tmp_size;
-	memcpy(data, &self->tamanioPagina, tmp_size = sizeof(uint16_t));
+	memcpy(data + offset, &self->tamanioPagina, tmp_size = sizeof(uint16_t));
 
 	stream->length = offset + tmp_size;
 	stream->data = data;
@@ -85,4 +87,7 @@ stUMCConfig* deserializarConfigUMC(t_stream *stream){
 
 	return self;
 }
+
+
+
 
