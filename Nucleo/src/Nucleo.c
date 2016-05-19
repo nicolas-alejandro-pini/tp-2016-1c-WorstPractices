@@ -27,7 +27,6 @@
 
 
 #include "nucleo.h"
-#include "interprete.h"
 
 /*
  ============================================================================
@@ -284,6 +283,7 @@ void threadCPU(int unCpu,stEstado* info){
 	liberarHeaderIPC(stHeaderIPC);
 	pthread_exit(NULL);
 }
+
 /*
  ============================================================================
  Funcion principal
@@ -295,6 +295,7 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	t_metadata_program *unPrograma;
 	stPCB *unPCB;
+	stUMCConfig UMCConfig;
 	char* temp_file = "nucleo.log";
 
 	/*Inicializamos las listas todo:liberarlas luego*/
@@ -383,7 +384,13 @@ int main(int argc, char *argv[]) {
 			elEstadoActual.fdMax = elEstadoActual.sockUmc;
 			maximoAnterior = elEstadoActual.fdMax;
 			log_info("UMC Conectada...");
-			printf("OK\n\n");
+
+			// Pido a la UMC info de inicio
+			if(recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig))
+			{
+				log_error("UMC recibirConfigUMC");
+			}
+
 		} else {
 			printf("UMC handshake error - Tipo de mensaje de confirmacion incorrecto\n");
 			log_error("UMC handshake error - Tipo de mensaje de confirmacion incorrecto");
