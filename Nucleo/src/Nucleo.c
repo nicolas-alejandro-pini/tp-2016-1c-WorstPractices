@@ -387,9 +387,9 @@ int main(int argc, char *argv[]) {
 
 			// Pido a la UMC info de inicio
 			if(recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig))
-			{
 				log_error("UMC recibirConfigUMC");
-			}
+			log_info("UMC recibirConfigUMC - OK");
+			printf("Tamaño pagina[%d] paginas por proceso [%d]\n",UMCConfig.tamanioPagina, UMCConfig.paginasXProceso);
 
 		} else {
 			printf("UMC handshake error - Tipo de mensaje de confirmacion incorrecto\n");
@@ -482,7 +482,9 @@ int main(int argc, char *argv[]) {
 								log_info("Se ha creado un PCB con PID[%s]",unPCB->pid);
 
 								/*TODO: Calcular paginas y pedirlas a la UMC*/
-
+								stUMCConfig UMCConfig;
+								recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig);
+								printf("PaginasXProc[%d] Tamaño pagina[%d]\n", UMCConfig.paginasXProceso, UMCConfig.tamanioPagina);
 
 
 								/*Lo almaceno en la cola de PCB listo para ejecutar*/

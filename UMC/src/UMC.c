@@ -63,7 +63,7 @@ void loadInfo (stParametro* info, char* file_name){
 	}
 
 	if (config_has_property(miConf,"MARCOS_X_PROC")) {
-		info->frameByProc = config_get_array_value(miConf,"MARCOS_X_PROC");
+		info->frameByProc = config_get_int_value(miConf,"MARCOS_X_PROC");
 	} else {
 		printf("Parametro MARCOS_X_PROC no cargado en el archivo de configuracion\n \"%s\"  \n","MARCOS_X_PROC");
 		exit(-2);
@@ -311,12 +311,7 @@ int main(int argc, char *argv[]) {
 								}
 								break;
 							case CONNECTNUCLEO:
-							/* TODO enviar mensaje con cantidad de paginas al Nucleo */
 
-								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
-									printf("No se pudo enviar el MensajeIPC al cliente\n");
-									return 0;
-								}
 								unaCabecera = nuevoHeaderIPC(OK);
 								if(!enviarHeaderIPC(unCliente, unaCabecera)){
 									printf("No se pudo enviar un mensaje de confirmacion al Nucleo conectado\n");
@@ -337,6 +332,11 @@ int main(int argc, char *argv[]) {
 									}
 									agregarSock=0;
 								}
+
+								// Envio cantidad de paginas por proceso y tamaño de pagina
+								if(enviarConfigUMC(unCliente, elEstadoActual.frameSize, elEstadoActual.frameByProc))
+									printf("ERROR - UMC enviarConfigUMC");
+								printf("Tamaño pagina[%d] paginas por proceso [%d]\n",elEstadoActual.frameSize, elEstadoActual.frameByProc);
 						}
 					}/*-Cierro if-Conexion Nueva-*/
 
