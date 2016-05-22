@@ -55,7 +55,7 @@ void realizarAccionUMC(unsigned int tipo, char* contenido){
 			pthread_create(&tid,&attr,(void*)escribirBytes,contenido);
 			break;
 
-		case FIN_PROGRAMA:
+		case FINPROGRAMA:
 			pthread_create(&tid,&attr,(void*)finalizarPrograma,contenido);
 			break;
 
