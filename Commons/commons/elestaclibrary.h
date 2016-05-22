@@ -38,9 +38,10 @@ typedef struct{
 }  __attribute__((packed))stPageEnd;
 
 typedef struct{
-	uint16_t paginasXProceso;
-	uint16_t tamanioPagina;
+	int paginasXProceso;
+	int tamanioPagina;
 } __attribute__((packed))stUMCConfig;
+
 
 typedef uint16_t t_data;
 

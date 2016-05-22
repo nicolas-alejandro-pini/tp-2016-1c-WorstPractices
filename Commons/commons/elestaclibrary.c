@@ -6,59 +6,29 @@
  */
 #include "elestaclibrary.h"
 
-//ToDo: Implementar con la libreria socketsIPCIRC serializada
-
 int recibirConfigUMC(int unSocket, stUMCConfig *UMCConfig){
-	uint16_t bytes_recv_length, bytes_recv_data, *length;
-	t_stream stream;
-	void *buffer = malloc(sizeof(stream.length));
+	int iRecv;
+	int size_umcConfig = sizeof(stUMCConfig);
+	iRecv = recv(unSocket, UMCConfig, sizeof(stUMCConfig), 0);
+	if(iRecv < size_umcConfig)
+		return EXIT_FAILURE;
 
-	bytes_recv_length = recv(unSocket, buffer, sizeof(stream.length), 0);
-	if(bytes_recv_length < 0) {
-		perror("Error recibirConfigUMC - recv length");
-		free(buffer);
-		return -1;
-	}
-	if(bytes_recv_length == 0){
-		perror("Error recibirConfigUMC - cliente cerro la conexion");
-		free(buffer);
-		return -1;
-	}
-	length = (uint16_t*) buffer;
-	stream.length = length[0];
-
-	buffer = realloc(buffer, sizeof(stream.length) + stream.length + 1);
-
-	bytes_recv_data = recv(unSocket, buffer, stream.length, MSG_WAITALL);
-	if( bytes_recv_data < 0){
-		perror("Error recibirConfigUMC - recv data");
-		free(buffer);
-		return -1;
-	}
-	if(bytes_recv_data == 0){
-		perror("Error recibirConfigUMC - cliente cerro la conexion");
-		free(buffer);
-		return -1;
-	}
-	UMCConfig = deserializarConfigUMC(&stream);
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 int enviarConfigUMC(int unSocket, int frameSize, int frameByProc){
+	int iSent;
+	int size_umcConfig = sizeof(stUMCConfig);
 	stUMCConfig UMCConfig;
+
 	UMCConfig.paginasXProceso = frameByProc;
 	UMCConfig.tamanioPagina = frameSize;
 
-	t_stream *stream = serializarConfigUMC(&UMCConfig);
-	int ret = -1;
-	ret = send(unSocket, stream->data, stream->length, 0);
-	if(ret == -1){
-		perror("Error al enviar la config UMC");
-		free(stream);
-		return -1;
-	}
-	printf("Configuracion UMC enviada\n");
-	return 0;
+	iSent = send(unSocket, &UMCConfig, sizeof(stUMCConfig), 0);
+	if(iSent < size_umcConfig)
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
 }
 
 t_stream* serializarConfigUMC(stUMCConfig *self){
