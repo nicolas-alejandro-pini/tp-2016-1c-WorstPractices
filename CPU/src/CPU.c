@@ -411,38 +411,36 @@ int cargarPCB(char* stringPCB){
  Description : Funcion para obtener instruccion del progracma ANSISOP en memoria.
  =========================================================================================
  */
-char* getInstruccion (int start, int size){
+int getInstruccion (int start, int size, char** instruccion){
 
 	stMensajeIPC mensajeUMC;
 
-
 	char* estructuraSerializada;
-	char* instruccion;
 	t_posicion posicionInstruccion;
 
 	posicionInstruccion.size = size;
 	posicionInstruccion.offSet = start;
-	// posicionInstruccion.nroPagina = unPCB.Numero de Pagina  ----> Falta cargar el numero de pagina inicial.
+	posicionInstruccion.nroPagina = unPCB.paginaInicial;
 
 	/*TODO Serializar el mensaje de estructura */
 
 	mensajeUMC = sendResponseMessages (configuracionInicial.sockUmc, GETINSTRUCCION, estructuraSerializada);
 
-	if (mensajeUMC != NULL){
-
-		if (mensajeUMC.header.tipo == OK) {
-
-				/*TODO Deserializar el mensaje*/
-				free(estructuraSerializada);
-				return instruccion;
-			}
-	}else{
+	if (mensajeUMC == NULL){
 		printf("Error: Fallo en obtener instrucción.\n");
-
-		free(instruccion);
 		free(estructuraSerializada);
-		return NULL;
+		return (-1);
 	}
+
+	if (mensajeUMC.header.tipo == OK) {
+
+		/*TODO Deserializar el mensaje*/
+
+		instruccion = estructuraSerializada;
+	}
+
+	free(estructuraSerializada);
+	return 0;
 }
 
 /*
@@ -459,7 +457,9 @@ int ejecutarInstruccion(void){
 	int programCounter = unPCB.pc;
 	char* instruccion = NULL;
 
-	instruccion = getInstruccion(unPCB.metadata_program->instrucciones_serializado[programCounter].start, unPCB.metadata_program->instrucciones_serializado[programCounter].offset);
+	instruccion = getInstruccion(unPCB.metadata_program->instrucciones_serializado[programCounter].start,
+								 unPCB.metadata_program->instrucciones_serializado[programCounter].offset,
+								 &instruccion);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
@@ -625,69 +625,80 @@ int main(void) {
 
 							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(OK),"CPU: Programa recibido.");
 
-							if (cargarPCB(unMensaje.contenido) == -1)
+							if (cargarPCB(unMensaje.contenido) != -1)
 							{
-								log_info("Error en lectura ANSIPROG...");
-							}
+								log_info("PCB de ANSIPROG cargado. /n");
 
-							log_info("PCB de ANSIPROG cargado. /n");
+								/* Envio mensaje para obtener el quantum del programa */
 
-							/* Envio mensaje para obtener el quantum del programa */
+								enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUM));
 
-							enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUM));
+								if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
+									log_error("Error al recibir el quantum desde el Nucleo./n");
+									configuracionInicial.salir = 1;
+									break;
+								}else{
 
-							if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
-								log_error("Error al recibir el quantum desde el Nucleo./n");
-								configuracionInicial.salir = 0;
-							}else{
+									if (unMensaje.header.id == QUANTUM){
 
-								quantum = unMensaje.contenido ; /*TODO recibir el quantum en mensajeIPC*/
-							}
+										quantum = atoi(unMensaje.contenido) ; /*TODO recibir el quantum en mensajeIPC*/
 
-							if (quantum <= 0)
-								log_info("Error en Quantum definido. /n");
-
-
-							/* Envio mensaje para obtener el quantum sleep del programa */
-
-							enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUMSLEEP));
-
-							if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
-								log_error("Error al recibir el quantum sleep desde el Nucleo./n");
-								configuracionInicial.salir = 0;
-							}else{
-
-								quantum = unMensaje.contenido ; /*TODO recibir el quantum en mensajeIPC*/
-							}
-
-							//Ejecuto las instrucciones defidas por quamtum
-
-							while (quantum > 0){
-								if(ejecutarInstruccion() == OK)
-								{
-									sleep(quantumSleep);
-									quantum --; 	/* descuento un quantum para proxima ejecución */
-									unPCB.pc ++; 	/* actualizo el program counter a la siguiente posición */
+									}
 
 								}
 
-							}
+								if (quantum <= 0){
+									log_info("Error en Quantum definido. /n");
+									break;
+								}
 
-							devolverPCBalNucleo();
+								/* Envio mensaje para obtener el quantum sleep del programa */
+
+								enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUMSLEEP));
+
+								if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
+									log_error("Error al recibir el quantum sleep desde el Nucleo./n");
+									configuracionInicial.salir = 1;
+									break;
+								}else{
+
+									if (unMensaje.header.id == QUANTUMSLEEP){
+										quantumSleep = atoi(unMensaje.contenido) ; /*TODO recibir el quantum en mensajeIPC*/
+									}
+								}
+
+								//Ejecuto las instrucciones defidas por quamtum
+
+								while (quantum > 0){
+									if(ejecutarInstruccion() == OK)
+									{
+										sleep(quantumSleep);
+										quantum --; 	/* descuento un quantum para proxima ejecución */
+										unPCB.pc ++; 	/* actualizo el program counter a la siguiente posición */
+
+									}
+
+								}
+
+								devolverPCBalNucleo();
+
+							}else
+								log_info("Error en lectura ANSIPROG...");
 
 
-						break;
+							break;
 
-/*
-						case UMCINSTRUCCION:
-						{
-							log_info("Respondiendo solicitud UMCINSTRUCCION...");
 
-							enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(OK),"CPU: Recibi del UMC.");
+						case SIGUSR1:
 
-						}
-						break;
-						*/
+							log_info("Respondiendo solicitud SIGUSR1...");
+
+							/* Notifico al nucleo mi desconexion*/
+							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(SIGUSR1),"CPU: señal SIGUSR1.");
+
+							configuracionInicial.salir = 1;
+							break;
+
 					}
 				}
 
