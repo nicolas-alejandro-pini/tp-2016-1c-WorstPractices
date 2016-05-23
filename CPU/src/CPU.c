@@ -29,6 +29,7 @@
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
 #include <commons/elestaclibrary.h>
+#include <commons/pcb.h>
 #include <commons/config.h>
 #include "parser/parser.h"
 #include "parser/metadata_program.h"
@@ -84,12 +85,13 @@ stPCB unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 t_posicion definirVariable(t_nombre_variable identificador_variable){
 
 	stMensajeIPC mensajePrimitiva;
+	t_posicion posicionVariable;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(NUEVAVARIABLE),identificador_variable);
 
 	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
-		return NULL;
+		return posicionVariable;
 	}
 
 	if (mensajePrimitiva.header.tipo == OK) {
@@ -98,8 +100,8 @@ t_posicion definirVariable(t_nombre_variable identificador_variable){
 
 	}
 
-	free(mensajePrimitiva);
-	return t_posicion;
+	//free(mensajePrimitiva);
+	return posicionVariable;
 }
 
 t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
@@ -111,7 +113,7 @@ t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Falló la obtencion de posicion de la variable %s.\n", identificador_variable);
-		return NULL;
+		return posicionVariable;
 	}
 
 	if (mensajePrimitiva.header.tipo == OK) {
@@ -120,7 +122,7 @@ t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	}
 
-	free(mensajePrimitiva);
+	//free(mensajePrimitiva);
 	return posicionVariable;
 
 }
@@ -147,7 +149,7 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 	}
 
-	free(mensajePrimitiva);
+	//free(mensajePrimitiva);
 	return valor;
 
 
@@ -159,8 +161,6 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 
 	/*TODO Serializar el mensaje de estructura */
 	char* estructuraSerializada;
-
-	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, ASIGNARVARIABLE, estructuraSerializada);
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(ASIGNARVARIABLE),estructuraSerializada);
 
@@ -175,7 +175,7 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 
 	}
 
-	free(mensajePrimitiva);
+	//free(mensajePrimitiva); /*TODO Arreglar el free de las estructuras*/
 
 }
 
@@ -379,7 +379,7 @@ int cargarPCB(char* stringPCB){
 
 		/*TODO Deserealizar la estructura del PCB */
 
-		unPCB = (stPCB) stringPCB;
+		//unPCB = (stPCB) stringPCB; /*TODO asignar PCB*/
 
 	return (-1);
 }
@@ -406,12 +406,14 @@ int getInstruccion (int start, int size, char** instruccion){
 
 	/*TODO Serializar el mensaje de estructura */
 
-	mensajeUMC = sendResponseMessages (configuracionInicial.sockUmc, GETINSTRUCCION, estructuraSerializada);
 
-	if (mensajeUMC == NULL){
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(GETINSTRUCCION),estructuraSerializada);
+
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajeUMC)){
 		printf("Error: Fallo en obtener instrucción.\n");
 		free(estructuraSerializada);
 		return (-1);
+
 	}
 
 	if (mensajeUMC.header.tipo == OK) {
@@ -419,6 +421,7 @@ int getInstruccion (int start, int size, char** instruccion){
 		/*TODO Deserializar el mensaje*/
 
 		instruccion = estructuraSerializada;
+
 	}
 
 	free(estructuraSerializada);
@@ -470,22 +473,20 @@ int devolverPCBalNucleo(void){
 
 	/*TODO serrializar PCB */
 
-	stMensajeIPC mensajePrimitiva;
+	stMensajeIPC mensajePCB;
 
-	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockNucleo, SENDANSISOP, serializadoPCB);
 
-	if (mensajePrimitiva != NULL){
+	enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(SENDANSISOP),serializadoPCB);
 
-		if (mensajePrimitiva.header.tipo != OK) {
-
+		if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&mensajePCB)){
 			printf("Error: Falló enviar PCB al Nucleo.\n");
 			free(serializadoPCB);
 			return (-1);
 
 		}
-	}
+
 	free(serializadoPCB);
-	free(mensajePrimitiva);
+	//free(mensajePCB);
 	return 0;
 }
 
