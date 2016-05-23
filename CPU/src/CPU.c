@@ -70,29 +70,6 @@ t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de
 
 stPCB unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 
-/*
- ============================================================================
- Name        : sendResponseMessage.
- Author      : Ezequiel Martinez
- Inputs      : N/A
- Outputs     : N/A
- Description : funcion para enviar y recibir mensajes ipc para primitivas.
- ============================================================================
- */
-
-stMensajeIPC sendResponseMessages(int socket, int header, char* mensaje){
-
-	stMensajeIPC unMensajeToSend;
-
-	enviarMensajeIPC(socket,nuevoHeaderIPC(header),mensaje);
-
-		if(!recibirMensajeIPC(socket,&unMensajeToSend)){
-			printf("Error: No se recibio mensaje.\n");
-			return NULL;
-		}
-
-	return unMensajeToSend;
-}
 
 /*
  ============================================================================
@@ -108,42 +85,43 @@ t_posicion definirVariable(t_nombre_variable identificador_variable){
 
 	stMensajeIPC mensajePrimitiva;
 
-	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, NUEVAVARIABLE, identificador_variable);
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(NUEVAVARIABLE),identificador_variable);
 
-	if (mensajePrimitiva != NULL){
-
-		if (mensajePrimitiva.header.tipo == OK) {
-
-				/*TODO Deserializar el mensaje*/
-
-			}
-	}else{
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
 		return NULL;
 	}
 
+	if (mensajePrimitiva.header.tipo == OK) {
+
+		/*TODO Deserializar el mensaje*/
+
+	}
+
+	free(mensajePrimitiva);
 	return t_posicion;
 }
 
 t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	stMensajeIPC mensajePrimitiva;
+	t_posicion posicionVariable;
 
-	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, POSICIONVARIABLE, identificador_variable);
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
 
-		if (mensajePrimitiva != NULL){
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
+		printf("Error: Falló la obtencion de posicion de la variable %s.\n", identificador_variable);
+		return NULL;
+	}
 
-			if (mensajePrimitiva.header.tipo == OK) {
+	if (mensajePrimitiva.header.tipo == OK) {
 
-					/*TODO Deserializar el mensaje*/
+		/*TODO Deserializar el mensaje*/
 
-				}
-		}else{
-			printf("Error: Falló la obtencion de posicion de la variable %s.\n", identificador_variable);
-			return NULL;
-		}
+	}
 
-		return t_posicion;
+	free(mensajePrimitiva);
+	return posicionVariable;
 
 }
 
@@ -153,24 +131,24 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
 
-		/*TODO Serializar el mensaje de estructura */
-		char* estructuraSerializada;
+	/*TODO Serializar el mensaje de estructura */
+	char* estructuraSerializada;
 
-		mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, VALORVARIABLE, estructuraSerializada);
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(VALORVARIABLE),estructuraSerializada);
 
-		if (mensajePrimitiva != NULL){
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
+		printf("Error: Fallo en deferenciar variable.\n");
+		return NULL;
+	}
 
-			if (mensajePrimitiva.header.tipo == OK) {
+	if (mensajePrimitiva.header.tipo == OK) {
 
-					/*TODO Deserializar el mensaje*/
+		/*TODO Deserializar el mensaje*/
 
-				}
-		}else{
-			printf("Error: Fallo en deferenciar variable.\n");
-			return NULL;
-		}
+	}
 
-		return valor;
+	free(mensajePrimitiva);
+	return valor;
 
 
 }
@@ -184,16 +162,20 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 
 	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, ASIGNARVARIABLE, estructuraSerializada);
 
-	if (mensajePrimitiva != NULL){
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(ASIGNARVARIABLE),estructuraSerializada);
 
-		if (mensajePrimitiva.header.tipo == OK) {
-
-				/*TODO Deserializar el mensaje*/
-
-			}
-	}else{
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Fallo en asignacion de la variable.\n");
+
 	}
+
+	if (mensajePrimitiva.header.tipo == OK) {
+
+		/*TODO Deserializar el mensaje*/
+
+	}
+
+	free(mensajePrimitiva);
 
 }
 
@@ -473,6 +455,15 @@ int ejecutarInstruccion(void){
 
 }
 
+/*
+ =========================================================================================
+ Name        : devolverPCBalNucleo()
+ Author      : Ezequiel Martinez
+ Inputs      : N/A
+ Outputs     : Retorna -1 en caso de haber algun error.
+ Description : Envia el PCB al Nucleo con la informacion actualizada.
+ =========================================================================================
+ */
 int devolverPCBalNucleo(void){
 
 	char* serializadoPCB;
@@ -494,6 +485,7 @@ int devolverPCBalNucleo(void){
 		}
 	}
 	free(serializadoPCB);
+	free(mensajePrimitiva);
 	return 0;
 }
 
@@ -561,7 +553,6 @@ int main(void) {
 		SocketAnterior = configuracionInicial.socketMax;
 		log_info("OK - UMC conectada.");
 		fflush(stdout);
-		//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
 
 	}
 		//Fin de conexion al UMC//
@@ -641,8 +632,7 @@ int main(void) {
 
 									if (unMensaje.header.id == QUANTUM){
 
-										quantum = atoi(unMensaje.contenido) ; /*TODO recibir el quantum en mensajeIPC*/
-
+										quantum = atoi(unMensaje.contenido) ;
 									}
 
 								}
@@ -680,7 +670,13 @@ int main(void) {
 
 								}
 
-								devolverPCBalNucleo();
+								if (devolverPCBalNucleo() == -1){
+
+									log_info("Error al devolver PCB de ANSIPROG...");
+									configuracionInicial.salir = 1;
+									break;
+
+								}
 
 							}else
 								log_info("Error en lectura ANSIPROG...");
@@ -694,7 +690,7 @@ int main(void) {
 							log_info("Respondiendo solicitud SIGUSR1...");
 
 							/* Notifico al nucleo mi desconexion*/
-							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(SIGUSR1),"CPU: señal SIGUSR1.");
+							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(SIGUSR1CPU),"CPU: señal SIGUSR1.");
 
 							configuracionInicial.salir = 1;
 							break;
