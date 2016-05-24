@@ -7,6 +7,122 @@
 
 #include "serializador.h"
 
+
+/************* Agregar serializacion de paquetes ********************/
+
+int serializar_ejemplo(t_paquete *paquete, t_UMCConfig *self){
+	uint32_t numero32 = 777;
+	uint16_t numero16 = 243;
+	t_list *lista = list_create();
+
+	// lista cargada con 10 veces la estructura t_UMCConfig
+	int i;
+	for(i=0; i < 10; i++)
+		list_add(lista, self);
+
+
+	// Iniciar en 0
+	int32_t offset = 0;
+
+	// Serializo int de 8 bytes y 4 bytes
+	serializar_campo(paquete, &offset, &numero32, sizeof(numero32));
+	serializar_campo(paquete, &offset, &numero16, sizeof(numero16));
+	serializar_campo(paquete, &offset, &(self->paginasXProceso), sizeof(self->paginasXProceso));
+	serializar_campo(paquete, &offset, &(self->tamanioPagina), sizeof(self->tamanioPagina));
+
+	// Serializo la estructura t_UMCConfig , debe tener el __attribute__((packed))
+	serializar_campo(paquete, &offset, self, sizeof(t_UMCConfig));
+
+	// Serializo lista
+	serializar_lista(paquete, &offset, lista, sizeof(t_UMCConfig));
+
+	// Serializar el header despues de agregar todos los campos (porque actualiza header.length)
+	serializar_header(paquete);
+
+	list_destroy(lista);
+
+	return offset;
+}
+
+int deserializar_ejemplo(t_UMCConfig *self, t_paquete *paquete){
+	int offset = 0;
+	t_UMCConfig self2;
+	uint32_t numero32;
+	uint16_t numero16;
+	t_list *lista = list_create();
+
+	deserializar_campo(paquete, &offset, &numero32, sizeof(numero32));
+	deserializar_campo(paquete, &offset, &numero16, sizeof(numero16));
+	deserializar_campo(paquete, &offset, &(self->paginasXProceso), sizeof(self->paginasXProceso));
+	deserializar_campo(paquete, &offset, &(self->tamanioPagina), sizeof(self->tamanioPagina));
+	deserializar_campo(paquete, &offset, &self2, sizeof(t_UMCConfig));
+
+	deserializar_lista(paquete, &offset, lista, sizeof(t_UMCConfig));
+
+	// chequeo que esten todos los nodos
+	int32_t cant = list_size(lista);
+	printf("cant %d", cant);
+	self = list_get(lista,7);
+	list_destroy(lista);
+
+	return EXIT_SUCCESS;
+}
+
+/** EJEMPLO CREACION DE PAQUETE (Envio de la configuracion del UMC) **/
+
+int enviarConfigUMC(int unSocket, int frameSize, int frameByProc){
+	int offset = 0;
+	t_paquete paquete;
+	t_UMCConfig UMCConfig;
+
+	// cargo estructura
+	UMCConfig.paginasXProceso = frameByProc;
+	UMCConfig.tamanioPagina = frameSize;
+
+	crear_paquete(&paquete, CONFIG_UMC);
+	serializar_campo(&paquete, &offset, &UMCConfig, sizeof(UMCConfig));
+	// Otra forma
+	//serializar_campo(&paquete, &offset, &(UMCConfig.paginasXProceso), sizeof(UMCConfig.paginasXProceso));
+	//serializar_campo(&paquete, &offset, &(UMCConfig.tamanioPagina), sizeof(UMCConfig.tamanioPagina));
+	serializar_header(&paquete);
+
+	enviar_paquete(unSocket, &paquete);
+	free_paquete(&paquete);
+
+	return EXIT_SUCCESS;
+}
+
+int recibirConfigUMC(int unSocket, t_UMCConfig *UMCConfig){
+	t_paquete paquete;
+	int offset = 0;
+	int type = 0;
+	recibir_paquete(unSocket, &paquete);
+	type = obtener_paquete_type(&paquete);
+
+	switch(type){
+		case CONFIG_UMC:
+						deserializar_campo(&paquete, &offset, UMCConfig, sizeof(t_UMCConfig));
+						// Otra forma
+						//deserializar_campo(&paquete, &offset, &(UMCConfig->paginasXProceso), sizeof(UMCConfig->paginasXProceso));
+						//deserializar_campo(&paquete, &offset, &(UMCConfig->tamanioPagina), sizeof(UMCConfig->tamanioPagina));
+						break;
+		case CONNECTION_CLOSED:
+						perror("Se cerro la conexion");
+						break;
+	}
+
+	free_paquete(&paquete);
+	return EXIT_SUCCESS;
+}
+
+
+
+
+
+
+/*********** Implementacion primitivas de serializacion *************/
+
+
 void serializar_header(t_paquete *paquete){
 	t_header header_net;
 	int32_t offset_ = 0, tmp_size = 0;
@@ -124,68 +240,5 @@ int32_t* serializar_lista(t_paquete *paquete, int32_t *offset, t_list *lista, in
 	}
 	return offset;
 }
-
-
-
-/************* funciones especificas ********************/
-
-int serializar_ejemplo(t_paquete *paquete, t_UMCConfig *self){
-	uint32_t numero32 = 777;
-	uint16_t numero16 = 243;
-	t_list *lista = list_create();
-
-	// lista cargada con 10 veces la estructura t_UMCConfig
-	int i;
-	for(i=0; i < 10; i++)
-		list_add(lista, self);
-
-
-	// Iniciar en 0
-	int32_t offset = 0;
-
-	// Serializo int de 8 bytes y 4 bytes
-	serializar_campo(paquete, &offset, &numero32, sizeof(numero32));
-	serializar_campo(paquete, &offset, &numero16, sizeof(numero16));
-	serializar_campo(paquete, &offset, &(self->paginasXProceso), sizeof(self->paginasXProceso));
-	serializar_campo(paquete, &offset, &(self->tamanioPagina), sizeof(self->tamanioPagina));
-
-	// Serializo la estructura t_UMCConfig , debe tener el __attribute__((packed))
-	serializar_campo(paquete, &offset, self, sizeof(t_UMCConfig));
-
-	// Serializo lista
-	serializar_lista(paquete, &offset, lista, sizeof(t_UMCConfig));
-
-	// Serializar el header despues de agregar todos los campos (porque actualiza header.length)
-	serializar_header(paquete);
-
-	list_destroy(lista);
-
-	return offset;
-}
-
-int deserializar_ejemplo(t_UMCConfig *self, t_paquete *paquete){
-	int offset = 0;
-	t_UMCConfig self2;
-	uint32_t numero32;
-	uint16_t numero16;
-	t_list *lista = list_create();
-
-	deserializar_campo(paquete, &offset, &numero32, sizeof(numero32));
-	deserializar_campo(paquete, &offset, &numero16, sizeof(numero16));
-	deserializar_campo(paquete, &offset, &(self->paginasXProceso), sizeof(self->paginasXProceso));
-	deserializar_campo(paquete, &offset, &(self->tamanioPagina), sizeof(self->tamanioPagina));
-	deserializar_campo(paquete, &offset, &self2, sizeof(t_UMCConfig));
-
-	deserializar_lista(paquete, &offset, lista, sizeof(t_UMCConfig));
-
-	// chequeo que esten todos los nodos
-	int32_t cant = list_size(lista);
-	printf("cant %d", cant);
-	self = list_get(lista,7);
-	list_destroy(lista);
-
-	return EXIT_SUCCESS;
-}
-
 
 
