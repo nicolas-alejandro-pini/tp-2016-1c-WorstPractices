@@ -8,6 +8,11 @@
 #ifndef COMMONS_IPCTYPES_H_
 #define COMMONS_IPCTYPES_H_
 
+/*Definiciones para el manejo de paquetes */
+#define CONNECTION_CLOSED 0
+#define BROKENPIPE 1
+#define CONFIG_UMC 2
+
 /*Definicion de Parametros de Conexiones comunes*/
 #define OK					0ul
 #define ERROR				1ul
