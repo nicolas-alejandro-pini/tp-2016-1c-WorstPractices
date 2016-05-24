@@ -12,7 +12,7 @@
 #include <commons/ipctypes.h>
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
-#include <commons/elestaclibrary.h>
+#include <commons/serializador.h>
 #include <commons/parser/metadata_program.h>
 #include <commons/pcb.h>
 #include <commons/log.h>
@@ -258,7 +258,7 @@ void threadCPU(int unCpu,stEstado* info){
 				/*Se produjo una excepcion por acceso a una posicion de memoria invalida (segmentation fault), imprimir error
 				 * y bajar la consola tambien close (cliente)*/
 				break;
-			case SIGUSR1:
+			case SIGUSR1CPU:
 				/*Se cayo el CPU, se debe replanificar, (continue) */
 				break;
 			case OBTENERVALOR:
@@ -295,7 +295,7 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	t_metadata_program *unPrograma;
 	stPCB *unPCB;
-	stUMCConfig UMCConfig;
+	t_UMCConfig UMCConfig;
 	char* temp_file = "nucleo.log";
 
 	/*Inicializamos las listas todo:liberarlas luego*/
@@ -482,7 +482,6 @@ int main(int argc, char *argv[]) {
 								log_info("Se ha creado un PCB con PID[%s]",unPCB->pid);
 
 								/*TODO: Calcular paginas y pedirlas a la UMC*/
-								stUMCConfig UMCConfig;
 								recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig);
 								printf("PaginasXProc[%d] Tamaño pagina[%d]\n", UMCConfig.paginasXProceso, UMCConfig.tamanioPagina);
 
