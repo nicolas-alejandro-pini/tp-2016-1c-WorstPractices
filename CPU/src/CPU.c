@@ -29,6 +29,7 @@
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
 #include <commons/elestaclibrary.h>
+#include <commons/pcb.h>
 #include <commons/config.h>
 #include "parser/parser.h"
 #include "parser/metadata_program.h"
@@ -70,29 +71,6 @@ t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de
 
 stPCB unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 
-/*
- ============================================================================
- Name        : sendResponseMessage.
- Author      : Ezequiel Martinez
- Inputs      : N/A
- Outputs     : N/A
- Description : funcion para enviar y recibir mensajes ipc para primitivas.
- ============================================================================
- */
-
-stMensajeIPC sendResponseMessages(int socket, int header, char* mensaje){
-
-	stMensajeIPC unMensajeToSend;
-
-	enviarMensajeIPC(socket,nuevoHeaderIPC(header),mensaje);
-
-		if(!recibirMensajeIPC(socket,&unMensajeToSend)){
-			printf("Error: No se recibio mensaje.\n");
-			return NULL;
-		}
-
-	return unMensajeToSend;
-}
 
 /*
  ============================================================================
@@ -107,43 +85,45 @@ stMensajeIPC sendResponseMessages(int socket, int header, char* mensaje){
 t_posicion definirVariable(t_nombre_variable identificador_variable){
 
 	stMensajeIPC mensajePrimitiva;
+	t_posicion posicionVariable;
 
-	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, NUEVAVARIABLE, identificador_variable);
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(NUEVAVARIABLE),identificador_variable);
 
-	if (mensajePrimitiva != NULL){
-
-		if (mensajePrimitiva.header.tipo == OK) {
-
-				/*TODO Deserializar el mensaje*/
-
-			}
-	}else{
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
-		return NULL;
+		return posicionVariable;
 	}
 
-	return t_posicion;
+	if (mensajePrimitiva.header.tipo == OK) {
+
+		/*TODO Deserializar el mensaje*/
+
+	}
+
+	//free(mensajePrimitiva);
+	return posicionVariable;
 }
 
 t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	stMensajeIPC mensajePrimitiva;
+	t_posicion posicionVariable;
 
-	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, POSICIONVARIABLE, identificador_variable);
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
 
-		if (mensajePrimitiva != NULL){
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
+		printf("Error: Falló la obtencion de posicion de la variable %s.\n", identificador_variable);
+		return posicionVariable;
+	}
 
-			if (mensajePrimitiva.header.tipo == OK) {
+	if (mensajePrimitiva.header.tipo == OK) {
 
-					/*TODO Deserializar el mensaje*/
+		/*TODO Deserializar el mensaje*/
 
-				}
-		}else{
-			printf("Error: Falló la obtencion de posicion de la variable %s.\n", identificador_variable);
-			return NULL;
-		}
+	}
 
-		return t_posicion;
+	//free(mensajePrimitiva);
+	return posicionVariable;
 
 }
 
@@ -153,24 +133,24 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
 
-		/*TODO Serializar el mensaje de estructura */
-		char* estructuraSerializada;
+	/*TODO Serializar el mensaje de estructura */
+	char* estructuraSerializada;
 
-		mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, VALORVARIABLE, estructuraSerializada);
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(VALORVARIABLE),estructuraSerializada);
 
-		if (mensajePrimitiva != NULL){
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
+		printf("Error: Fallo en deferenciar variable.\n");
+		return NULL;
+	}
 
-			if (mensajePrimitiva.header.tipo == OK) {
+	if (mensajePrimitiva.header.tipo == OK) {
 
-					/*TODO Deserializar el mensaje*/
+		/*TODO Deserializar el mensaje*/
 
-				}
-		}else{
-			printf("Error: Fallo en deferenciar variable.\n");
-			return NULL;
-		}
+	}
 
-		return valor;
+	//free(mensajePrimitiva);
+	return valor;
 
 
 }
@@ -182,18 +162,20 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 	/*TODO Serializar el mensaje de estructura */
 	char* estructuraSerializada;
 
-	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockUmc, ASIGNARVARIABLE, estructuraSerializada);
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(ASIGNARVARIABLE),estructuraSerializada);
 
-	if (mensajePrimitiva != NULL){
-
-		if (mensajePrimitiva.header.tipo == OK) {
-
-				/*TODO Deserializar el mensaje*/
-
-			}
-	}else{
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Fallo en asignacion de la variable.\n");
+
 	}
+
+	if (mensajePrimitiva.header.tipo == OK) {
+
+		/*TODO Deserializar el mensaje*/
+
+	}
+
+	//free(mensajePrimitiva); /*TODO Arreglar el free de las estructuras*/
 
 }
 
@@ -397,7 +379,7 @@ int cargarPCB(char* stringPCB){
 
 		/*TODO Deserealizar la estructura del PCB */
 
-		unPCB = (stPCB) stringPCB;
+		//unPCB = (stPCB) stringPCB; /*TODO asignar PCB*/
 
 	return (-1);
 }
@@ -411,38 +393,39 @@ int cargarPCB(char* stringPCB){
  Description : Funcion para obtener instruccion del progracma ANSISOP en memoria.
  =========================================================================================
  */
-char* getInstruccion (int start, int size){
+int getInstruccion (int start, int size, char** instruccion){
 
 	stMensajeIPC mensajeUMC;
 
-
 	char* estructuraSerializada;
-	char* instruccion;
 	t_posicion posicionInstruccion;
 
 	posicionInstruccion.size = size;
 	posicionInstruccion.offSet = start;
-	// posicionInstruccion.nroPagina = unPCB.Numero de Pagina  ----> Falta cargar el numero de pagina inicial.
+	posicionInstruccion.nroPagina = unPCB.paginaInicial;
 
 	/*TODO Serializar el mensaje de estructura */
 
-	mensajeUMC = sendResponseMessages (configuracionInicial.sockUmc, GETINSTRUCCION, estructuraSerializada);
 
-	if (mensajeUMC != NULL){
+	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(GETINSTRUCCION),estructuraSerializada);
 
-		if (mensajeUMC.header.tipo == OK) {
-
-				/*TODO Deserializar el mensaje*/
-				free(estructuraSerializada);
-				return instruccion;
-			}
-	}else{
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajeUMC)){
 		printf("Error: Fallo en obtener instrucción.\n");
-
-		free(instruccion);
 		free(estructuraSerializada);
-		return NULL;
+		return (-1);
+
 	}
+
+	if (mensajeUMC.header.tipo == OK) {
+
+		/*TODO Deserializar el mensaje*/
+
+		instruccion = estructuraSerializada;
+
+	}
+
+	free(estructuraSerializada);
+	return 0;
 }
 
 /*
@@ -459,7 +442,9 @@ int ejecutarInstruccion(void){
 	int programCounter = unPCB.pc;
 	char* instruccion = NULL;
 
-	instruccion = getInstruccion(unPCB.metadata_program->instrucciones_serializado[programCounter].start, unPCB.metadata_program->instrucciones_serializado[programCounter].offset);
+	instruccion = getInstruccion(unPCB.metadata_program->instrucciones_serializado[programCounter].start,
+								 unPCB.metadata_program->instrucciones_serializado[programCounter].offset,
+								 &instruccion);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
@@ -473,27 +458,35 @@ int ejecutarInstruccion(void){
 
 }
 
+/*
+ =========================================================================================
+ Name        : devolverPCBalNucleo()
+ Author      : Ezequiel Martinez
+ Inputs      : N/A
+ Outputs     : Retorna -1 en caso de haber algun error.
+ Description : Envia el PCB al Nucleo con la informacion actualizada.
+ =========================================================================================
+ */
 int devolverPCBalNucleo(void){
 
 	char* serializadoPCB;
 
 	/*TODO serrializar PCB */
 
-	stMensajeIPC mensajePrimitiva;
+	stMensajeIPC mensajePCB;
 
-	mensajePrimitiva = sendResponseMessages (configuracionInicial.sockNucleo, SENDANSISOP, serializadoPCB);
 
-	if (mensajePrimitiva != NULL){
+	enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(SENDANSISOP),serializadoPCB);
 
-		if (mensajePrimitiva.header.tipo != OK) {
-
+		if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&mensajePCB)){
 			printf("Error: Falló enviar PCB al Nucleo.\n");
 			free(serializadoPCB);
 			return (-1);
 
 		}
-	}
+
 	free(serializadoPCB);
+	//free(mensajePCB);
 	return 0;
 }
 
@@ -561,7 +554,6 @@ int main(void) {
 		SocketAnterior = configuracionInicial.socketMax;
 		log_info("OK - UMC conectada.");
 		fflush(stdout);
-		//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
 
 	}
 		//Fin de conexion al UMC//
@@ -625,69 +617,85 @@ int main(void) {
 
 							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(OK),"CPU: Programa recibido.");
 
-							if (cargarPCB(unMensaje.contenido) == -1)
+							if (cargarPCB(unMensaje.contenido) != -1)
 							{
-								log_info("Error en lectura ANSIPROG...");
-							}
+								log_info("PCB de ANSIPROG cargado. /n");
 
-							log_info("PCB de ANSIPROG cargado. /n");
+								/* Envio mensaje para obtener el quantum del programa */
 
-							/* Envio mensaje para obtener el quantum del programa */
+								enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUM));
 
-							enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUM));
+								if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
+									log_error("Error al recibir el quantum desde el Nucleo./n");
+									configuracionInicial.salir = 1;
+									break;
+								}else{
 
-							if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
-								log_error("Error al recibir el quantum desde el Nucleo./n");
-								configuracionInicial.salir = 0;
-							}else{
+									if (unMensaje.header.id == QUANTUM){
 
-								quantum = unMensaje.contenido ; /*TODO recibir el quantum en mensajeIPC*/
-							}
-
-							if (quantum <= 0)
-								log_info("Error en Quantum definido. /n");
-
-
-							/* Envio mensaje para obtener el quantum sleep del programa */
-
-							enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUMSLEEP));
-
-							if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
-								log_error("Error al recibir el quantum sleep desde el Nucleo./n");
-								configuracionInicial.salir = 0;
-							}else{
-
-								quantum = unMensaje.contenido ; /*TODO recibir el quantum en mensajeIPC*/
-							}
-
-							//Ejecuto las instrucciones defidas por quamtum
-
-							while (quantum > 0){
-								if(ejecutarInstruccion() == OK)
-								{
-									sleep(quantumSleep);
-									quantum --; 	/* descuento un quantum para proxima ejecución */
-									unPCB.pc ++; 	/* actualizo el program counter a la siguiente posición */
+										quantum = atoi(unMensaje.contenido) ;
+									}
 
 								}
 
-							}
+								if (quantum <= 0){
+									log_info("Error en Quantum definido. /n");
+									break;
+								}
 
-							devolverPCBalNucleo();
+								/* Envio mensaje para obtener el quantum sleep del programa */
+
+								enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUMSLEEP));
+
+								if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensaje)){
+									log_error("Error al recibir el quantum sleep desde el Nucleo./n");
+									configuracionInicial.salir = 1;
+									break;
+								}else{
+
+									if (unMensaje.header.id == QUANTUMSLEEP){
+										quantumSleep = atoi(unMensaje.contenido) ; /*TODO recibir el quantum en mensajeIPC*/
+									}
+								}
+
+								//Ejecuto las instrucciones defidas por quamtum
+
+								while (quantum > 0){
+									if(ejecutarInstruccion() == OK)
+									{
+										sleep(quantumSleep);
+										quantum --; 	/* descuento un quantum para proxima ejecución */
+										unPCB.pc ++; 	/* actualizo el program counter a la siguiente posición */
+
+									}
+
+								}
+
+								if (devolverPCBalNucleo() == -1){
+
+									log_info("Error al devolver PCB de ANSIPROG...");
+									configuracionInicial.salir = 1;
+									break;
+
+								}
+
+							}else
+								log_info("Error en lectura ANSIPROG...");
 
 
-						break;
+							break;
 
-/*
-						case UMCINSTRUCCION:
-						{
-							log_info("Respondiendo solicitud UMCINSTRUCCION...");
 
-							enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(OK),"CPU: Recibi del UMC.");
+						case SIGUSR1:
 
-						}
-						break;
-						*/
+							log_info("Respondiendo solicitud SIGUSR1...");
+
+							/* Notifico al nucleo mi desconexion*/
+							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(SIGUSR1CPU),"CPU: señal SIGUSR1.");
+
+							configuracionInicial.salir = 1;
+							break;
+
 					}
 				}
 

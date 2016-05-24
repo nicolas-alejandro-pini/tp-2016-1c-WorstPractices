@@ -31,7 +31,7 @@
 #define FINANSISOP			123ul
 #define QUANTUMFIN			124ul
 #define EXECERROR			125ul
-#define SIGUSR1				126ul
+#define SIGUSR1CPU			126ul
 #define OBTENERVALOR		127ul
 #define GRABARVALOR			128ul
 #define WAIT				129ul
