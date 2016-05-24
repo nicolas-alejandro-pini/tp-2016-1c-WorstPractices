@@ -13,6 +13,15 @@
 #define SOCKETSIPCIRC_H_
 
 	#include "../commons/ipctypes.h"
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <string.h>
+	#include <errno.h>
+	#include <netdb.h>
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <arpa/inet.h>
 
 	/*----------------------------------------------------------------------------*/
 	/*                     Definiciones y Declaraciones                           */
@@ -43,6 +52,29 @@
 		char *contenido;	/* } __attribute__((packed)) stMensajeIPC;*/
 	}stMensajeIPC;
 
+	#define CONNECTION_CLOSED 0
+	#define CONFIG_UMC 1
+
+	typedef uint16_t t_htons;
+	typedef uint32_t t_htonl;
+	typedef uint16_t t_buffer;
+
+	typedef struct{
+		t_htons type;
+		t_htonl length;
+	} __attribute__ ((__packed__)) t_header;
+
+	typedef struct{
+		t_header header;
+		t_buffer *data;
+	}  t_paquete;
+
+	typedef struct{
+		int paginasXProceso;
+		int tamanioPagina;
+	//} __attribute__((packed)) t_UMCConfig;
+	} t_UMCConfig;
+
 	/*----------------------------------------------------------------------------*/
 	/*                         Funciones Privadas                                 */
 	/*----------------------------------------------------------------------------*/
@@ -66,5 +98,23 @@
 	/*----------------------------------------------------------------------------*/
 	
 	int recibirMensajeIPC(int unSocket, stMensajeIPC* unNuevoMensaje);
+
+	/*----------------------------------------------------------------------------*/
+	/*                         Manejo de paquetes                                 */
+	/*----------------------------------------------------------------------------*/
+
+
+	t_buffer* serializar_header(t_paquete *paquete, int32_t *offset);
+	void deserializar_header(t_header *buf_header, int32_t *offset, t_header *header);
+	int32_t* serializar_campo(t_buffer *buffer, int32_t *offset, void *campo, int32_t size);
+	int enviar_paquete(int sockfd, t_paquete *paquete);
+	int recibir_paquete(int sockfd, t_paquete *paquete);
+	int recibir_header(int sockfd, t_header *header);
+	void free_paquete(t_paquete *paquete);
+
+	/** Estructuras especificas **/
+	int serializarConfigUMC(t_paquete *paquete, t_UMCConfig *self);
+	int deserializarConfigUMC(t_UMCConfig *self, t_paquete *paquete);
+
 
 #endif /* SOCKETSIPCIRC_H_ */
