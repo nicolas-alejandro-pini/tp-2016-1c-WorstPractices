@@ -1,3 +1,6 @@
+#include <commons/collections/queue.h>
+#include <commons/collections/list.h>
+
 #ifndef NUCLEO_H_
 #define NUCLEO_H_
 
@@ -36,9 +39,17 @@ typedef struct {
 	int salir;              /* Indica si debo o no salir de la aplicacion. */
 } stEstado;
 
-typedef struct stCPUConectado{
-	int socket;	/* Socket de CPU. */
-}stCPUConectado;
+typedef struct{
+	char* nombre;           /*Nombre del dispositivo de I/O*/
+	int retardo;			/*Retardo en milisegundos*/
+	t_queue rafagas;		/*Cola de rafagas de ejecucion*/
+} stDispositivo;
+
+typedef struct{
+	char* pid;           	/*PID del proceso que realiza el pedido de I/O*/
+	int unidades;			/*Unidades de ejecucion */
+} stRafaga;
+
 
 #endif
 
