@@ -9,29 +9,13 @@
 
 #include "Nucleo.h"
 
-#include <commons/config.h>
-#include <commons/socketsIPCIRC.h>
-#include <commons/ipctypes.h>
-#include <commons/collections/list.h>
-#include <commons/collections/queue.h>
-#include <commons/serializador.h>
-#include <commons/parser/metadata_program.h>
-#include <commons/pcb.h>
-#include <commons/log.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/inotify.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
 /*
  ============================================================================
  Estructuras y definiciones
  ============================================================================
  */
+
+int pidIncrementer = 0;
 
 /* Listas globales */
 fd_set fds_master; /* Lista de todos mis sockets.*/
@@ -294,6 +278,7 @@ int main(int argc, char *argv[]) {
 	t_metadata_program *unPrograma;
 	stPCB *unPCB;
 	t_UMCConfig UMCConfig;
+	t_paquete paquete;
 
 	int bytesLeidos = 0;
 	char* temp_file = "nucleo.log";
@@ -353,7 +338,6 @@ int main(int argc, char *argv[]) {
 
 		stHeaderIPC = nuevoHeaderIPC(ERROR);
 		if (!recibirHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
-			printf("UMC handshake error - No se pudo recibir mensaje de respuesta\n");
 			log_error("UMC handshake error - No se pudo recibir mensaje de respuesta");
 			liberarHeaderIPC(stHeaderIPC);
 			close(unCliente);
@@ -363,7 +347,6 @@ int main(int argc, char *argv[]) {
 		if (stHeaderIPC->tipo == QUIENSOS) {
 			stHeaderIPC = nuevoHeaderIPC(CONNECTNUCLEO);
 			if (!enviarHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
-
 				log_error("UMC handshake error - No se pudo enviar mensaje de conexion");
 				liberarHeaderIPC(stHeaderIPC);
 				close(unCliente);
@@ -474,27 +457,33 @@ int main(int argc, char *argv[]) {
 						} else {
 							int sizeToRecv = stHeaderIPC->largo;
 							if (stHeaderIPC->tipo == SENDANSISOP) {
-//								unPrograma = metadata_desde_literal(unMensaje.contenido);
-//								unPCB = crearPCB(unPrograma,unCliente);
-//								log_info("Se ha creado un PCB con PID[%s]",unPCB->pid);
-
-								stHeaderIPC = nuevoHeaderIPC(OK);
-								if (!enviarHeaderIPC(unCliente, stHeaderIPC)) {
-									printf("Handshake Consola - No se puede recibir el mensaje de reconocimiento de cliente\n");
-									log_error("Handshake Consola - No se puede recibir el mensaje de reconocimiento de cliente");
-									liberarHeaderIPC(stHeaderIPC);
-									close(unCliente);
-									continue;
-								}
 
 								/*TODO: Calcular paginas y pedirlas a la UMC*/
-								recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig);
-								printf("PaginasXProc[%d] Tamaño pagina[%d]\n", UMCConfig.paginasXProceso, UMCConfig.tamanioPagina);
 
-								/*Lo almaceno en la cola de PCB listo para ejecutar*/
-								/*Lo almaceno en la cola de PCB listo para ejecutar*/
-								queue_push(colaReady, unPCB);
-								log_info("PCB[PID:%s] - ha ingresado a la cola de Ready", unPCB->pid);
+								unPrograma = metadata_desde_literal(unMensaje.contenido);
+								unPCB = malloc(sizeof(stPCB));
+								unPCB->pid = 1;
+								unPCB->pc = 0;
+								unPCB->paginaInicial= 0;/*TODO: Hacer intercambio con la UMC*/
+								unPCB->cantidadPaginas= 3; /*TODO: Hacer intercambio con la UMC*/
+								unPCB->socketConsola = unCliente;
+								unPCB->socketCPU = 0;
+								unPCB->metadata_program = unPrograma;
+
+								serializar_pcb(&paquete,unPCB);
+
+								stPCB *unPCBDes = malloc(sizeof(stPCB));
+								deserializar_pcb(unPCBDes,&paquete);
+
+
+//
+//								recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig);
+//								printf("PaginasXProc[%d] Tamaño pagina[%d]\n", UMCConfig.paginasXProceso, UMCConfig.tamanioPagina);
+//
+//								/*Lo almaceno en la cola de PCB listo para ejecutar*/
+//								/*Lo almaceno en la cola de PCB listo para ejecutar*/
+//								queue_push(colaReady, unPCB);
+								log_info("PCB[PID:%s] - ha ingresado a la cola de Ready", unPCBDes->pid);
 
 							}
 
