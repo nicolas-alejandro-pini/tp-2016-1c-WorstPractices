@@ -30,7 +30,7 @@
 	typedef struct {
 		t_puntero_instruccion	start;
 		t_size		offset;
-	} t_intructions;
+	} __attribute__((packed)) t_intructions ;
 
 	typedef struct {
 		t_puntero_instruccion	instruccion_inicio;	//El numero de la primera instruccion (Begin)
@@ -42,7 +42,7 @@
 
 		int				cantidad_de_funciones;
 		int				cantidad_de_etiquetas;
-	} t_metadata_program;
+	} __attribute__((packed)) t_metadata_program ;
 
 t_metadata_program* metadata_desde_literal(const char*);
 void metadata_destruir(t_metadata_program*);

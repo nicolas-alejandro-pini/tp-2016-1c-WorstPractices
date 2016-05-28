@@ -6,30 +6,67 @@
  */
 #include "pcb.h"
 
-stPCB * crearPCB(t_metadata_program *unPrograma, int socketConsola) {
+int serializar_pcb(t_paquete *paquete, stPCB *self) {
 
-	stPCB * unPCB = malloc(sizeof(stPCB));
-	nuevoPID(unPCB->pid);
-	unPCB->pc = 0;
-	unPCB->socketConsola = 0;
-	unPCB->socketCPU = 0;
-	unPCB->socketConsola = 0;
-	unPCB->paginaInicial = 0;
-	unPCB->tamanioPaginas = 0;
-	unPCB->cantidadPaginas = 0;
-	return (unPCB);
-}
+	// Iniciar en 0
+	int32_t offset = 0;
 
-void liberarPCB(stPCB *unPCB) {
-	free(unPCB);
-}
+	//Serializamos los campos estaticos
+	serializar_campo(paquete, &offset, &self->pid, sizeof(self->pid));
+	serializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
+	serializar_campo(paquete, &offset, &self->paginaInicial, sizeof(self->pc));
+	serializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
+	serializar_campo(paquete, &offset, &self->tamanioPaginas, sizeof(self->tamanioPaginas));
+	serializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
+	serializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 
-void nuevoPID(char *id) {
-	char i;
+	// Serializo la estructura stPCB , debe tener el __attribute__((packed))
+	serializar_campo(paquete, &offset, self, sizeof(stPCB));
 
-	srand(time(NULL));
-	for (i = 0; i < 15; i++) {
-		*(id + i) = (char) rand();
+	//Serializacion del t_metadata
+	t_metadata_program* miMetadata = self->metadata_program;
+
+	serializar_campo(paquete, &offset, miMetadata, sizeof(t_metadata_program));
+
+	int i, j;
+
+	for (i = 0; i < miMetadata->instrucciones_size; ++i) {
+		serializar_campo(paquete, &offset, &miMetadata->instrucciones_serializado[i], sizeof(t_intructions));
 	}
-	id[15] = '\0';
+
+	for (j = 0; j < miMetadata->etiquetas_size; ++j) {
+		serializar_campo(paquete, &offset, &miMetadata->etiquetas[j], sizeof(char));
+	}
+
+	serializar_header(paquete);
+
+	return offset;
+}
+
+int deserializar_pcb(stPCB *self,t_paquete *paquete) {
+	int offset = 0;
+
+	deserializar_campo(paquete, &offset, &self->pid, sizeof(self->pid));
+	deserializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
+	deserializar_campo(paquete, &offset, &self->paginaInicial, sizeof(self->pc));
+	deserializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
+	deserializar_campo(paquete, &offset, &self->tamanioPaginas, sizeof(self->tamanioPaginas));
+	deserializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
+	deserializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
+
+	deserializar_campo(paquete, &offset, &self, sizeof(stPCB));
+	deserializar_campo(paquete, &offset, &self->metadata_program, sizeof(t_metadata_program));
+
+	int i, j;
+
+	for (i = 0; i < self->metadata_program->instrucciones_size; ++i) {
+		deserializar_campo(paquete, &offset, &self->metadata_program->instrucciones_serializado[i], sizeof(t_intructions));
+	}
+
+	for (j = 0; j < self->metadata_program->etiquetas_size; ++j) {
+		deserializar_campo(paquete, &offset, &self->metadata_program->etiquetas[j], sizeof(char));
+	}
+
+	return EXIT_SUCCESS;
+
 }
