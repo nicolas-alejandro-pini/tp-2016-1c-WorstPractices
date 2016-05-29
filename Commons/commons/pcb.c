@@ -21,7 +21,7 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 //	serializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 
 	// Serializo la estructura stPCB , debe tener el __attribute__((packed))
-	serializar_campo(paquete, &offset, self, sizeof(stPCB));
+	//serializar_campo(paquete, &offset, self, sizeof(stPCB));
 
 	//Serializacion del t_metadata
 //	t_metadata_program* miMetadata = self->metadata_program;
@@ -39,13 +39,14 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 //	}
 
 	serializar_header(paquete);
-
 	return offset;
 }
 
 int deserializar_pcb(stPCB *self,t_paquete *paquete) {
 	int offset = 0;
+	t_header *buf_header = malloc(sizeof(t_header));
 
+	deserializar_header(buf_header, &offset, &paquete->header);
 	deserializar_campo(paquete, &offset, &self->pid, sizeof(self->pid));
 //	deserializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
 //	deserializar_campo(paquete, &offset, &self->paginaInicial, sizeof(self->pc));
@@ -54,7 +55,7 @@ int deserializar_pcb(stPCB *self,t_paquete *paquete) {
 //	deserializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
 //	deserializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 
-	deserializar_campo(paquete, &offset, &self, sizeof(stPCB));
+//	deserializar_campo(paquete, &offset, &self, sizeof(stPCB));
 //	self->metadata_program = malloc(sizeof(t_metadata_program));
 //	deserializar_campo(paquete, &offset, &self->metadata_program, sizeof(t_metadata_program));
 //
