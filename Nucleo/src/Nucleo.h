@@ -47,18 +47,16 @@ typedef struct {
 	int sockUmc;			/* Socket de comunicacion con la UMC. */
 	int quantum;			/* Quantum de tiempo para ejecucion de rafagas. */
 	int quantumSleep;		/* Retardo en milisegundos que el nucleo esperara luego de ejecutar cada sentencia. */
-	char** ioIds;			/* Array con los dispositivos conectados*/
-	char** ioSleep;			/* Array con los retardos por cada dispositivo conectados (en milisegundos)*/
-	char** semIds;			/* Array con identificadores por cada semaforo*/
-	char** semInit;			/* Array con los valores iniciales de los semaforos conectados*/
-	char** sharedVars;		/* Array con las variables compartidas*/
+	t_list *dispositivos; 	/* Lista de stDispositivos*/
+	t_list *semaforos;		/* Lista de los semaforos con sus valores*/
+	t_list *sharedVars;		/* Lista con las variables compartidas*/
 	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
 	int salir;              /* Indica si debo o no salir de la aplicacion. */
 } stEstado;
 
 typedef struct{
 	char* nombre;           /*Nombre del dispositivo de I/O*/
-	int retardo;			/*Retardo en milisegundos*/
+	char* retardo;			/*Retardo en milisegundos*/
 	t_queue rafagas;		/*Cola de rafagas de ejecucion*/
 } stDispositivo;
 
@@ -66,6 +64,29 @@ typedef struct{
 	char* pid;           	/*PID del proceso que realiza el pedido de I/O*/
 	int unidades;			/*Unidades de ejecucion */
 } stRafaga;
+
+typedef struct{
+	char* nombre;           /*Nombre del semaforo*/
+	char* valor; 			/*Valor del semaforo*/
+} stSemaforo;
+
+typedef struct{
+	char* nombre;           /*Nombre del semaforo*/
+	char* valor; 			/*Valor del semaforo*/
+} stSharedVar;
+
+void loadInfo(stEstado* info);
+void monitoreoConfiguracion(stEstado* info);
+void cargar_sharedVars(stEstado *info,char** sharedVars);
+void cargar_semaforos(stEstado *info,char** semIds, char** semInit);
+void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep);
+stDispositivo *crear_dispositivo(char *nombre, char *retardo);
+stSemaforo 	*crear_semaforo(char *nombre, char* valor);
+stSharedVar *crear_sharedVar(char *nombre);
+void threadCPU(int unCpu, stEstado* info);
+int pid_incrementer();
+void cerrarSockets(stEstado *elEstadoActual);
+void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado);
 
 
 #endif
