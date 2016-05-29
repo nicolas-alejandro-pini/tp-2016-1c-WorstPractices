@@ -276,7 +276,8 @@ int main(int argc, char *argv[]) {
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
 	t_metadata_program *unPrograma;
-	stPCB *unPCB;
+	stPCB unPCB;
+	stPCB unPCBDes;
 	t_UMCConfig UMCConfig;
 	t_paquete paquete;
 
@@ -450,31 +451,29 @@ int main(int argc, char *argv[]) {
 						}
 
 						/* Recibo Programa */
-
-						if (!recibirHeaderIPC(unCliente, stHeaderIPC)) {
+						if (!recibirMensajeIPC(unCliente, &unMensaje)) {
+							printf("Consola error - No se puede recibir el programa a procesar\n");
 							log_error("No se puede recibir el programa a procesar");
 							continue;
 						} else {
-							int sizeToRecv = stHeaderIPC->largo;
-							if (stHeaderIPC->tipo == SENDANSISOP) {
+							if (unMensaje.header.tipo == SENDANSISOP) {
 
 								/*TODO: Calcular paginas y pedirlas a la UMC*/
 
 								unPrograma = metadata_desde_literal(unMensaje.contenido);
-								unPCB = malloc(sizeof(stPCB));
-								unPCB->pid = 1;
-								unPCB->pc = 0;
-								unPCB->paginaInicial= 0;/*TODO: Hacer intercambio con la UMC*/
-								unPCB->cantidadPaginas= 3; /*TODO: Hacer intercambio con la UMC*/
-								unPCB->socketConsola = unCliente;
-								unPCB->socketCPU = 0;
-								unPCB->metadata_program = unPrograma;
+								unPCB.pid = 1;
+//								unPCB->pc = 0;
+//								unPCB->paginaInicial = 0;/*TODO: Hacer intercambio con la UMC*/
+//								unPCB->cantidadPaginas = 3; /*TODO: Hacer intercambio con la UMC*/
+//								unPCB->socketConsola = unCliente;
+//								unPCB->socketCPU = 0;
+//								unPCB->metadata_program = unPrograma;
 
-								serializar_pcb(&paquete,unPCB);
+								crear_paquete(&paquete,EXECANSISOP);
+								serializar_pcb(&paquete, &unPCB);
 
-								stPCB *unPCBDes = malloc(sizeof(stPCB));
-								deserializar_pcb(unPCBDes,&paquete);
 
+								deserializar_pcb(&unPCBDes, &paquete);
 
 //
 //								recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig);
@@ -483,8 +482,7 @@ int main(int argc, char *argv[]) {
 //								/*Lo almaceno en la cola de PCB listo para ejecutar*/
 //								/*Lo almaceno en la cola de PCB listo para ejecutar*/
 //								queue_push(colaReady, unPCB);
-								log_info("PCB[PID:%s] - ha ingresado a la cola de Ready", unPCBDes->pid);
-
+								log_info("PCB[PID:%s] - ha ingresado a la cola de Ready", unPCBDes.pid);
 							}
 
 						}
