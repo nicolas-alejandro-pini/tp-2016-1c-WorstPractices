@@ -28,7 +28,6 @@
 #include "commons/sockets.h"
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
-#include <commons/elestaclibrary.h>
 #include <commons/pcb.h>
 #include <commons/config.h>
 #include "parser/parser.h"
@@ -70,6 +69,8 @@ int SocketAnterior = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
 stPCB unPCB; /* Estructura del pcb para ejecutar las instrucciones */
+
+t_posicion POSICION_DUMMY;
 
 
 /*
@@ -212,7 +213,7 @@ AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_irAlLabel				= irAlLabel,
 		.AnSISOP_llamarConRetorno		= llamarFuncion,
 		.AnSISOP_retornar				= retornar,
-		.AnSISOP_entradaSalida			= entradaSalida
+		.AnSISOP_entradaSalida			= entradaSalida,
 };
 
 AnSISOP_kernel kernel_functions = {
@@ -375,7 +376,7 @@ void cerrarSockets(t_configCPU *configuracionInicial){
  */
 int cargarPCB(char* stringPCB){
 
-	if (stringPCB != NULL)
+	//if (stringPCB != NULL)
 
 		/*TODO Deserealizar la estructura del PCB */
 
@@ -653,9 +654,9 @@ int main(void) {
 									break;
 								}else{
 
-									if (unMensaje.header.id == QUANTUMSLEEP){
+									if (unMensaje.header.id == QUANTUMSLEEP)
 										quantumSleep = atoi(unMensaje.contenido) ; /*TODO recibir el quantum en mensajeIPC*/
-									}
+
 								}
 
 								//Ejecuto las instrucciones defidas por quamtum
