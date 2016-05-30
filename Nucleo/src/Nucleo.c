@@ -603,12 +603,13 @@ int main(int argc, char *argv[]) {
 
 								unPrograma = metadata_desde_literal(unMensaje.contenido);
 								unPCB.pid = 1;
-//								unPCB->pc = 0;
-//								unPCB->paginaInicial = 0;/*TODO: Hacer intercambio con la UMC*/
-//								unPCB->cantidadPaginas = 3; /*TODO: Hacer intercambio con la UMC*/
-//								unPCB->socketConsola = unCliente;
-//								unPCB->socketCPU = 0;
-//								unPCB->metadata_program = unPrograma;
+								unPCB.pc = 44444;
+								unPCB.paginaInicial = 55555;/*TODO: Hacer intercambio con la UMC*/
+								unPCB.cantidadPaginas = 123456; /*TODO: Hacer intercambio con la UMC*/
+								unPCB.tamanioPaginas = 999999;
+								unPCB.socketConsola = unCliente;
+								unPCB.socketCPU = 69;
+								unPCB.metadata_program = unPrograma;
 
 								crear_paquete(&paquete, EXECANSISOP);
 								serializar_pcb(&paquete, &unPCB);
@@ -622,7 +623,7 @@ int main(int argc, char *argv[]) {
 //								/*Lo almaceno en la cola de PCB listo para ejecutar*/
 //								/*Lo almaceno en la cola de PCB listo para ejecutar*/
 //								queue_push(colaReady, unPCB);
-								log_info("PCB[PID:%s] - ha ingresado a la cola de Ready", unPCBDes.pid);
+								// log_info("PCB[PID:%d] - ha ingresado a la cola de Ready",(int) unPCBDes.pid); <-- no le cabe imprimir %d ni %s
 							}
 
 						}
