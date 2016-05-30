@@ -23,7 +23,7 @@ fd_set read_fds; /* Sublista de fds_master.*/
 
 t_queue *colaReady; /*Cola de todos los PCB listos para ejecutar*/
 t_queue *colaExit; /*Cola de todos los PCB listos para liberar*/
-t_queue *colaBlock; /*Cola de todos los PCB listos para liberar*/
+t_list 	*listaBlock; /*Lista de todos los PCB listos para liberar*/
 
 
 pthread_mutex_t mutexColaReady;
@@ -146,6 +146,9 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 	stDispositivo *new = malloc(sizeof(stDispositivo));/*TODO: liberar estos dispositivos al final*/
 	new->nombre = strdup(nombre);
 	new->retardo = retardo;
+	new->rafagas = queue_create();
+	/*Lanzar hilo para que haga el tratamiento de cada una da las rafagas de la cola*/
+
 	return new;
 }
 
@@ -203,14 +206,52 @@ void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado)
 	unMensaje->header.tipo = -1;
 }
 
-int pid_incrementer(){
-	pidIncrementer = pidIncrementer + 1;
-	return pidIncrementer;
-}
 
-void threadCPU(int unCpu, stEstado* info) {
-	stHeaderIPC *stHeaderIPC;
-	stPCB *stPCB;
+void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
+	int error = 0;
+	t_queue *colaRafaga;
+	stRafaga *unaRafaga;
+	stPCB *unPCB;
+	int unidad;
+
+	colaRafaga = unDispositivo->rafagas;
+
+	while (!error) {
+		if (queue_size(colaRafaga) == 0) {
+			continue;
+		}
+
+		unaRafaga = queue_pop(colaRafaga);
+
+		for (unidad=0; unidad < unaRafaga->unidades; ++unidad) {
+			usleep(atoi(unDispositivo->retardo));
+		}
+
+		/*Busqueda del pcb en la lista de pcb bloqueados*/
+		int _es_el_pcb(stPCB *p) {
+			return p->pid==unaRafaga->pid;
+		}
+
+		unPCB = list_remove_by_condition(listaBlock, (void*) _es_el_pcb);
+
+		/*Ponemos en la cola de Ready para que lo vuelva a ejecutar un CPU*/
+		pthread_mutex_lock(&mutexColaReady);
+		queue_push(colaReady, unPCB);
+		pthread_mutex_unlock(&mutexColaReady);
+		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
+
+	}
+}
+void threadCPU(void *argumentos) {
+	struct thread_cpu_arg_struct *args = argumentos;
+
+	stHeaderIPC *unHeaderIPC;
+	stMensajeIPC unMensajeIPC;
+	stPCB *unPCB;
+	t_paquete paquete;
+	stDispositivo *unDispositivo;
+	stRafaga *unaRafagaIO;
+	char *dispositivo_name;
 	int error = 0;
 
 	while (!error) {
@@ -219,33 +260,33 @@ void threadCPU(int unCpu, stEstado* info) {
 		}
 
 		pthread_mutex_lock(&mutexColaReady);
-		stPCB = queue_pop(colaReady);
+		unPCB = queue_pop(colaReady);
 		pthread_mutex_unlock(&mutexColaReady);
 
-		stHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
+		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
 
 		/*TODO: Esto no funciona, hay que implementar la serializacion para mandarlo por enviarMensajeIPC*/
-		if (!enviarMensajeIPC(unCpu, stHeaderIPC, "pcbSerializado")) {
-			log_error("CPU error - No se pudo enviar el PCB[%d]", stPCB->pid);
+		if (!enviarMensajeIPC(args->socketCpu, unHeaderIPC, "pcbSerializado")) {
+			log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
 			error = 1;
-			close(unCpu);
+			close(args->socketCpu);
 			continue;
 		}
 
-		if (!recibirHeaderIPC(unCpu, stHeaderIPC)) {
+		if (!recibirHeaderIPC(args->socketCpu, unHeaderIPC)) {
 			log_error("CPU error - No se pudo recibir el mensaje");
 			error = 1;
-			close(unCpu);
+			close(args->socketCpu);
 			continue;
 		} else {
-			if (stHeaderIPC->tipo == QUANTUM) {
+			if (unHeaderIPC->tipo == QUANTUM) {
 				char* quantum;
-				quantum = malloc(sizeof(info->quantum));
-				sprintf(quantum, "%d", info->quantum);
-				if (!enviarMensajeIPC(unCpu, stHeaderIPC, quantum)) {
+				quantum = malloc(sizeof(args->estado->quantum));
+				sprintf(quantum, "%d", args->estado->quantum);
+				if (!enviarMensajeIPC(args->socketCpu, unHeaderIPC, quantum)) {
 					log_error("CPU error - No se pudo enviar el quantum");
 					error = 1;
-					close(unCpu);
+					close(args->socketCpu);
 					continue;
 				}
 
@@ -253,38 +294,74 @@ void threadCPU(int unCpu, stEstado* info) {
 			}
 		}
 
-		if (!recibirHeaderIPC(unCpu, stHeaderIPC)) {
+		if (!recibirHeaderIPC(args->socketCpu, unHeaderIPC)) {
 			log_error("CPU error - No se pudo recibir el mensaje");
 			error = 1;
-			close(unCpu);
+			close(args->socketCpu);
 			continue;
 		} else {
-			if (stHeaderIPC->tipo == QUANTUMSLEEP) {
+			if (unHeaderIPC->tipo == QUANTUMSLEEP) {
 				char* sleepQuantum;
-				sleepQuantum = malloc(sizeof(info->quantumSleep));
-				sprintf(sleepQuantum, "%d", info->quantum);
-				if (!enviarMensajeIPC(unCpu, stHeaderIPC, sleepQuantum)) {
+				sleepQuantum = malloc(sizeof(args->estado->quantumSleep));
+				sprintf(sleepQuantum, "%d", args->estado->quantum);
+				if (!enviarMensajeIPC(args->socketCpu, unHeaderIPC, sleepQuantum)) {
 					log_error("CPU error - No se pudo enviar el quantum sleep");
 					error = 1;
-					close(unCpu);
+					close(args->socketCpu);
 					continue;
 				}
-
 				free(sleepQuantum);
 			}
 		}
 
-		if (!recibirHeaderIPC(unCpu, stHeaderIPC)) {
-			log_error("CPU error - No se pudo recibir confirmacion de recepcion de PCB[%d]\n", stPCB->pid);
+		if (!recibirMensajeIPC(args->socketCpu,&unMensajeIPC)) {
+			log_error("CPU error - No se pudo recibir header");
 			error = 1;
-			close(unCpu);
+			close(args->socketCpu);
 			continue;
 		} else {
-			switch (stHeaderIPC->tipo) {
+			switch (unMensajeIPC.header.tipo) {
 			case IOANSISOP:
-				/*Pide I/O*/
-				/*Deberia poner el PCB en ponerlo en la cola de bloqueado del correspondiente dispositivo (TODO: hacer que la configuracion los lea)
-				 * y hacer un continue para que el CPU existente tome otro PCB de la cola de listos*/
+				/*Busqueda de dispositivo*/
+				dispositivo_name = strdup(unMensajeIPC.contenido);
+				int _es_el_dispositivo(stDispositivo *d) {
+					return string_equals_ignore_case(d->nombre, dispositivo_name);
+				}
+				unDispositivo= list_remove_by_condition(args->estado->dispositivos,(void*)_es_el_dispositivo);
+
+				/*Envio confirmacion al CPU*/
+				unHeaderIPC = nuevoHeaderIPC(OK);
+				if (!enviarHeaderIPC(args->socketCpu,unHeaderIPC)) {
+					log_error("CPU error - No se pudo enviar header");
+					error = 1;
+					close(args->socketCpu);
+					continue;
+				}
+				/*Recibo el PCB*/
+				if (!recibir_paquete(args->socketCpu, &paquete)) {
+					log_error("CPU error - No se pudo recibir header");
+					error = 1;
+					close(args->socketCpu);
+					continue;
+				}
+
+				deserializar_pcb(unPCB,&paquete);
+
+				/*Almacenamos la rafaga de ejecucion de entrada salida*/
+				unaRafagaIO = malloc(sizeof(stRafaga));
+				unaRafagaIO->pid = unPCB->pid;
+				unaRafagaIO->unidades = 2; /*TODO: Se recibira de esta manera nombre|unidades*/
+
+				queue_push(unDispositivo->rafagas,unaRafagaIO);
+
+				/*Volvemos a almacenar el dispositivo en la lista*/
+				list_add(args->estado->dispositivos,unDispositivo);
+				list_add(listaBlock,unPCB);
+
+				log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
+
+				continue;
+
 				break;
 			case FINANSISOP:
 				/*Termina de ejecutar el PCB, en este caso deberia moverlo a la cola de EXIT para que luego sea liberada la memoria*/
@@ -321,12 +398,12 @@ void threadCPU(int unCpu, stEstado* info) {
 	if (error) {
 		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
 		pthread_mutex_lock(&mutexColaReady);
-		queue_push(colaReady, stPCB);
+		queue_push(colaReady, unPCB);
 		pthread_mutex_unlock(&mutexColaReady);
-		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", stPCB->pid);
+		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
 	}
 
-	liberarHeaderIPC(stHeaderIPC);
+	liberarHeaderIPC(unHeaderIPC);
 	pthread_exit(NULL);
 }
 
@@ -342,22 +419,24 @@ int main(int argc, char *argv[]) {
 	t_metadata_program *unPrograma;
 	stPCB unPCB;
 	stPCB unPCBDes;
-	t_UMCConfig UMCConfig;
 	t_paquete paquete;
+	struct thread_cpu_arg_struct cpu_arg_struct;
 
-	int bytesLeidos = 0;
 	char* temp_file = "nucleo.log";
 
 	/*Inicializamos cola de ready*/
 	colaReady = queue_create();
+	listaBlock = list_create();
 
 	int unCliente = 0, unSocket;
-	int maximoAnterior = 0;
+	int maximoAnterior =0;
 	struct sockaddr addressAceptado;
 
 	int agregarSock;
 
 	pthread_t p_thread;
+	pthread_t p_threadCpu;
+
 
 	printf("----------------------------------Elestac------------------------------------\n");
 	printf("-----------------------------------Nucleo------------------------------------\n");
@@ -375,6 +454,7 @@ int main(int argc, char *argv[]) {
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
 	pthread_create(&p_thread, NULL, (void*) &monitoreoConfiguracion, (void*) &elEstadoActual);
+
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
@@ -475,7 +555,6 @@ int main(int argc, char *argv[]) {
 					}
 
 					if (!recibirHeaderIPC(unCliente, stHeaderIPC)) {
-
 						log_error("Handshake error - No se puede recibir el mensaje de reconocimiento de cliente");
 
 						liberarHeaderIPC(stHeaderIPC);
@@ -524,12 +603,13 @@ int main(int argc, char *argv[]) {
 
 								unPrograma = metadata_desde_literal(unMensaje.contenido);
 								unPCB.pid = 1;
-//								unPCB->pc = 0;
-//								unPCB->paginaInicial = 0;/*TODO: Hacer intercambio con la UMC*/
-//								unPCB->cantidadPaginas = 3; /*TODO: Hacer intercambio con la UMC*/
-//								unPCB->socketConsola = unCliente;
-//								unPCB->socketCPU = 0;
-//								unPCB->metadata_program = unPrograma;
+								unPCB.pc = 44444;
+								unPCB.paginaInicial = 55555;/*TODO: Hacer intercambio con la UMC*/
+								unPCB.cantidadPaginas = 123456; /*TODO: Hacer intercambio con la UMC*/
+								unPCB.tamanioPaginas = 999999;
+								unPCB.socketConsola = unCliente;
+								unPCB.socketCPU = 69;
+								unPCB.metadata_program = unPrograma;
 
 								crear_paquete(&paquete, EXECANSISOP);
 								serializar_pcb(&paquete, &unPCB);
@@ -543,11 +623,10 @@ int main(int argc, char *argv[]) {
 //								/*Lo almaceno en la cola de PCB listo para ejecutar*/
 //								/*Lo almaceno en la cola de PCB listo para ejecutar*/
 //								queue_push(colaReady, unPCB);
-								log_info("PCB[PID:%s] - ha ingresado a la cola de Ready", unPCBDes.pid);
+								// log_info("PCB[PID:%d] - ha ingresado a la cola de Ready",(int) unPCBDes.pid); <-- no le cabe imprimir %d ni %s
 							}
 
 						}
-
 						break;
 
 					case CONNECTCPU:
@@ -558,11 +637,8 @@ int main(int argc, char *argv[]) {
 							log_error("CPU error - No se pudo enviar confirmacion de recepcion");
 							continue;
 						}
-
-						printf("Nuevo CPU conectado...\n");
 						log_info("Nuevo CPU conectado");
 						agregarSock = 1;
-
 						/*Agrego el socket conectado A la lista Master*/
 						if (agregarSock == 1) {
 							FD_SET(unCliente, &(fds_master));
@@ -571,6 +647,14 @@ int main(int argc, char *argv[]) {
 								elEstadoActual.fdMax = unCliente;
 							}
 							agregarSock = 0;
+						}
+
+						cpu_arg_struct.estado = &elEstadoActual;
+						cpu_arg_struct.socketCpu = unCliente;
+
+						if(pthread_create(&p_threadCpu, NULL, (void*) &threadCPU,(void *)&cpu_arg_struct)!=0){
+							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
+							continue;
 						}
 
 						break;
