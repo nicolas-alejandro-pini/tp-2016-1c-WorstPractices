@@ -54,14 +54,19 @@ typedef struct {
 	int salir;              /* Indica si debo o no salir de la aplicacion. */
 } stEstado;
 
+struct thread_cpu_arg_struct {
+	stEstado *estado;
+    int socketCpu;
+};
+
 typedef struct{
 	char* nombre;           /*Nombre del dispositivo de I/O*/
 	char* retardo;			/*Retardo en milisegundos*/
-	t_queue rafagas;		/*Cola de rafagas de ejecucion*/
+	t_queue* rafagas;		/*Cola de rafagas de ejecucion*/
 } stDispositivo;
 
 typedef struct{
-	char* pid;           	/*PID del proceso que realiza el pedido de I/O*/
+	uint32_t pid;           	/*PID del proceso que realiza el pedido de I/O*/
 	int unidades;			/*Unidades de ejecucion */
 } stRafaga;
 
@@ -83,8 +88,7 @@ void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep);
 stDispositivo *crear_dispositivo(char *nombre, char *retardo);
 stSemaforo 	*crear_semaforo(char *nombre, char* valor);
 stSharedVar *crear_sharedVar(char *nombre);
-void threadCPU(int unCpu, stEstado* info);
-int pid_incrementer();
+void threadCPU(void *argumentos);
 void cerrarSockets(stEstado *elEstadoActual);
 void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado);
 
