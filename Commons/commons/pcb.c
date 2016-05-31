@@ -19,7 +19,8 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 	serializar_campo(paquete, &offset, &self->tamanioPaginas, sizeof(self->tamanioPaginas));
 	serializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
 	serializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
-
+	serializar_campo(paquete, &offset, &self->quantum, sizeof(self->quantum));
+	serializar_campo(paquete, &offset, &self->quantumSleep, sizeof(self->quantumSleep));
 	//Serializacion del t_metadata
 	t_metadata_program* miMetadata = self->metadata_program;
 	serializar_campo(paquete, &offset, miMetadata, sizeof(t_metadata_program));
@@ -43,7 +44,7 @@ int deserializar_pcb(stPCB *self,t_paquete *paquete) {
 	// paquete->data. cuando se envia el paquete recibir_header saca el header
 	//                para pruebas de deserializar sin enviar el paquete hay que
 	//                adelantar el offset el tamaño del header. (como si lo hubiera sacado)
-	offset = sizeof(t_header) / sizeof(t_buffer);
+	//offset = sizeof(t_header) / sizeof(t_buffer); /*Descomentar para probar sin envio*/
 	deserializar_campo(paquete, &offset, &self->pid, sizeof(self->pid));
 	deserializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
 	deserializar_campo(paquete, &offset, &self->paginaInicial, sizeof(self->pc));
@@ -51,6 +52,8 @@ int deserializar_pcb(stPCB *self,t_paquete *paquete) {
 	deserializar_campo(paquete, &offset, &self->tamanioPaginas, sizeof(self->tamanioPaginas));
 	deserializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
 	deserializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
+	deserializar_campo(paquete, &offset, &self->quantum, sizeof(self->quantum));
+	deserializar_campo(paquete, &offset, &self->quantumSleep, sizeof(self->quantumSleep));
 
 	// Reservo memoria para estructura t_metadata_program
 	self->metadata_program = malloc(sizeof(t_metadata_program));
