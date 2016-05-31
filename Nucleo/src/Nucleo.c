@@ -263,12 +263,14 @@ void threadCPU(void *argumentos) {
 		unPCB = queue_pop(colaReady);
 		pthread_mutex_unlock(&mutexColaReady);
 
-		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
+		unPCB->quantum = args->estado->quantum;
+		unPCB->quantumSleep = args->estado->quantumSleep;
 
-		/*TODO: Esto no funciona, hay que implementar la serializacion para mandarlo por enviarMensajeIPC*/
-		if (!enviarMensajeIPC(args->socketCpu, unHeaderIPC, "pcbSerializado")) {
+		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
+		if (!enviarHeaderIPC(args->socketCpu,unHeaderIPC)) {
 			log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
 			error = 1;
+			liberarHeaderIPC(unHeaderIPC);
 			close(args->socketCpu);
 			continue;
 		}
@@ -278,41 +280,24 @@ void threadCPU(void *argumentos) {
 			error = 1;
 			close(args->socketCpu);
 			continue;
-		} else {
-			if (unHeaderIPC->tipo == QUANTUM) {
-				char* quantum;
-				quantum = malloc(sizeof(args->estado->quantum));
-				sprintf(quantum, "%d", args->estado->quantum);
-				if (!enviarMensajeIPC(args->socketCpu, unHeaderIPC, quantum)) {
-					log_error("CPU error - No se pudo enviar el quantum");
-					error = 1;
-					close(args->socketCpu);
-					continue;
-				}
-
-				free(quantum);
-			}
 		}
 
-		if (!recibirHeaderIPC(args->socketCpu, unHeaderIPC)) {
-			log_error("CPU error - No se pudo recibir el mensaje");
-			error = 1;
-			close(args->socketCpu);
-			continue;
-		} else {
-			if (unHeaderIPC->tipo == QUANTUMSLEEP) {
-				char* sleepQuantum;
-				sleepQuantum = malloc(sizeof(args->estado->quantumSleep));
-				sprintf(sleepQuantum, "%d", args->estado->quantum);
-				if (!enviarMensajeIPC(args->socketCpu, unHeaderIPC, sleepQuantum)) {
-					log_error("CPU error - No se pudo enviar el quantum sleep");
-					error = 1;
-					close(args->socketCpu);
-					continue;
-				}
-				free(sleepQuantum);
+		if (unHeaderIPC->tipo == OK) {
+			crear_paquete(&paquete, EXECANSISOP);
+			serializar_pcb(&paquete, unPCB);
+
+			if (enviar_paquete(args->socketCpu, &paquete)) {
+				log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
+				error = 1;
+				close(args->socketCpu);
+				continue;
 			}
+
+			free_paquete(&paquete);
+
 		}
+
+
 
 		if (!recibirMensajeIPC(args->socketCpu,&unMensajeIPC)) {
 			log_error("CPU error - No se pudo recibir header");
@@ -358,7 +343,7 @@ void threadCPU(void *argumentos) {
 				list_add(args->estado->dispositivos,unDispositivo);
 				list_add(listaBlock,unPCB);
 
-				log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
+//				log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
 
 				continue;
 
@@ -611,10 +596,10 @@ int main(int argc, char *argv[]) {
 								unPCB.socketCPU = 69;
 								unPCB.metadata_program = unPrograma;
 
-								crear_paquete(&paquete, EXECANSISOP);
-								serializar_pcb(&paquete, &unPCB);
+								//crear_paquete(&paquete, EXECANSISOP);
+								//serializar_pcb(&paquete, &unPCB);
 
-								deserializar_pcb(&unPCBDes, &paquete);
+								//deserializar_pcb(&unPCBDes, &paquete);
 
 //
 //								recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig);
@@ -622,8 +607,8 @@ int main(int argc, char *argv[]) {
 //
 //								/*Lo almaceno en la cola de PCB listo para ejecutar*/
 //								/*Lo almaceno en la cola de PCB listo para ejecutar*/
-//								queue_push(colaReady, unPCB);
-								// log_info("PCB[PID:%d] - ha ingresado a la cola de Ready",(int) unPCBDes.pid); <-- no le cabe imprimir %d ni %s
+								queue_push(colaReady, &unPCB);
+//								log_info("PCB- ha ingresado a la cola de Ready");
 							}
 
 						}
