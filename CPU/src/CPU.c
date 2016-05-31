@@ -32,6 +32,7 @@
 #include <commons/config.h>
 #include "parser/parser.h"
 #include "parser/metadata_program.h"
+#include "dummy_ansisop.h"
 
 /*Archivos de Configuracion*/
 #define CFGFILE		"cpu.conf"
@@ -82,7 +83,7 @@ t_posicion POSICION_DUMMY;
  Description : Se declaran todas las funciones primitivas.
  ============================================================================
  */
-
+/*
 t_posicion definirVariable(t_nombre_variable identificador_variable){
 
 	stMensajeIPC mensajePrimitiva;
@@ -98,7 +99,7 @@ t_posicion definirVariable(t_nombre_variable identificador_variable){
 	if (mensajePrimitiva.header.tipo == OK) {
 
 		/*TODO Deserializar el mensaje*/
-
+/*COMENTEARIO TEST
 	}
 
 	//free(mensajePrimitiva);
@@ -120,7 +121,7 @@ t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 	if (mensajePrimitiva.header.tipo == OK) {
 
 		/*TODO Deserializar el mensaje*/
-
+/*COMENTEARIO TEST
 	}
 
 	//free(mensajePrimitiva);
@@ -133,8 +134,8 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
-
-	/*TODO Serializar el mensaje de estructura */
+/*COMENTEARIO TEST
+	/*TODO Serializar el mensaje de estructura *//*COMENTEARIO TEST
 	char* estructuraSerializada;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(VALORVARIABLE),estructuraSerializada);
@@ -147,7 +148,7 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 	if (mensajePrimitiva.header.tipo == OK) {
 
 		/*TODO Deserializar el mensaje*/
-
+/*COMENTEARIO TEST
 	}
 
 	//free(mensajePrimitiva);
@@ -160,7 +161,7 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 
 	stMensajeIPC mensajePrimitiva;
 
-	/*TODO Serializar el mensaje de estructura */
+	/*TODO Serializar el mensaje de estructura *//*COMENTEARIO TEST
 	char* estructuraSerializada;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(ASIGNARVARIABLE),estructuraSerializada);
@@ -173,11 +174,11 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 	if (mensajePrimitiva.header.tipo == OK) {
 
 		/*TODO Deserializar el mensaje*/
-
+/*COMENTEARIO TEST
 	}
 
 	//free(mensajePrimitiva); /*TODO Arreglar el free de las estructuras*/
-
+/*COMENTEARIO TEST
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable);
@@ -220,7 +221,18 @@ AnSISOP_kernel kernel_functions = {
 		.AnSISOP_signal		= wait,
 		.AnSISOP_signal		= signal_cpu
 };
+COMENTARIO TEST*/
 
+AnSISOP_funciones AnSISOP_functions = {
+		.AnSISOP_definirVariable		= dummy_definirVariable,
+		.AnSISOP_obtenerPosicionVariable= dummy_obtenerPosicionVariable,
+		.AnSISOP_dereferenciar			= dummy_dereferenciar,
+		.AnSISOP_asignar				= dummy_asignar,
+		.AnSISOP_imprimir				= dummy_imprimir,
+		.AnSISOP_imprimirTexto			= dummy_imprimirTexto,
+
+};
+AnSISOP_kernel kernel_functions = { };
 
 /*
  ============================================================================
@@ -330,7 +342,7 @@ int cpuConectarse(char* IP, int puerto, char* aQuien){
 
 	int socket = 0;
 
-	printf("Conectando con %s...\n",aQuien);
+	printf("Conectando con %d...\n",puerto);
 	fflush(stdout);
 	socket = conectar(IP, puerto);
 
@@ -535,7 +547,7 @@ int main(void) {
 		FD_SET(configuracionInicial.sockNucleo,&(fds_master));
 		configuracionInicial.socketMax = configuracionInicial.sockNucleo;
 		SocketAnterior = configuracionInicial.socketMax;
-		log_info("OK - Nucleo conectado.");
+		//log_info("OK - Nucleo conectado.");
 		fflush(stdout);
 		//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
 
@@ -544,8 +556,8 @@ int main(void) {
 
 	/***** Lanzo conexión con el UMC ********/
 
-	log_info("Conectando al UMC...");
-
+	//log_info("Conectando al UMC...");
+/*
 	configuracionInicial.sockUmc = cpuConectarse(configuracionInicial.ipUmc, configuracionInicial.puertoUmc, "UMC");
 
 	if (configuracionInicial.sockUmc > 0){
@@ -553,10 +565,10 @@ int main(void) {
 		FD_SET(configuracionInicial.sockUmc,&(fds_master));
 		configuracionInicial.socketMax = configuracionInicial.sockUmc;
 		SocketAnterior = configuracionInicial.socketMax;
-		log_info("OK - UMC conectada.");
+		//log_info("OK - UMC conectada.");
 		fflush(stdout);
 
-	}
+	}*/
 		//Fin de conexion al UMC//
 
 	while(configuracionInicial.salir == 0)
@@ -614,15 +626,28 @@ int main(void) {
 					{
 						case EXECANSISOP:
 
-							log_info("Respondiendo solicitud ANSIPROG...");
+//							log_info("Respondiendo solicitud ANSIPROG...");
 
-							enviarMensajeIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(OK),"CPU: Programa recibido.");
+							enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(OK));
 
-							if (cargarPCB(unMensaje.contenido) != -1)
+							t_paquete paquete;
+
+							recibir_paquete (configuracionInicial.sockNucleo, &paquete);
+
+							int type = obtener_paquete_type(&paquete);
+
+
+
+							//if (cargarPCB(unMensaje.contenido) != -1)
+							if (type == EXECANSISOP)
 							{
-								log_info("PCB de ANSIPROG cargado. /n");
+								deserializar_pcb(&unPCB , &paquete);
+
+//								log_info("PCB de ANSIPROG cargado. /n");
 
 								/* Envio mensaje para obtener el quantum del programa */
+
+								free_paquete(&paquete);
 
 								enviarHeaderIPC(configuracionInicial.sockNucleo,nuevoHeaderIPC(QUANTUM));
 
@@ -640,7 +665,7 @@ int main(void) {
 								}
 
 								if (quantum <= 0){
-									log_info("Error en Quantum definido. /n");
+									printf("Error en Quantum definido. /n");
 									break;
 								}
 
