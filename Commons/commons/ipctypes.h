@@ -48,10 +48,11 @@
 #define SOYUMC				140ul
 
 /*Definicion de tipos de mensaje de interfaz UMC */
-#define INICIALIZAR_PROGRAMA	150ul
-#define READ_BTYES_PAGE			151ul
-#define WRITE_BYTES_PAGE		152ul
-#define FINPROGRAMA				153ul
+#define INICIALIZAR_PROGRAMA		150ul
+#define SIN_ESPACIO					151ul
+#define READ_BTYES_PAGE				152ul
+#define WRITE_BYTES_PAGE			153ul
+#define FINPROGRAMA					154ul
 
 /*Definicion de tipos de mensaje entre CPU y UMC */
 #define NUEVAVARIABLE 170ul				/* Mensaje para definir nueva variable en la UMC */

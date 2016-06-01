@@ -14,6 +14,7 @@
 typedef struct{
 	uint16_t processId;		/* identificador del proceso del PCB. */
 	uint16_t cantidadPaginas;/* cantidad de paginas que necesita el programa. */
+	char* 	 programa;	/* Programa a enviar */
 } __attribute__((packed)) stPageIni;
 
 typedef struct {
