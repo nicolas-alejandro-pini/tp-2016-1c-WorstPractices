@@ -87,12 +87,15 @@ t_posicion POSICION_DUMMY;
 t_posicion definirVariable(t_nombre_variable identificador_variable){
 
 	stMensajeIPC mensajePrimitiva;
+	stHeaderIPC* unHeaderPrimitiva;
 	t_posicion posicionVariable;
 
-	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(NUEVAVARIABLE),identificador_variable);
+	unHeaderPrimitiva = nuevoHeaderIPC(WRITE_BYTES_PAGE);
+
+	enviarMensajeIPC(configuracionInicial.sockUmc,unHeaderPrimitiva,(char)identificador_variable);
 
 	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
-		printf("Error: Fallo la definicion de variable %s.\n", identificador_variable);
+		printf("Error: Fallo la definicion de variable %s.\n", (char)identificador_variable);
 		return posicionVariable;
 	}
 
@@ -181,25 +184,63 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 
 }
 
-t_valor_variable obtenerValorCompartida(t_nombre_compartida variable);
+t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
-t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor);
+	t_valor_variable  HARCODE= 9999;
+	printf("Llamo a ObtenerValorCompartida");
+	return HARCODE;
+}
 
-t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta) ;
+t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+	t_valor_variable  HARCODE= 1111;
+	printf("Llamo a asignarValorCompartida");
+	return HARCODE;
+}
 
-t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, t_posicion donde_retornar, t_puntero_instruccion linea_en_ejecuccion);
+t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
 
-t_puntero_instruccion retornar(t_valor_variable retorno);
+	t_puntero_instruccion PUNTERO;
+	printf("Llamo a irAlLabel");
+	return PUNTERO;
+}
 
-int imprimir(t_valor_variable valor_mostrar);
+t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, t_posicion donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
 
-int imprimirTexto(char* texto);
+	t_puntero_instruccion PUNTERO;
+	printf("Llamo a llamarFuncion");
+	return PUNTERO;
+}
 
-int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo);
+t_puntero_instruccion retornar(t_valor_variable retorno){
+	t_puntero_instruccion PUNTERO;
+	printf("Llamo a retornar");
+	return PUNTERO;
+}
 
-int wait(t_nombre_semaforo identificador_semaforo);
+int imprimir(t_valor_variable valor_mostrar){
+	printf("Llamo a imprimir");
+	return 0;
+}
 
-int signal_cpu(t_nombre_semaforo identificador_semaforo);
+int imprimirTexto(char* texto){
+	printf("Llamo a imprimirTexto");
+	return 0;
+}
+
+int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
+	printf("Llamo a entradaSalida");
+	return 0;
+}
+
+int wait(t_nombre_semaforo identificador_semaforo){
+	printf("Llamo a wait");
+	return 0;
+}
+
+int signal_cpu(t_nombre_semaforo identificador_semaforo){
+	printf("Llamo a signal_cpu");
+	return 0;
+}
 
 
 AnSISOP_funciones AnSISOP_functions = {
@@ -519,7 +560,6 @@ int devolverPCBalNucleo(void){
  */
 int main(void) {
 
-	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeaderIPC;
 	int unSocket;
 	int quantum=0;
@@ -590,7 +630,7 @@ int main(void) {
 		{
 			if(FD_ISSET(unSocket,&read_fds))
 			{
-				if (!recibirHeaderIPC(unSocket,&unHeaderIPC))/* Si se cerro un Cliente. */
+				if (!recibirHeaderIPC(unSocket,unHeaderIPC))/* Si se cerro un Cliente. */
 				{
 					if (configuracionInicial.sockNucleo == unSocket)
 					{
