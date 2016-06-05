@@ -104,7 +104,7 @@ int serializar_inicializar_programa(t_paquete *paquete, stPageIni *self) {
 
 int deserializar_inicializar_programa(stPageIni *self,t_paquete *paquete) {
 	int offset = 0;
-	//offset = sizeof(t_header) / sizeof(t_buffer); /*Descomentar para probar sin envio*/
+	offset = sizeof(t_header) / sizeof(t_buffer); /*Descomentar para probar sin envio*/
 	deserializar_campo(paquete, &offset, &self->processId, sizeof(self->processId));
 	deserializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
 	deserializar_campo(paquete, &offset, &self->programa, strlen(self->programa+1));

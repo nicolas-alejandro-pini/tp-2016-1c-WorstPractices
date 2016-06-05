@@ -53,5 +53,8 @@ void deserializar_header(t_header *buf_header, int32_t *offset, t_header *header
 int serializar_ejemplo(t_paquete *paquete, t_UMCConfig *self);
 int deserializar_ejemplo(t_UMCConfig *self, t_paquete *paquete);
 
+int serializar_inicializar_programa(t_paquete *paquete, stPageIni *self);
+int deserializar_inicializar_programa(stPageIni *self,t_paquete *paquete);
+
 
 #endif /* COMMONS_SERIALIZADOR_H_ */
