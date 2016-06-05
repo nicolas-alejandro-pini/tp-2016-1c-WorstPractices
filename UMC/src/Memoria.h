@@ -7,6 +7,9 @@
 
 #ifndef MEMORIA_H_
 #define MEMORIA_H_
+#include <stdint.h>
+#include <pthread.h>
+#include <stdio.h>
 
 void *memoriaPrincipal;
 

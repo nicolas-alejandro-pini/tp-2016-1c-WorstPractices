@@ -376,7 +376,7 @@ int main(int argc, char *argv[]) {
 	        	        	/* Aplico demora definida en archivo de configuracion */
 	        	        	sleep(elEstadoActual.delay);
 
-	        	        	realizarAccionUMC(unMensaje->header.tipo, unMensaje->contenido);
+	        	        	realizarAccionUMC(unMensaje->header.tipo, unMensaje->contenido, unSocket, attr);
 
 	        	        	fflush(stdout);
 

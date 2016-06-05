@@ -5,7 +5,9 @@
  *      Author: utnso
  */
 
-#include <stdio.h>
+
+#include "Memoria.h"
+
 
 pthread_mutex_t memoria;
 
