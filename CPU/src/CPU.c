@@ -74,6 +74,34 @@ stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 t_posicion POSICION_DUMMY;
 
 
+int mensajeToUMC(int tipoHeader, t_posicion posicionUMC){
+
+	stHeaderIPC* unHeader;
+	t_posicion posicionVariable;
+	t_paquete paquetePosicion;
+	int resultado = 0;
+
+	unHeader = nuevoHeaderIPC(tipoHeader);
+
+	enviarHeaderIPC(configuracionInicial.sockUmc, unHeader);
+
+	crear_paquete(&paquetePosicion, tipoHeader);
+	serializar_pcb(&paquetePosicion, unPCB);
+
+	if (enviar_paquete(configuracionInicial.sockUmc, &paquetePosicion)) {
+		log_error("No se pudo enviar al UMC el paquete para operacion [%d]", tipoHeader);
+		resultado = -1;
+	}
+
+	free_paquete(&paquetePosicion);
+
+	liberarHeaderIPC (unHeader);
+
+	return resultado;
+
+}
+
+
 /*
  ============================================================================
  Name        : Funciones Primitivas para ANSISOP Program.
