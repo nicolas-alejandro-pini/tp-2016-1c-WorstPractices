@@ -9,7 +9,8 @@
 #define COMMONS_SERIALIZADOR_H_
 
 #include "socketsIPCIRC.h"
-#include "commons/collections/list.h"
+#include "collections/list.h"
+#include <stdint.h>
 
 typedef struct{
 	uint16_t processId;		/* identificador del proceso del PCB. */
