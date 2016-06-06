@@ -57,6 +57,12 @@ int hayMarcoslibres(int cantidad){
 int estaPaginaDisponible(uint16_t pagina){
 	return 0;
 }
+int informarSwap(uint16_t cantidadPaginas){
+	return 0;
+}
+int reservarMarcos(uint16_t cantidadPaginas){
+	return 0;
+}
 void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthread_attr_t attr){
 
 	pthread_t tid;
