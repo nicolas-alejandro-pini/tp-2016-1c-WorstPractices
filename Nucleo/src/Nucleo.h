@@ -47,6 +47,7 @@ typedef struct {
 	int sockUmc;			/* Socket de comunicacion con la UMC. */
 	int quantum;			/* Quantum de tiempo para ejecucion de rafagas. */
 	int quantumSleep;		/* Retardo en milisegundos que el nucleo esperara luego de ejecutar cada sentencia. */
+	int stackSize;			/* Tamaño en páginas del Stack */
 	t_list *dispositivos; 	/* Lista de stDispositivos*/
 	t_list *semaforos;		/* Lista de los semaforos con sus valores*/
 	t_list *sharedVars;		/* Lista con las variables compartidas*/
@@ -66,7 +67,7 @@ typedef struct{
 } stDispositivo;
 
 typedef struct{
-	uint32_t pid;           	/*PID del proceso que realiza el pedido de I/O*/
+	uint32_t pid;           /*PID del proceso que realiza el pedido de I/O*/
 	int unidades;			/*Unidades de ejecucion */
 } stRafaga;
 

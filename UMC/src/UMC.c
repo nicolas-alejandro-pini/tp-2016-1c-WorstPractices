@@ -54,6 +54,7 @@ void loadInfo (stParametro* info, char* file_name){
 		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","MARCOS");
 		exit(-2);
 	}
+	frames = info->frames;
 
 	if (config_has_property(miConf,"MARCOS_SIZE")) {
 		info->frameSize = config_get_int_value(miConf,"MARCOS_SIZE");
@@ -61,11 +62,20 @@ void loadInfo (stParametro* info, char* file_name){
 		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","MARCOS_SIZE");
 		exit(-2);
 	}
+	frameSize = info->frameSize;
 
 	if (config_has_property(miConf,"MARCOS_X_PROC")) {
-		info->frameByProc = config_get_int_value(miConf,"MARCOS_X_PROC");
+		info->frameByProc = config_get_array_value(miConf,"MARCOS_X_PROC");
 	} else {
 		printf("Parametro MARCOS_X_PROC no cargado en el archivo de configuracion\n \"%s\"  \n","MARCOS_X_PROC");
+		exit(-2);
+	}
+	frameByProc = info->frameByProc;
+
+	if (config_has_property(miConf,"ALGORITMO")) {
+		info->delay = config_get_array_value(miConf,"ALGORITMO");
+	} else {
+		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","RETARDO");
 		exit(-2);
 	}
 
@@ -99,14 +109,14 @@ void cerrarSockets(stParametro *elEstadoActual){
 }
 /*
  =========================================================================================
- Name        : cpuHandShake
+ Name        : swapHandShake
  Author      : Ezequiel Martinez
  Inputs      : Recibe el socket, un mensaje para identificarse y un tipo para el header.
  Outputs     : Retorna -1 en caso de error y si no hay error devuelve el socket.
  Description : Funcion para cargar los parametros del archivo de configuración
  =========================================================================================
  */
-int cpuHandShake (int socket, char* mensaje, int tipoHeader)
+int swapHandShake (int socket, char* mensaje, int tipoHeader)
 {
 	stMensajeIPC unMensaje;
 
@@ -150,16 +160,6 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstad
 	unMensaje->header.tipo = -1;
 }
 
-/*
- =========================================================================================
- Name        : cpuConectarse()
- Author      : Ezequiel Martinez
- Inputs      : Recibe IP y Puerto.
- Outputs     : Retorna -1 en caso de error y si no hay error devuelve el socket.
- Description : Realiza la conexión con un servidor.
- =========================================================================================
- */
-
 int main(int argc, char *argv[]) {
 
 	stParametro elEstadoActual;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
 	char enviolog[TAMDATOS];
 	char elsocket[10];
 	int agregarSock;
-
+	pthread_attr_t attr;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -203,6 +203,10 @@ int main(int argc, char *argv[]) {
 		elEstadoActual.salir = 0;
 		elEstadoActual.sockEscuchador = -1;
 
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+		pthread_attr_setscope(&attr,PTHREAD_SCOPE_SYSTEM);
+
 		/* ---------------------------------Me pongo a escuchar mi puerto escuchador------------------------------- */
 
 		printf("Creando el socket de escucha...");
@@ -221,7 +225,7 @@ int main(int argc, char *argv[]) {
 		elEstadoActual.sockSwap = conectar(elEstadoActual.ipSwap, elEstadoActual.puertoSwap);
 		/* Inicio el handShake con el servidor */
 		if (elEstadoActual.sockSwap != -1){
-		/*	if (cpuHandShake(elEstadoActual.sockSwap, "SOYUMC", CONNECTSWAP) != -1)
+		/*	if (swapHandShake(elEstadoActual.sockSwap, "SOYUMC", CONNECTSWAP) != -1)
 			{
 				printf("CONNECTION_ERROR - No se recibe un mensaje correcto en Handshake con Swap\n");
 				fflush(stdout);
@@ -311,7 +315,12 @@ int main(int argc, char *argv[]) {
 								}
 								break;
 							case CONNECTNUCLEO:
+							/* TODO enviar mensaje con cantidad de paginas al Nucleo */
 
+								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
+									printf("No se pudo enviar el MensajeIPC al cliente\n");
+									return 0;
+								}
 								unaCabecera = nuevoHeaderIPC(OK);
 								if(!enviarHeaderIPC(unCliente, unaCabecera)){
 									printf("No se pudo enviar un mensaje de confirmacion al Nucleo conectado\n");
@@ -332,16 +341,12 @@ int main(int argc, char *argv[]) {
 									}
 									agregarSock=0;
 								}
-
-								// Envio cantidad de paginas por proceso y tamaño de pagina
-								if(enviarConfigUMC(unCliente, elEstadoActual.frameSize, elEstadoActual.frameByProc))
-									printf("ERROR - UMC enviarConfigUMC");
-								printf("Tamaño pagina[%d] paginas por proceso [%d]\n",elEstadoActual.frameSize, elEstadoActual.frameByProc);
 						}
 					}/*-Cierro if-Conexion Nueva-*/
 
 	/*--------------------------------------Conexion de un cliente existente-------------------------------------*/
 					else {
+						unMensaje->contenido = calloc(1,LONGITUD_MAX_DE_CONTENIDO);
 						memset(unMensaje->contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
 						if (!recibirMensajeIPC(unSocket,unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
@@ -371,7 +376,7 @@ int main(int argc, char *argv[]) {
 	        	        	/* Aplico demora definida en archivo de configuracion */
 	        	        	sleep(elEstadoActual.delay);
 
-	        	        	realizarAccionUMC(unMensaje->header.tipo, unMensaje->contenido);
+	        	        	realizarAccionUMC(unMensaje->header.tipo, unMensaje->contenido, unSocket, attr);
 
 	        	        	fflush(stdout);
 
@@ -392,7 +397,7 @@ int main(int argc, char *argv[]) {
 		return EXIT_SUCCESS;
 
 }
-int inicializarMemoriaDisponible(long tamanio, long cantidad){
+void* inicializarMemoriaDisponible(long tamanio, long cantidad){
 	void* r;
 	if((r=calloc(cantidad, tamanio))==NULL){
 		printf("No hay memoria disponible...");

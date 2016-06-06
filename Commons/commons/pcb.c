@@ -16,7 +16,6 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 	serializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
 	serializar_campo(paquete, &offset, &self->paginaInicial, sizeof(self->pc));
 	serializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
-	serializar_campo(paquete, &offset, &self->tamanioPaginas, sizeof(self->tamanioPaginas));
 	serializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
 	serializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 	serializar_campo(paquete, &offset, &self->quantum, sizeof(self->quantum));
@@ -49,7 +48,6 @@ int deserializar_pcb(stPCB *self,t_paquete *paquete) {
 	deserializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
 	deserializar_campo(paquete, &offset, &self->paginaInicial, sizeof(self->pc));
 	deserializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
-	deserializar_campo(paquete, &offset, &self->tamanioPaginas, sizeof(self->tamanioPaginas));
 	deserializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
 	deserializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 	deserializar_campo(paquete, &offset, &self->quantum, sizeof(self->quantum));

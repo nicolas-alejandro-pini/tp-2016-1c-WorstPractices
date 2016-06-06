@@ -9,11 +9,13 @@
 #define COMMONS_SERIALIZADOR_H_
 
 #include "socketsIPCIRC.h"
-#include "commons/collections/list.h"
+#include "collections/list.h"
+#include <stdint.h>
 
 typedef struct{
 	uint16_t processId;		/* identificador del proceso del PCB. */
 	uint16_t cantidadPaginas;/* cantidad de paginas que necesita el programa. */
+	char* 	 programa;	/* Programa a enviar */
 } __attribute__((packed)) stPageIni;
 
 typedef struct {
@@ -51,6 +53,9 @@ void deserializar_header(t_header *buf_header, int32_t *offset, t_header *header
 /** Estructuras especificas **/
 int serializar_ejemplo(t_paquete *paquete, t_UMCConfig *self);
 int deserializar_ejemplo(t_UMCConfig *self, t_paquete *paquete);
+
+int serializar_inicializar_programa(t_paquete *paquete, stPageIni *self);
+int deserializar_inicializar_programa(stPageIni *self,t_paquete *paquete);
 
 
 #endif /* COMMONS_SERIALIZADOR_H_ */

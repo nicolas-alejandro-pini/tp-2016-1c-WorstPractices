@@ -37,7 +37,6 @@ typedef struct {
 	uint32_t pc; /*Numero de la próxima instrucción del Programa que se debe ejecutar*/
 	uint32_t paginaInicial; /*Numero de pagina inicial*/
 	uint32_t cantidadPaginas; /*Numero de pagina inicial*/
-	uint32_t tamanioPaginas; /*Tamanio de paginas*/
 	uint32_t socketConsola; /*Numero de socket de la consola a la cual le devolvemos las salidas del programa en ejecucion*/
 	uint32_t socketCPU; /*Numero de socket de la CPU que esta ejecutando en ese momento el pcb*/
 	uint32_t quantum; /*Quantum a ejecutar*/

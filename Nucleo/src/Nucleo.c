@@ -8,6 +8,7 @@
  */
 
 #include "Nucleo.h"
+#include "servicio_memoria.h"
 
 /*
  ============================================================================
@@ -15,7 +16,7 @@
  ============================================================================
  */
 
-int pidIncrementer;
+int pidCounter;
 
 /* Listas globales */
 fd_set fds_master; /* Lista de todos mis sockets.*/
@@ -107,8 +108,18 @@ void loadInfo(stEstado* info) {
 		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SHARED_VARS");
 		exit(-2);
 	}
-}
 
+	if (config_has_property(miConf, "STACK_SIZE")) {
+		info->quantum = config_get_int_value(miConf, "STACK_SIZE");
+	} else {
+		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "STACK_SIZE");
+		exit(-2);
+	}
+}
+void pid_incrementer(int unPid){
+	pidCounter = pidCounter + 1;
+	unPid = pidCounter;
+}
 void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep) {
 	int iterator = 0;
 	stDispositivo *unDispositivo;
@@ -119,7 +130,6 @@ void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep) {
 		iterator++;
 	}
 }
-
 void cargar_semaforos(stEstado *info,char** semIds, char** semInit) {
 	int iterator = 0;
 	stSemaforo *unSemadoro;
@@ -130,7 +140,6 @@ void cargar_semaforos(stEstado *info,char** semIds, char** semInit) {
 		iterator++;
 	}
 }
-
 void cargar_sharedVars(stEstado *info,char** sharedVars) {
 	int iterator = 0;
 	stSharedVar *unaSharedVar;
@@ -141,7 +150,6 @@ void cargar_sharedVars(stEstado *info,char** sharedVars) {
 		iterator++;
 	}
 }
-
 stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 	stDispositivo *new = malloc(sizeof(stDispositivo));/*TODO: liberar estos dispositivos al final*/
 	new->nombre = strdup(nombre);
@@ -151,22 +159,18 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 
 	return new;
 }
-
 stSemaforo *crear_semaforo(char *nombre, char* valor) {
 	stSemaforo *new = malloc(sizeof(stSemaforo));/*TODO: liberar estos semaforos al final*/
 	new->nombre = strdup(nombre);
 	new->valor = strdup(valor);
 	return new;
 }
-
 stSharedVar *crear_sharedVar(char *nombre) {
 	stSharedVar *new = malloc(sizeof(stSharedVar));/*TODO: liberar estas sharedVar al final*/
 	new->nombre = strdup(nombre);
 	return new;
 }
-
-
-void monitoreoConfiguracion(stEstado* info) {
+void monitor_configuracion(stEstado* info) {
 	char buffer[BUF_LEN];
 
 	// Al inicializar inotify este nos devuelve un descriptor de archivo
@@ -187,10 +191,9 @@ void monitoreoConfiguracion(stEstado* info) {
 	printf("\nEl archivo de configuracion se ha modificado\n");
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
-	monitoreoConfiguracion(info);
+	monitor_configuracion(info);
 	pthread_exit(NULL);
 }
-
 void cerrarSockets(stEstado *elEstadoActual) {
 	int unSocket;
 	for (unSocket = 3; unSocket <= elEstadoActual->fdMax; unSocket++)
@@ -200,13 +203,10 @@ void cerrarSockets(stEstado *elEstadoActual) {
 	FD_ZERO(&(fds_master));
 	FD_ZERO(&(read_fds));
 }
-
 void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado) {
 	unEstado->salir = 1;
 	unMensaje->header.tipo = -1;
 }
-
-
 void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
 	int error = 0;
 	t_queue *colaRafaga;
@@ -297,8 +297,6 @@ void threadCPU(void *argumentos) {
 
 		}
 
-
-
 		if (!recibirMensajeIPC(args->socketCpu,&unMensajeIPC)) {
 			log_error("CPU error - No se pudo recibir header");
 			error = 1;
@@ -335,7 +333,7 @@ void threadCPU(void *argumentos) {
 				/*Almacenamos la rafaga de ejecucion de entrada salida*/
 				unaRafagaIO = malloc(sizeof(stRafaga));
 				unaRafagaIO->pid = unPCB->pid;
-				unaRafagaIO->unidades = 2; /*TODO: Se recibira de esta manera nombre|unidades*/
+				unaRafagaIO->unidades = 2;
 
 				queue_push(unDispositivo->rafagas,unaRafagaIO);
 
@@ -403,8 +401,9 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	t_metadata_program *unPrograma;
 	stPCB unPCB;
-	stPCB unPCBDes;
 	t_paquete paquete;
+	t_UMCConfig UMCConfig;
+	stPageIni *unInicioUMC;
 	struct thread_cpu_arg_struct cpu_arg_struct;
 
 	char* temp_file = "nucleo.log";
@@ -438,8 +437,7 @@ int main(int argc, char *argv[]) {
 	log_info("Configuracion cargada satisfactoriamente...");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
-	pthread_create(&p_thread, NULL, (void*) &monitoreoConfiguracion, (void*) &elEstadoActual);
-
+	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*)&elEstadoActual);
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
@@ -468,6 +466,7 @@ int main(int argc, char *argv[]) {
 		if (!recibirHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
 			log_error("UMC handshake error - No se pudo recibir mensaje de respuesta");
 			liberarHeaderIPC(stHeaderIPC);
+			/*TODO: Para la entrega si no es posible conectar la UMC hacer un exit*/
 			close(unCliente);
 
 		}
@@ -498,11 +497,21 @@ int main(int argc, char *argv[]) {
 		} else {
 
 			log_error("UMC handshake error - Tipo de mensaje de confirmacion incorrecto");
+			close(unCliente);
+			exit(-2);
 		}
+
+		if(recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig)){
+			log_error("UMC error - No se pudo recibir la configuracion");
+			close(unCliente);
+			exit(-2);
+		}
+		printf("PaginasXProc[%d] Tamaño pagina[%d]\n", UMCConfig.paginasXProceso, UMCConfig.tamanioPagina);
 
 	} else {
 
 		log_error("UMC connection error - No se pudo establecer el enlace");
+		/*TODO: Para la entrega si no es posible conectar la UMC hacer un exit*/
 	}
 
 	/*Ciclo Principal del Nucleo*/
@@ -554,9 +563,7 @@ int main(int argc, char *argv[]) {
 
 						stHeaderIPC = nuevoHeaderIPC(OK);
 						if (!enviarHeaderIPC(unCliente, stHeaderIPC)) {
-
 							log_error("Handshake Consola - No se puede recibir el mensaje de reconocimiento de cliente");
-
 							liberarHeaderIPC(stHeaderIPC);
 							close(unCliente);
 							continue;
@@ -584,29 +591,28 @@ int main(int argc, char *argv[]) {
 						} else {
 							if (unMensaje.header.tipo == SENDANSISOP) {
 
-								/*TODO: Calcular paginas y pedirlas a la UMC*/
-
 								unPrograma = metadata_desde_literal(unMensaje.contenido);
-								unPCB.pid = 1;
-								unPCB.pc = 44444;
-								unPCB.paginaInicial = 55555;/*TODO: Hacer intercambio con la UMC*/
-								unPCB.cantidadPaginas = 123456; /*TODO: Hacer intercambio con la UMC*/
-								unPCB.tamanioPaginas = 999999;
+
+								/***Creacion del PCB***/
+								pid_incrementer(unPCB.pid);
+								unPCB.pc = 0;
 								unPCB.socketConsola = unCliente;
-								unPCB.socketCPU = 69;
+								unPCB.socketCPU = 0;
 								unPCB.metadata_program = unPrograma;
+								unPCB.cantidadPaginas = (unMensaje.header.largo/UMCConfig.tamanioPagina);
+								/*TODO: Verificar UMC*/
+								if(inicializar_programa(unPCB.pid,unPCB.cantidadPaginas,unMensaje.contenido,elEstadoActual.sockUmc,unPCB.paginaInicial)){
+									printf("UMC error - No se puede ejecutar el programa por falta de espacio\n");
+									FD_CLR(unCliente, &fds_master);
+									close(unCliente);
+									if (unCliente > elEstadoActual.fdMax) {
+										maximoAnterior = elEstadoActual.fdMax;
+										elEstadoActual.fdMax = unSocket;
+									}
+									continue;
+								}
 
-								//crear_paquete(&paquete, EXECANSISOP);
-								//serializar_pcb(&paquete, &unPCB);
-
-								//deserializar_pcb(&unPCBDes, &paquete);
-
-//
-//								recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig);
-//								printf("PaginasXProc[%d] Tamaño pagina[%d]\n", UMCConfig.paginasXProceso, UMCConfig.tamanioPagina);
-//
-//								/*Lo almaceno en la cola de PCB listo para ejecutar*/
-//								/*Lo almaceno en la cola de PCB listo para ejecutar*/
+								/*Lo almaceno en la cola de PCB listo para ejecutar*/
 								queue_push(colaReady, &unPCB);
 //								log_info("PCB- ha ingresado a la cola de Ready");
 							}
@@ -636,12 +642,10 @@ int main(int argc, char *argv[]) {
 
 						cpu_arg_struct.estado = &elEstadoActual;
 						cpu_arg_struct.socketCpu = unCliente;
-
 						if(pthread_create(&p_threadCpu, NULL, (void*) &threadCPU,(void *)&cpu_arg_struct)!=0){
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							continue;
 						}
-
 						break;
 					default:
 						break;

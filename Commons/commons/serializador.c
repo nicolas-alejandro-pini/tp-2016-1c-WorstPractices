@@ -89,6 +89,28 @@ int deserializar_ejemplo(t_UMCConfig *self, t_paquete *paquete){
 	return EXIT_SUCCESS;
 }
 
+int serializar_inicializar_programa(t_paquete *paquete, stPageIni *self) {
+
+	int offset = 0;
+	serializar_campo(paquete, &offset, &self->processId, sizeof(self->processId));
+	serializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
+	serializar_campo(paquete, &offset, &self->programa, strlen(self->programa+1));
+
+	// Serializacion del header
+	serializar_header(paquete);
+
+	return offset;
+}
+
+int deserializar_inicializar_programa(stPageIni *self,t_paquete *paquete) {
+	int offset = 0;
+	offset = sizeof(t_header) / sizeof(t_buffer); /*Descomentar para probar sin envio*/
+	deserializar_campo(paquete, &offset, &self->processId, sizeof(self->processId));
+	deserializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
+	deserializar_campo(paquete, &offset, &self->programa, strlen(self->programa+1));
+	return EXIT_SUCCESS;
+}
+
 /** EJEMPLO CREACION DE PAQUETE (Envio de la configuracion del UMC) **/
 
 int enviarConfigUMC(int unSocket, int frameSize, int frameByProc){

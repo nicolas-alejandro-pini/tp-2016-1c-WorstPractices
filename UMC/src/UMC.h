@@ -21,23 +21,24 @@
 #include "commons/socketsIPCIRC.h"
 #include <commons/config.h>
 
-#include "Pagina.h"
-
+#include "Marco.h"
+/*
 typedef struct{
-	char* miIP;             /* Mi direccion de IP. Ej: <"127.0.0.1"> */
-	int puertoNucleo;		/* Puerto de escucha Nucleo */
-	int sockNucleo;			/* Socket de escucha Nucleo */
-	int puertoCpu;			/* Puerto de escucha CPU */
-	int sockCpu;			/* Socket de escucha CPU */
-	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
-	int fdMax2;             /* Numero que representa al mayor socket de fds_master. */
-	int salir;              /* Indica si debo o no salir de la aplicacion. */
+	char* miIP;             /* Mi direccion de IP. Ej: <"127.0.0.1"> /
+	int puertoNucleo;		/* Puerto de escucha Nucleo /
+	int sockNucleo;			/* Socket de escucha Nucleo /
+	int puertoCpu;			/* Puerto de escucha CPU /
+	int sockCpu;			/* Socket de escucha CPU /
+	int fdMax;              /* Numero que representa al mayor socket de fds_master. /
+	int fdMax2;             /* Numero que representa al mayor socket de fds_master. /
+	int salir;              /* Indica si debo o no salir de la aplicacion. /
 } stEstado;
-
+*/
 fd_set fds_master;			/* Lista de todos mis sockets.*/
 fd_set read_fds;	  		/* Sublista de fds_master.*/
-int sockSwap;
-void *memoriaPrincipal;
+
+
+
 
 typedef struct{
 	int miPuerto;		/* Puerto por el que escucho. */
@@ -100,7 +101,7 @@ typedef struct{
 void loadInfo (stParametro*, char*);
 void cerrarSockets(stParametro* );
 void finalizarSistema(stMensajeIPC*, int, stParametro* );
-int cpuHandShake (int socket, char* mensaje, int tipoHeader);
-int inicializarMemoriaDisponible(long tamanio, long cantidad);
+int swapHandShake (int socket, char* mensaje, int tipoHeader);
+void* inicializarMemoriaDisponible(long tamanio, long cantidad);
 
 #endif /* UMC_H_ */
