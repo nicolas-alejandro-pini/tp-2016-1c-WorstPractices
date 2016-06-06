@@ -25,13 +25,13 @@
 #include <math.h>
 #include <fcntl.h>
 #include <commons/log.h>
-#include "commons/sockets.h"
+#include <commons/sockets.h>
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
 #include <commons/pcb.h>
 #include <commons/config.h>
-#include "parser/parser.h"
-#include "parser/metadata_program.h"
+#include <commons/parser/parser.h>
+#include <commons/parser/metadata_program.h>
 
 
 /*Archivos de Configuracion*/
@@ -771,7 +771,3 @@ int main(void) {
 	log_destroy(logger);
 	return EXIT_SUCCESS;
 }
-
-
-
-
