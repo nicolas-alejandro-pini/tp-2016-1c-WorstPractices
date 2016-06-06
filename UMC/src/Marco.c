@@ -8,17 +8,12 @@
 #include "Marco.h"
 
 void *inicializarPrograma(stIni* ini){
-	int pid;
 
-	if(ini->sPI->cantidadPaginas>frameByProc){
-		/* TODO informar a nucleo que no se puede pedir esa cantidad de paginas */
-		printf("informar a nucleo que no se puede pedir esa cantidad de paginas");
-	}
+	/* TODO inicializarSwap */
+	inicializarSwap(ini->sPI);
+	/* TODO guardarEnTabla */
+	guardarEnTabla(ini->sPI->cantidadPaginas);
 
-	/* TODO informarSwap */
-	informarSwap(ini->sPI->cantidadPaginas);
-	/* TODO reservarMarcos */
-	reservarMarcos(ini->sPI->cantidadPaginas);
 	pthread_exit(NULL);
 }
 void *leerBytes(stRead* unaLectura){
@@ -57,10 +52,8 @@ int hayMarcoslibres(int cantidad){
 int estaPaginaDisponible(uint16_t pagina){
 	return 0;
 }
-int informarSwap(uint16_t cantidadPaginas){
-	return 0;
-}
-int reservarMarcos(uint16_t cantidadPaginas){
+
+int guardarEnTabla(uint16_t cantidadPaginas){
 	return 0;
 }
 void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthread_attr_t attr){
