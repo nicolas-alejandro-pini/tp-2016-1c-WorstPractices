@@ -46,6 +46,10 @@
 
 /*Definicion de tipos de mensaje enre la UMC y el Swap*/
 #define SOYUMC				140ul
+#define INICIAR_PROGRAMA	141ul /* pid (ui), cantidad paginas (ui), (ul), codigo prg (char*) */
+#define DESTRUIR_PROGRAMA	142ul /* pid */
+#define LEER_PAGINA			143ul /* pid, numero de pagina */
+#define ESCRIBIR_PAGINA		144ul /* pid, numero de pagina, contenido de pagina */
 
 /*Definicion de tipos de mensaje de interfaz UMC */
 #define INICIALIZAR_PROGRAMA		150ul
