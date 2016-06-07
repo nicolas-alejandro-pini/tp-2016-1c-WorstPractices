@@ -9,6 +9,9 @@
 
 #include "Nucleo.h"
 #include "servicio_memoria.h"
+#include "consumidor_cpu.h"
+#include "nucleo_config.h"
+#include "planificador.h"
 
 /*
  ============================================================================
@@ -22,177 +25,14 @@ int pidCounter;
 fd_set fds_master; /* Lista de todos mis sockets.*/
 fd_set read_fds; /* Sublista de fds_master.*/
 
-t_queue *colaReady; /*Cola de todos los PCB listos para ejecutar*/
-t_queue *colaExit; /*Cola de todos los PCB listos para liberar*/
-t_list 	*listaBlock; /*Lista de todos los PCB listos para liberar*/
-
-
-pthread_mutex_t mutexColaReady;
-
 /*
  ============================================================================
  Funciones
  ============================================================================
  */
-void loadInfo(stEstado* info) {
-
-	t_config* miConf = config_create(CFGFILE); /*Estructura de configuracion*/
-	info->dispositivos = list_create();
-	info->semaforos = list_create();
-	info->sharedVars = list_create();
-
-	if (miConf == NULL) {
-		log_error("Error iniciando la configuracion...\n");
-		return exit(-2);;
-	}
-
-	if (config_has_property(miConf, "IP")) {
-		info->miIP = config_get_string_value(miConf, "IP");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "IP");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "PUERTO")) {
-		info->miPuerto = config_get_int_value(miConf, "PUERTO");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "PUERTO");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "IP_UMC")) {
-		info->ipUmc = config_get_string_value(miConf, "IP_UMC");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "IP_UMC");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "PUERTO_UMC")) {
-		info->puertoUmc = config_get_int_value(miConf, "PUERTO_UMC");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "PUERTO_UMC");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "QUANTUM")) {
-		info->quantum = config_get_int_value(miConf, "QUANTUM");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "QUANTUM_SLEEP")) {
-		info->quantumSleep = config_get_int_value(miConf, "QUANTUM_SLEEP");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM_SLEEP");
-		exit(-2);
-	}
-
-	if (!config_has_property(miConf, "SEM_IDS")||!config_has_property(miConf, "SEM_INIT")) {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SEM_IDS");
-		exit(-2);
-	} else {
-		cargar_semaforos(info,config_get_array_value(miConf, "SEM_IDS"), config_get_array_value(miConf, "SEM_INIT"));
-	}
-
-	if (!config_has_property(miConf, "IO_IDS")||!config_has_property(miConf, "IO_SLEEP")) {
-		log_error("Parametros de dispositivos no cargados en el archivo de configuracion");
-		exit(-2);
-	} else {
-		cargar_dipositivos(info,config_get_array_value(miConf, "IO_IDS"), config_get_array_value(miConf, "IO_SLEEP"));
-	}
-
-	if (config_has_property(miConf, "SHARED_VARS")) {
-		cargar_sharedVars(info,config_get_array_value(miConf, "SHARED_VARS"));
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SHARED_VARS");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "STACK_SIZE")) {
-		info->quantum = config_get_int_value(miConf, "STACK_SIZE");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "STACK_SIZE");
-		exit(-2);
-	}
-}
-void pid_incrementer(int unPid){
+int pid_incrementer(){
 	pidCounter = pidCounter + 1;
-	unPid = pidCounter;
-}
-void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep) {
-	int iterator = 0;
-	stDispositivo *unDispositivo;
-
-	while (ioIds[iterator] != NULL) {
-		unDispositivo = crear_dispositivo(ioIds[iterator],ioSleep[iterator]);
-		list_add(info->dispositivos,unDispositivo);
-		iterator++;
-	}
-}
-void cargar_semaforos(stEstado *info,char** semIds, char** semInit) {
-	int iterator = 0;
-	stSemaforo *unSemadoro;
-
-	while (semIds[iterator] != NULL) {
-		unSemadoro = crear_semaforo(semIds[iterator],semInit[iterator]);
-		list_add(info->semaforos,unSemadoro);
-		iterator++;
-	}
-}
-void cargar_sharedVars(stEstado *info,char** sharedVars) {
-	int iterator = 0;
-	stSharedVar *unaSharedVar;
-
-	while (sharedVars[iterator] != NULL) {
-		unaSharedVar = crear_sharedVar(sharedVars[iterator]);
-		list_add(info->sharedVars,unaSharedVar);
-		iterator++;
-	}
-}
-stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
-	stDispositivo *new = malloc(sizeof(stDispositivo));/*TODO: liberar estos dispositivos al final*/
-	new->nombre = strdup(nombre);
-	new->retardo = retardo;
-	new->rafagas = queue_create();
-	/*Lanzar hilo para que haga el tratamiento de cada una da las rafagas de la cola*/
-
-	return new;
-}
-stSemaforo *crear_semaforo(char *nombre, char* valor) {
-	stSemaforo *new = malloc(sizeof(stSemaforo));/*TODO: liberar estos semaforos al final*/
-	new->nombre = strdup(nombre);
-	new->valor = strdup(valor);
-	return new;
-}
-stSharedVar *crear_sharedVar(char *nombre) {
-	stSharedVar *new = malloc(sizeof(stSharedVar));/*TODO: liberar estas sharedVar al final*/
-	new->nombre = strdup(nombre);
-	return new;
-}
-void monitor_configuracion(stEstado* info) {
-	char buffer[BUF_LEN];
-
-	// Al inicializar inotify este nos devuelve un descriptor de archivo
-	int file_descriptor = inotify_init();
-	if (file_descriptor < 0) {
-		perror("inotify_init");
-	}
-
-	// Creamos un monitor sobre un path indicando que eventos queremos escuchar
-	int watch_descriptor = inotify_add_watch(file_descriptor, CFGFILE,
-	IN_MODIFY | IN_CREATE | IN_DELETE);
-
-	int length = read(file_descriptor, buffer, BUF_LEN);
-	if (length < 0) {
-		perror("read");
-	}
-	loadInfo(info);
-	printf("\nEl archivo de configuracion se ha modificado\n");
-	inotify_rm_watch(file_descriptor, watch_descriptor);
-	close(file_descriptor);
-	monitor_configuracion(info);
-	pthread_exit(NULL);
+	return pidCounter;
 }
 void cerrarSockets(stEstado *elEstadoActual) {
 	int unSocket;
@@ -235,159 +75,12 @@ void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
 		unPCB = list_remove_by_condition(listaBlock, (void*) _es_el_pcb);
 
 		/*Ponemos en la cola de Ready para que lo vuelva a ejecutar un CPU*/
-		pthread_mutex_lock(&mutexColaReady);
-		queue_push(colaReady, unPCB);
-		pthread_mutex_unlock(&mutexColaReady);
+//		pthread_mutex_lock(&mutexColaReady);
+//		queue_push(colaReady, unPCB);
+//		pthread_mutex_unlock(&mutexColaReady);
 		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
 
 	}
-}
-void threadCPU(void *argumentos) {
-	struct thread_cpu_arg_struct *args = argumentos;
-
-	stHeaderIPC *unHeaderIPC;
-	stMensajeIPC unMensajeIPC;
-	stPCB *unPCB;
-	t_paquete paquete;
-	stDispositivo *unDispositivo;
-	stRafaga *unaRafagaIO;
-	char *dispositivo_name;
-	int error = 0;
-
-	while (!error) {
-		if (queue_size(colaReady) == 0) {
-			continue;
-		}
-
-		pthread_mutex_lock(&mutexColaReady);
-		unPCB = queue_pop(colaReady);
-		pthread_mutex_unlock(&mutexColaReady);
-
-		unPCB->quantum = args->estado->quantum;
-		unPCB->quantumSleep = args->estado->quantumSleep;
-
-		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
-		if (!enviarHeaderIPC(args->socketCpu,unHeaderIPC)) {
-			log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
-			error = 1;
-			liberarHeaderIPC(unHeaderIPC);
-			close(args->socketCpu);
-			continue;
-		}
-
-		if (!recibirHeaderIPC(args->socketCpu, unHeaderIPC)) {
-			log_error("CPU error - No se pudo recibir el mensaje");
-			error = 1;
-			close(args->socketCpu);
-			continue;
-		}
-
-		if (unHeaderIPC->tipo == OK) {
-			crear_paquete(&paquete, EXECANSISOP);
-			serializar_pcb(&paquete, unPCB);
-
-			if (enviar_paquete(args->socketCpu, &paquete)) {
-				log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
-				error = 1;
-				close(args->socketCpu);
-				continue;
-			}
-
-			free_paquete(&paquete);
-
-		}
-
-		if (!recibirMensajeIPC(args->socketCpu,&unMensajeIPC)) {
-			log_error("CPU error - No se pudo recibir header");
-			error = 1;
-			close(args->socketCpu);
-			continue;
-		} else {
-			switch (unMensajeIPC.header.tipo) {
-			case IOANSISOP:
-				/*Busqueda de dispositivo*/
-				dispositivo_name = strdup(unMensajeIPC.contenido);
-				int _es_el_dispositivo(stDispositivo *d) {
-					return string_equals_ignore_case(d->nombre, dispositivo_name);
-				}
-				unDispositivo= list_remove_by_condition(args->estado->dispositivos,(void*)_es_el_dispositivo);
-
-				/*Envio confirmacion al CPU*/
-				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(args->socketCpu,unHeaderIPC)) {
-					log_error("CPU error - No se pudo enviar header");
-					error = 1;
-					close(args->socketCpu);
-					continue;
-				}
-				/*Recibo el PCB*/
-				if (!recibir_paquete(args->socketCpu, &paquete)) {
-					log_error("CPU error - No se pudo recibir header");
-					error = 1;
-					close(args->socketCpu);
-					continue;
-				}
-
-				deserializar_pcb(unPCB,&paquete);
-
-				/*Almacenamos la rafaga de ejecucion de entrada salida*/
-				unaRafagaIO = malloc(sizeof(stRafaga));
-				unaRafagaIO->pid = unPCB->pid;
-				unaRafagaIO->unidades = 2;
-
-				queue_push(unDispositivo->rafagas,unaRafagaIO);
-
-				/*Volvemos a almacenar el dispositivo en la lista*/
-				list_add(args->estado->dispositivos,unDispositivo);
-				list_add(listaBlock,unPCB);
-
-//				log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
-
-				continue;
-
-				break;
-			case FINANSISOP:
-				/*Termina de ejecutar el PCB, en este caso deberia moverlo a la cola de EXIT para que luego sea liberada la memoria*/
-				break;
-			case QUANTUMFIN:
-				/*Termina de ejecutar su quantum hay que hacer un push en la cola de ready nuevamente*/
-				break;
-			case EXECERROR:
-				/*Se produjo una excepcion por acceso a una posicion de memoria invalida (segmentation fault), imprimir error
-				 * y bajar la consola tambien close (cliente)*/
-				break;
-			case SIGUSR1CPU:
-				/*Se cayo el CPU, se debe replanificar, (continue) */
-				break;
-			case OBTENERVALOR:
-				/*Valor de la variable compartida, devolver el valor para que el CPU siga ejecutando*/
-				break;
-			case GRABARVALOR:
-				/*Me pasa la variable compartida y el valor*/
-				break;
-			case WAIT:
-				/*Bloquea con el semaforo que pasa por parametro*/
-				break;
-			case SIGNAL:
-				/*libera con el semaforo que pasa por parametro*/
-				break;
-
-			}
-
-		}
-
-	}
-
-	if (error) {
-		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
-		pthread_mutex_lock(&mutexColaReady);
-		queue_push(colaReady, unPCB);
-		pthread_mutex_unlock(&mutexColaReady);
-		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
-	}
-
-	liberarHeaderIPC(unHeaderIPC);
-	pthread_exit(NULL);
 }
 
 /*
@@ -408,7 +101,7 @@ int main(int argc, char *argv[]) {
 
 	char* temp_file = "nucleo.log";
 
-	/*Inicializamos cola de ready*/
+	/*Inicializamos las colas del planificador*/
 	colaReady = queue_create();
 	listaBlock = list_create();
 
@@ -418,8 +111,7 @@ int main(int argc, char *argv[]) {
 
 	int agregarSock;
 
-	pthread_t p_thread;
-	pthread_t p_threadCpu;
+	pthread_t p_thread, p_threadCpu, p_threadProductor;
 
 
 	printf("----------------------------------Elestac------------------------------------\n");
@@ -437,7 +129,7 @@ int main(int argc, char *argv[]) {
 	log_info("Configuracion cargada satisfactoriamente...");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
-	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*)&elEstadoActual);
+	pthread_create(&p_thread, NULL, (void*)&monitor_configuracion, (void*)&elEstadoActual);
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
@@ -594,27 +286,31 @@ int main(int argc, char *argv[]) {
 								unPrograma = metadata_desde_literal(unMensaje.contenido);
 
 								/***Creacion del PCB***/
-								pid_incrementer(unPCB.pid);
+								unPCB.pid = pid_incrementer();
 								unPCB.pc = 0;
 								unPCB.socketConsola = unCliente;
 								unPCB.socketCPU = 0;
 								unPCB.metadata_program = unPrograma;
 								unPCB.cantidadPaginas = (unMensaje.header.largo/UMCConfig.tamanioPagina);
 								/*TODO: Verificar UMC*/
-								if(inicializar_programa(unPCB.pid,unPCB.cantidadPaginas,unMensaje.contenido,elEstadoActual.sockUmc,unPCB.paginaInicial)){
-									printf("UMC error - No se puede ejecutar el programa por falta de espacio\n");
-									FD_CLR(unCliente, &fds_master);
-									close(unCliente);
-									if (unCliente > elEstadoActual.fdMax) {
-										maximoAnterior = elEstadoActual.fdMax;
-										elEstadoActual.fdMax = unSocket;
-									}
+//								if(inicializar_programa(unPCB.pid,unPCB.cantidadPaginas,unMensaje.contenido,elEstadoActual.sockUmc,unPCB.paginaInicial)){
+//									printf("UMC error - No se puede ejecutar el programa por falta de espacio\n");
+//									FD_CLR(unCliente, &fds_master);
+//									close(unCliente);
+//									if (unCliente > elEstadoActual.fdMax) {
+//										maximoAnterior = elEstadoActual.fdMax;
+//										elEstadoActual.fdMax = unSocket;
+//									}
+//									continue;
+//								}
+
+								printf("Lanzamiento de hilo dedicado al nuevo PCB...");
+								if (pthread_create(&p_threadProductor, NULL, ready_productor,(void*)&unPCB) != 0) {
+									log_error("No se pudo lanzar el hilo correspondiente al nuevo PCB");
 									continue;
 								}
-
-								/*Lo almaceno en la cola de PCB listo para ejecutar*/
-								queue_push(colaReady, &unPCB);
-//								log_info("PCB- ha ingresado a la cola de Ready");
+								printf("OK\n");
+								fflush(stdout);
 							}
 
 						}
@@ -642,10 +338,16 @@ int main(int argc, char *argv[]) {
 
 						cpu_arg_struct.estado = &elEstadoActual;
 						cpu_arg_struct.socketCpu = unCliente;
-						if(pthread_create(&p_threadCpu, NULL, (void*) &threadCPU,(void *)&cpu_arg_struct)!=0){
+
+						printf("Lanzamiento de hilo dedicado al cpu...");
+						if(pthread_create(&p_threadCpu, NULL, (void*)&consumidor_cpu,(void *)&cpu_arg_struct)!=0){
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							continue;
 						}
+						printf("OK\n");
+						fflush(stdout);
+
+
 						break;
 					default:
 						break;

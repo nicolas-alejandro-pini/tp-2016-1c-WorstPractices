@@ -8,6 +8,12 @@
 #ifndef CONSUMIDOR_CPU_H_
 #define CONSUMIDOR_CPU_H_
 
+#include "Nucleo.h"
+#include "planificador.h"
+
+void consumidor_cpu(void *argumentos);
+
+
 
 
 #endif /* CONSUMIDOR_CPU_H_ */

@@ -4,7 +4,7 @@
  *  Created on: 6/6/2016
  *      Author: utnso
  */
-#include "ready.h"
+#include "planificador.h"
 
 void push_pcb(stPCB *unPCB) {
 	sem_wait(&shared.pcb_mutex);
@@ -28,10 +28,9 @@ int size_queue_ready() {
 
 }
 
-void *ready_productor(void *arg) {
-	stPCB* pcb_to_produce;
+void *ready_productor(void* arg) {
 
-	pcb_to_produce = (stPCB) arg;
+	stPCB *pcb_to_produce = arg;
 
 	sem_wait(&shared.pcb_empty);
 	push_pcb(pcb_to_produce);
@@ -43,11 +42,10 @@ void *ready_productor(void *arg) {
 	return NULL;
 }
 
-void *ready_consumer(stPCB *pcb_to_consume) {
+void ready_consumidor(stPCB *pcb_to_consume) {
 
 	sem_wait(&shared.pcb_full);
 	pop_pcb(pcb_to_consume);
 	sem_post(&shared.pcb_empty);
 
-	return NULL;
 }

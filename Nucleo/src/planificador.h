@@ -5,10 +5,11 @@
  *      Author: utnso
  */
 
-#ifndef READY_H_
-#define READY_H_
+#ifndef PLANIFICADOR_H_
+#define PLANIFICADOR_H_
 
 #include <commons/pcb.h>
+#include <commons/collections/queue.h>
 #include </usr/include/semaphore.h>
 
 typedef struct {
@@ -18,9 +19,13 @@ typedef struct {
 } ready_t;
 
 ready_t shared;
+t_list 	*listaBlock; 		/*Lista de todos los PCB bloqueados*/
+t_queue *colaReady; 		/*Cola de todos los PCB listos para ejecutar*/
+t_queue *colaExit; 			/*Cola de todos los PCB listos para liberar*/
 
 void push_pcb(stPCB *unPCB);
 void pop_pcb(stPCB *unPCB);
+void *ready_productor(void *arg);
 
 
-#endif /* READY_H_ */
+#endif /* PLANIFICADOR_H_ */

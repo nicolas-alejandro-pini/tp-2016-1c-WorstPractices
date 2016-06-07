@@ -3,10 +3,9 @@
 #include <commons/config.h>
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
-#include <commons/collections/list.h>
-#include <commons/collections/queue.h>
 #include <commons/serializador.h>
 #include <commons/parser/metadata_program.h>
+#include </usr/include/semaphore.h>
 #include <commons/pcb.h>
 #include <commons/log.h>
 #include <pthread.h>
@@ -81,14 +80,6 @@ typedef struct{
 	char* valor; 			/*Valor del semaforo*/
 } stSharedVar;
 
-void loadInfo(stEstado* info);
-void monitoreoConfiguracion(stEstado* info);
-void cargar_sharedVars(stEstado *info,char** sharedVars);
-void cargar_semaforos(stEstado *info,char** semIds, char** semInit);
-void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep);
-stDispositivo *crear_dispositivo(char *nombre, char *retardo);
-stSemaforo 	*crear_semaforo(char *nombre, char* valor);
-stSharedVar *crear_sharedVar(char *nombre);
 void threadCPU(void *argumentos);
 void cerrarSockets(stEstado *elEstadoActual);
 void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado);
