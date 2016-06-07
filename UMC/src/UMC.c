@@ -19,39 +19,38 @@
 void loadInfo (stParametro* info, char* file_name){
 
 	/* TODO realizar verificacines sobre lo cargadop desde el archivo */
-	t_config* miConf = config_create (file_name); /*Estructura de configuracion*/
+	t_config* miConf = config_create (file_name);
 
 	if(miConf == NULL){
-		printf("\nCONFIG ERROR - Error accediendo al archivo de configuracion\n");
-		/*loguear(ERROR_LOG,"SELECT ERROR - accediendo al archivo de configuracion","UMC");*/
+		log_error("CONFIG ERROR - Error accediendo al archivo de configuracion");
 		exit(-1);
 	}
 
 	if (config_has_property(miConf, "PUERTO")) {
 		info->miPuerto = config_get_int_value(miConf, "PUERTO");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO");
+		log_error("Parametro no cargado en el archivo de configuracion - PUERTO");
 		exit(-2);
 	}
 
 	if (config_has_property(miConf,"IP_SWAP")) {
 		info->ipSwap = config_get_string_value(miConf,"IP_SWAP");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","IP_SWAP");
+		log_error("Parametro no cargado en el archivo de configuracion - IP_SWAP");
 		exit(-2);
 	}
 
 	if (config_has_property(miConf,"PUERTO_SWAP")) {
 		info->puertoSwap = config_get_int_value(miConf,"PUERTO_SWAP");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_SWAP");
+		log_error("Parametro no cargado en el archivo de configuracion - PUERTO_SWAP");
 		exit(-2);
 	}
 
 	if (config_has_property(miConf,"MARCOS")) {
 		info->frames = config_get_int_value(miConf,"MARCOS");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","MARCOS");
+		log_error("Parametro no cargado en el archivo de configuracion - MARCOS");
 		exit(-2);
 	}
 	frames = info->frames;
@@ -59,7 +58,7 @@ void loadInfo (stParametro* info, char* file_name){
 	if (config_has_property(miConf,"MARCOS_SIZE")) {
 		info->frameSize = config_get_int_value(miConf,"MARCOS_SIZE");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","MARCOS_SIZE");
+		log_error("Parametro no cargado en el archivo de configuracion - MARCOS_SIZE");
 		exit(-2);
 	}
 	frameSize = info->frameSize;
@@ -67,7 +66,7 @@ void loadInfo (stParametro* info, char* file_name){
 	if (config_has_property(miConf,"MARCOS_X_PROC")) {
 		info->frameByProc = config_get_array_value(miConf,"MARCOS_X_PROC");
 	} else {
-		printf("Parametro MARCOS_X_PROC no cargado en el archivo de configuracion\n \"%s\"  \n","MARCOS_X_PROC");
+		log_error("Parametro MARCOS_X_PROC no cargado en el archivo de configuracion - MARCOS_X_PROC");
 		exit(-2);
 	}
 	frameByProc = info->frameByProc;
@@ -75,21 +74,21 @@ void loadInfo (stParametro* info, char* file_name){
 	if (config_has_property(miConf,"ALGORITMO")) {
 		info->delay = config_get_array_value(miConf,"ALGORITMO");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","RETARDO");
+		log_error("Parametro no cargado en el archivo de configuracion - ALGORITMO");
 		exit(-2);
 	}
 
 	if (config_has_property(miConf,"ENTRADAS_TLB")) {
 		info->entradasTLB = config_get_array_value(miConf,"ENTRADAS_TLB");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","ENTRADAS_TLB");
+		log_error("Parametro no cargado en el archivo de configuracion - ENTRADAS_TLB");
 		exit(-2);
 	}
 
 	if (config_has_property(miConf,"RETARDO")) {
 		info->delay = config_get_array_value(miConf,"RETARDO");
 	} else {
-		printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","RETARDO");
+		log_error("Parametro no cargado en el archivo de configuracion - RETARDO");
 		exit(-2);
 	}
 
@@ -110,10 +109,10 @@ void cerrarSockets(stParametro *elEstadoActual){
 /*
  =========================================================================================
  Name        : swapHandShake
- Author      : Ezequiel Martinez
+ Author      : Diego Laib
  Inputs      : Recibe el socket, un mensaje para identificarse y un tipo para el header.
  Outputs     : Retorna -1 en caso de error y si no hay error devuelve el socket.
- Description : Funcion para cargar los parametros del archivo de configuración
+ Description : Funcion handshake con Swap
  =========================================================================================
  */
 int swapHandShake (int socket, char* mensaje, int tipoHeader)
@@ -135,23 +134,10 @@ int swapHandShake (int socket, char* mensaje, int tipoHeader)
 		}
 	}
 
-	if(!recibirMensajeIPC(socket,&unMensaje)){
-			printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
-			fflush(stdout);
-			return (-1);
-	}
-
-	printf("HandShake: mensaje recibido %d",unMensaje.header.tipo);
+	log_info("HandShake: establecido");
 	fflush(stdout);
 
-	if(unMensaje.header.tipo == OK)
-	{
-		printf("Conexión establecida con id: %d...\n",tipoHeader);
-		fflush(stdout);
-		return socket;
-	}
-	else
-		return (-1);
+	return 0;
 }
 
 void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstado){
@@ -172,21 +158,28 @@ int main(int argc, char *argv[]) {
 	char elsocket[10];
 	int agregarSock;
 	pthread_attr_t attr;
+	char* temp_file = "umc.log";
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
 
-	printf("-----------------------------------------------------------------------------\n");
-	printf("------------------------------------UMC--------------------------------------\n");
-	printf("------------------------------------v1.0-------------------------------------\n\n");
+	//Primero instancio el log
+		t_log* logger = log_create(temp_file, "UMC",-1, LOG_LEVEL_INFO);
+
+	log_info("-----------------------------------------------------------------------------\n");
+	log_info("------------------------------------UMC--------------------------------------\n");
+	log_info("------------------------------------v1.0-------------------------------------\n\n");
+
+
 
 	/* ----------------------------------------Se carga el archivo de configuracion--------------------------- */
 
-		/*loguear(INFO_LOG,"*****INICIO UMC*****\n","UMC"); */
-		printf("Obteniendo configuracion...");
+
+
+		log_info("*****INICIO UMC*****");
+		log_info("Obteniendo configuracion...");
 		loadInfo(&elEstadoActual,argv[1]);
-		printf("OK\n\n");
-		/*loguear(INFO_LOG,"Configuración OK","UMC");*/
+		log_info("Configuración OK");
 
 
 
@@ -209,38 +202,39 @@ int main(int argc, char *argv[]) {
 
 		/* ---------------------------------Me pongo a escuchar mi puerto escuchador------------------------------- */
 
-		printf("Creando el socket de escucha...");
+		log_info("Creando el socket de escucha...");
 		elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
 		if(elEstadoActual.sockEscuchador < 0){
-			printf("No puede crear el socket de escucha...");
+			log_info("No puede crear el socket de escucha...");
 			exit(-1);
 		}
 		FD_SET(elEstadoActual.sockEscuchador,&(fds_master));
 		elEstadoActual.fdMax =	elEstadoActual.sockEscuchador;
-		printf("Socket de escucha OK\n");
+		log_info("Socket de escucha OK\n");
 		/*loguear(INFO_LOG,"Esperando conexiones...","SERVER");*/
 
 		/********************************* Lanzo conexión con el Swap ********************************************/
-		printf("Conectando con el Swap\n");
-		elEstadoActual.sockSwap = conectar(elEstadoActual.ipSwap, elEstadoActual.puertoSwap);
+		log_info("Conectando con el Swap");
+		sockSwap = conectar(elEstadoActual.ipSwap, elEstadoActual.puertoSwap);
 		/* Inicio el handShake con el servidor */
-		if (elEstadoActual.sockSwap != -1){
-		/*	if (swapHandShake(elEstadoActual.sockSwap, "SOYUMC", CONNECTSWAP) != -1)
+		if (sockSwap != -1){
+			if (swapHandShake(elEstadoActual.sockSwap, "SOYUMC", SOYUMC) != -1)
 			{
-				printf("CONNECTION_ERROR - No se recibe un mensaje correcto en Handshake con Swap\n");
+				log_info("CONNECTION_ERROR - No se recibe un mensaje correcto en Handshake con Swap");
 				fflush(stdout);
-		*/		/*loguear(ERROR_LOG,"SOCKET_ERROR - No se recibe un mensaje correcto","SERVER");*/
-		/*		close(elEstadoActual.sockSwap);
+				log_info("SOCKET_ERROR - No se recibe un mensaje correcto");
+				close(elEstadoActual.sockSwap);
 			}
 			else
-			{*/
-				printf("OK - Swap conectado. \n");
+			{
+				log_info("OK - Swap conectado.");
 				fflush(stdout);
 				/*loguear(OK_LOG,"Swap conectado","Swap"); TODO Agregar funcion de logueo.*/
-	/*		} */
+			}
 		}	/*Fin de conexion al Swap*/
 		else{
-			printf("No se pudo conectar con el Swap\n");
+			log_info("No se pudo conectar con el Swap");
+			log_destroy(logger);
 		}
 
 	/* ........................................Ciclo Principal SERVER........................................ */
@@ -315,21 +309,10 @@ int main(int argc, char *argv[]) {
 								}
 								break;
 							case CONNECTNUCLEO:
-							/* TODO enviar mensaje con cantidad de paginas al Nucleo */
 
-								if(!enviarMensajeIPC(unCliente,nuevoHeaderIPC(OK),"MSGOK")){
-									printf("No se pudo enviar el MensajeIPC al cliente\n");
-									return 0;
-								}
-								unaCabecera = nuevoHeaderIPC(OK);
-								if(!enviarHeaderIPC(unCliente, unaCabecera)){
-									printf("No se pudo enviar un mensaje de confirmacion al Nucleo conectado\n");
-									liberarHeaderIPC(unaCabecera);
-									close(unCliente);
-									continue;
-								}
-								printf("Conexion con modulo cliente establecida\n");
-								/*loguear(INFO_LOG,"Conexion con modulo cliente establecida\n","SERVER");*/
+								enviarConfigUMC(unCliente, elEstadoActual.frameSize, elEstadoActual.frameByProc);
+
+								log_info("Conexion con modulo cliente establecida Nucleo");
 								agregarSock=1;
 
 								/*Agrego el socket conectado A la lista Master*/
@@ -354,7 +337,7 @@ int main(int argc, char *argv[]) {
 							if(unSocket==elEstadoActual.sockEscuchador){
 								printf("Se perdio conexion con el cliente conectado...\n ");
 								sprintf(enviolog,"SOCKET ERROR - Conexion perdida: %d",unSocket);
-								/*loguear(INFO_LOG,"SOCKET ERROR - Conexion perdida:\n","CLIENTE");*/
+								log_info(enviolog);
 							}
 
 							/*Saco el socket de la lista Master*/
