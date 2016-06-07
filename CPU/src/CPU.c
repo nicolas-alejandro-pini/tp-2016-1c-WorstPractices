@@ -30,6 +30,7 @@
 #include <commons/ipctypes.h>
 #include <commons/pcb.h>
 #include <commons/config.h>
+#include <commons/serializador.h>
 #include <commons/parser/parser.h>
 #include <commons/parser/metadata_program.h>
 
@@ -53,12 +54,22 @@ typedef struct{
 } t_configCPU;
 
 
-typedef struct{
-	int nroPagina;		// Indica el numero de pagina //
+/*typedef struct{
+/	int nroPagina;		// Indica el numero de pagina //
 	int size;			// Tamaño//
 	int offSet;			// offSet //
-} t_posicion;
+} stPosicion;
+*/
 
+typedef struct{
+	char* nombre;           /*Nombre del semaforo*/
+	char* valor; 			/*Valor del semaforo*/
+} stSemaforo;
+
+typedef struct{
+	char* nombre;           /*Nombre del semaforo*/
+	int valor; 			/*Valor del semaforo*/
+} stSharedVar;
 
 //Variables Globales//
 
@@ -71,13 +82,12 @@ t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de
 
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 
-t_posicion POSICION_DUMMY;
+stPosicion POSICION_DUMMY;
 
 
-int mensajeToUMC(int tipoHeader, t_posicion posicionUMC){
+int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 
 	stHeaderIPC* unHeader;
-	t_posicion posicionVariable;
 	t_paquete paquetePosicion;
 	int resultado = 0;
 
@@ -86,7 +96,7 @@ int mensajeToUMC(int tipoHeader, t_posicion posicionUMC){
 	enviarHeaderIPC(configuracionInicial.sockUmc, unHeader);
 
 	crear_paquete(&paquetePosicion, tipoHeader);
-	serializar_pcb(&paquetePosicion, unPCB);
+	serializar_pcb(&paquetePosicion, posicionVariable);
 
 	if (enviar_paquete(configuracionInicial.sockUmc, &paquetePosicion)) {
 		log_error("No se pudo enviar al UMC el paquete para operacion [%d]", tipoHeader);
@@ -112,11 +122,11 @@ int mensajeToUMC(int tipoHeader, t_posicion posicionUMC){
  ============================================================================
  */
 
-t_posicion definirVariable(t_nombre_variable identificador_variable){
+stPosicion definirVariable(t_nombre_variable identificador_variable){
 
 	stMensajeIPC mensajePrimitiva;
 	stHeaderIPC* unHeaderPrimitiva;
-	t_posicion posicionVariable;
+	stPosicion posicionVariable;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(WRITE_BYTES_PAGE);
 
@@ -137,10 +147,10 @@ t_posicion definirVariable(t_nombre_variable identificador_variable){
 	return posicionVariable;
 }
 
-t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
+stPosicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	stMensajeIPC mensajePrimitiva;
-	t_posicion posicionVariable;
+	stPosicion posicionVariable;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
 
@@ -161,7 +171,7 @@ t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 }
 
 
-t_valor_variable dereferenciar(t_posicion direccion_variable){
+t_valor_variable dereferenciar(stPosicion direccion_variable){
 
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
@@ -188,7 +198,7 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 }
 
-void asignar(t_posicion direccion_variable, t_valor_variable valor ){
+void asignar(stPosicion direccion_variable, t_valor_variable valor ){
 
 	stMensajeIPC mensajePrimitiva;
 
@@ -214,15 +224,76 @@ void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
-	t_valor_variable  HARCODE= 9999;
-	printf("Llamo a ObtenerValorCompartida");
-	return HARCODE;
+	stHeaderIPC *unHeaderIPC;
+	t_paquete paquete;
+	stSharedVar sharedVar;
+	int type;
+
+	t_valor_variable resultado;
+
+	unHeaderIPC = nuevoHeaderIPC(OBTENERVALOR);
+
+	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+
+	sharedVar.nombre = variable;
+
+	crear_paquete(&paquete, OBTENERVALOR);
+	serializar_pcb(&paquete, sharedVar);
+
+	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+		log_error("No se pudo enviar el SharedVar al Nucleo.");
+	}
+
+	recibir_paquete (configuracionInicial.sockNucleo, &paquete);
+
+	type = obtener_paquete_type(&paquete);
+
+	if (type != OBTENERVALOR)
+	{
+		log_error("Fallo al recibir paquete del nucleo.");
+		free_paquete(&paquete);
+		return (-1);
+	}
+
+	deserializar_pcb(&sharedVar , &paquete);
+
+	resultado = sharedVar.valor;
+
+	free_paquete(&paquete);
+
+	liberarHeaderIPC(unHeaderIPC);
+
+	return resultado;
 }
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
-	t_valor_variable  HARCODE= 1111;
-	printf("Llamo a asignarValorCompartida");
-	return HARCODE;
+
+	stHeaderIPC *unHeaderIPC;
+	t_paquete paquete;
+	stSharedVar sharedVar;
+	int type;
+
+	t_valor_variable resultado;
+
+	unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
+
+	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+
+	sharedVar.nombre = variable;
+	sharedVar.valor = valor;
+
+	crear_paquete(&paquete, GRABARVALOR);
+	serializar_pcb(&paquete, sharedVar);
+
+	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+		log_error("No se pudo enviar el SharedVar al Nucleo.");
+	}
+
+	free_paquete(&paquete);
+
+	liberarHeaderIPC(unHeaderIPC);
+
+	return resultado;
 }
 
 t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
@@ -232,7 +303,7 @@ t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
 	return PUNTERO;
 }
 
-t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, t_posicion donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
+t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, stPosicion donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
 
 	t_puntero_instruccion PUNTERO;
 	printf("Llamo a llamarFuncion");
@@ -480,7 +551,7 @@ int getInstruccion (int start, int size, char** instruccion){
 	stMensajeIPC mensajeUMC;
 
 	char* estructuraSerializada;
-	t_posicion posicionInstruccion;
+	stPosicion posicionInstruccion;
 
 	posicionInstruccion.size = size;
 	posicionInstruccion.offSet = start;
