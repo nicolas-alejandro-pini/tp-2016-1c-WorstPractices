@@ -15,6 +15,8 @@ int inicializarSwap(stPageIni *st){
 	 *
 	 * devuelve OK o ERROR
 	 */
+
+
 	return 0;
 }
 
@@ -29,3 +31,26 @@ int inicializarSwap(stPageIni *st){
  *
  * destruirPrograma()<-NULL
  */
+
+
+int enviarPagina(){
+	int offset = 0;
+		t_paquete paquete;
+		t_UMCConfig UMCConfig;
+
+		// cargo estructura
+		UMCConfig.paginasXProceso = frameByProc;
+		UMCConfig.tamanioPagina = frameSize;
+
+		crear_paquete(&paquete, CONFIG_UMC);
+		serializar_campo(&paquete, &offset, &UMCConfig, sizeof(UMCConfig));
+		// Otra forma
+		//serializar_campo(&paquete, &offset, &(UMCConfig.paginasXProceso), sizeof(UMCConfig.paginasXProceso));
+		//serializar_campo(&paquete, &offset, &(UMCConfig.tamanioPagina), sizeof(UMCConfig.tamanioPagina));
+		serializar_header(&paquete);
+
+		enviar_paquete(sockSwap, &paquete);
+		free_paquete(&paquete);
+
+		return EXIT_SUCCESS;
+}

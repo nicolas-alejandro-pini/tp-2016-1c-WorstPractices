@@ -13,7 +13,7 @@
 
 void *memoriaPrincipal;
 
-void* leerMemoria(uint16_t pagina, uint16_t offset, uint16_t lenght);
+void* leerMemoria(uint16_t marco);
 void* escribirMemoria(uint16_t pagina, uint16_t offset, uint16_t lenght, unsigned char * buffer);
 
 #endif /* MEMORIA_H_ */
