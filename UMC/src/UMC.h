@@ -52,7 +52,7 @@ typedef struct{
 	int delay;          /* Retardo para la respuesta de UMC. */
 	int sockEscuchador;		/* Socket con el que escucho. */
 	int sockSwap;			/* Socket con el que hablo con Swap. */
-	char algoritmo[20];     /*Clock o ClockModificado*/
+	char* algoritmo;     /*Clock o ClockModificado*/
 	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
 	int salir;              /* Indica si debo o no salir de la aplicacion. */
 } stParametro;

@@ -72,7 +72,7 @@ void loadInfo (stParametro* info, char* file_name){
 	frameByProc = info->frameByProc;
 
 	if (config_has_property(miConf,"ALGORITMO")) {
-		info->delay = config_get_array_value(miConf,"ALGORITMO");
+		info->algoritmo = config_get_string_value(miConf,"ALGORITMO");
 	} else {
 		log_error("Parametro no cargado en el archivo de configuracion - ALGORITMO");
 		exit(-2);
@@ -309,10 +309,17 @@ int main(int argc, char *argv[]) {
 								}
 								break;
 							case CONNECTNUCLEO:
+								unaCabecera = nuevoHeaderIPC(OK);
+								if(!enviarHeaderIPC(unCliente, unaCabecera)){
+									printf("No se pudo enviar un mensaje de confirmacion a la consola conectada\n");
+									liberarHeaderIPC(unaCabecera);
+									close(unCliente);
+									continue;
+								}
 
 								enviarConfigUMC(unCliente, elEstadoActual.frameSize, elEstadoActual.frameByProc);
 
-								log_info("Conexion con modulo cliente establecida Nucleo");
+//								log_info("Conexion con modulo cliente establecida Nucleo");
 								agregarSock=1;
 
 								/*Agrego el socket conectado A la lista Master*/
