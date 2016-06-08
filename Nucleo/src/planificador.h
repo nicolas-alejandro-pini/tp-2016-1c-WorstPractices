@@ -8,24 +8,17 @@
 #ifndef PLANIFICADOR_H_
 #define PLANIFICADOR_H_
 
-#include <commons/pcb.h>
-#include <commons/collections/queue.h>
-#include </usr/include/semaphore.h>
+#include 	<commons/pcb.h>
+#include 	<commons/collections/queue.h>
+#include	<stdlib.h>
+#include	<stdio.h>
+#include	<pthread.h>
 
-typedef struct {
-    sem_t pcb_full;         /* Numero de sem contador de pcb */
-    sem_t pcb_empty;        /* keep track of the number of empty spots */
-    sem_t pcb_mutex;        /* enforce mutual exclusion to shared data */
-} ready_t;
+t_list *listaBlock; /*Lista de todos los PCB bloqueados*/
+t_queue *colaReady; /*Cola de todos los PCB listos para ejecutar*/
+t_queue *colaExit; /*Cola de todos los PCB listos para liberar*/
 
-ready_t shared;
-t_list 	*listaBlock; 		/*Lista de todos los PCB bloqueados*/
-t_queue *colaReady; 		/*Cola de todos los PCB listos para ejecutar*/
-t_queue *colaExit; 			/*Cola de todos los PCB listos para liberar*/
-
-void push_pcb(stPCB *unPCB);
-void pop_pcb(stPCB *unPCB);
 void *ready_productor(void *arg);
-
+void ready_consumidor(stPCB *pcb_to_consume);
 
 #endif /* PLANIFICADOR_H_ */

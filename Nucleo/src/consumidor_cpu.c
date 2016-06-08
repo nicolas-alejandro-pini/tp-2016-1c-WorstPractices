@@ -11,7 +11,7 @@ void consumidor_cpu(void *args) {
 
 	stHeaderIPC *unHeaderIPC;
 	stMensajeIPC unMensajeIPC;
-	stPCB *unPCB;
+	stPCB unPCB;
 	t_paquete paquete;
 	stDispositivo *unDispositivo;
 	stRafaga *unaRafagaIO;
@@ -20,12 +20,12 @@ void consumidor_cpu(void *args) {
 
 	while (!error) {
 		ready_consumidor(&unPCB);
-		unPCB->quantum = current_args->estado->quantum;
-		unPCB->quantumSleep = current_args->estado->quantumSleep;
+		unPCB.quantum = current_args->estado->quantum;
+		unPCB.quantumSleep = current_args->estado->quantumSleep;
 
 		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
 		if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
-			log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
+			log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB.pid);
 			error = 1;
 			liberarHeaderIPC(unHeaderIPC);
 			ready_productor(&unPCB);
@@ -43,10 +43,10 @@ void consumidor_cpu(void *args) {
 
 		if (unHeaderIPC->tipo == OK) {
 			crear_paquete(&paquete, EXECANSISOP);
-			serializar_pcb(&paquete, unPCB);
+			serializar_pcb(&paquete, &unPCB);
 
 			if (enviar_paquete(current_args->socketCpu, &paquete)) {
-				log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
+				log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB.pid);
 				error = 1;
 				ready_productor(&unPCB);
 				close(current_args->socketCpu);
@@ -88,18 +88,18 @@ void consumidor_cpu(void *args) {
 					continue;
 				}
 
-				deserializar_pcb(unPCB, &paquete);
+				deserializar_pcb(&unPCB, &paquete);
 
 				/*Almacenamos la rafaga de ejecucion de entrada salida*/
 				unaRafagaIO = malloc(sizeof(stRafaga));
-				unaRafagaIO->pid = unPCB->pid;
+				unaRafagaIO->pid = unPCB.pid;
 				unaRafagaIO->unidades = 2;
 
 				queue_push(unDispositivo->rafagas, unaRafagaIO);
 
 				/*Volvemos a almacenar el dispositivo en la lista*/
 				list_add(current_args->estado->dispositivos, unDispositivo);
-				list_add(listaBlock, unPCB);
+				list_add(listaBlock, &unPCB);
 
 //				log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
 
@@ -140,8 +140,8 @@ void consumidor_cpu(void *args) {
 
 	if (error) {
 		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
-		push_pcb(unPCB);
-		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
+		ready_productor(&unPCB);
+		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB.pid);
 	}
 
 	liberarHeaderIPC(unHeaderIPC);

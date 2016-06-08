@@ -32,6 +32,10 @@
 #define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 )
 #define BUF_LEN     ( 1024 * EVENT_SIZE )
 
+/* Listas globales */
+fd_set fds_master; /* Lista de todos mis sockets.*/
+fd_set read_fds; /* Sublista de fds_master.*/
+
 /*
  ============================================================================
  Estructuras del nucleo

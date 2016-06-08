@@ -21,16 +21,12 @@
 
 int pidCounter;
 
-/* Listas globales */
-fd_set fds_master; /* Lista de todos mis sockets.*/
-fd_set read_fds; /* Sublista de fds_master.*/
-
 /*
  ============================================================================
  Funciones
  ============================================================================
  */
-int pid_incrementer(){
+int pid_incrementer() {
 	pidCounter = pidCounter + 1;
 	return pidCounter;
 }
@@ -63,13 +59,13 @@ void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
 
 		unaRafaga = queue_pop(colaRafaga);
 
-		for (unidad=0; unidad < unaRafaga->unidades; ++unidad) {
+		for (unidad = 0; unidad < unaRafaga->unidades; ++unidad) {
 			usleep(atoi(unDispositivo->retardo));
 		}
 
 		/*Busqueda del pcb en la lista de pcb bloqueados*/
 		int _es_el_pcb(stPCB *p) {
-			return p->pid==unaRafaga->pid;
+			return p->pid == unaRafaga->pid;
 		}
 
 		unPCB = list_remove_by_condition(listaBlock, (void*) _es_el_pcb);
@@ -97,6 +93,9 @@ int main(int argc, char *argv[]) {
 	t_paquete paquete;
 	t_UMCConfig UMCConfig;
 	stPageIni *unInicioUMC;
+
+	pidCounter = 0;
+
 	struct thread_cpu_arg_struct cpu_arg_struct;
 
 	char* temp_file = "nucleo.log";
@@ -106,13 +105,12 @@ int main(int argc, char *argv[]) {
 	listaBlock = list_create();
 
 	int unCliente = 0, unSocket;
-	int maximoAnterior =0;
+	int maximoAnterior = 0;
 	struct sockaddr addressAceptado;
 
 	int agregarSock;
 
 	pthread_t p_thread, p_threadCpu, p_threadProductor;
-
 
 	printf("----------------------------------Elestac------------------------------------\n");
 	printf("-----------------------------------Nucleo------------------------------------\n");
@@ -129,7 +127,7 @@ int main(int argc, char *argv[]) {
 	log_info("Configuracion cargada satisfactoriamente...");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
-	pthread_create(&p_thread, NULL, (void*)&monitor_configuracion, (void*)&elEstadoActual);
+	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*) &elEstadoActual);
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
@@ -181,19 +179,7 @@ int main(int argc, char *argv[]) {
 
 		}
 
-		if (stHeaderIPC->tipo == OK) {
-			elEstadoActual.fdMax = elEstadoActual.sockUmc;
-			maximoAnterior = elEstadoActual.fdMax;
-			log_info("UMC Conectada...");
-
-		} else {
-
-			log_error("UMC handshake error - Tipo de mensaje de confirmacion incorrecto");
-			close(unCliente);
-			exit(-2);
-		}
-
-		if(recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig)){
+		if (recibirConfigUMC(elEstadoActual.sockUmc, &UMCConfig)) {
 			log_error("UMC error - No se pudo recibir la configuracion");
 			close(unCliente);
 			exit(-2);
@@ -291,7 +277,7 @@ int main(int argc, char *argv[]) {
 								unPCB.socketConsola = unCliente;
 								unPCB.socketCPU = 0;
 								unPCB.metadata_program = unPrograma;
-								unPCB.cantidadPaginas = (unMensaje.header.largo/UMCConfig.tamanioPagina);
+								unPCB.cantidadPaginas = (unMensaje.header.largo / UMCConfig.tamanioPagina);
 								/*TODO: Verificar UMC*/
 //								if(inicializar_programa(unPCB.pid,unPCB.cantidadPaginas,unMensaje.contenido,elEstadoActual.sockUmc,unPCB.paginaInicial)){
 //									printf("UMC error - No se puede ejecutar el programa por falta de espacio\n");
@@ -303,9 +289,8 @@ int main(int argc, char *argv[]) {
 //									}
 //									continue;
 //								}
-
 								printf("Lanzamiento de hilo dedicado al nuevo PCB...");
-								if (pthread_create(&p_threadProductor, NULL, ready_productor,(void*)&unPCB) != 0) {
+								if (pthread_create(&p_threadProductor, NULL, ready_productor, (void*) &unPCB) != 0) {
 									log_error("No se pudo lanzar el hilo correspondiente al nuevo PCB");
 									continue;
 								}
@@ -340,13 +325,12 @@ int main(int argc, char *argv[]) {
 						cpu_arg_struct.socketCpu = unCliente;
 
 						printf("Lanzamiento de hilo dedicado al cpu...");
-						if(pthread_create(&p_threadCpu, NULL, (void*)&consumidor_cpu,(void *)&cpu_arg_struct)!=0){
+						if (pthread_create(&p_threadCpu, NULL, (void*) &consumidor_cpu, (void *) &cpu_arg_struct) != 0) {
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							continue;
 						}
 						printf("OK\n");
 						fflush(stdout);
-
 
 						break;
 					default:

@@ -6,35 +6,19 @@
  */
 #include "planificador.h"
 
-void push_pcb(stPCB *unPCB) {
-	sem_wait(&shared.pcb_mutex);
-	queue_push(colaReady, &unPCB);
-	sem_post(&shared.pcb_mutex);
-}
-
-void pop_pcb(stPCB *unPCB) {
-	sem_wait(&shared.pcb_mutex);
-	unPCB = queue_pop(colaReady);
-	sem_post(&shared.pcb_mutex);
-}
-
-int size_queue_ready() {
-	int cantidad_pcb = 0;
-	sem_wait(&shared.pcb_mutex);
-	cantidad_pcb = queue_size(colaReady);
-	sem_post(&shared.pcb_mutex);
-
-	return cantidad_pcb;
-
-}
+int numInQ = 0;										// number of items in the queue
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;	// mutual exclusion lock
+pthread_mutex_t empty = PTHREAD_MUTEX_INITIALIZER;	// synchronization lock
 
 void *ready_productor(void* arg) {
 
 	stPCB *pcb_to_produce = arg;
 
-	sem_wait(&shared.pcb_empty);
-	push_pcb(pcb_to_produce);
-	sem_post(&shared.pcb_full);
+	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
+	queue_push(colaReady, pcb_to_produce);
+	numInQ++;
+	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
+	pthread_mutex_unlock(&empty);	// Comienzo de espera de consumidor
 	printf("[PID-%d] Ingresa a la cola de Ready...\n", pcb_to_produce->pid);
 	fflush(stdout);
 	sleep(1);
@@ -44,8 +28,10 @@ void *ready_productor(void* arg) {
 
 void ready_consumidor(stPCB *pcb_to_consume) {
 
-	sem_wait(&shared.pcb_full);
-	pop_pcb(pcb_to_consume);
-	sem_post(&shared.pcb_empty);
+	while (numInQ == 0) pthread_mutex_lock(&empty);
+	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
+	pcb_to_consume = queue_pop(colaReady);
+	numInQ--;
+	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
 
 }
