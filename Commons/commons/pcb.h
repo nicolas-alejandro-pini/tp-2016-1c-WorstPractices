@@ -13,21 +13,15 @@
 #include "serializador.h"
 
 typedef struct {
-	uint32_t id; /*Variable*/
-	uint32_t pagina;
-	uint32_t offset;
-	uint32_t size;
-} stPosicionIS; /*Posicion de memoria en el indice de Stack*/
+	uint32_t id; 					/*Variable*/
+	stPosicion posicion_memoria;
+} stVars; 					/*Posicion de memoria en el indice de Stack*/
+
 
 typedef struct {
-	uint32_t lenght;
-	char *data;
-} stPCBSerializado;
-
-typedef struct {
-	uint32_t pos; /*Posicion del registro del Stack*/
-	t_list argumentos; /*Posiciones de memoria donde se almacenan las copias de los argumentos de la función(Listas de stPosicionIS)*/
-	t_list variables; /*Identificadores y posiciones de memoria donde se almacenan las variables locales de la función(Listas de stPosicionIS)*/
+	uint32_t pos; 		/*Posicion del registro del Stack*/
+	t_list argumentos;  /*Posiciones de memoria donde se almacenan las copias de los argumentos de la función(Listas de stPosicionIS)*/
+	t_list variables;   /*Identificadores y posiciones de memoria donde se almacenan las variables locales de la función(Listas de stPosicionIS)*/
 	uint32_t retPosicion; /*Posición del índice de código donde se debe retornar al finalizar la ejecución de la función*/
 	stPosicion retVar; /*Posición de memoria donde se debe almacenar el resultado de la función provisto por la sentencia RETURN*/
 } stIndiceStack;
@@ -42,7 +36,7 @@ typedef struct {
 	uint32_t quantum; /*Quantum a ejecutar*/
 	uint32_t quantumSleep; /*Retardo del quantum*/
 	t_metadata_program* metadata_program;
-//	t_list stack;
+	//t_list stack;
 }__attribute__((packed)) stPCB;
 
 int serializar_pcb(t_paquete *paquete, stPCB *self);
