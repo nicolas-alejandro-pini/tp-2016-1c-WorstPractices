@@ -226,7 +226,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	stHeaderIPC *unHeaderIPC;
 	t_paquete paquete;
-	stSharedVar sharedVar;
+	stSharedVar* sharedVar;
 	int type;
 
 	t_valor_variable resultado;
@@ -270,7 +270,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 
 	stHeaderIPC *unHeaderIPC;
 	t_paquete paquete;
-	stSharedVar sharedVar;
+	stSharedVar* sharedVar;
 	int type;
 
 	t_valor_variable resultado;
