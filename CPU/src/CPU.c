@@ -67,9 +67,14 @@ typedef struct{
 } stSemaforo;
 
 typedef struct{
-	char* nombre;           /*Nombre del semaforo*/
-	int valor; 			/*Valor del semaforo*/
+	t_nombre_compartida nombre;		/*Nombre del semaforo*/
+	int valor;						/*Valor del semaforo*/
 } stSharedVar;
+
+typedef struct{
+	t_nombre_dispositivo nombre;	/*Nombre del dispositivo*/
+	int tiempo;						/*Tiempo de espera*/
+} stIO;
 
 //Variables Globales//
 
@@ -90,13 +95,19 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 	stHeaderIPC* unHeader;
 	t_paquete paquetePosicion;
 	int resultado = 0;
+	int offset = 0;
 
 	unHeader = nuevoHeaderIPC(tipoHeader);
 
 	enviarHeaderIPC(configuracionInicial.sockUmc, unHeader);
 
 	crear_paquete(&paquetePosicion, tipoHeader);
-	serializar_pcb(&paquetePosicion, posicionVariable);
+
+	serializar_campo(paquetePosicion, &offset, &posicionVariable->offset, sizeof(&posicionVariable->offset));
+	serializar_campo(paquetePosicion, &offset, &posicionVariable->pagina, sizeof(posicionVariable->pagina));
+	serializar_campo(paquetePosicion, &offset, &posicionVariable->size, sizeof(posicionVariable->size));
+
+	serializar_header(paquetePosicion);
 
 	if (enviar_paquete(configuracionInicial.sockUmc, &paquetePosicion)) {
 		log_error("No se pudo enviar al UMC el paquete para operacion [%d]", tipoHeader);
@@ -105,7 +116,7 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 
 	free_paquete(&paquetePosicion);
 
-	liberarHeaderIPC (unHeader);
+	liberarHeaderIPC(unHeader);
 
 	return resultado;
 
@@ -227,7 +238,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	stHeaderIPC *unHeaderIPC;
 	t_paquete paquete;
 	stSharedVar* sharedVar;
-	int type;
+	int type, offset=0;
 
 	t_valor_variable resultado;
 
@@ -235,10 +246,13 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
-	sharedVar.nombre = variable;
+	sharedVar->nombre = variable;
+	sharedVar->valor = 0;
 
 	crear_paquete(&paquete, OBTENERVALOR);
-	serializar_pcb(&paquete, sharedVar);
+	serializar_campo(paquete, &offset, &sharedVar->nombre, sizeof(sharedVar->nombre));
+	serializar_campo(paquete, &offset, &sharedVar->valor, sizeof(sharedVar->valor));
+
 
 	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el SharedVar al Nucleo.");
@@ -257,7 +271,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	deserializar_pcb(&sharedVar , &paquete);
 
-	resultado = sharedVar.valor;
+	resultado = sharedVar->valor;
 
 	free_paquete(&paquete);
 
@@ -310,20 +324,54 @@ t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, stPosicion donde
 	return PUNTERO;
 }
 
-t_puntero_instruccion retornar(t_valor_variable retorno){
-	t_puntero_instruccion PUNTERO;
+void retornar(t_valor_variable retorno){
+
 	printf("Llamo a retornar");
-	return PUNTERO;
 }
 
-int imprimir(t_valor_variable valor_mostrar){
-	printf("Llamo a imprimir");
-	return 0;
+void imprimir(t_valor_variable valor_mostrar){
+
+	stHeaderIPC* unHeaderPrimitiva;
+	t_paquete paquete;
+	int offset = 0;
+
+	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIR);
+
+	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva);
+
+	crear_paquete(&paquete, IMPRIMIR);
+
+	serializar_campo(&paquete, &offset, &valor_mostrar, sizeof(valor_mostrar));
+
+	serializar_header(&paquete);
+
+	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+		log_error("No se pudo enviar el paquete para primitiva IMPRIMIR");
+	}
+
+	free_paquete(&paquete);
+
+	liberarHeaderIPC(unHeaderPrimitiva);
+
 }
 
-int imprimirTexto(char* texto){
-	printf("Llamo a imprimirTexto");
-	return 0;
+void imprimirTexto(char* texto){
+
+	stHeaderIPC* unHeaderPrimitiva;
+	stPosicion posicionVariable;
+
+	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIRTEXTO);
+
+	enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva,texto);
+
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,&unHeaderPrimitiva)){
+		printf("Error: Fallo la impresion del texto:  %s.\n", texto);
+
+	}
+
+	if (unHeaderPrimitiva.tipo == OK)
+		printf("Se imprime texto: %s \n", texto);
+
 }
 
 int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
@@ -331,14 +379,12 @@ int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 	return 0;
 }
 
-int wait(t_nombre_semaforo identificador_semaforo){
+void wait(t_nombre_semaforo identificador_semaforo){
 	printf("Llamo a wait");
-	return 0;
 }
 
-int signal_cpu(t_nombre_semaforo identificador_semaforo){
+void signal_cpu(t_nombre_semaforo identificador_semaforo){
 	printf("Llamo a signal_cpu");
-	return 0;
 }
 
 
