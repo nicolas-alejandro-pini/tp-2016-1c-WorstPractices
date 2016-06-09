@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include "Memoria.h"
 #include "ISwap.h"
+#include "TablaMarcos.h"
+#include "TLB.h"
 
 typedef struct{
 	uint16_t socketResp;

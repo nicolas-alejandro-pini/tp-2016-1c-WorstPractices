@@ -64,7 +64,7 @@ void loadInfo (stParametro* info, char* file_name){
 	frameSize = info->frameSize;
 
 	if (config_has_property(miConf,"MARCOS_X_PROC")) {
-		info->frameByProc = config_get_array_value(miConf,"MARCOS_X_PROC");
+		info->frameByProc = config_get_int_value(miConf,"MARCOS_X_PROC");
 	} else {
 		log_error("Parametro MARCOS_X_PROC no cargado en el archivo de configuracion - MARCOS_X_PROC");
 		exit(-2);
@@ -79,14 +79,15 @@ void loadInfo (stParametro* info, char* file_name){
 	}
 
 	if (config_has_property(miConf,"ENTRADAS_TLB")) {
-		info->entradasTLB = config_get_array_value(miConf,"ENTRADAS_TLB");
+		info->entradasTLB = config_get_int_value(miConf,"ENTRADAS_TLB");
 	} else {
 		log_error("Parametro no cargado en el archivo de configuracion - ENTRADAS_TLB");
 		exit(-2);
 	}
 
 	if (config_has_property(miConf,"RETARDO")) {
-		info->delay = config_get_array_value(miConf,"RETARDO");
+		info->delay = config_get_int_value(miConf,"RETARDO");
+		delay = info->delay;
 	} else {
 		log_error("Parametro no cargado en el archivo de configuracion - RETARDO");
 		exit(-2);
@@ -120,16 +121,16 @@ int swapHandShake (int socket, char* mensaje, int tipoHeader)
 	stMensajeIPC unMensaje;
 
 	if(!recibirMensajeIPC(socket,&unMensaje)){
-		printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+		log_error("SOCKET_ERROR - No se recibe un mensaje correcto");
 		fflush(stdout);
 	}
 
-	printf("HandShake mensaje recibido %d",unMensaje.header.tipo);
+	log_info("HandShake mensaje recibido %d",unMensaje.header.tipo);
 
 	if (unMensaje.header.tipo == QUIENSOS)
 	{
 		if(!enviarMensajeIPC(socket,nuevoHeaderIPC(tipoHeader),mensaje)){
-			printf("No se pudo enviar el MensajeIPC\n");
+			log_error("No se pudo enviar el MensajeIPC");
 			return (-1);
 		}
 	}
@@ -186,7 +187,6 @@ int main(int argc, char *argv[]) {
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
 
 		memoriaPrincipal = inicializarMemoriaDisponible(elEstadoActual.frameSize, elEstadoActual.frames);
-
 
 		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */
 

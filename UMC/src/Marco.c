@@ -9,22 +9,27 @@
 
 void *inicializarPrograma(stIni* ini){
 
-	/* TODO inicializarSwap */
 	inicializarSwap(ini->sPI);
-	/* TODO guardarEnTabla */
-	guardarEnTabla(ini->sPI->cantidadPaginas);
+	/* TODO crearTabla */
+	crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
 
 	pthread_exit(NULL);
 }
 void *leerBytes(stRead* unaLectura){
 	/* Si NO esta la pagina disponible */
-	if (estaPaginaDisponible(unaLectura->sPos->pagina)!=0){
+	if (estaActivadaTLB() && buscarEnTLB(unaLectura->sPos->pagina)!=0){
 		//pid = elegirReemplazo();
 		cambiarContexto(unaLectura->sPos->pagina);
 	}
-	/*reservo memoria para devolver buffer leido*/
-	void *leido = calloc(unaLectura->sPos->size,1);
+
+
+	void *leido;
 	leido = leerMemoria(unaLectura->sPos->pagina,unaLectura->sPos->offset, unaLectura->sPos->size);
+	if(!enviarMensajeIPC(unaLectura->socketResp,nuevoHeaderIPC(OK),leido)){
+		log_error("No se pudo enviar el MensajeIPC");
+		return (-1);
+	}
+	free(leido);
 
 	/* TODO devolver por socket */
 
@@ -53,9 +58,7 @@ int estaPaginaDisponible(uint16_t pagina){
 	return 0;
 }
 
-int guardarEnTabla(uint16_t cantidadPaginas){
-	return 0;
-}
+
 void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthread_attr_t attr){
 
 	pthread_t tid;
@@ -105,6 +108,11 @@ void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthr
 			end->pid = atoi(contenido);
 
 			pthread_create(&tid,&attr,(void*)finalizarPrograma,end);
+			break;
+
+		case CAMBIOCONTEXTO:
+			/* TODO actualizo tabla de marcos con el pid y TLB flush de ese pid */
+
 			break;
 
 		default:

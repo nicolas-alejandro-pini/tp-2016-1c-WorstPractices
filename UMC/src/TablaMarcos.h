@@ -13,8 +13,9 @@
 
 /* puntero a la tabla de Marcos */
 char *TablaMarcos;
-
+int delay;
 int buscarEnTabla(uint16_t paginaBuscada);
 int reemplazarValorTabla(uint16_t Pagina, stRegistroTablas registro);
+int crearTabla(uint16_t processId, uint16_t cantidadPaginas);
 
 #endif /* TABLAMARCOS_H_ */

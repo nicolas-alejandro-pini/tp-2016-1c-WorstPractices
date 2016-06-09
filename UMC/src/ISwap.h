@@ -9,11 +9,14 @@
 #define ISWAP_H_
 
 #include <commons/serializador.h>
+#include <commons/sockets.h>
 
 int sockSwap;
 
 int inicializarSwap(stPageIni *st);
-
+int enviarPagina(uint16_t pagina, char* buffer);
+char* recibirPagina(uint16_t pagina);
+int destruirPrograma(uint16_t pid);
 
 
 #endif /* ISWAP_H_ */
