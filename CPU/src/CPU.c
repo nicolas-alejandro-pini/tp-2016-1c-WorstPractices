@@ -103,11 +103,9 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 
 	crear_paquete(&paquetePosicion, tipoHeader);
 
-	serializar_campo(paquetePosicion, &offset, &posicionVariable->offset, sizeof(&posicionVariable->offset));
-	serializar_campo(paquetePosicion, &offset, &posicionVariable->pagina, sizeof(posicionVariable->pagina));
-	serializar_campo(paquetePosicion, &offset, &posicionVariable->size, sizeof(posicionVariable->size));
+	serializar_campo(&paquetePosicion, &offset, posicionVariable, sizeof(stPosicion));
 
-	serializar_header(paquetePosicion);
+	serializar_header(&paquetePosicion);
 
 	if (enviar_paquete(configuracionInicial.sockUmc, &paquetePosicion)) {
 		log_error("No se pudo enviar al UMC el paquete para operacion [%d]", tipoHeader);
@@ -116,7 +114,7 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 
 	free_paquete(&paquetePosicion);
 
-	liberarHeaderIPC(unHeader);
+	free(unHeader);
 
 	return resultado;
 
