@@ -5,13 +5,21 @@
  *      Author: utnso
  */
 
-#include "Marco.h"
+#include "ICPU.h"
 
 void *inicializarPrograma(stIni* ini){
+	stHeaderIPC *unHeader;
 
-	inicializarSwap(ini->sPI);
+	if(inicializarSwap(ini->sPI) == EXIT_FAILURE){
+		log_error("No se pudo enviar el codigo a Swap");
+		unHeader=nuevoHeaderIPC(ERROR);
+		enviarHeaderIPC(ini->socketResp, unHeader);
+		pthread_exit(NULL);
+	}
 	/* TODO crearTabla */
 	crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
+
+	/* no guardo en memoria */
 
 	pthread_exit(NULL);
 }
@@ -59,35 +67,32 @@ int estaPaginaDisponible(uint16_t pagina){
 }
 
 
-void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthread_attr_t attr){
+void realizarAccionCPU(uint16_t socket){
 
-	pthread_t tid;
-
-	stIni *ini;
 	stWrite *wr;
 	stRead *read;
 	stEnd *end;
+	stMensajeIPC *unMensaje;
 
-	switch(tipo){
+	while(1){
 
-		/* TODO incluir pedidos de la consola UMC */
-		case INICIALIZAR_PROGRAMA:
+		if(!recibirMensajeIPC(socket, unMensaje)){
+			log_error("Thread Error - No se pudo recibir mensaje de respuesta - socket: %d", socket);
+			liberarHeaderIPC(unMensaje->header);
+			liberarHeaderIPC(unMensaje->contenido);
+			close(socket);
+			pthread_exit(NULL);
+		}
 
-			ini = (stIni*)calloc(1,sizeof(stIni));
-			ini->socketResp = socket;
-			ini->sPI= (stPageIni*)contenido;
-
-			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);
-
-			break;
+		switch(unMensaje->header.tipo){
 
 		case READ_BTYES_PAGE:
 
 			read = (stRead*)calloc(1,sizeof(stRead));
 			read->socketResp = socket;
-			read->sPos = (stPosicion*)contenido;
+			read->sPos = (stPosicion*)unMensaje->contenido;
 
-			pthread_create(&tid,&attr,(void*)leerBytes,read);
+			leerBytes(read);
 
 			break;
 
@@ -95,9 +100,9 @@ void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthr
 
 			wr = (stWrite*)calloc(1,sizeof(stWrite));
 			wr->socketResp = socket;
-			wr->sEP = (stEscrituraPagina*)contenido;
+			wr->sEP = (stEscrituraPagina*)unMensaje->contenido;
 
-			pthread_create(&tid,&attr,(void*)escribirBytes,wr);
+			escribirBytes(wr);
 
 			break;
 
@@ -105,9 +110,9 @@ void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthr
 
 			end = calloc(1,sizeof(stEnd));
 			end->socketResp = socket;
-			end->pid = atoi(contenido);
+			end->pid = atoi(unMensaje->contenido);
 
-			pthread_create(&tid,&attr,(void*)finalizarPrograma,end);
+			finalizarPrograma(end);
 			break;
 
 		case CAMBIOCONTEXTO:
@@ -116,11 +121,11 @@ void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthr
 			break;
 
 		default:
-			printf("\nSe recibio una peticion con un codigo desconocido...%i\n", tipo);
+			log_info("Se recibio una peticion con un codigo desconocido...%i\n", unMensaje->header.tipo);
 			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 			break;
 
-	}
-	/*Cierro switch(unMensaje.header.tipo)*/
+		}/*Cierro switch(unMensaje.header.tipo)*/
+	}/*Cierro while*/
 }

@@ -11,7 +11,7 @@ int buscarPagina(uint16_t paginaBuscada){
 	/* TODO buscarEnTabla */
 	return 0;
 }
-int reemplazarValorTabla(uint16_t Pagina, stRegistroTablas registro){
+int reemplazarValorTabla(uint16_t Pagina, stRegistroTP registro){
 	/* TODO reemplazarValorTabla */
 	return 0;
 }

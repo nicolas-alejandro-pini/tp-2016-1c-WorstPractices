@@ -10,8 +10,8 @@
 
 #include <commons/serializador.h>
 #include <commons/sockets.h>
+#include "Parametros.h"
 
-int sockSwap;
 
 int inicializarSwap(stPageIni *st);
 int enviarPagina(uint16_t pagina, char* buffer);

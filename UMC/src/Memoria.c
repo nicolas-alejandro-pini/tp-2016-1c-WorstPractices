@@ -19,3 +19,11 @@ void* escribirMemoria(uint16_t marco, uint16_t offset, uint16_t lenght, unsigned
 	/*TODO escribir memoria */
 	return NULL;
 }
+void* inicializarMemoriaDisponible(long tamanio, long cantidad){
+	void* r;
+	if((r=calloc(cantidad, tamanio))==NULL){
+		printf("No hay memoria disponible...");
+		exit(-1);
+	}
+	return r;
+}

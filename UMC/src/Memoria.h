@@ -13,6 +13,7 @@
 
 void *memoriaPrincipal;
 
+void* inicializarMemoriaDisponible(long tamanio, long cantidad);
 void* leerMemoria(uint16_t marco, uint16_t offset, uint16_t lenght);
 void* escribirMemoria(uint16_t marco, uint16_t offset, uint16_t lenght, unsigned char * buffer);
 

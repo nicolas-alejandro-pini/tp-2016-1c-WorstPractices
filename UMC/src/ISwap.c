@@ -18,11 +18,12 @@ int inicializarSwap(stPageIni *st){
 	 * devuelve OK o ERROR
 	 */
 	paquete->data=st;
+	paquete->header.type=INICIAR_PROGRAMA;
 	serializar_header(paquete);
 
-	enviar_paquete(sockSwap, paquete);
+	enviar_paquete(losParametros.sockSwap, paquete);
 	respuesta = (stHeader*)calloc(1,sizeof(stHeader));
-	recibirHeader(sockSwap, respuesta);
+	recibirHeader(losParametros.sockSwap, respuesta);
 
 	if(respuesta->tipo==OK)
 		ret=EXIT_FAILURE;
