@@ -187,6 +187,7 @@ int main(int argc, char *argv[]) {
 
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
 
+		TablaMarcos = NULL;
 		memoriaPrincipal = inicializarMemoriaDisponible(losParametros.frameSize, losParametros.frames);
 
 		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */
@@ -297,7 +298,7 @@ int main(int argc, char *argv[]) {
 								log_info("Conexion con CPU establecida\n");
 								agregarSock=1;
 
-								pthread_create(&tid, attr, realizarAccionCPU, &unCliente);
+								pthread_create(&tid, &attr, (void*)realizarAccionCPU, &unCliente);
 
 								break;
 							case CONNECTNUCLEO:

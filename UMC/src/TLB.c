@@ -11,7 +11,7 @@ int buscarEnTLB(uint16_t paginaBuscada){
 	/* TODO buscarEnTLB */
 	return 0;
 }
-int reemplazarValorTLB(uint16_t Pagina, stRegistroTablas registro){
+int reemplazarValorTLB(uint16_t Pagina, stRegistroTLB registro){
 	/* TODO reemplazarValorTLB */
 	return 0;
 }

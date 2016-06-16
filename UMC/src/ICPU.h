@@ -48,7 +48,7 @@ int cambiarContexto(uint16_t pagina);
 int elegirReemplazo(int cantidad);
 int hayMarcoslibres(int cantidad);
 int estaPaginaDisponible(uint16_t pagina);
-void realizarAccionCPU(unsigned int tipo, char* contenido, uint16_t socket, pthread_attr_t attr);
+void realizarAccionCPU(uint16_t socket);
 
 int guardarEnTabla(uint16_t cantidadPaginas);
 

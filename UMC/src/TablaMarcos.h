@@ -9,16 +9,24 @@
 #define TABLAMARCOS_H_
 
 #include <stdint.h>
+#include <stdio.h>
 #include "Parametros.h"
 
+
+
 typedef struct{
-	uint16_t pid;
 	uint16_t pagina;
 	uint16_t marco;
 	unsigned char bit2ndChance;
 	unsigned char bitPresencia;
 	unsigned char bitModificado;
 }stRegistroTP;
+
+typedef struct{
+	uint16_t pid;
+	void *tabla;
+}stNodoListaTP;
+
 
 /*
  * TLB -> directo MP

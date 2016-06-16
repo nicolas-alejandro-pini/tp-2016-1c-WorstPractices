@@ -28,7 +28,7 @@ typedef struct{
 char *TLB;
 
 int buscarEnTLB(uint16_t paginaBuscada);
-int reemplazarValorTLB(uint16_t Pagina, stRegistroTablas registro);
+int reemplazarValorTLB(uint16_t Pagina, stRegistroTLB registro);
 
 int estaActivadaTLB();
 
