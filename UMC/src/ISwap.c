@@ -9,15 +9,32 @@
 
 int inicializarSwap(stPageIni *st){
 
-
+	t_paquete *paquete;
+	stHeader* respuesta;
+	int ret;
 	/*
 	 * PASAR pid, cantidad de pagina, y codigo prg
 	 *
 	 * devuelve OK o ERROR
 	 */
+	paquete->data=st;
+	paquete->header.type=INICIAR_PROGRAMA;
+	serializar_header(paquete);
 
+	enviar_paquete(losParametros.sockSwap, paquete);
+	respuesta = (stHeader*)calloc(1,sizeof(stHeader));
+	recibirHeader(losParametros.sockSwap, respuesta);
 
-	return 0;
+	if(respuesta->tipo==OK)
+		ret=EXIT_FAILURE;
+	else
+		ret=EXIT_SUCCESS;
+
+	free_paquete(paquete);
+	free(respuesta);
+
+	return ret;
+
 }
 
 //define INICIAR_PROGRAMA	141ul /* pid (ui), cantidad paginas (ui), (ul), codigo prg (char*) */
@@ -32,25 +49,14 @@ int inicializarSwap(stPageIni *st){
  * destruirPrograma()<-NULL
  */
 
+int enviarPagina(uint16_t pagina, char* buffer){
 
-int enviarPagina(){
-	int offset = 0;
-		t_paquete paquete;
-		t_UMCConfig UMCConfig;
+}
 
-		// cargo estructura
-		UMCConfig.paginasXProceso = frameByProc;
-		UMCConfig.tamanioPagina = frameSize;
+char* recibirPagina(uint16_t pagina){
 
-		crear_paquete(&paquete, CONFIG_UMC);
-		serializar_campo(&paquete, &offset, &UMCConfig, sizeof(UMCConfig));
-		// Otra forma
-		//serializar_campo(&paquete, &offset, &(UMCConfig.paginasXProceso), sizeof(UMCConfig.paginasXProceso));
-		//serializar_campo(&paquete, &offset, &(UMCConfig.tamanioPagina), sizeof(UMCConfig.tamanioPagina));
-		serializar_header(&paquete);
+}
 
-		enviar_paquete(sockSwap, &paquete);
-		free_paquete(&paquete);
+int destruirPrograma(uint16_t pid){
 
-		return EXIT_SUCCESS;
 }

@@ -9,12 +9,37 @@
 #define TABLAMARCOS_H_
 
 #include <stdint.h>
-#include "Tablas.h"
+#include <stdio.h>
+#include "Parametros.h"
+
+
+
+typedef struct{
+	uint16_t pagina;
+	uint16_t marco;
+	unsigned char bit2ndChance;
+	unsigned char bitPresencia;
+	unsigned char bitModificado;
+}stRegistroTP;
+
+typedef struct{
+	uint16_t pid;
+	void *tabla;
+}stNodoListaTP;
+
+
+/*
+ * TLB -> directo MP
+ * TLB miss -> TP -> MP
+ * TLB miss -> TP page fault-> Swap -> MP, TP, TLB
+ *
+ */
 
 /* puntero a la tabla de Marcos */
 char *TablaMarcos;
 
 int buscarEnTabla(uint16_t paginaBuscada);
-int reemplazarValorTabla(uint16_t Pagina, stRegistroTablas registro);
+int reemplazarValorTabla(uint16_t Pagina, stRegistroTP registro);
+int crearTabla(uint16_t processId, uint16_t cantidadPaginas);
 
 #endif /* TABLAMARCOS_H_ */
