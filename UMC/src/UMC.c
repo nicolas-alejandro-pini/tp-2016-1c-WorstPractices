@@ -168,6 +168,11 @@ int main(int argc, char *argv[]) {
 	//Primero instancio el log
 		t_log* logger = log_create(temp_file, "UMC",-1, LOG_LEVEL_INFO);
 
+	// Ejecuto las pruebas
+	if(argv[2])
+		if(strcmp(argv[2], "--cunit")==0)
+			test_unit_umc();
+
 	log_info("-----------------------------------------------------------------------------\n");
 	log_info("------------------------------------UMC--------------------------------------\n");
 	log_info("------------------------------------v1.0-------------------------------------\n\n");
