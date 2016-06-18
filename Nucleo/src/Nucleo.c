@@ -89,12 +89,18 @@ int main(int argc, char *argv[]) {
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
 	t_metadata_program *unPrograma;
-	stPCB unPCB;
+	stPCB *unPCB;
 	t_paquete paquete;
 	t_UMCConfig UMCConfig;
 	stPageIni *unInicioUMC;
 
+	stIndiceStack *indiceStack;
+	stPosicion *unArgumento;
+	stVars *unaVariable;
+
 	pidCounter = 0;
+
+	int metadataSize = 0;
 
 	struct thread_cpu_arg_struct cpu_arg_struct;
 
@@ -270,14 +276,51 @@ int main(int argc, char *argv[]) {
 							if (unMensaje.header.tipo == SENDANSISOP) {
 
 								unPrograma = metadata_desde_literal(unMensaje.contenido);
-
+								metadataSize = sizeof(t_metadata_program)+(sizeof(t_intructions)*unPrograma->instrucciones_size)+(sizeof(char)*unPrograma->etiquetas_size);
 								/***Creacion del PCB***/
-								unPCB.pid = pid_incrementer();
-								unPCB.pc = 0;
-								unPCB.socketConsola = unCliente;
-								unPCB.socketCPU = 0;
-								unPCB.metadata_program = unPrograma;
-								unPCB.cantidadPaginas = (unMensaje.header.largo / UMCConfig.tamanioPagina);
+								unPCB = (stPCB*)malloc(sizeof(stPCB));
+								if(unPCB!= NULL){
+									unPCB->pid = pid_incrementer();
+									unPCB->pc = 0;
+									unPCB->socketConsola = unCliente;
+									unPCB->socketCPU = 0;
+									unPCB->paginaInicial = 0;
+									unPCB->cantidadPaginas=0;
+									unPCB->metadata_program = (t_metadata_program *)malloc(metadataSize);
+									memcpy(unPCB->metadata_program,unPrograma,metadataSize);
+									unPCB->stack = (t_list*)malloc(sizeof(t_list)+sizeof(stIndiceStack));
+									unPCB->stack = list_create();
+
+									/*Datos de prueba*/
+									indiceStack =(stIndiceStack*) malloc(sizeof(stIndiceStack));
+									indiceStack->argumentos = (t_list*)malloc(sizeof(t_list)+sizeof(stPosicion));
+									indiceStack->argumentos = list_create();
+									unArgumento = (stPosicion*)malloc(sizeof(stPosicion));
+									unArgumento->pagina = 0;
+									unArgumento->offset = 0;
+									unArgumento->size = 4;
+									list_add(indiceStack->argumentos,unArgumento);
+
+									indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
+									indiceStack->variables = list_create();
+									unaVariable = (stVars*)malloc(sizeof(stVars));
+									unaVariable->id = 1;
+									unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
+									unaVariable->posicion_memoria->pagina=0;
+									unaVariable->posicion_memoria->offset=0;
+									unaVariable->posicion_memoria->size = 0;
+									list_add(indiceStack->variables,unaVariable);
+
+									indiceStack->pos=0;
+									indiceStack->retPosicion=1;
+									indiceStack->retVar = (stPosicion*)malloc(sizeof(stPosicion));
+									indiceStack->retVar->pagina=0;
+									indiceStack->retVar->offset=0;
+									indiceStack->retVar->size=4;
+									list_add(unPCB->stack,indiceStack);
+								}
+
+
 								/*TODO: Verificar UMC*/
 //								if(inicializar_programa(unPCB.pid,unPCB.cantidadPaginas,unMensaje.contenido,elEstadoActual.sockUmc,unPCB.paginaInicial)){
 //									printf("UMC error - No se puede ejecutar el programa por falta de espacio\n");
@@ -290,7 +333,7 @@ int main(int argc, char *argv[]) {
 //									continue;
 //								}
 								printf("Lanzamiento de hilo dedicado al nuevo PCB...");
-								if (pthread_create(&p_threadProductor, NULL, ready_productor, (void*) &unPCB) != 0) {
+								if (pthread_create(&p_threadProductor, NULL, ready_productor,(void*)unPCB) != 0) {
 									log_error("No se pudo lanzar el hilo correspondiente al nuevo PCB");
 									continue;
 								}

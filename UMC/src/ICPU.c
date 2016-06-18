@@ -7,6 +7,7 @@
 
 #include "ICPU.h"
 
+
 void *inicializarPrograma(stIni* ini){
 	stHeaderIPC *unHeader;
 
@@ -16,34 +17,88 @@ void *inicializarPrograma(stIni* ini){
 		enviarHeaderIPC(ini->socketResp, unHeader);
 		pthread_exit(NULL);
 	}
-	/* TODO crearTabla */
+
 	crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
 
 	/* no guardo en memoria */
 
+	/*Cierro este thread porque este es creado por Nucleo y voy a trabajar con el CPU*/
 	pthread_exit(NULL);
 }
-void *leerBytes(stRead* unaLectura){
-	/* Si NO esta la pagina disponible */
-	if (estaActivadaTLB() && buscarEnTLB(unaLectura->sPos->pagina)!=0){
-		//pid = elegirReemplazo();
-		cambiarContexto(unaLectura->sPos->pagina);
+void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
+
+	uint16_t resTLB, resTabla, frameBuscado;
+	void *leido, *bytesLeidos;
+	stRegistroTLB stTLB;
+
+	/* si esta disponible en cache*/
+	if (estaActivadaTLB()== OK)
+		resTLB =  buscarEnTLB(pid, unaLectura->pagina, &frameBuscado);
+
+	// TLB miss
+	else
+		resTabla = buscarEnTabla(pid, unaLectura->pagina, &frameBuscado);
+
+	// leo el frame desde memoria
+	if(resTLB == OK || resTabla == OK){
+
+			// acceder a memoria con el resultado encontrado en cache
+			leido = leerMemoria(frameBuscado);
+
+			// con el marco obtenido separo los bytes que se pidieron leer
+			bytesLeidos = calloc(1, unaLectura->size);
+			memcpy(bytesLeidos,leido+unaLectura->offset,unaLectura->size);
+
+			//envio la respuesta de la lectura a la CPU
+			if(!enviarMensajeIPC(socketCPU,nuevoHeaderIPC(OK),bytesLeidos)){
+				log_error("No se pudo enviar el MensajeIPC");
+				return;
+			}
+
+			//libero memoria
+			free(leido);
+			free(bytesLeidos);
+
+	}
+	// Page fault
+	else{
+
+		// acceder a swap con las pagina qeu necesito
+		leido = recibirPagina(unaLectura->pagina);
+
+		// con la pagina obtenida separo los bytes que se pidieron leer
+		bytesLeidos = calloc(1, unaLectura->size);
+		memcpy(bytesLeidos,leido+unaLectura->offset,unaLectura->size);
+
+		//envio la respuesta de la lectura a la CPU
+		if(!enviarMensajeIPC(socketCPU,nuevoHeaderIPC(OK),bytesLeidos)){
+			log_error("No se pudo enviar el MensajeIPC");
+			return;
+		}
+		// libero lo enviado
+		free(bytesLeidos);
+
+		// cargo en memoria la pagina obtenida
+
+
+		// TODO cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
+
+
+		// TODO cargo en memoria la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
+		if(estaActivadaTLB() && resTLB==ERROR){
+
+			stTLB.pid = pid;
+			stTLB.pagina = unaLectura->pagina;
+			stTLB.marco = frameBuscado;
+			reemplazarValorTLB(stTLB);
+		}
+
+		// libero pagina obtenida
+		free(leido);
 	}
 
-
-	void *leido;
-	leido = leerMemoria(unaLectura->sPos->pagina,unaLectura->sPos->offset, unaLectura->sPos->size);
-	if(!enviarMensajeIPC(unaLectura->socketResp,nuevoHeaderIPC(OK),leido)){
-		log_error("No se pudo enviar el MensajeIPC");
-		return (-1);
-	}
-	free(leido);
-
-	/* TODO devolver por socket */
-
-	pthread_exit(NULL);
 }
-void *escribirBytes(stWrite* unaEscritura){
+void *escribirBytes(stEscrituraPagina* unaEscritura){
 	/* TODO escribirBytes */
 	return 0;
 }
@@ -51,14 +106,11 @@ void *finalizarPrograma(stEnd *fin){
 	/* TODO finalizarPrograma */
 	pthread_exit(NULL);
 }
-int cambiarContexto(uint16_t pagina){
-	/* TODO cambiar contexto */
+int cambiarContexto(uint16_t pid){
+	/* TODO cambiarContexto */
+	return 0;
+}
 
-	return 0;
-}
-int elegirReemplazo(int cantidad){
-	return 0;
-}
 int hayMarcoslibres(int cantidad){
 	return 0;
 }
@@ -69,10 +121,10 @@ int estaPaginaDisponible(uint16_t pagina){
 
 void realizarAccionCPU(uint16_t socket){
 
-	stWrite *wr;
-	stRead *read;
-	stEnd *end;
 	stMensajeIPC *unMensaje;
+	uint16_t pidActivo;
+	stEnd end;
+
 
 	while(1){
 
@@ -88,21 +140,17 @@ void realizarAccionCPU(uint16_t socket){
 
 		case READ_BTYES_PAGE:
 
-			read = (stRead*)calloc(1,sizeof(stRead));
-			read->socketResp = socket;
-			read->sPos = (stPosicion*)unMensaje->contenido;
+			stPosicion *posR =(stPosicion*)unMensaje->contenido;
 
-			leerBytes(read);
+			leerBytes(posR, pidActivo, socket);
 
 			break;
 
 		case WRITE_BYTES_PAGE:
 
-			wr = (stWrite*)calloc(1,sizeof(stWrite));
-			wr->socketResp = socket;
-			wr->sEP = (stEscrituraPagina*)unMensaje->contenido;
+			stPosicion *posW =(stPosicion*)unMensaje->contenido;
 
-			escribirBytes(wr);
+			escribirBytes(posW, pidActivo, socket);
 
 			break;
 
@@ -117,6 +165,7 @@ void realizarAccionCPU(uint16_t socket){
 
 		case CAMBIOCONTEXTO:
 			/* TODO actualizo tabla de marcos con el pid y TLB flush de ese pid */
+
 
 			break;
 

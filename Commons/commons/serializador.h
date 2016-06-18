@@ -22,7 +22,7 @@ typedef struct {
 	uint16_t  offset;
 	uint16_t  size;
 	uint16_t  pagina;
-}stPosicion;						/*Representa a el Indice de Codigo propuesto por el TP*/
+}__attribute__((packed))stPosicion;						/*Representa a el Indice de Codigo propuesto por el TP*/
 
 typedef struct{
 	uint16_t nroPagina;	/* numero de pagina a escribir. */

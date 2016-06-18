@@ -168,6 +168,11 @@ int main(int argc, char *argv[]) {
 	//Primero instancio el log
 		t_log* logger = log_create(temp_file, "UMC",-1, LOG_LEVEL_INFO);
 
+	// Ejecuto las pruebas
+	if(argv[2])
+		if(strcmp(argv[2], "--cunit")==0)
+			test_unit_umc();
+
 	log_info("-----------------------------------------------------------------------------\n");
 	log_info("------------------------------------UMC--------------------------------------\n");
 	log_info("------------------------------------v1.0-------------------------------------\n\n");
@@ -188,6 +193,7 @@ int main(int argc, char *argv[]) {
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
 
 		TablaMarcos = NULL;
+		crearTLB(TLB, losParametros.entradasTLB);
 		memoriaPrincipal = inicializarMemoriaDisponible(losParametros.frameSize, losParametros.frames);
 
 		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */
@@ -382,6 +388,7 @@ int main(int argc, char *argv[]) {
 	        	        			break;
 
 	        	        	}
+
 	        	        	fflush(stdout);
 
 	        	        }/*Ciero Else comunicacion con el servidor*/

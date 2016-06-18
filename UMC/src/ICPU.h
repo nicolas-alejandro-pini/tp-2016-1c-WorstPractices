@@ -23,6 +23,7 @@ typedef struct{
 	uint16_t socketResp;
 	stPageIni *sPI;
 }stIni;
+/*
 typedef struct{
 	uint16_t socketResp;
 	stPosicion *sPos;
@@ -31,6 +32,7 @@ typedef struct{
 	uint16_t socketResp;
 	stEscrituraPagina *sEP;
 }stWrite;
+*/
 typedef struct{
 	uint16_t socketResp;
 	uint16_t pid;
@@ -41,8 +43,8 @@ int frameSize;
 int frameByProc;
 
 void *inicializarPrograma(stIni*);
-void *leerBytes(stRead*);
-void *escribirBytes(stWrite*);
+void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU);
+void *escribirBytes(stEscrituraPagina* unaEscritura);
 void *finalizarPrograma(stEnd*);
 int cambiarContexto(uint16_t pagina);
 int elegirReemplazo(int cantidad);
