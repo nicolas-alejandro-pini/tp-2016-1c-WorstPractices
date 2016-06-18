@@ -442,7 +442,7 @@ void cerrarSockets(t_configCPU *configuracionInicial){
  Author      : Ezequiel Martinez
  Inputs      : N/A.
  Outputs     : Retorna -1 en caso de no poder cargar el PCB.
- Description : Funcion para cargar el PCB del progracma ANSISOP.
+ Description : Funcion para cargar el PCB del programa ANSISOP.
  =========================================================================================
  */
 int cargarPCB(void){
@@ -457,7 +457,8 @@ int cargarPCB(void){
 	//if (cargarPCB(unMensaje.contenido) != -1)
 	if (type == EXECANSISOP)
 	{
-		deserializar_pcb(&unPCB , &paquete);
+		unPCB = (stPCB*)malloc(sizeof(stPCB));
+		deserializar_pcb(unPCB , &paquete);
 		//log_info("PCB de ANSIPROG cargado. /n");
 		free_paquete(&paquete);
 		return 0;
@@ -658,6 +659,7 @@ int main(void) {
 		{
 			if(FD_ISSET(unSocket,&read_fds))
 			{
+				unHeaderIPC = nuevoHeaderIPC(ERROR);
 				if (!recibirHeaderIPC(unSocket,unHeaderIPC))/* Si se cerro un Cliente. */
 				{
 					if (configuracionInicial.sockNucleo == unSocket)
@@ -703,7 +705,6 @@ int main(void) {
 //							log_info("Respondiendo solicitud ANSIPROG...");
 
 							unHeaderIPC = nuevoHeaderIPC(OK);
-
 							enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
 							if (cargarPCB() != -1)
