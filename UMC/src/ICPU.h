@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
-#ifndef MARCO_H_
-#define MARCO_H_
+#ifndef ICPU_H_
+#define ICPU_H_
 
 #include <commons/serializador.h>
 #include <commons/ipctypes.h>
@@ -16,11 +16,14 @@
 #include <stdlib.h>
 #include "Memoria.h"
 #include "ISwap.h"
+#include "TablaMarcos.h"
+#include "TLB.h"
 
 typedef struct{
 	uint16_t socketResp;
 	stPageIni *sPI;
 }stIni;
+/*
 typedef struct{
 	uint16_t socketResp;
 	stPosicion *sPos;
@@ -29,6 +32,7 @@ typedef struct{
 	uint16_t socketResp;
 	stEscrituraPagina *sEP;
 }stWrite;
+*/
 typedef struct{
 	uint16_t socketResp;
 	uint16_t pid;
@@ -39,15 +43,15 @@ int frameSize;
 int frameByProc;
 
 void *inicializarPrograma(stIni*);
-void *leerBytes(stRead*);
-void *escribirBytes(stWrite*);
+void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU);
+void *escribirBytes(stEscrituraPagina* unaEscritura);
 void *finalizarPrograma(stEnd*);
 int cambiarContexto(uint16_t pagina);
 int elegirReemplazo(int cantidad);
 int hayMarcoslibres(int cantidad);
 int estaPaginaDisponible(uint16_t pagina);
-void realizarAccionUMC(unsigned int tipo, char* contenido, uint16_t socket, pthread_attr_t attr);
+void realizarAccionCPU(uint16_t socket);
 
 int guardarEnTabla(uint16_t cantidadPaginas);
 
-#endif /* MARCO_H_ */
+#endif /* ICPU_H_ */

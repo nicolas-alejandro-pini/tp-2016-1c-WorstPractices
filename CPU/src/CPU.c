@@ -673,7 +673,7 @@ int getInstruccion (int start, int size, char** instruccion){
 	stMensajeIPC mensajeUMC;
 
 	char* estructuraSerializada;
-	t_posicion posicionInstruccion;
+	stPosicion posicionInstruccion;
 
 	posicionInstruccion.size = size;
 	posicionInstruccion.offSet = start;

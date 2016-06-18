@@ -22,51 +22,13 @@
 #include <commons/config.h>
 #include <commons/log.h>
 
-#include "Marco.h"
-/*
-typedef struct{
-	char* miIP;             /* Mi direccion de IP. Ej: <"127.0.0.1"> /
-	int puertoNucleo;		/* Puerto de escucha Nucleo /
-	int sockNucleo;			/* Socket de escucha Nucleo /
-	int puertoCpu;			/* Puerto de escucha CPU /
-	int sockCpu;			/* Socket de escucha CPU /
-	int fdMax;              /* Numero que representa al mayor socket de fds_master. /
-	int fdMax2;             /* Numero que representa al mayor socket de fds_master. /
-	int salir;              /* Indica si debo o no salir de la aplicacion. /
-} stEstado;
-*/
+#include "ICPU.h"
+#include "Parametros.h"
+#include "Memoria.h"
+#include "tests/test_umc.h"
+
 fd_set fds_master;			/* Lista de todos mis sockets.*/
 fd_set read_fds;	  		/* Sublista de fds_master.*/
-
-
-
-
-typedef struct{
-	int miPuerto;		/* Puerto por el que escucho. */
-	char* ipSwap;		/* ip para conectarse a Swap. */
-	int puertoSwap;		/* Puerto para conectarse a Swap. */
-	int frames;			/* Cantidad de marcos a usar. */
-	int frameSize;      /* Tamaño de marcos a usar. */
-	int frameByProc;    /* Numero de marcos por proceso. */
-	int entradasTLB;    /* Numero de entradas en cache. */
-	int delay;          /* Retardo para la respuesta de UMC. */
-	int sockEscuchador;		/* Socket con el que escucho. */
-	int sockSwap;			/* Socket con el que hablo con Swap. */
-	char* algoritmo;     /*Clock o ClockModificado*/
-	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
-	int salir;              /* Indica si debo o no salir de la aplicacion. */
-} stParametro;
-
-
-/*Archivos de Configuracion*/
-/*define CFGFILE		"configuracion.conf"*/
-
-
-/*Definicion de Parametros de Respuesta*/
-/*
-#define CONNECTSWAP	501
-#define CPUREQ		602
-*/
 
 
 /*Definicion de MACROS*/
@@ -76,34 +38,14 @@ typedef struct{
 #define LONGITUD_MAX_DE_CONTENIDO 1024
 
 
-/*--------------------------------------------Estructuras----------------------------------------*/
-/*												 */
+/*--------------------------------------------Declaraciones----------------------------------------*/
+/*-------------------------------------------------------------------------------------------------*/
 
-/*typedef struct {
-/*	int socket;	*//* Socket con el que me comunico con él. */
-/*	char dispositivo[TAMDATOS];
-//	int estado;
-//}stConectados;
-*/
-/*
-typedef struct {
-	int unServidor;
-	int tipoDeAccion;
-	char elResultado[LONGITUD_MAX_DE_CONTENIDO];
-}stResultados;
-*/
-
-/*
-typedef struct{
-
-	int idSector;
-}stSectorOFT;
-*/
 
 void loadInfo (stParametro*, char*);
 void cerrarSockets(stParametro* );
 void finalizarSistema(stMensajeIPC*, int, stParametro* );
 int swapHandShake (int socket, char* mensaje, int tipoHeader);
-void* inicializarMemoriaDisponible(long tamanio, long cantidad);
+
 
 #endif /* UMC_H_ */
