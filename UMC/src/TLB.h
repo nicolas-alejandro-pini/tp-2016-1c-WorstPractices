@@ -9,6 +9,8 @@
 #define TLB_H_
 
 #include <stdint.h>
+#include <stdio.h>
+#include <commons/ipctypes.h>
 
 typedef struct{
 	uint16_t pid;
@@ -27,9 +29,9 @@ typedef struct{
 /* puntero a la tabla cache TLB */
 char *TLB;
 
-int buscarEnTLB(uint16_t paginaBuscada);
-int reemplazarValorTLB(uint16_t Pagina, stRegistroTLB registro);
-
+int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t frame);
+int reemplazarValorTLB(stRegistroTLB registro);
+int crearTLB(uint16_t cantidadRegistros);
 int estaActivadaTLB();
 
 

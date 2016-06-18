@@ -7,15 +7,27 @@
 
 #include "TLB.h"
 
-int buscarEnTLB(uint16_t paginaBuscada){
+int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t frame){
 	/* TODO buscarEnTLB */
 	return 0;
 }
-int reemplazarValorTLB(uint16_t Pagina, stRegistroTLB registro){
+int reemplazarValorTLB(stRegistroTLB registro){
 	/* TODO reemplazarValorTLB */
 	return 0;
 }
 
-int estaActivadaTLB(){
+int crearTLB(uint16_t cantidadRegistros){
+	if(cantidadRegistros == 0){
+		TLB = NULL;
+		return 0;
+	}
+
+	/* TODO crearTLB */
 	return 0;
+}
+
+int estaActivadaTLB(){
+	if(TLB==NULL)
+		return ERROR;
+	return OK;
 }
