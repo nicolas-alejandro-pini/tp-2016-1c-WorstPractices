@@ -103,11 +103,11 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 
 	crear_paquete(&paquetePosicion, tipoHeader);
 
-	serializar_campo(paquetePosicion, &offset, &posicionVariable->offset, sizeof(&posicionVariable->offset));
-	serializar_campo(paquetePosicion, &offset, &posicionVariable->pagina, sizeof(posicionVariable->pagina));
-	serializar_campo(paquetePosicion, &offset, &posicionVariable->size, sizeof(posicionVariable->size));
+	serializar_campo(&paquetePosicion, &offset, &posicionVariable->offset, sizeof(&posicionVariable->offset));
+	serializar_campo(&paquetePosicion, &offset, &posicionVariable->pagina, sizeof(posicionVariable->pagina));
+	serializar_campo(&paquetePosicion, &offset, &posicionVariable->size, sizeof(posicionVariable->size));
 
-	serializar_header(paquetePosicion);
+	serializar_header(&paquetePosicion);
 
 	if (enviar_paquete(configuracionInicial.sockUmc, &paquetePosicion)) {
 		log_error("No se pudo enviar al UMC el paquete para operacion [%d]", tipoHeader);
@@ -250,8 +250,8 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	sharedVar->valor = 0;
 
 	crear_paquete(&paquete, OBTENERVALOR);
-	serializar_campo(paquete, &offset, &sharedVar->nombre, sizeof(sharedVar->nombre));
-	serializar_campo(paquete, &offset, &sharedVar->valor, sizeof(sharedVar->valor));
+	serializar_campo(&paquete, &offset, &sharedVar->nombre, sizeof(sharedVar->nombre));
+	serializar_campo(&paquete, &offset, &sharedVar->valor, sizeof(sharedVar->valor));
 
 
 	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
@@ -374,7 +374,7 @@ void imprimirTexto(char* texto){
 
 	}
 
-	if (unHeaderPrimitiva.tipo == OK)
+	if (unHeaderPrimitiva->tipo == OK)
 		printf("Se imprime texto: %s \n", texto);
 
 }
@@ -676,8 +676,8 @@ int getInstruccion (int start, int size, char** instruccion){
 	stPosicion posicionInstruccion;
 
 	posicionInstruccion.size = size;
-	posicionInstruccion.offSet = start;
-	posicionInstruccion.nroPagina = unPCB->paginaInicial;
+	posicionInstruccion.offset= start;
+	posicionInstruccion.pagina = unPCB->paginaInicial;
 
 	/*TODO Serializar el mensaje de estructura */
 
