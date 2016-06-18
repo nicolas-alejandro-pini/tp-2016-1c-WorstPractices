@@ -11,13 +11,18 @@
 #include <stdlib.h>
 #include <CUnit/Basic.h>
 
-
-void agregar_tests();
+int test_unit_umc();
 int inicializar_umc();
 int finalizar_umc();
+void agregar_tests();
 
-int test_unit_umc();
-void test_tlb();
+// Pruebas
+void test_creacion_tlb();
+void test_reemplazo_tlb();
+void test_busqueda_tlb();
 void test_estructuras_memoria();
+
+// Auxiliares
+void thread_cpu(void *arg);
 
 #endif
