@@ -19,6 +19,6 @@ t_queue *colaReady; /*Cola de todos los PCB listos para ejecutar*/
 t_queue *colaExit; /*Cola de todos los PCB listos para liberar*/
 
 void *ready_productor(void *arg);
-void ready_consumidor(stPCB *pcb_to_consume);
+stPCB *ready_consumidor();
 
 #endif /* PLANIFICADOR_H_ */

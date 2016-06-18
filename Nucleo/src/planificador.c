@@ -26,12 +26,13 @@ void *ready_productor(void* arg) {
 	return NULL;
 }
 
-void ready_consumidor(stPCB *pcb_to_consume) {
+stPCB *ready_consumidor() {
 
+	stPCB *pcb_aux;
 	while (numInQ == 0) pthread_mutex_lock(&empty);
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
-	pcb_to_consume = queue_pop(colaReady);
+	pcb_aux = queue_pop(colaReady);
 	numInQ--;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
-
+	return pcb_aux;
 }
