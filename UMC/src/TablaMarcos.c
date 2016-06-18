@@ -7,7 +7,7 @@
 
 #include "TablaMarcos.h"
 
-int buscarPagina(uint16_t paginaBuscada){
+int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t frame){
 	/* TODO buscarEnTabla */
 	return 0;
 }

@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
 	pthread_attr_t attr;
 	pthread_t tid;
 	char* temp_file = "umc.log";
-	stIni *ini;
-	stEnd *end;
+	stIni ini;
+	stEnd end;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -193,6 +193,7 @@ int main(int argc, char *argv[]) {
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
 
 		TablaMarcos = NULL;
+		crearTLB(losParametros.entradasTLB);
 		memoriaPrincipal = inicializarMemoriaDisponible(losParametros.frameSize, losParametros.frames);
 
 		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */

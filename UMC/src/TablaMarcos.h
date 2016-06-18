@@ -38,7 +38,7 @@ typedef struct{
 /* puntero a la tabla de Marcos */
 char *TablaMarcos;
 
-int buscarEnTabla(uint16_t paginaBuscada);
+int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t frame);
 int reemplazarValorTabla(uint16_t Pagina, stRegistroTP registro);
 int crearTabla(uint16_t processId, uint16_t cantidadPaginas);
 
