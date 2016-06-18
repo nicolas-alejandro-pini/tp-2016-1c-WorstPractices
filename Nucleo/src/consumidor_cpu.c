@@ -11,7 +11,7 @@ void consumidor_cpu(void *args) {
 
 	stHeaderIPC *unHeaderIPC;
 	stMensajeIPC unMensajeIPC;
-	stPCB unPCB;
+	stPCB *unPCB;
 	t_paquete paquete;
 	stDispositivo *unDispositivo;
 	stRafaga *unaRafagaIO;
@@ -19,13 +19,13 @@ void consumidor_cpu(void *args) {
 	int error = 0;
 
 	while (!error) {
-		ready_consumidor(&unPCB);
-		unPCB.quantum = current_args->estado->quantum;
-		unPCB.quantumSleep = current_args->estado->quantumSleep;
+		unPCB = ready_consumidor();
+		unPCB->quantum = current_args->estado->quantum;
+		unPCB->quantumSleep = current_args->estado->quantumSleep;
 
 		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
 		if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
-			log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB.pid);
+			log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
 			error = 1;
 			liberarHeaderIPC(unHeaderIPC);
 			ready_productor(&unPCB);
@@ -43,10 +43,10 @@ void consumidor_cpu(void *args) {
 
 		if (unHeaderIPC->tipo == OK) {
 			crear_paquete(&paquete, EXECANSISOP);
-			serializar_pcb(&paquete, &unPCB);
+			serializar_pcb(&paquete, unPCB);
 
 			if (enviar_paquete(current_args->socketCpu, &paquete)) {
-				log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB.pid);
+				log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
 				error = 1;
 				ready_productor(&unPCB);
 				close(current_args->socketCpu);
@@ -92,7 +92,7 @@ void consumidor_cpu(void *args) {
 
 				/*Almacenamos la rafaga de ejecucion de entrada salida*/
 				unaRafagaIO = malloc(sizeof(stRafaga));
-				unaRafagaIO->pid = unPCB.pid;
+				unaRafagaIO->pid = unPCB->pid;
 				unaRafagaIO->unidades = 2;
 
 				queue_push(unDispositivo->rafagas, unaRafagaIO);
@@ -101,7 +101,7 @@ void consumidor_cpu(void *args) {
 				list_add(current_args->estado->dispositivos, unDispositivo);
 				list_add(listaBlock, &unPCB);
 
-//				log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
+				//log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
 
 				continue;
 
@@ -110,7 +110,19 @@ void consumidor_cpu(void *args) {
 				/*Termina de ejecutar el PCB, en este caso deberia moverlo a la cola de EXIT para que luego sea liberada la memoria*/
 				break;
 			case QUANTUMFIN:
-				/*Termina de ejecutar su quantum hay que hacer un push en la cola de ready nuevamente*/
+
+				if(recibir_paquete (current_args->socketCpu, &paquete)){
+					log_error("No se pudo recibir el paquete\n");
+					error = 1;
+					close(current_args->socketCpu);
+					continue;
+				}
+
+				deserializar_pcb(&unPCB , &paquete);
+				printf("PCB[%d] termino con su quantum\n", unPCB->pid);
+				ready_productor(unPCB);
+				free_paquete(&paquete);
+
 				break;
 			case EXECERROR:
 				/*Se produjo una excepcion por acceso a una posicion de memoria invalida (segmentation fault), imprimir error
@@ -141,7 +153,7 @@ void consumidor_cpu(void *args) {
 	if (error) {
 		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
 		ready_productor(&unPCB);
-		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB.pid);
+		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
 	}
 
 	liberarHeaderIPC(unHeaderIPC);
