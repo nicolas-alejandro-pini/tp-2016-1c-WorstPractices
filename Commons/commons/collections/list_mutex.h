@@ -13,7 +13,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
-#include <commons/collections/list.h>
+#include "list.h"
 
 typedef struct {
 	t_list *list;
