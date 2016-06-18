@@ -7,74 +7,8 @@
  Description : Hello World in C, Ansi-style
  ============================================================================
  */
-#include <dirent.h>
-#include <signal.h>
-#include <sys/time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <errno.h>
-#include <sys/sysinfo.h>
-#include <time.h>
-#include <math.h>
-#include <fcntl.h>
-#include <commons/log.h>
-#include <commons/sockets.h>
-#include <commons/socketsIPCIRC.h>
-#include <commons/ipctypes.h>
-#include <commons/pcb.h>
-#include <commons/config.h>
-#include <commons/serializador.h>
-#include <commons/parser/parser.h>
-#include <commons/parser/metadata_program.h>
+#include "CPU.h"
 
-
-/*Archivos de Configuracion*/
-#define CFGFILE		"cpu.conf"
-
-
-//Estructuras del CPU//
-
-typedef struct{
-	char* ipNucleo;		// Ip del Nucleo para conectarme //
-	int puertoNucleo;	// Puerto del Nucleo //
-	char* ipUmc;		// Ip del UMC //
-	int puertoUmc;		// Puerto del UMC //
-	int quantum;		// Quamtum del CPU //
-	int sockNucleo;		// Socket para conexion con el nucleo //
-	int sockUmc;		// Socket para conexion con el umc //
-	int socketMax;		// Contiene el ultimo socket conectado//
-	int salir;			// Flaf para indicar el fin del programa //
-} t_configCPU;
-
-
-/*typedef struct{
-/	int nroPagina;		// Indica el numero de pagina //
-	int size;			// Tamaño//
-	int offSet;			// offSet //
-} stPosicion;
-*/
-
-typedef struct{
-	char* nombre;           /*Nombre del semaforo*/
-	char* valor; 			/*Valor del semaforo*/
-} stSemaforo;
-
-typedef struct{
-	t_nombre_compartida nombre;		/*Nombre del semaforo*/
-	int valor;						/*Valor del semaforo*/
-} stSharedVar;
-
-typedef struct{
-	char* nombre;	/*Nombre del dispositivo*/
-	int tiempo;		/*Tiempo de espera*/
-} stIO;
 
 //Variables Globales//
 
@@ -86,8 +20,6 @@ int SocketAnterior = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
-
-stPosicion POSICION_DUMMY;
 
 
 int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
@@ -131,35 +63,20 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
  ============================================================================
  */
 
-stPosicion definirVariable(t_nombre_variable identificador_variable){
+t_posicion definirVariable(t_nombre_variable identificador_variable){
 
-	stMensajeIPC mensajePrimitiva;
-	stHeaderIPC* unHeaderPrimitiva;
-	stPosicion posicionVariable;
 
-	unHeaderPrimitiva = nuevoHeaderIPC(WRITE_BYTES_PAGE);
+	t_posicion posicionVariable;
 
-	enviarMensajeIPC(configuracionInicial.sockUmc,unHeaderPrimitiva,(char)identificador_variable);
 
-	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
-		printf("Error: Fallo la definicion de variable %s.\n", (char)identificador_variable);
-		return posicionVariable;
-	}
 
-	if (mensajePrimitiva.header.tipo == OK) {
-
-		/*TODO Deserializar el mensaje*/
-
-	}
-
-	//free(mensajePrimitiva);
 	return posicionVariable;
 }
 
-stPosicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
+t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	stMensajeIPC mensajePrimitiva;
-	stPosicion posicionVariable;
+	t_posicion posicionVariable;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
 
@@ -180,7 +97,7 @@ stPosicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 }
 
 
-t_valor_variable dereferenciar(stPosicion direccion_variable){
+t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
@@ -207,14 +124,11 @@ t_valor_variable dereferenciar(stPosicion direccion_variable){
 
 }
 
-void asignar(stPosicion direccion_variable, t_valor_variable valor ){
+void asignar(t_posicion direccion_variable, t_valor_variable valor ){
 
 	stMensajeIPC mensajePrimitiva;
 
-	/*TODO Serializar el mensaje de estructura */
-	char* estructuraSerializada;
-
-	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(ASIGNARVARIABLE),estructuraSerializada);
+	//enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(ASIGNARVARIABLE),estructuraSerializada);
 
 	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Fallo en asignacion de la variable.\n");
@@ -234,6 +148,7 @@ void asignar(stPosicion direccion_variable, t_valor_variable valor ){
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	stHeaderIPC *unHeaderIPC;
+	stMensajeIPC unMensaje;
 	t_paquete paquete;
 	stSharedVar* sharedVar;
 	int type, offset=0;
@@ -242,14 +157,16 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	unHeaderIPC = nuevoHeaderIPC(OBTENERVALOR);
 
+	unMensaje.contenido = &variable;
+
 	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
 	sharedVar->nombre = variable;
 	sharedVar->valor = 0;
 
 	crear_paquete(&paquete, OBTENERVALOR);
-	serializar_campo(paquete, &offset, &sharedVar->nombre, sizeof(sharedVar->nombre));
-	serializar_campo(paquete, &offset, &sharedVar->valor, sizeof(sharedVar->valor));
+	serializar_campo(&paquete, &offset, sharedVar, sizeof(stSharedVar));
+
 
 
 	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
@@ -292,13 +209,12 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
-	sharedVar.nombre = variable;
+	sharedVar.nombre = &variable;
 	sharedVar.valor = valor;
 
 	crear_paquete(&paquete, GRABARVALOR);
 
-	serializar_campo(&paquete, &offset, &sharedVar.nombre, sizeof(sharedVar.nombre));
-	serializar_campo(&paquete, &offset, &sharedVar.valor, sizeof(sharedVar.valor));
+	serializar_campo(&paquete, &offset, &sharedVar, sizeof(stSharedVar));
 
 	serializar_header(&paquete);
 
@@ -372,7 +288,7 @@ void imprimirTexto(char* texto){
 
 	}
 
-	if (unHeaderPrimitiva.tipo == OK)
+	if (unHeaderPrimitiva->tipo == OK)
 		printf("Se imprime texto: %s \n", texto);
 
 }
@@ -673,8 +589,8 @@ int getInstruccion (int start, int size, char** instruccion){
 	stPosicion posicionInstruccion;
 
 	posicionInstruccion.size = size;
-	posicionInstruccion.offSet = start;
-	posicionInstruccion.nroPagina = unPCB->paginaInicial;
+	posicionInstruccion.offset = start;
+	posicionInstruccion.pagina= unPCB->paginaInicial;
 
 	/*TODO Serializar el mensaje de estructura */
 
