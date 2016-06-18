@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
 	pthread_attr_t attr;
 	pthread_t tid;
 	char* temp_file = "umc.log";
-	stIni ini;
-	stEnd end;
+	stIni *ini;
+	stEnd *end;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
 								log_info("Conexion con CPU establecida\n");
 								agregarSock=1;
 
-//								//pthread_create(&tid, &attr, (void*)realizarAccionCPU, &unCliente);
+								pthread_create(&tid, &attr, (void*)realizarAccionCPU, &unCliente);
 
 								break;
 							case CONNECTNUCLEO:
@@ -358,36 +358,36 @@ int main(int argc, char *argv[]) {
 	        	        else{
 
 	        	        	/* Se sigue comunicado con el Nucleo, podría recibir otros mensajes */
-//
-//	        	        	switch(unMensaje->header.tipo){
-//
-//	        	        		case INICIALIZAR_PROGRAMA:
-//
-//	        	        			ini = (stIni*)calloc(1,sizeof(stIni));
-//	        	        			ini->socketResp = unSocket;
-//	        	        			ini->sPI= unMensaje->contenido;
-//
-//	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);
-//
-//	        	        			break;
-//
-//	        	        		case FINPROGRAMA:
-//
-//	        	        			end = calloc(1,sizeof(stEnd));
-//	        	        			end->socketResp = socket;
-//	        	        			end->pid = atoi(unMensaje->contenido);
-//
-//	        	        			pthread_create(&tid,&attr,(void*)finalizarPrograma,end);
-//	        	        			break;
-//
-//
-//	        	        		default:
-//	        	        			printf("Se recibio una peticion con un codigo desconocido...%i", unMensaje->header.tipo);
-//	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
-//	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
-//	        	        			break;
-//
-//	        	        	}
+
+	        	        	switch(unMensaje->header.tipo){
+
+	        	        		case INICIALIZAR_PROGRAMA:
+
+	        	        			ini = (stIni*)calloc(1,sizeof(stIni));
+	        	        			ini->socketResp = unSocket;
+	        	        			ini->sPI= unMensaje->contenido;
+
+	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);
+
+	        	        			break;
+
+	        	        		case FINPROGRAMA:
+
+	        	        			end = calloc(1,sizeof(stEnd));
+	        	        			end->socketResp = socket;
+	        	        			end->pid = atoi(unMensaje->contenido);
+
+	        	        			pthread_create(&tid,&attr,(void*)finalizarPrograma,end);
+	        	        			break;
+
+
+	        	        		default:
+	        	        			printf("Se recibio una peticion con un codigo desconocido...%i", unMensaje->header.tipo);
+	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
+	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
+	        	        			break;
+
+	        	        	}
 
 	        	        	fflush(stdout);
 

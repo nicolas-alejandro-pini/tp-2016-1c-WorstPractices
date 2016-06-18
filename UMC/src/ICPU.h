@@ -44,7 +44,7 @@ int frameByProc;
 
 void *inicializarPrograma(stIni*);
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU);
-void escribirBytes(stEscrituraPagina*);
+void *escribirBytes(stEscrituraPagina* unaEscritura);
 void *finalizarPrograma(stEnd*);
 int cambiarContexto(uint16_t pagina);
 int elegirReemplazo(int cantidad);
