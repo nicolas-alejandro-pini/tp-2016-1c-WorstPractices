@@ -16,7 +16,7 @@ fd_set fds_master;		/* Lista de todos mis sockets. */
 fd_set read_fds;		/* Sublista de fds_master. */
 
 int SocketAnterior = 0;
-
+t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
@@ -65,32 +65,30 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 
 t_puntero definirVariable(t_nombre_variable identificador_variable){
 
-
-	t_puntero posicionVariable;
 	stIndiceStack *indiceStack;
 	stPosicion *unArgumento;
 	stVars *unaVariable;
-	int tamanioLista;
+	int tamanioStack;
 
+	tamanioStack=list_size(&unPCB->stack);
 
 	indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
 	indiceStack->variables = list_create();
 	unaVariable = (stVars*)malloc(sizeof(stVars));
-	unaVariable->id = 1;
+	unaVariable->id = identificador_variable;
 	unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
 	unaVariable->posicion_memoria->pagina=0;
-	unaVariable->posicion_memoria->offset=0;
-	unaVariable->posicion_memoria->size = 0;
+	unaVariable->posicion_memoria->offset= ultimaPosicionStack;
+	unaVariable->posicion_memoria->size = TAMANIOVARIABLES;
 	list_add(indiceStack->variables,unaVariable);
 
-	tamanioLista=list_size(&unPCB->stack);
-
-	indiceStack->pos = tamanioLista + 1;
+	indiceStack->pos = tamanioStack + 1;
 
 	list_add(unPCB->stack,indiceStack);
 
+	ultimaPosicionStack = ultimaPosicionStack + TAMANIOVARIABLES;
 
-	return posicionVariable;
+	return ultimaPosicionStack;
 }
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
