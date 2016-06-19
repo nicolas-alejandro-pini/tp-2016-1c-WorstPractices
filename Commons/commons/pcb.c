@@ -13,6 +13,7 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 	uint32_t l, max_stack;
 	stIndiceStack *stack;
 
+
 	//Serializamos los campos estaticos
 	serializar_campo(paquete, &offset, &self->pid, sizeof(self->pid));
 	serializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
@@ -45,6 +46,7 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 		serializar_lista(paquete, &offset, stack->variables, sizeof(stVars));
 		serializar_campo(paquete, &offset, &stack->retPosicion, sizeof(uint32_t));
 		serializar_campo(paquete, &offset, &stack->retVar, sizeof(stPosicion));
+		serializar_campo(paquete, &offset, &stack->pos, sizeof(uint32_t));
 	}
 
 	// Serializacion del header
@@ -57,6 +59,7 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 	int i, j, offset = 0;
 	uint32_t max_stack = 0;
 	stIndiceStack *indiceStack;
+	stPosicion *unaPosicionTest;/*TODO: borrar*/
 
 	// paquete->data. cuando se envia el paquete recibir_header saca el header
 	//                para pruebas de deserializar sin enviar el paquete hay que
@@ -94,15 +97,15 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 
 	for (i = 0; i < max_stack; i++) {
 		indiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
-		indiceStack->argumentos = (t_list*)malloc(sizeof(t_list)+sizeof(stPosicion));
 		indiceStack->argumentos = list_create();
 		deserializar_campo(paquete, &offset, &indiceStack->pos, sizeof(uint32_t));
 		deserializar_lista(paquete, &offset, indiceStack->argumentos, sizeof(stPosicion));
-		indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
 		indiceStack->variables = list_create();
 		deserializar_lista(paquete, &offset, indiceStack->variables, sizeof(stVars));
 		deserializar_campo(paquete, &offset, &indiceStack->retPosicion, sizeof(uint32_t));
 		deserializar_campo(paquete, &offset, &indiceStack->retVar, sizeof(stPosicion));
+		deserializar_campo(paquete, &offset, &indiceStack->pos, sizeof(uint32_t));
+		list_add(self->stack,indiceStack);
 	}
 
 	// liberar al finalizar PCB
@@ -112,3 +115,4 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 
 	return EXIT_SUCCESS;
 }
+

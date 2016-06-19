@@ -301,22 +301,19 @@ int main(int argc, char *argv[]) {
 									unArgumento->size = 4;
 									list_add(indiceStack->argumentos,unArgumento);
 
-									indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
 									indiceStack->variables = list_create();
 									unaVariable = (stVars*)malloc(sizeof(stVars));
 									unaVariable->id = 1;
-									unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
-									unaVariable->posicion_memoria->pagina=0;
-									unaVariable->posicion_memoria->offset=0;
-									unaVariable->posicion_memoria->size = 0;
+									unaVariable->posicion_memoria.pagina=6996;
+									unaVariable->posicion_memoria.offset=1212;
+									unaVariable->posicion_memoria.size = 123;
 									list_add(indiceStack->variables,unaVariable);
 
-									indiceStack->pos=0;
+									indiceStack->pos=6;
 									indiceStack->retPosicion=1;
-									indiceStack->retVar = (stPosicion*)malloc(sizeof(stPosicion));
-									indiceStack->retVar->pagina=0;
-									indiceStack->retVar->offset=0;
-									indiceStack->retVar->size=4;
+									indiceStack->retVar.pagina=4;
+									indiceStack->retVar.offset=121;
+									indiceStack->retVar.size=960;
 									list_add(unPCB->stack,indiceStack);
 								}
 
