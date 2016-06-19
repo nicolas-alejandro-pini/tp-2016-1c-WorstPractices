@@ -63,19 +63,40 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
  ============================================================================
  */
 
-t_posicion definirVariable(t_nombre_variable identificador_variable){
+t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 
-	t_posicion posicionVariable;
+	t_puntero posicionVariable;
+	stIndiceStack *indiceStack;
+	stPosicion *unArgumento;
+	stVars *unaVariable;
+	int tamanioLista;
+
+
+	indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
+	indiceStack->variables = list_create();
+	unaVariable = (stVars*)malloc(sizeof(stVars));
+	unaVariable->id = 1;
+	unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
+	unaVariable->posicion_memoria->pagina=0;
+	unaVariable->posicion_memoria->offset=0;
+	unaVariable->posicion_memoria->size = 0;
+	list_add(indiceStack->variables,unaVariable);
+
+	tamanioLista=list_size(&unPCB->stack);
+
+	indiceStack->pos = tamanioLista + 1;
+
+	list_add(unPCB->stack,indiceStack);
 
 
 	return posicionVariable;
 }
 
-t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
+t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	stMensajeIPC mensajePrimitiva;
-	t_posicion posicionVariable;
+	t_puntero posicionVariable;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
 
@@ -96,7 +117,7 @@ t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 }
 
 
-t_valor_variable dereferenciar(t_posicion direccion_variable){
+t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
@@ -123,7 +144,7 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 }
 
-void asignar(t_posicion direccion_variable, t_valor_variable valor ){
+void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	stMensajeIPC mensajePrimitiva;
 

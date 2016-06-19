@@ -58,5 +58,3 @@ typedef struct{
 	char* nombre;	/*Nombre del dispositivo*/
 	int tiempo;		/*Tiempo de espera*/
 } stIO;
-
-typedef int t_posicion;
