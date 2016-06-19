@@ -15,8 +15,8 @@
 
 
 typedef struct {
-	uint32_t id; 					/*Id variable*/
-	stPosicion *posicion_memoria;    /*Posicion de la variable en la memoria*/
+	t_nombre_variable id; 			/*Id variable*/
+	stPosicion posicion_memoria;    /*Posicion de la variable en la memoria*/
 } __attribute__((packed)) stVars;
 
 
@@ -25,12 +25,13 @@ typedef struct {
 	t_list *argumentos;  	/*Posiciones de memoria donde se almacenan las copias de los argumentos de la función(Listas de stPosicion)*/
 	t_list *variables;   	/*Identificadores y posiciones de memoria donde se almacenan las variables locales de la función(Listas de stVars)*/
 	uint32_t retPosicion; 	/*Posición del índice de código donde se debe retornar al finalizar la ejecución de la función*/
-	stPosicion *retVar; 		/*Posición de memoria donde se debe almacenar el resultado de la función provisto por la sentencia RETURN*/
+	stPosicion retVar; 		/*Posición de memoria donde se debe almacenar el resultado de la función provisto por la sentencia RETURN*/
 } __attribute__((packed)) stIndiceStack;
 
 typedef struct {
 	uint32_t pid; /*Numero identificador del proceso unico en el sistema */
 	uint32_t pc; /*Numero de la próxima instrucción del Programa que se debe ejecutar*/
+	uint32_t posicionStack; /*Posicion a partir de donde comienza el stack*/
 	uint32_t paginaInicial; /*Numero de pagina inicial*/
 	uint32_t cantidadPaginas; /*Numero de pagina inicial*/
 	uint32_t socketConsola; /*Numero de socket de la consola a la cual le devolvemos las salidas del programa en ejecucion*/

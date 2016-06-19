@@ -59,4 +59,4 @@ typedef struct{
 	int tiempo;		/*Tiempo de espera*/
 } stIO;
 
-typedef int t_posicion;
+#define TAMANIOVARIABLES 4;

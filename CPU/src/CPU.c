@@ -16,7 +16,7 @@ fd_set fds_master;		/* Lista de todos mis sockets. */
 fd_set read_fds;		/* Sublista de fds_master. */
 
 int SocketAnterior = 0;
-
+t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
@@ -63,19 +63,38 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
  ============================================================================
  */
 
-t_posicion definirVariable(t_nombre_variable identificador_variable){
+t_puntero definirVariable(t_nombre_variable identificador_variable){
 
+	stIndiceStack *indiceStack;
+	stPosicion *unArgumento;
+	stVars *unaVariable;
+	int tamanioStack;
 
-	t_posicion posicionVariable;
+	tamanioStack=list_size(&unPCB->stack);
 
+	indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
+	indiceStack->variables = list_create();
+	unaVariable = (stVars*)malloc(sizeof(stVars));
+	unaVariable->id = identificador_variable;
+	unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
+	unaVariable->posicion_memoria->pagina=0;
+	unaVariable->posicion_memoria->offset= ultimaPosicionStack;
+	unaVariable->posicion_memoria->size = TAMANIOVARIABLES;
+	list_add(indiceStack->variables,unaVariable);
 
-	return posicionVariable;
+	indiceStack->pos = tamanioStack + 1;
+
+	list_add(unPCB->stack,indiceStack);
+
+	ultimaPosicionStack = ultimaPosicionStack + TAMANIOVARIABLES;
+
+	return ultimaPosicionStack;
 }
 
-t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
+t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	stMensajeIPC mensajePrimitiva;
-	t_posicion posicionVariable;
+	t_puntero posicionVariable;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
 
@@ -96,7 +115,7 @@ t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 }
 
 
-t_valor_variable dereferenciar(t_posicion direccion_variable){
+t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
@@ -123,7 +142,7 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 }
 
-void asignar(t_posicion direccion_variable, t_valor_variable valor ){
+void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	stMensajeIPC mensajePrimitiva;
 
@@ -554,6 +573,10 @@ int cargarPCB(void){
 
 	t_paquete paquete;
 	int type;
+	stVars *unaVar;
+	uint32_t i, j, k, max_stack, max_args, max_vars;
+	stIndiceStack *stack;
+	stPosicion *argumento;
 
 	recibir_paquete (configuracionInicial.sockNucleo, &paquete);
 
@@ -564,6 +587,50 @@ int cargarPCB(void){
 	{
 		unPCB = (stPCB*)malloc(sizeof(stPCB));
 		deserializar_pcb(unPCB , &paquete);
+
+		max_stack = list_size(unPCB->stack);
+
+		for (i = 0; i < max_stack; ++i) {
+			stack = list_get(unPCB->stack, i);
+			max_args = list_size(stack->argumentos);
+			max_vars = list_size(stack->variables);
+			printf("Posicion: %d\n",stack->pos);
+			printf("Argumentos\n");
+			printf("----------------------------\n");
+			for (j = 0; j < max_args; ++j) {
+				printf("Argumento [%d] --> ",j);
+				argumento  = list_get(stack->argumentos, j);
+				printf("Pagina:[%d] - ",argumento->pagina);
+				printf("Offset:[%d] - ",argumento->offset);
+				printf("Size:[%d]\n",argumento->size);
+			}
+			printf("----------------------------\n");
+			printf("Variables\n");
+			printf("----------------------------\n");
+			for (k = 0; k < max_args; ++k) {
+				printf("Variable [%d] --> ",k);
+				unaVar  = list_get(stack->variables, k);
+				printf("Id:[%d] - ",unaVar->id);
+				printf("Pagina:[%d] - ",unaVar->posicion_memoria.pagina);
+				printf("Offset:[%d] - ",unaVar->posicion_memoria.offset);
+				printf("Size:[%d]\n",unaVar->posicion_memoria.size);
+			}
+			printf("----------------------------\n");
+
+			printf("Posicion de stack retorno: %d\n",stack->retPosicion);
+			printf("Posicion de memoria de variable de retorno:\n");
+			printf("Pagina:[%d] - ",stack->retVar.pagina);
+			printf("Offset:[%d] - ",stack->retVar.offset);
+			printf("Size:[%d]\n",stack->retVar.size);
+			fflush(stdout);
+		}
+
+
+
+
+
+
+
 		//log_info("PCB de ANSIPROG cargado. /n");
 		free_paquete(&paquete);
 		return 0;
