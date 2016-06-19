@@ -77,7 +77,6 @@ void test_reemplazo_tlb(){
 	loadInfo(&losParametros, "umc.conf");
 	crearTLB(5); //losParametros.entradasTLB);
 
-	// NO DEBE EMPEZAR EN LA PAGINA 0
 	for(i=1 ; i<TEST_REEMPLAZO_X_PROC+1; i++){
 		reg.pid = 1;
 		reg.pagina = i;
@@ -91,7 +90,44 @@ void test_reemplazo_tlb(){
 
 // Prueba 3
 void test_busqueda_tlb(){
+	int i;
+	uint16_t frame;
+	stRegistroTLB reg;
+	stParametro losParametros;
+	loadInfo(&losParametros, "umc.conf");
+	crearTLB(5); //losParametros.entradasTLB);
 
+	// cargo tabla
+	for(i=1 ; i<TEST_REEMPLAZO_X_PROC+1; i++){
+		reg.pid = 1;
+		reg.pagina = i;
+		reg.marco = i+100;
+		reemplazarValorTLB(reg);
+	}
+	imprimirTLB();
+	//Inicial
+	//Pid | Pagina | Marco | LastUsed
+	//[1][6][106][4]
+	//[1][7][107][3]
+	//[1][8][108][2]
+	//[1][9][109][1]
+	//[1][10][110][0]
+	buscarEnTLB(1, 6, &frame);
+	printf("pid:1, pagina:6, frame:[%d]\n", frame);
+	buscarEnTLB(1, 7, &frame);
+	printf("pid:1, pagina:7, frame:[%d]\n", frame);
+	buscarEnTLB(1, 8, &frame);
+	printf("pid:1, pagina:8, frame:[%d]\n", frame);
+	buscarEnTLB(1, 9, &frame);
+	printf("pid:1, pagina:9, frame:[%d]\n", frame);
+	//Pid | Pagina | Marco | LastUsed
+	//[1][6][106][4]
+	//[1][7][107][3]
+	//[1][8][108][2]
+	//[1][9][109][1]
+	//[1][10][110][4]
+	imprimirTLB();
+	destruirTLB(TLB);
 }
 
 // Prueba X

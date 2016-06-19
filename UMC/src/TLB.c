@@ -66,36 +66,41 @@ int estaActivadaTLB(){
 	return OK;
 }
 
-int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t frame){
-	stRegistroTLB *regFind = NULL;
-	stRegistroTLB reg;
-	reg.pagina = paginaBuscada;
-	reg.pid = pid;
+int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame){
+	stRegistroTLB *nodoSearch = NULL;
+	stRegistroTLB nodoIndex;
+	nodoIndex.pagina = paginaBuscada;
+	nodoIndex.pid = pid;
 
-	int _is_this_reg(stRegistroTLB *list_nodo){
-		if(list_nodo->pid == reg.pid && list_nodo->pagina == reg.pagina)
-			return 1;
-		return 0;
+	// LRU (Last Recently Used) Search
+	void _last_recently_used(stRegistroTLB *list_nodo){
+		if(list_nodo->pid == nodoIndex.pid && list_nodo->pagina == nodoIndex.pagina){
+			// Copio referencia de memoria
+			nodoSearch = list_nodo;
+		}
+		// sumo a todos los nodos una unidad de tiempo
+		if(list_nodo->lastUsed < MAX_LAST_RECENTLY_USED)
+			list_nodo->lastUsed++;
 	}
 
 	// Busco en la TLB atomicamente
 	pthread_mutex_lock(&TLB->mutex);
-	regFind = list_find(TLB->lista, (void*)_is_this_reg);
+	list_iterate(TLB->lista,(void*)_last_recently_used);
 
 	// En caso de encontrarlo
-	if(regFind)
+	if(nodoSearch)
 	{
-		// Aumento su bit de uso
-		if(regFind->lastUsed < MAX_LAST_RECENTLY_USED)
-			regFind->lastUsed++;
+		// Seteo su lastUsed a tiempo 0
+		nodoSearch->lastUsed=0;
 
 		// Copio direccion fisica
-		if(regFind->marco)
-			frame = regFind->marco;
+		if(nodoSearch->marco)
+			*frame = nodoSearch->marco;
 	}
 	pthread_mutex_unlock(&TLB->mutex);
 
-	if(!regFind)
+	// Retorno 0 TLB MISS // frame
+	if(!nodoSearch)
 		return 0;
 
 	return frame;
@@ -103,15 +108,16 @@ int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t frame){
 
 int reemplazarValorTLB(stRegistroTLB registro){
 	stRegistroTLB *lastNodeUsed = NULL;
-	uint16_t lastUsed = 1;
+	int32_t lastUsed = -1;
 
+	// Implemento LRU (Last Recently Used)
 	void _last_recently_used(stRegistroTLB *list_nodo){
-		if(list_nodo->lastUsed > lastUsed){
+		if(lastUsed < list_nodo->lastUsed){
 			lastUsed = list_nodo->lastUsed;
 			lastNodeUsed = list_nodo;
 		}
-
-		if(list_nodo->lastUsed != 0)
+		// sumo a todos los nodos una unidad de tiempo
+		if(list_nodo->lastUsed < MAX_LAST_RECENTLY_USED)
 			list_nodo->lastUsed++;
 	}
 
@@ -123,7 +129,7 @@ int reemplazarValorTLB(stRegistroTLB registro){
 	if(lastNodeUsed)
 	{
 		memcpy(lastNodeUsed, &registro, sizeof(stRegistroTLB));
-		lastNodeUsed->lastUsed=1;  // El reemplazo cuenta como usado
+		lastNodeUsed->lastUsed=0;  // Reemplazo inicializa en 0
 	}
 	pthread_mutex_unlock(&TLB->mutex);
 
