@@ -11,9 +11,10 @@
 
 // Funciones privadas
 void destruirNodoTLB(void *nodo);
+void imprimirNodoTLB(void *nodo);
 
 // Funciones publicas
-int crearTLB(t_list_mutex *tlb, uint16_t cantidadRegistros){
+int crearTLB(uint16_t cantidadRegistros){
 	uint16_t i;
 
 	// TLB desactiva
@@ -22,8 +23,13 @@ int crearTLB(t_list_mutex *tlb, uint16_t cantidadRegistros){
 		return EXIT_SUCCESS;
 	}
 
+	// Creo estructura TLB
+	TLB = malloc(sizeof(tTLB));
+
 	// Referencia a la lista
-	TLB = list_mutex_create();
+	TLB->lista = list_create();
+	// Mutex
+	pthread_mutex_init(&TLB->mutex, NULL);
 
 	// Creo los nodos ( la lista referencia no alloca memoria)
 	for(i = 0; i < cantidadRegistros; i++){
@@ -34,19 +40,24 @@ int crearTLB(t_list_mutex *tlb, uint16_t cantidadRegistros){
 		nodo->pagina = 0;
 		nodo->marco = 0;
 		nodo->lastUsed = 0;
-		list_mutex_add(TLB, nodo);
+		list_add(TLB->lista, nodo);
 	}
 
 	return EXIT_SUCCESS;
 }
 
-void destruirTLB(t_list_mutex *tlb){
-	list_mutex_destroy_and_destroy_elements(tlb, destruirNodoTLB);
+void destruirTLB(){
+	list_destroy_and_destroy_elements(TLB->lista, destruirNodoTLB);
+	free(TLB);
 }
 
 // +Mutex
-int cantidadRegistrosTLB(t_list_mutex *tlb){
-	return list_size(tlb->list);
+int cantidadRegistrosTLB(){
+	int size;
+	pthread_mutex_lock(&TLB->mutex);
+	size = list_size(TLB->lista);
+	pthread_mutex_unlock(&TLB->mutex);
+	return size;
 }
 
 int estaActivadaTLB(){
@@ -69,7 +80,7 @@ int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t frame){
 
 	// Busco en la TLB atomicamente
 	pthread_mutex_lock(&TLB->mutex);
-	regFind = list_find(TLB->list, (void*)_is_this_reg);
+	regFind = list_find(TLB->lista, (void*)_is_this_reg);
 
 	// En caso de encontrarlo
 	if(regFind)
@@ -92,39 +103,45 @@ int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t frame){
 
 int reemplazarValorTLB(stRegistroTLB registro){
 	stRegistroTLB *lastNodeUsed = NULL;
-	uint16_t lastUsed = -1;
+	uint16_t lastUsed = 1;
 
 	void _last_recently_used(stRegistroTLB *list_nodo){
-		if(list_nodo->lastUsed < lastUsed){
+		if(list_nodo->lastUsed > lastUsed){
 			lastUsed = list_nodo->lastUsed;
 			lastNodeUsed = list_nodo;
 		}
+
+		if(list_nodo->lastUsed != 0)
+			list_nodo->lastUsed++;
 	}
 
 	// Busco en la TLB atomicamente
 	pthread_mutex_lock(&TLB->mutex);
-	list_iterate(TLB->list,(void*)_last_recently_used);
+	list_iterate(TLB->lista,(void*)_last_recently_used);
 
 	// Reemplazo registro
 	if(lastNodeUsed)
 	{
 		memcpy(lastNodeUsed, &registro, sizeof(stRegistroTLB));
-		lastNodeUsed->lastUsed++;
+		lastNodeUsed->lastUsed=1;  // El reemplazo cuenta como usado
 	}
 	pthread_mutex_unlock(&TLB->mutex);
 
 	return 0;
 }
 
-void imprimirTLB(t_list_mutex *tlb){
+void imprimirTLB(){
 
 	printf("\nPid | Pagina | Marco | LastUsed \n");
-	void _imprimirRegistro(stRegistroTLB *list_nodo){
-		printf("[%d][%d][%d][%d]\n", list_nodo->pid, list_nodo->pagina, list_nodo->marco, list_nodo->lastUsed);
-	}
+
 	pthread_mutex_lock(&TLB->mutex);
-	list_iterate(tlb->list,(void*)_imprimirRegistro);
+	list_iterate(TLB->lista,imprimirNodoTLB);
 	pthread_mutex_unlock(&TLB->mutex);
+}
+
+void imprimirNodoTLB(void *nodo){
+	stRegistroTLB *list_nodo = (stRegistroTLB*) nodo;
+	printf("[%d][%d][%d][%d]\n", list_nodo->pid, list_nodo->pagina, list_nodo->marco, list_nodo->lastUsed);
 }
 
 void destruirNodoTLB(void *nodo){

@@ -24,7 +24,7 @@ int test_unit_umc() {
 
 // Agrego los test al suite de pruebas del UMC
 void agregar_tests(){
-	CU_pSuite suite_umc = CU_add_suite("Pruebas UMC:", inicializar_umc, finalizar_umc);
+	CU_pSuite suite_umc = CU_add_suite("Pruebas UMC:", NULL, NULL);
 	CU_add_test(suite_umc, "test creacion tlb", test_creacion_tlb);
 	CU_add_test(suite_umc, "test reemplazo tlb", test_reemplazo_tlb);
 	CU_add_test(suite_umc, "test busqueda tlb", test_busqueda_tlb);
@@ -34,24 +34,26 @@ void agregar_tests(){
 // Setea el entorno del suite para pruebas
 int inicializar_umc(){
 	int i;
-	int cant_cpu = 4;
-	char *msg[] = { "CPU 1", "CPU 2", "CPU 3", "CPU 4"};
-	pthread_t threads[cant_cpu];
+	stParametro losParametros;
+	loadInfo(&losParametros, "umc.conf");
+	//crearTLB(TLB, losParametros.entradasTLB);
+	//imprimirTLB(TLB);
 
-	for( i=0; i<cant_cpu; i++)
-		if( pthread_create(&threads[i], NULL, (void*)&thread_cpu, msg[i]) ){
+	for( i=0; i<CANT_CPU; i++)
+		if( pthread_create(&tests_threads[i], NULL, (void*)&thread_cpu, &i) ){
 			perror("Ocurrio un error durante la creacion del Thread.");
 		}
-
-	for( i=0; i<cant_cpu; i++)
-		pthread_join(threads[i], NULL);
-
 
 	return EXIT_SUCCESS;
 }
 
 // Finaliza el suite de pruebas de la UMC
 int finalizar_umc(){
+	int i;
+	for( i=0; i<CANT_CPU; i++)
+		pthread_join(tests_threads[i], NULL);
+
+	destruirTLB(TLB);
 	return EXIT_SUCCESS;
 }
 
@@ -61,15 +63,30 @@ int finalizar_umc(){
 void test_creacion_tlb(){
 	stParametro losParametros;
 	loadInfo(&losParametros, "umc.conf");
-
-	crearTLB(TLB, 10); //losParametros.entradasTLB);
-	imprimirTLB(TLB);
-	CU_ASSERT_EQUAL(cantidadRegistrosTLB(TLB), losParametros.entradasTLB);
+	crearTLB(losParametros.entradasTLB);
+	imprimirTLB();
+	CU_ASSERT_EQUAL(cantidadRegistrosTLB(), losParametros.entradasTLB);
+	destruirTLB();
 }
 
 // Prueba 2
 void test_reemplazo_tlb(){
+	int i;
+	stRegistroTLB reg;
+	stParametro losParametros;
+	loadInfo(&losParametros, "umc.conf");
+	crearTLB(5); //losParametros.entradasTLB);
 
+	// NO DEBE EMPEZAR EN LA PAGINA 0
+	for(i=1 ; i<TEST_REEMPLAZO_X_PROC+1; i++){
+		reg.pid = 1;
+		reg.pagina = i;
+		reg.marco = i+100;
+		reemplazarValorTLB(reg);
+		imprimirTLB();
+		sleep(1);
+	}
+	destruirTLB(TLB);
 }
 
 // Prueba 3
@@ -109,8 +126,20 @@ void test_estructuras_memoria(){
 
 /// AUXILIARES
 void thread_cpu(void *arg){
-	char *msg = (char*) arg;
-	printf("Thread ID: [%u] | %s\n", (unsigned int)pthread_self(), msg);
+	int i;
+	stRegistroTLB reg;
+	int *pid = (int*) arg;
+
+	for(i=0 ; i<TEST_REEMPLAZO_X_PROC; i++){
+		reg.pid = *pid;
+		reg.pagina = i;
+		reg.marco = i+100;
+		//reemplazarValorTLB(reg);
+	}
+	printf("Thread ID: [%u] | [%d]\n", (unsigned int)pthread_self(), *pid);
+	//imprimirTLB(TLB);
+	sleep(1);
+
 }
 
 

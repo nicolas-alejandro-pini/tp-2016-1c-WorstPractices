@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
 
 		TablaMarcos = NULL;
-		crearTLB(TLB, losParametros.entradasTLB);
+		crearTLB(losParametros.entradasTLB);
 		memoriaPrincipal = inicializarMemoriaDisponible(losParametros.frameSize, losParametros.frames);
 
 		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */
