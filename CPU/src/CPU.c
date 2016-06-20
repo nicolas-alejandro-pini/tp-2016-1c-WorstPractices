@@ -16,6 +16,7 @@ fd_set fds_master;		/* Lista de todos mis sockets. */
 fd_set read_fds;		/* Sublista de fds_master. */
 
 int SocketAnterior = 0;
+int tamanioPaginaUCM ;
 t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
@@ -66,20 +67,19 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	stIndiceStack *indiceStack;
-	stPosicion *unArgumento;
 	stVars *unaVariable;
 	int tamanioStack;
 
-	tamanioStack=list_size(&unPCB->stack);
+	tamanioStack=list_size(unPCB->stack);
 
 	indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
 	indiceStack->variables = list_create();
 	unaVariable = (stVars*)malloc(sizeof(stVars));
 	unaVariable->id = identificador_variable;
-	unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
-	unaVariable->posicion_memoria->pagina=0;
-	unaVariable->posicion_memoria->offset= ultimaPosicionStack;
-	unaVariable->posicion_memoria->size = TAMANIOVARIABLES;
+	//unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
+	unaVariable->posicion_memoria.pagina=0;
+	unaVariable->posicion_memoria.offset= ultimaPosicionStack;
+	unaVariable->posicion_memoria.size = TAMANIOVARIABLES;
 	list_add(indiceStack->variables,unaVariable);
 
 	indiceStack->pos = tamanioStack + 1;
@@ -254,7 +254,7 @@ t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
 	return PUNTERO;
 }
 
-t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, stPosicion donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
+t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, t_puntero donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
 
 	t_puntero_instruccion PUNTERO;
 	printf("Llamo a llamarFuncion");
@@ -641,6 +641,26 @@ int cargarPCB(void){
 
 /*
  =========================================================================================
+ Name        : calcularPaginaFisica()
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe la dirección logica
+ Outputs     : .
+ Description : Funcion para obtener
+ =========================================================================================
+ */
+int calcularPaginaFisica (int paginaLogica){
+
+	int paginaFisica = unPCB->paginaInicial;
+	int i;
+
+	for (i=1; paginaLogica > i;i++)
+		paginaFisica++;
+
+	return paginaFisica;
+}
+
+/*
+ =========================================================================================
  Name        : getInstruccion()
  Author      : Ezequiel Martinez
  Inputs      : Recibe el comienzo de la instruccion y el size.
@@ -648,39 +668,47 @@ int cargarPCB(void){
  Description : Funcion para obtener instruccion del progracma ANSISOP en memoria.
  =========================================================================================
  */
-int getInstruccion (int start, int size, char** instruccion){
+char* getInstruccion (int startRequest, int sizeRequest){
 
-	stMensajeIPC mensajeUMC;
-
-	char* estructuraSerializada;
+	char* instruccionTemp="\0";
+	char* instruccion;
 	stPosicion posicionInstruccion;
 
-	posicionInstruccion.size = size;
-	posicionInstruccion.offset = start;
-	posicionInstruccion.pagina= unPCB->paginaInicial;
+	int paginaToUMC;
+	int startToUMC = startRequest;
+	int sizeToUMC;
+	int pagina;
 
-	/*TODO Serializar el mensaje de estructura */
+	int cantidadPaginas = (sizeRequest / tamanioPaginaUCM) + 1;
 
+	for (pagina=1;pagina<cantidadPaginas;pagina++)
+	{
+		sizeToUMC = tamanioPaginaUCM - startToUMC;
 
-	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(GETINSTRUCCION),estructuraSerializada);
+		if (sizeToUMC > sizeRequest)
+			sizeToUMC = pagina*tamanioPaginaUCM - sizeRequest;
 
-	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajeUMC)){
-		printf("Error: Fallo en obtener instrucción.\n");
-		free(estructuraSerializada);
-		return (-1);
+		paginaToUMC = calcularPaginaFisica(pagina);
+
+		posicionInstruccion.pagina = paginaToUMC;
+		posicionInstruccion.offset = startRequest;
+		posicionInstruccion.size = sizeToUMC;
+
+		enviarHeaderIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE));
+
+		//enviar_paquete (UMC, posicionInstruccion);
+		//recibir_paquete (UCM, unPaquete);
+		instruccionTemp = "recibo instruccion"; //unPaquete.contenido;
+		instruccion = string_append (instruccion,instruccionTemp);
+
+		startToUMC = startToUMC + sizeToUMC;
 
 	}
 
-	if (mensajeUMC.header.tipo == OK) {
+	free(instruccionTemp);
+	free(posicionInstruccion);
 
-		/*TODO Deserializar el mensaje*/
-
-		instruccion = estructuraSerializada;
-
-	}
-
-	free(estructuraSerializada);
-	return 0;
+	return instruccion;
 }
 
 /*
@@ -698,8 +726,7 @@ int ejecutarInstruccion(void){
 	char* instruccion = NULL;
 
 	instruccion = getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
-								 unPCB->metadata_program->instrucciones_serializado[programCounter].offset,
-								 &instruccion);
+								 unPCB->metadata_program->instrucciones_serializado[programCounter].offset);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
@@ -773,7 +800,7 @@ int main(void) {
 	log_info("Iniciando el proceo CPU..."); /* prints CPU Application */
 
 
-	// Limpio las liastas //
+	// Limpio las listas //
 	FD_ZERO(&(fds_master));
 	FD_ZERO(&(read_fds));
 
