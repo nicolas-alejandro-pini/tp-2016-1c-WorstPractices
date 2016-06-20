@@ -21,11 +21,15 @@ typedef struct{
 	unsigned long int sector;
 } t_asignacion;
 
+typedef struct{
+	unsigned long int offset;
+	unsigned long int largo;
+}t_bloque_libre;
 
 /**
  * Inicializa la gestion de asignacion del espacio en la particion Swap
  */
-int initGestionAsignacion(unsigned long int cantidadSectores);
+int initGestionAsignacion(unsigned long int cantidadSectores, unsigned long int retardo);
 
 /**
  * Termina la gestion de asignacion del espacio en la particion Swap liberando
