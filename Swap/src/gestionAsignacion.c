@@ -6,13 +6,15 @@
  */
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <stddef.h>
 
 #include "commons/bitarray.h"
 #include "commons/log.h"
 
 
 //Bit Array
-struct t_bitarray *bitArray;
+t_bitarray *bitArray;
 char *bitArrayBuffer;
 
 /**
@@ -52,6 +54,14 @@ void destroyGestionAsignacion(){
  * En caso que no haya espacio suficiente devuelve error
  */
 int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPaginas){
+
+	return 0;
+}
+
+/**
+ * Libera el espacio previamente asignado al proceso
+ */
+int liberarEspacioDeProceso(unsigned long int pID){
 
 	return 0;
 }

@@ -9,6 +9,20 @@
 #define GESTIONASIGNACION_H_
 
 /**
+ * Tabla de asignacion
+ * ------------------------------
+ * 	PID	|	Pagina	|	Sector	|
+ * 	-----------------------------
+ *
+ */
+typedef struct{
+	unsigned long int pid;
+	unsigned long int pagina;
+	unsigned long int sector;
+} t_asignacion;
+
+
+/**
  * Inicializa la gestion de asignacion del espacio en la particion Swap
  */
 int initGestionAsignacion(unsigned long int cantidadSectores);
@@ -26,5 +40,10 @@ void destroyGestionAsignacion();
  * En caso que no haya espacio suficiente devuelve error
  */
 int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPaginas);
+
+/**
+ * Libera el espacio previamente asignado al proceso
+ */
+int liberarEspacioDeProceso(unsigned long int pID);
 
 #endif /* GESTIONASIGNACION_H_ */
