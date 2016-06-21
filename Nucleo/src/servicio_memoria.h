@@ -10,7 +10,7 @@
 #include <commons/serializador.h>
 #include <commons/ipctypes.h>
 
-inicializar_programa(int pid, int cantidad_paginas, char* programa, int socket_umc, int pagina_inicial);
+inicializar_programa(int pid, int cantidad_paginas, char* programa, int socket_umc);
 
 
 #endif /* SERVICIO_MEMORIA_H_ */
