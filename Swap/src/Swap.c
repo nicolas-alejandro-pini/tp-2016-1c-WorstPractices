@@ -11,11 +11,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <stddef.h>
+#include <unistd.h>
+
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/sockets.h>
 #include <commons/ipctypes.h>
 #include <commons/socketsIPCIRC.h>
+
+#include "particionSwap.h"
+#include "gestionAsignacion.h"
 
 int main(void) {
     char* temp_file = "swap.log";
@@ -32,9 +38,9 @@ int main(void) {
     //Configuracion cargada
     int puertoEscucha;
     char *nombreSwap;
-    int cantidadPaginas;
-    int tamanioPagina;
-    int retardoCompactacion;
+    long cantidadPaginas;
+    long tamanioPagina;
+    long retardoCompactacion;
 
     //Primero instancio el log
     t_log* logger = log_create(temp_file, "SWAP",-1, LOG_LEVEL_INFO);
@@ -52,9 +58,9 @@ int main(void) {
     //Cargo la configuracion del proceso y la imprimo en el log
     puertoEscucha = config_get_int_value(config, "PUERTO_ESCUCHA");
     nombreSwap = config_get_string_value(config, "NOMBRE_SWAP");
-    cantidadPaginas = config_get_int_value(config, "CANTIDAD_PAGINAS");
-    tamanioPagina = config_get_int_value(config, "TAMANIO_PAGINA");
-    retardoCompactacion = config_get_int_value(config, "RETARDO_COMPACTACION");
+    cantidadPaginas = config_get_long_value(config, "CANTIDAD_PAGINAS");
+    tamanioPagina = config_get_long_value(config, "TAMANIO_PAGINA");
+    retardoCompactacion = config_get_long_value(config, "RETARDO_COMPACTACION");
 
     log_info("Puerto de escucha: %d", puertoEscucha);
     log_info("Nombre del archivo Swap: %s", nombreSwap);
@@ -62,14 +68,25 @@ int main(void) {
     log_info("Tamanio de pagina: %d", tamanioPagina);
     log_info("Retardo de compactacion: %d", retardoCompactacion);
 
+    //Creo la particion SWAP
+    if(crearParticionSwap(nombreSwap, cantidadPaginas, tamanioPagina) <  0){
+    	//Error al crear
+    	log_error("Error al crear la particion SWAP");
+        log_destroy(logger);
+        config_destroy(config);
+    	return EXIT_FAILURE;
+    }
+
     //Creo el socket de escucha
     srvSock = escuchar(puertoEscucha);
     if(srvSock == -1){
         log_error("Error creando el socket de escucha...");
         log_destroy(logger);
         config_destroy(config);
+        destruirParticionSwap();
     	return EXIT_FAILURE;
     }
+
     //Arranco a escuchar mensajes
     log_info("Esperando conexiones...");
     while(!terminar){
@@ -78,8 +95,7 @@ int main(void) {
             log_error("Error aceptando la conexion del cliente...");
             continue;
     	}
-    	//clientIPAddress = inet_ntoa(sockAddress.sin_addr);
-        //log_info(logger, "Nuevo cliente conectado desde la IP: %s", clientIPAddress);
+
     	log_info("Nuevo cliente conectado");
 
     	ipcHeader = nuevoHeaderIPC(QUIENSOS);
@@ -92,19 +108,37 @@ int main(void) {
     	}
 
     	if(ipcHeader->tipo == SOYUMC){
-    		// Se me conecto un UMC
+    		// Se me conecto un UMC por lo cual me quedo escuchando sus mensajes
 
         	while(1){
             	if(recibirHeaderIPC(cliSock, ipcHeader) <= 0){
             		log_error("La UMC se desconecto u ocurrio un error de comunicacion");
             		liberarHeaderIPC(ipcHeader);
+            		terminar = -1;
             		break;
             	}
 
+            	//Tratamiento de los diferentes mensajes desde la UMC
+            	switch(ipcHeader->tipo){
 
+            	case INICIAR_PROGRAMA:
+
+            		break;
+
+            	case DESTRUIR_PROGRAMA:
+
+            		break;
+
+            	case LEER_PAGINA:
+
+            		break;
+
+            	case ESCRIBIR_PAGINA:
+
+            		break;
+            	}
 
         	}
-
         	liberarHeaderIPC(ipcHeader);
     	} else {
     		// Se me conecto cualquiera, lo tengo que rechazar
@@ -116,6 +150,8 @@ int main(void) {
     //Libero lo reservado
     log_destroy(logger);
     config_destroy(config);
+    destruirParticionSwap();
+
 	return EXIT_SUCCESS;
 }
 

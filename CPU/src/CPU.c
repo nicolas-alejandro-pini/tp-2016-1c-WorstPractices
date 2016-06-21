@@ -16,7 +16,8 @@ fd_set fds_master;		/* Lista de todos mis sockets. */
 fd_set read_fds;		/* Sublista de fds_master. */
 
 int SocketAnterior = 0;
-
+int tamanioPaginaUCM ;
+t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
@@ -63,19 +64,37 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
  ============================================================================
  */
 
-t_posicion definirVariable(t_nombre_variable identificador_variable){
+t_puntero definirVariable(t_nombre_variable identificador_variable){
 
+	stIndiceStack *indiceStack;
+	stVars *unaVariable;
+	int tamanioStack;
 
-	t_posicion posicionVariable;
+	tamanioStack=list_size(unPCB->stack);
 
+	indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
+	indiceStack->variables = list_create();
+	unaVariable = (stVars*)malloc(sizeof(stVars));
+	unaVariable->id = identificador_variable;
+	//unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
+	unaVariable->posicion_memoria.pagina=0;
+	unaVariable->posicion_memoria.offset= ultimaPosicionStack;
+	unaVariable->posicion_memoria.size = TAMANIOVARIABLES;
+	list_add(indiceStack->variables,unaVariable);
 
-	return posicionVariable;
+	indiceStack->pos = tamanioStack + 1;
+
+	list_add(unPCB->stack,indiceStack);
+
+	ultimaPosicionStack = ultimaPosicionStack + TAMANIOVARIABLES;
+
+	return ultimaPosicionStack;
 }
 
-t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
+t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	stMensajeIPC mensajePrimitiva;
-	t_posicion posicionVariable;
+	t_puntero posicionVariable;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
 
@@ -96,7 +115,7 @@ t_posicion obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 }
 
 
-t_valor_variable dereferenciar(t_posicion direccion_variable){
+t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
@@ -123,7 +142,7 @@ t_valor_variable dereferenciar(t_posicion direccion_variable){
 
 }
 
-void asignar(t_posicion direccion_variable, t_valor_variable valor ){
+void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	stMensajeIPC mensajePrimitiva;
 
@@ -235,7 +254,7 @@ t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
 	return PUNTERO;
 }
 
-t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, stPosicion donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
+t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, t_puntero donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
 
 	t_puntero_instruccion PUNTERO;
 	printf("Llamo a llamarFuncion");
@@ -622,6 +641,26 @@ int cargarPCB(void){
 
 /*
  =========================================================================================
+ Name        : calcularPaginaFisica()
+ Author      : Ezequiel Martinez
+ Inputs      : Recibe la dirección logica
+ Outputs     : .
+ Description : Funcion para obtener
+ =========================================================================================
+ */
+int calcularPaginaFisica (int paginaLogica){
+
+	int paginaFisica = unPCB->paginaInicial;
+	int i;
+
+	for (i=1; paginaLogica > i;i++)
+		paginaFisica++;
+
+	return paginaFisica;
+}
+
+/*
+ =========================================================================================
  Name        : getInstruccion()
  Author      : Ezequiel Martinez
  Inputs      : Recibe el comienzo de la instruccion y el size.
@@ -629,39 +668,51 @@ int cargarPCB(void){
  Description : Funcion para obtener instruccion del progracma ANSISOP en memoria.
  =========================================================================================
  */
-int getInstruccion (int start, int size, char** instruccion){
+void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
-	stMensajeIPC mensajeUMC;
+	char* instruccionTemp="\0";
 
-	char* estructuraSerializada;
 	stPosicion posicionInstruccion;
+	stMensajeIPC *unMensaje;
 
-	posicionInstruccion.size = size;
-	posicionInstruccion.offset = start;
-	posicionInstruccion.pagina= unPCB->paginaInicial;
+	int paginaToUMC;
+	int startToUMC = startRequest;
+	int sizeToUMC;
+	int pagina;
 
-	/*TODO Serializar el mensaje de estructura */
+	int cantidadPaginas = (sizeRequest / tamanioPaginaUCM) + 1;
 
+	for (pagina=1;pagina<cantidadPaginas;pagina++)
+	{
+		sizeToUMC = tamanioPaginaUCM - startToUMC;
 
-	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(GETINSTRUCCION),estructuraSerializada);
+		if (sizeToUMC > sizeRequest)
+			sizeToUMC = pagina*tamanioPaginaUCM - sizeRequest;
 
-	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajeUMC)){
-		printf("Error: Fallo en obtener instrucción.\n");
-		free(estructuraSerializada);
-		return (-1);
+		paginaToUMC = calcularPaginaFisica(pagina);
+
+		posicionInstruccion.pagina = paginaToUMC;
+		posicionInstruccion.offset = startRequest;
+		posicionInstruccion.size = sizeToUMC;
+
+		//enviarHeaderIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE));
+
+		enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE),&posicionInstruccion);
+
+		recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje );
+
+		//enviar_paquete (UMC, posicionInstruccion);
+		//recibir_paquete (UCM, unPaquete);
+		instruccionTemp = (char*)unMensaje->contenido; //unPaquete.contenido;
+
+		string_append (*instruccion,instruccionTemp);
+
+		startToUMC = startToUMC + sizeToUMC;
 
 	}
 
-	if (mensajeUMC.header.tipo == OK) {
+	free(instruccionTemp);
 
-		/*TODO Deserializar el mensaje*/
-
-		instruccion = estructuraSerializada;
-
-	}
-
-	free(estructuraSerializada);
-	return 0;
 }
 
 /*
@@ -678,9 +729,9 @@ int ejecutarInstruccion(void){
 	int programCounter = unPCB->pc;
 	char* instruccion = NULL;
 
-	instruccion = getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
-								 unPCB->metadata_program->instrucciones_serializado[programCounter].offset,
-								 &instruccion);
+	getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
+					unPCB->metadata_program->instrucciones_serializado[programCounter].offset,
+					*instruccion);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
@@ -754,7 +805,7 @@ int main(void) {
 	log_info("Iniciando el proceo CPU..."); /* prints CPU Application */
 
 
-	// Limpio las liastas //
+	// Limpio las listas //
 	FD_ZERO(&(fds_master));
 	FD_ZERO(&(read_fds));
 

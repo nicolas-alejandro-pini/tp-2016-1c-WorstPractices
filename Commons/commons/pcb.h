@@ -15,7 +15,7 @@
 
 
 typedef struct {
-	uint32_t id; 					/*Id variable*/
+	t_nombre_variable id; 			/*Id variable*/
 	stPosicion posicion_memoria;    /*Posicion de la variable en la memoria*/
 } __attribute__((packed)) stVars;
 
@@ -31,6 +31,7 @@ typedef struct {
 typedef struct {
 	uint32_t pid; /*Numero identificador del proceso unico en el sistema */
 	uint32_t pc; /*Numero de la próxima instrucción del Programa que se debe ejecutar*/
+	uint32_t posicionStack; /*Posicion a partir de donde comienza el stack*/
 	uint32_t cantidadPaginas; /*Numero de pagina inicial*/
 	uint32_t socketConsola; /*Numero de socket de la consola a la cual le devolvemos las salidas del programa en ejecucion*/
 	uint32_t socketCPU; /*Numero de socket de la CPU que esta ejecutando en ese momento el pcb*/

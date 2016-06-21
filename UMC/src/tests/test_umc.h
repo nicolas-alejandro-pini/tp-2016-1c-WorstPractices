@@ -9,7 +9,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <CUnit/Basic.h>
+#define CANT_CPU 1
+#define TEST_REEMPLAZO_X_PROC 10
+
+pthread_t tests_threads[CANT_CPU];
 
 int test_unit_umc();
 int inicializar_umc();

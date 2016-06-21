@@ -8,6 +8,7 @@
 #ifndef PARAMETROS_H_
 #define PARAMETROS_H_
 
+#include <commons/log.h>
 
 typedef struct{
 	int miPuerto;		/* Puerto por el que escucho. */
@@ -26,5 +27,7 @@ typedef struct{
 } stParametro;
 
 stParametro losParametros;
+
+t_log* logger;
 
 #endif /* PARAMETROS_H_ */

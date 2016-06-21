@@ -18,7 +18,6 @@
 
 void loadInfo (stParametro* info, char* file_name){
 
-	/* TODO realizar verificacines sobre lo cargadop desde el archivo */
 	t_config* miConf = config_create (file_name);
 
 	if(miConf == NULL){
@@ -168,7 +167,7 @@ int main(int argc, char *argv[]) {
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
 
 	//Primero instancio el log
-		t_log* logger = log_create(temp_file, "UMC",-1, LOG_LEVEL_INFO);
+		logger = log_create(temp_file, "UMC",-1, LOG_LEVEL_INFO);
 
 	// Ejecuto las pruebas
 	if(argv[2])
@@ -195,7 +194,7 @@ int main(int argc, char *argv[]) {
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
 
 		TablaMarcos = NULL;
-		crearTLB(TLB, losParametros.entradasTLB);
+		crearTLB(losParametros.entradasTLB);
 		memoriaPrincipal = inicializarMemoriaDisponible(losParametros.frameSize, losParametros.frames);
 
 		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */
@@ -239,7 +238,7 @@ int main(int argc, char *argv[]) {
 			{
 				log_info("OK - Swap conectado.");
 				fflush(stdout);
-				/*loguear(OK_LOG,"Swap conectado","Swap"); TODO Agregar funcion de logueo.*/
+
 			}
 		}	/*Fin de conexion al Swap*/
 		else{
@@ -394,12 +393,12 @@ int main(int argc, char *argv[]) {
 	        	        			end->socketResp = socket;
 	        	        			end->pid = atoi(unMensaje->contenido);
 
-	        	        			pthread_create(&tid,&attr,(void*)finalizarPrograma,end);
+	        	        			pthread_create(&tid,&attr,(void*)finalizarProgramaNucleo,end);
 	        	        			break;
 
 
 	        	        		default:
-	        	        			printf("Se recibio una peticion con un codigo desconocido...%i", unMensaje->header.tipo);
+	        	        			printf("Se recibio una peticion con un codigo desconocido...%ld", unMensaje->header.tipo);
 	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;

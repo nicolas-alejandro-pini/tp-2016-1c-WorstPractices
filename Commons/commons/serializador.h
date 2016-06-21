@@ -58,4 +58,7 @@ int serializar_inicializar_programa(t_paquete *paquete, stPageIni *self);
 int deserializar_inicializar_programa(stPageIni *self,t_paquete *paquete);
 
 
+int enviarConfigUMC(int unSocket, int frameSize, int frameByProc);
+int recibirConfigUMC(int unSocket, t_UMCConfig *UMCConfig);
+
 #endif /* COMMONS_SERIALIZADOR_H_ */

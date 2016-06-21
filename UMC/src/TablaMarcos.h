@@ -10,12 +10,17 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <commons/string.h>
+#include <commons/collections/list.h>
+#include "Memoria.h"
 #include "Parametros.h"
 
-
+// con este valor se conserva el valor del marco del la pagina a reemplazar
+#define REEMPLAZAR_MARCO 146ul
 
 typedef struct{
-	uint16_t pagina;
+	// pagina es el indice
 	uint16_t marco;
 	unsigned char bit2ndChance;
 	unsigned char bitPresencia;
@@ -23,7 +28,7 @@ typedef struct{
 }stRegistroTP;
 
 typedef struct{
-	uint16_t pid;
+	int size;
 	void *tabla;
 }stNodoListaTP;
 
@@ -36,10 +41,14 @@ typedef struct{
  */
 
 /* puntero a la tabla de Marcos */
-char *TablaMarcos;
+void *TablaMarcos;
 
-int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t frame);
-int reemplazarValorTabla(uint16_t Pagina, stRegistroTP registro);
+int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t **frame);
+stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t Pagina, stRegistroTP registro, uint8_t flag);
 int crearTabla(uint16_t processId, uint16_t cantidadPaginas);
-
+stNodoListaTP *buscarPID(uint16_t pid);
+void liberarTablaPid(uint16_t pid);
+stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
+stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
+stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada);
 #endif /* TABLAMARCOS_H_ */
