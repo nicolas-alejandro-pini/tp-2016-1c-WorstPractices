@@ -160,7 +160,9 @@ int main(int argc, char *argv[]) {
 	pthread_t tid;
 	char* temp_file = "umc.log";
 	stIni *ini;
+	stPageIni *unPageIni;
 	stEnd *end;
+	t_paquete paquete_stPageIni;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -363,9 +365,24 @@ int main(int argc, char *argv[]) {
 
 	        	        		case INICIALIZAR_PROGRAMA:
 
-	        	        			ini = (stIni*)calloc(1,sizeof(stIni));
-	        	        			ini->socketResp = unSocket;
-	        	        			ini->sPI= unMensaje->contenido;
+	        	        			unaCabecera = nuevoHeaderIPC(OK);
+	        	        			if (!enviarHeaderIPC(unCliente, unaCabecera)) {
+										liberarHeaderIPC(unaCabecera);
+										close(unCliente);
+										return -1;
+									}
+
+									if (recibir_paquete(unCliente, &paquete_stPageIni)) {
+										printf("No se pudo recibir paquete de inicio de programa");
+										close(unCliente);
+										return -1;
+									}
+									unPageIni = (stPageIni*)malloc(sizeof(stPageIni));
+									deserializar_inicializar_programa(unPageIni,&paquete_stPageIni);
+
+									ini = (stIni*)calloc(1,sizeof(stIni));
+	        	        			ini->socketResp = unCliente;
+	        	        			ini->sPI= unPageIni;
 
 	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);
 
