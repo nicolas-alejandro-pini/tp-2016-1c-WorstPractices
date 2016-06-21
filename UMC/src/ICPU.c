@@ -254,8 +254,9 @@ void realizarAccionCPU(uint16_t socket){
 
 		if(!recibirMensajeIPC(socket, unMensaje)){
 			log_error("Thread Error - No se pudo recibir mensaje de respuesta - socket: %d", socket);
-			liberarHeaderIPC(unMensaje->header);
-			liberarHeaderIPC(unMensaje->contenido);
+			//liberarHeaderIPC(unMensaje->header);
+			free(unMensaje->contenido);
+			free(unMensaje);
 			close(socket);
 			pthread_exit(NULL);
 		}
