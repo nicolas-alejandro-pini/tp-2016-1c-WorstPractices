@@ -10,11 +10,16 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <stdio.h>
+#include "Parametros.h"
+#include "commons/ipctypes.h"
 
 void *memoriaPrincipal;
+void *marcosLibres;
 
 void* inicializarMemoriaDisponible(long tamanio, long cantidad);
-void* leerMemoria(uint16_t marco);
-void* escribirMemoria(uint16_t marco, unsigned char * buffer);
+void* leerMemoria(void *posicion, uint16_t size);
+void* escribirMemoria(void *posicion, uint16_t size, unsigned char * buffer);
+uint16_t obtenerMarcoLibre();
+uint16_t liberarMarco(uint16_t marco);
 
 #endif /* MEMORIA_H_ */

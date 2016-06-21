@@ -23,16 +23,7 @@ typedef struct{
 	uint16_t socketResp;
 	stPageIni *sPI;
 }stIni;
-/*
-typedef struct{
-	uint16_t socketResp;
-	stPosicion *sPos;
-}stRead;
-typedef struct{
-	uint16_t socketResp;
-	stEscrituraPagina *sEP;
-}stWrite;
-*/
+
 typedef struct{
 	uint16_t socketResp;
 	uint16_t pid;
@@ -44,12 +35,12 @@ int frameByProc;
 
 void *inicializarPrograma(stIni*);
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU);
-void *escribirBytes(stEscrituraPagina* unaEscritura);
-void *finalizarPrograma(stEnd*);
-int cambiarContexto(uint16_t pagina);
-int elegirReemplazo(int cantidad);
-int hayMarcoslibres(int cantidad);
-int estaPaginaDisponible(uint16_t pagina);
+void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socketCPU);
+void finalizarPrograma(uint16_t pid, uint16_t socketCPU);
+void *finalizarProgramaNucleo(stEnd *fin);
+void cambiarContexto(uint16_t pagina);
+
+void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB);
 void realizarAccionCPU(uint16_t socket);
 
 int guardarEnTabla(uint16_t cantidadPaginas);

@@ -66,7 +66,7 @@ int estaActivadaTLB(){
 	return OK;
 }
 
-int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame){
+int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t **frame){
 	stRegistroTLB *nodoSearch = NULL;
 	stRegistroTLB nodoIndex;
 	nodoIndex.pagina = paginaBuscada;
@@ -103,7 +103,7 @@ int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame){
 	if(!nodoSearch)
 		return 0;
 
-	return frame;
+	return *frame;
 }
 
 int reemplazarValorTLB(stRegistroTLB registro){

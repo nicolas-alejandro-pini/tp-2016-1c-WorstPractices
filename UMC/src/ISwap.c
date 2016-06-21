@@ -10,20 +10,21 @@
 int inicializarSwap(stPageIni *st){
 
 	t_paquete *paquete;
-	stHeader* respuesta;
+	stHeaderIPC* respuesta;
 	int ret;
 	/*
 	 * PASAR pid, cantidad de pagina, y codigo prg
 	 *
 	 * devuelve OK o ERROR
 	 */
-	paquete->data=st;
+	paquete = calloc(1,sizeof(t_paquete));
+	paquete->data=(void*)st;
 	paquete->header.type=INICIAR_PROGRAMA;
 	serializar_header(paquete);
 
 	enviar_paquete(losParametros.sockSwap, paquete);
-	respuesta = (stHeader*)calloc(1,sizeof(stHeader));
-	recibirHeader(losParametros.sockSwap, respuesta);
+	respuesta = (stHeaderIPC*)calloc(1,sizeof(stHeader));
+	recibirHeaderIPC(losParametros.sockSwap, respuesta);
 
 	if(respuesta->tipo==OK)
 		ret=EXIT_FAILURE;
@@ -50,13 +51,16 @@ int inicializarSwap(stPageIni *st){
  */
 
 int enviarPagina(uint16_t pagina, char* buffer){
-
+	// TODO enviarPagina
+	return 0;
 }
 
 char* recibirPagina(uint16_t pagina){
-
+	// TODO recibirPagina
+	return 0;
 }
 
 int destruirPrograma(uint16_t pid){
-
+	// TODO destruirPrograma
+	return 0;
 }

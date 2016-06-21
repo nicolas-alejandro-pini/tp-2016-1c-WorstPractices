@@ -91,7 +91,7 @@ void test_reemplazo_tlb(){
 // Prueba 3
 void test_busqueda_tlb(){
 	int i;
-	uint16_t frame;
+	uint16_t *frame;
 	stRegistroTLB reg;
 	stParametro losParametros;
 	loadInfo(&losParametros, "umc.conf");
@@ -113,13 +113,13 @@ void test_busqueda_tlb(){
 	//[1][9][109][1]
 	//[1][10][110][0]
 	buscarEnTLB(1, 6, &frame);
-	printf("pid:1, pagina:6, frame:[%d]\n", frame);
+	printf("pid:1, pagina:6, frame:[%d]\n", *frame);
 	buscarEnTLB(1, 7, &frame);
-	printf("pid:1, pagina:7, frame:[%d]\n", frame);
+	printf("pid:1, pagina:7, frame:[%d]\n", *frame);
 	buscarEnTLB(1, 8, &frame);
-	printf("pid:1, pagina:8, frame:[%d]\n", frame);
+	printf("pid:1, pagina:8, frame:[%d]\n", *frame);
 	buscarEnTLB(1, 9, &frame);
-	printf("pid:1, pagina:9, frame:[%d]\n", frame);
+	printf("pid:1, pagina:9, frame:[%d]\n", *frame);
 	//Pid | Pagina | Marco | LastUsed
 	//[1][6][106][4]
 	//[1][7][107][3]

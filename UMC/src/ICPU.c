@@ -8,8 +8,22 @@
 #include "ICPU.h"
 
 
+/*
+ *  TODO casos especiales:
+ *  	- el proceso no tiene marcos asignados y no tiene marcos disponibles-> rechazar pedido de memoria
+ *  	- el proceso tiene marcos asignados,
+ *  		no llego al maximo, pero no hay marcos libres en la memoria->aplicar reemplazo sobre los marcos que tenga en su tabla
+ */
+
+
 void *inicializarPrograma(stIni* ini){
 	stHeaderIPC *unHeader;
+
+	crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
+
+#undef TEST_SIN_SWAP
+
+#ifndef TEST_SIN_SWAP
 
 	if(inicializarSwap(ini->sPI) == EXIT_FAILURE){
 		log_error("No se pudo enviar el codigo a Swap");
@@ -17,8 +31,35 @@ void *inicializarPrograma(stIni* ini){
 		enviarHeaderIPC(ini->socketResp, unHeader);
 		pthread_exit(NULL);
 	}
+#else
+	// falta agregar rutina para paginar el codigo enviado y asi guardarlo en memoria
+	uint16_t resTLB, resTabla, frameBuscado, marco;
+	void *posicion;
+	stRegistroTLB stTLB;
+	stRegistroTP regTP;
+	int hayTLB;
 
-	crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
+	marco = obtenerMarcoLibre();
+	if(marco == 0)
+		marco = reemplazarValorTabla(pid, pagina, regTP, REEMPLAZAR_MARCO);
+	else{
+		regTP.marco = marco;
+		marco = reemplazarValorTabla(pid, pagina, regTP, NULL);
+	}
+
+	// cargo en memoria la pagina obtenida
+	posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
+	escribirMemoria(posicion, losParametros.frameSize, leido);
+
+	// cargo en TLB la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
+	if(usarTLB != 0){
+		stTLB.pid = pid;
+		stTLB.pagina = pagina;
+		stTLB.marco = regTP.marco;
+		reemplazarValorTLB(stTLB);
+	}
+
+#endif
 
 	/* no guardo en memoria */
 
@@ -27,23 +68,26 @@ void *inicializarPrograma(stIni* ini){
 }
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
-	uint16_t resTLB, resTabla, frameBuscado;
-	void *leido, *bytesLeidos;
+	uint16_t resTLB, resTabla, frameBuscado, marco;
+	void *leido, *bytesLeidos, *pos;
 	stRegistroTLB stTLB;
+	stRegistroTP regTP;
+	int hayTLB;
 
-	/* si esta disponible en cache*/
-	if (estaActivadaTLB()== OK)
+	/* si esta disponible cache*/
+	if ((hayTLB = estaActivadaTLB())== OK){
 		resTLB =  buscarEnTLB(pid, unaLectura->pagina, &frameBuscado);
-
-	// TLB miss
-	else
+	}
+	// no hay TLB o es un TLB miss
+	if(hayTLB==ERROR || resTLB==0)
 		resTabla = buscarEnTabla(pid, unaLectura->pagina, &frameBuscado);
 
-	// leo el frame desde memoria
-	if(resTLB == OK || resTabla == OK){
+	// leo el frame desde memoria si estan en tabla o TLB
+	if(resTLB != 0 || resTabla != 0){
 
 			// acceder a memoria con el resultado encontrado en cache
-			leido = leerMemoria(frameBuscado);
+			pos = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize);
+			leido = leerMemoria(pos, unaLectura->size);
 
 			// con el marco obtenido separo los bytes que se pidieron leer
 			bytesLeidos = calloc(1, unaLectura->size);
@@ -60,15 +104,14 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 			free(bytesLeidos);
 
 	}
-	// Page fault
+	// Page fault Lectura
 	else{
 
-		// acceder a swap con las pagina qeu necesito
-		leido = recibirPagina(unaLectura->pagina);
+		leido = ejecutarPageFault(pid, unaLectura->pagina, hayTLB && resTLB!=0);
 
 		// con la pagina obtenida separo los bytes que se pidieron leer
 		bytesLeidos = calloc(1, unaLectura->size);
-		memcpy(bytesLeidos,leido+unaLectura->offset,unaLectura->size);
+		memcpy(bytesLeidos,leido+(unaLectura->offset),unaLectura->size);
 
 		//envio la respuesta de la lectura a la CPU
 		if(!enviarMensajeIPC(socketCPU,nuevoHeaderIPC(OK),bytesLeidos)){
@@ -77,54 +120,135 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 		}
 		// libero lo enviado
 		free(bytesLeidos);
-
-		// cargo en memoria la pagina obtenida
-
-
-		// TODO cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
-
-
-		// TODO cargo en memoria la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
-		if(estaActivadaTLB() && resTLB==ERROR){
-
-			stTLB.pid = pid;
-			stTLB.pagina = unaLectura->pagina;
-			stTLB.marco = frameBuscado;
-			reemplazarValorTLB(stTLB);
-		}
-
 		// libero pagina obtenida
 		free(leido);
 	}
 
 }
-void *escribirBytes(stEscrituraPagina* unaEscritura){
-	/* TODO escribirBytes */
-	return 0;
+void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socketCPU){
+	uint16_t resTLB, resTabla, *frameBuscado, marco;
+	void *leido;
+	uint16_t *posicion;
+	stRegistroTLB stTLB;
+	stRegistroTP regTP, *registro;
+	int hayTLB;
+
+	/* si esta disponible cache*/
+	if ((hayTLB = estaActivadaTLB())== OK){
+		resTLB = buscarEnTLB(pid, unaEscritura->nroPagina, &frameBuscado);
+	}
+	// no hay TLB o es un TLB miss
+	if(hayTLB==ERROR || resTLB==0)
+		resTabla = buscarEnTabla(pid, unaEscritura->nroPagina, &frameBuscado);
+
+	// escribo el frame desde memoria si estan en tabla o TLB
+	if(resTLB != 0 || resTabla != 0){
+
+		// en el marco obtenido indico posicion para escribir los bytes pedidos
+		posicion = frameBuscado+unaEscritura->offset;
+		escribirMemoria(posicion, unaEscritura->tamanio, unaEscritura->buffer);
+
+		//envio la respuesta de la Escritura a la CPU
+		if(!enviarHeaderIPC(socketCPU,nuevoHeaderIPC(OK))){
+			log_error("No se pudo enviar el MensajeIPC");
+			return;
+		}
+
+	}
+	// Page fault Escritura
+	else{
+
+		leido = ejecutarPageFault(pid, unaEscritura->nroPagina, estaActivadaTLB() && resTLB!=0);
+
+		// busco en TLB, deberia estar porque page fault actulizo
+		resTLB = buscarEnTLB(pid, unaEscritura->nroPagina, &frameBuscado);
+
+		// prendo el bit de modificado en Tabla
+		registro = buscarRegistroEnTabla(pid, unaEscritura->nroPagina);
+		registro->bitModificado=1;
+
+		// en la pagina obtenida escribo los bytes que se pidieron
+		posicion = frameBuscado+unaEscritura->offset;
+		escribirMemoria(posicion, unaEscritura->tamanio, unaEscritura->buffer);
+
+		//envio la respuesta de la lectura a la CPU
+		if(!enviarHeaderIPC(socketCPU,nuevoHeaderIPC(OK))){
+			log_error("No se pudo enviar el MensajeIPC");
+			return;
+		}
+
+		// libero pagina obtenida
+		free(leido);
+	}
 }
-void *finalizarPrograma(stEnd *fin){
-	/* TODO finalizarPrograma */
+void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB){
+	uint16_t marco;
+	void *leido, *posicion;
+	stRegistroTLB stTLB, *registro;
+	stRegistroTP regTP;
+
+	// acceder a swap con las pagina que necesito
+	leido = recibirPagina(pagina);
+
+	// cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
+	regTP.bit2ndChance=0;
+	regTP.bitModificado=0;
+	regTP.bitPresencia=1;
+	marco = obtenerMarcoLibre();
+	if(marco == 0)
+		registro = reemplazarValorTabla(pid, pagina, regTP, REEMPLAZAR_MARCO);
+	else{
+		regTP.marco = marco;
+		registro = reemplazarValorTabla(pid, pagina, regTP, NULL);
+	}
+
+	// cargo en memoria la pagina obtenida
+	posicion = memoriaPrincipal+((registro->marco-1)*losParametros.frameSize);
+	escribirMemoria(posicion, losParametros.frameSize, leido);
+
+	// cargo en TLB la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
+	if(usarTLB != 0){
+		stTLB.pid = pid;
+		stTLB.pagina = pagina;
+		stTLB.marco = regTP.marco;
+		reemplazarValorTLB(stTLB);
+	}
+	return leido;
+}
+void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
+
+	liberarTablaPid(pid);
+
+	// TODO liberarTLB ?
+	//liberarTLB();
+
+
+
+}
+void *finalizarProgramaNucleo(stEnd *fin){
+
+	finalizarPrograma(fin->pid, fin->socketResp);
 	pthread_exit(NULL);
 }
-int cambiarContexto(uint16_t pid){
-	/* TODO cambiarContexto */
-	return 0;
-}
+void cambiarContexto(uint16_t pid){
 
-int hayMarcoslibres(int cantidad){
-	return 0;
-}
-int estaPaginaDisponible(uint16_t pagina){
-	return 0;
-}
+	stRegistroTP *data;
+	data = buscarPID(pid);
 
+	// TODO es necesario actualizar swap con paginas que tienen byte modificado ??
+
+	// TODO es necesario hacer un flush del pid en TLB ???
+
+
+}
 
 void realizarAccionCPU(uint16_t socket){
 
 	stMensajeIPC *unMensaje;
-	uint16_t pidActivo;
-	stEnd end;
-
+	uint16_t pidActivo, pagina;
+	stEnd *end;
+	stPosicion *posR;
+	stEscrituraPagina *posW;
 
 	while(1){
 
@@ -140,7 +264,7 @@ void realizarAccionCPU(uint16_t socket){
 
 		case READ_BTYES_PAGE:
 
-			stPosicion *posR =(stPosicion*)unMensaje->contenido;
+			posR =(stPosicion*)(unMensaje->contenido);
 
 			leerBytes(posR, pidActivo, socket);
 
@@ -148,7 +272,7 @@ void realizarAccionCPU(uint16_t socket){
 
 		case WRITE_BYTES_PAGE:
 
-			stPosicion *posW =(stPosicion*)unMensaje->contenido;
+			posW =(stEscrituraPagina*)(unMensaje->contenido);
 
 			escribirBytes(posW, pidActivo, socket);
 
@@ -156,16 +280,13 @@ void realizarAccionCPU(uint16_t socket){
 
 		case FINPROGRAMA:
 
-			end = calloc(1,sizeof(stEnd));
-			end->socketResp = socket;
-			end->pid = atoi(unMensaje->contenido);
-
-			finalizarPrograma(end);
+			finalizarPrograma(pidActivo, socket);
 			break;
 
 		case CAMBIOCONTEXTO:
-			/* TODO actualizo tabla de marcos con el pid y TLB flush de ese pid */
 
+			pidActivo = (uint16_t)*(unMensaje->contenido);
+			//cambiarContexto(pidActivo);
 
 			break;
 
