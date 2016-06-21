@@ -88,7 +88,7 @@ void consumidor_cpu(void *args) {
 					continue;
 				}
 
-				deserializar_pcb(&unPCB, &paquete);
+				deserializar_pcb(unPCB, &paquete);
 
 				/*Almacenamos la rafaga de ejecucion de entrada salida*/
 				unaRafagaIO = malloc(sizeof(stRafaga));
