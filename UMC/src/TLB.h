@@ -9,6 +9,7 @@
 #define TLB_H_
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <commons/ipctypes.h>
 #include <commons/collections/list_mutex.h>
@@ -31,14 +32,21 @@ typedef struct{
  */
 
 /* puntero a la tabla cache TLB */
-t_list_mutex *TLB;
+typedef struct tTLB {
+	t_list *lista;
+	pthread_mutex_t mutex;
+} tTLB;
 
-int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t frame);
+// global.
+tTLB *TLB;
+
+
+int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame);
 int reemplazarValorTLB(stRegistroTLB registro);
-int crearTLB(t_list_mutex *tlb, uint16_t cantidadRegistros);
-void destruirTLB(t_list_mutex *tlb);
+int crearTLB(uint16_t cantidadRegistros);
+void destruirTLB();
 int estaActivadaTLB();
-int cantidadRegistrosTLB(t_list_mutex *tlb);
-void imprimirTLB(t_list_mutex *tlb);
+int cantidadRegistrosTLB();
+void imprimirTLB();
 
 #endif /* TLB_H_ */

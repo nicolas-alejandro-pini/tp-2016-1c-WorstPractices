@@ -91,6 +91,8 @@
 
 	stHeaderIPC * nuevoHeaderIPC(unsigned long unTipo);
 
+	void liberarHeaderIPC(stHeaderIPC *unHeader);
+
 	/*----------------------------------------------------------------------------*/
 
 	int enviarHeaderIPC(int unSocket, stHeaderIPC *unHeader);
