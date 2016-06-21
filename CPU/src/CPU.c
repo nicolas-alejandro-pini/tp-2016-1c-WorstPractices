@@ -668,11 +668,12 @@ int calcularPaginaFisica (int paginaLogica){
  Description : Funcion para obtener instruccion del progracma ANSISOP en memoria.
  =========================================================================================
  */
-char* getInstruccion (int startRequest, int sizeRequest){
+void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
 	char* instruccionTemp="\0";
-	char* instruccion;
+
 	stPosicion posicionInstruccion;
+	stMensajeIPC *unMensaje;
 
 	int paginaToUMC;
 	int startToUMC = startRequest;
@@ -694,21 +695,24 @@ char* getInstruccion (int startRequest, int sizeRequest){
 		posicionInstruccion.offset = startRequest;
 		posicionInstruccion.size = sizeToUMC;
 
-		enviarHeaderIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE));
+		//enviarHeaderIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE));
+
+		enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE),&posicionInstruccion);
+
+		recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje );
 
 		//enviar_paquete (UMC, posicionInstruccion);
 		//recibir_paquete (UCM, unPaquete);
-		instruccionTemp = "recibo instruccion"; //unPaquete.contenido;
-		instruccion = string_append (instruccion,instruccionTemp);
+		instruccionTemp = (char*)unMensaje->contenido; //unPaquete.contenido;
+
+		string_append (*instruccion,instruccionTemp);
 
 		startToUMC = startToUMC + sizeToUMC;
 
 	}
 
 	free(instruccionTemp);
-	free(posicionInstruccion);
 
-	return instruccion;
 }
 
 /*
@@ -725,8 +729,9 @@ int ejecutarInstruccion(void){
 	int programCounter = unPCB->pc;
 	char* instruccion = NULL;
 
-	instruccion = getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
-								 unPCB->metadata_program->instrucciones_serializado[programCounter].offset);
+	getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
+					unPCB->metadata_program->instrucciones_serializado[programCounter].offset,
+					*instruccion);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
