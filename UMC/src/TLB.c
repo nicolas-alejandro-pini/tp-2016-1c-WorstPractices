@@ -66,7 +66,7 @@ int estaActivadaTLB(){
 	return OK;
 }
 
-int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t **frame){
+uint16_t buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame){
 	stRegistroTLB *nodoSearch = NULL;
 	stRegistroTLB nodoIndex;
 	nodoIndex.pagina = paginaBuscada;
@@ -134,6 +134,23 @@ int reemplazarValorTLB(stRegistroTLB registro){
 	pthread_mutex_unlock(&TLB->mutex);
 
 	return 0;
+}
+
+void flushTLB(uint16_t pid){
+
+	// Elimino paginas asociadas a pid. Sin eliminar el nodo de la lista
+	void _flush_nodo(stRegistroTLB *list_nodo){
+		if(pid == list_nodo->pid){
+			list_nodo->pid = 0;      //
+			list_nodo->pagina = 0;   // necesarios
+			list_nodo->lastUsed = 0; //
+			list_nodo->marco = 0;
+		}
+	}
+	// Itero lista
+	pthread_mutex_lock(&TLB->mutex);
+	list_iterate(TLB->lista,(void*)_flush_nodo);
+	pthread_mutex_unlock(&TLB->mutex);
 }
 
 void imprimirTLB(){
