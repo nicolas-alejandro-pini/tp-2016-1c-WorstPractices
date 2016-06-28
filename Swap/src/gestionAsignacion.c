@@ -122,10 +122,48 @@ int compactarParticionSwap(){
 }
 
 /**
- * Reserva los sectores para el nuevo proceso
+ * Verifica la existencia del proceso en la tabla de asignacion
+ *
+ */
+unsigned long int buscarIndicePrimeraAsignacionProceso(unsigned long int pId){
+	int cantAsignaciones = list_size(assignmentList);
+	unsigned long int i;
+	t_asignacion *asignacion;
+
+	for(i = 0; i < cantAsignaciones; i++){
+		asignacion = list_get(assignmentList, i);
+		if(asignacion->pid == pId)
+			break;
+	}
+
+	if(i == cantAsignaciones)
+		return -1;
+
+	return i;
+}
+
+/**
+ * Reserva los sectores para el nuevo proceso, previamente se realizaron los controles necesarios
  *
  */
 int reservarEspacioProceso(unsigned long int pid, unsigned long int sectorInicial, unsigned long int cantidadSectores){
+
+	unsigned long int nroSector;
+	unsigned long int nroPagina = 0;
+
+	for(nroSector = sectorInicial; nroSector < sectorInicial + cantidadSectores; nroSector++){
+		//Actualizo el bitmap
+		bitarray_set_bit(bitArray, nroSector);
+
+		//Agrego el elemento a la tabla de asignacion
+		t_asignacion *nuevaAsignacion = (t_asignacion *)malloc(sizeof(t_asignacion));
+		nuevaAsignacion->pid = pid;
+		nuevaAsignacion->sector = nroSector;
+		nuevaAsignacion->pagina = nroPagina++;
+
+		list_add(assignmentList, nuevaAsignacion);
+	}
+
 	return 0;
 }
 
@@ -133,6 +171,21 @@ int reservarEspacioProceso(unsigned long int pid, unsigned long int sectorInicia
  * Libera el espacio previamente asignado al proceso
  */
 int liberarEspacioDeProceso(unsigned long int pID){
+
+	unsigned long int i;
+	t_asignacion * asignacion;
+
+	i = buscarIndicePrimeraAsignacionProceso(pID);
+	while(i >= 0){
+
+		//Libero la asignacion realizada
+		asignacion = (t_asignacion *)list_remove(assignmentList, i);
+		bitarray_clean_bit(bitArray, asignacion->sector);
+		free(asignacion);
+
+		//Busco la siguiente
+		i = buscarIndicePrimeraAsignacionProceso(pID);
+	}
 
 	return 0;
 }
@@ -146,15 +199,20 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 
 	t_bloque_libre info_bloque_libre;
 
+	if(buscarIndicePrimeraAsignacionProceso(pID) >= 0){
+		log_error("El proceso al que se desea asignar espacio ya se encuentra en la tabla de asignacion");
+		return -1;
+	}
+
 	//Si la cantidad de paginas requeridas para el PID es mayor a las disponibles totales
 	if(cantidadPaginas > bitArray->size){
 		log_info("La unidad SWAP no posee sectores suficientes para satisfacer la solicitud");
-		return -1;
+		return -2;
 	}
 
 	if(cantidadSectoresLibres() < cantidadPaginas){
 		log_info("La unidad SWAP no posee suficientes sectores libres para satisfacer la solicitud");
-		return -2;
+		return -3;
 	}
 
 	//Vamos a usar Worst Fit para la asignacion de sectores a los procesos
@@ -167,7 +225,7 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 
 	if(reservarEspacioProceso(pID, info_bloque_libre.offset, cantidadPaginas) < 0){
 		log_error("Ocurrio un error al reservar el espacio en el SWAP para el proceso con PID: %d", pID);
-		return -3;
+		return -4;
 	}
 
 	log_info("Asignacion de paginas satisfactoria al proceso(PID %ul): %ul->%ul",
