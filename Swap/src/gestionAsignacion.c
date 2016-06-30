@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include "Swap.h"
 #include "gestionAsignacion.h"
 #include "commons/bitarray.h"
 #include "commons/log.h"
@@ -23,24 +24,24 @@ char *bitArrayBuffer;
 //Lista de asignaciones
 t_list *assignmentList;
 
-unsigned long int retardoCompactacion;
+t_swap_config *loaded_config;
 
 /**
  * Inicializa la gestion de asignacion del espacio en la particion Swap
  */
-int initGestionAsignacion(unsigned long int cantidadSectores, unsigned long int retardo){
+int initGestionAsignacion(t_swap_config * config){
 
-	retardoCompactacion = retardo;
+	loaded_config = config;
 
 	//Reservo espacio necesario para el bitmap
-	bitArrayBuffer = malloc(cantidadSectores);
+	bitArrayBuffer = malloc(config->cantidadPaginas);
 	if(bitArrayBuffer == NULL){
 		log_error("Error al asignar espacio en memoria para el BitMap");
 		return -1;
 	}
 
 	//Creo el bit array
-	bitArray = bitarray_create(bitArrayBuffer, cantidadSectores);
+	bitArray = bitarray_create(bitArrayBuffer, config->cantidadPaginas);
 	if(bitArray == NULL){
 		log_error("Error al crear el BitMap");
 		return -2;
@@ -219,7 +220,7 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 	if(cantidadSectoresLibresContiguosMaxima(&info_bloque_libre) < cantidadPaginas){
 		//Debo compactar, luego tengo que poder realizar la asignacion
 		compactarParticionSwap();
-		usleep(retardoCompactacion);
+		usleep(loaded_config->retardoCompactacion);
 		cantidadSectoresLibresContiguosMaxima(&info_bloque_libre);
 	}
 

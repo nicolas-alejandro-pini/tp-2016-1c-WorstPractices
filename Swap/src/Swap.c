@@ -20,6 +20,7 @@
 #include <commons/ipctypes.h>
 #include <commons/socketsIPCIRC.h>
 
+#include "Swap.h"
 #include "particionSwap.h"
 #include "gestionAsignacion.h"
 
@@ -36,11 +37,7 @@ int main(void) {
     stHeaderIPC *ipcHeader;
 
     //Configuracion cargada
-    int puertoEscucha;
-    char *nombreSwap;
-    long cantidadPaginas;
-    long tamanioPagina;
-    long retardoCompactacion;
+    t_swap_config loaded_config;
 
     //Primero instancio el log
     t_log* logger = log_create(temp_file, "SWAP",-1, LOG_LEVEL_INFO);
@@ -56,20 +53,20 @@ int main(void) {
     log_info("Configuracion cargada satisfactoriamente...");
 
     //Cargo la configuracion del proceso y la imprimo en el log
-    puertoEscucha = config_get_int_value(config, "PUERTO_ESCUCHA");
-    nombreSwap = config_get_string_value(config, "NOMBRE_SWAP");
-    cantidadPaginas = config_get_long_value(config, "CANTIDAD_PAGINAS");
-    tamanioPagina = config_get_long_value(config, "TAMANIO_PAGINA");
-    retardoCompactacion = config_get_long_value(config, "RETARDO_COMPACTACION");
+    loaded_config.puertoEscucha = config_get_int_value(config, "PUERTO_ESCUCHA");
+    loaded_config.nombreSwap = config_get_string_value(config, "NOMBRE_SWAP");
+    loaded_config.cantidadPaginas = config_get_long_value(config, "CANTIDAD_PAGINAS");
+    loaded_config.tamanioPagina = config_get_long_value(config, "TAMANIO_PAGINA");
+    loaded_config.retardoCompactacion = config_get_long_value(config, "RETARDO_COMPACTACION");
 
-    log_info("Puerto de escucha: %d", puertoEscucha);
-    log_info("Nombre del archivo Swap: %s", nombreSwap);
-    log_info("Cantidad de paginas: %d", cantidadPaginas);
-    log_info("Tamanio de pagina: %d", tamanioPagina);
-    log_info("Retardo de compactacion: %d", retardoCompactacion);
+    log_info("Puerto de escucha: %d", loaded_config.puertoEscucha);
+    log_info("Nombre del archivo Swap: %s", loaded_config.nombreSwap);
+    log_info("Cantidad de paginas: %d", loaded_config.cantidadPaginas);
+    log_info("Tamanio de pagina: %d", loaded_config.tamanioPagina);
+    log_info("Retardo de compactacion: %d", loaded_config.retardoCompactacion);
 
     //Creo la particion SWAP
-    if(crearParticionSwap(nombreSwap, cantidadPaginas, tamanioPagina) <  0){
+    if(crearParticionSwap(loaded_config.nombreSwap, loaded_config.cantidadPaginas, loaded_config.tamanioPagina) <  0){
     	//Error al crear
     	log_error("Error al crear la particion SWAP");
         log_destroy(logger);
@@ -78,7 +75,7 @@ int main(void) {
     }
 
     //Creo el socket de escucha
-    srvSock = escuchar(puertoEscucha);
+    srvSock = escuchar(loaded_config.puertoEscucha);
     if(srvSock == -1){
         log_error("Error creando el socket de escucha...");
         log_destroy(logger);
