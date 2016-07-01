@@ -13,6 +13,7 @@
 
 #include "Swap.h"
 #include "gestionAsignacion.h"
+#include "particionSwap.h"
 #include "commons/bitarray.h"
 #include "commons/log.h"
 #include "commons/collections/list.h"
