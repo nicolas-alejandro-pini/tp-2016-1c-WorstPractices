@@ -116,9 +116,100 @@ unsigned long int cantidadSectoresLibresContiguosMaxima(t_bloque_libre *info_blo
 }
 
 /**
+ * Busca la información de asignación realizada a un sector dado
+ *
+ */
+t_asignacion * buscarAsignacionSector(unsigned long int nroSector){
+	int cantAsignaciones = list_size(assignmentList);
+	unsigned long int i;
+	t_asignacion *asignacion;
+
+	for(i = 0; i < cantAsignaciones; i++){
+		asignacion = list_get(assignmentList, i);
+		if(asignacion->sector == nroSector)
+			return asignacion;
+	}
+
+	return NULL;
+}
+
+/**
  * Compacta la particion SWAP para crear espacio libre contiguo para nuevos procesos
  */
 int compactarParticionSwap(){
+
+	off_t offset;
+	off_t proximoSectorOcupado;
+
+	t_asignacion * asignacion;
+
+	char *buffer = malloc(loaded_config->tamanioPagina);
+
+	for(offset = 0; offset < bitArray->size; offset++){
+		if(bitarray_test_bit(bitArray, offset) == false){
+
+			//Encontré un sector libre, busco el próximo ocupado
+
+			proximoSectorOcupado = offset + 1;
+			while(proximoSectorOcupado < bitArray->size)
+				if(bitarray_test_bit(bitArray, proximoSectorOcupado) == false)
+					proximoSectorOcupado++;
+
+			//Si llegué al final de mi particion termino el procedimiento
+			if(proximoSectorOcupado == bitArray->size)
+				break;
+
+			//-------------------------------
+			// 1. actualizo la partición SWAP
+			//-------------------------------
+
+			//Tengo que traer al offset actual el próximo ocupado
+			if(leerSector(buffer, proximoSectorOcupado) < 0){
+				//Error al leer la particion SWAP
+				log_error("Error al leer la particion SWAP");
+				free(buffer);
+				return -1;
+			}
+
+			if(escribirSector(buffer, offset) < 0){
+				//Error al escribir en el offset actual
+				log_error("Error al escribir la particion SWAP");
+				free(buffer);
+				return -1;
+			}
+
+
+			//------------------------------------
+			// 2. Actualizo la tabla de asignación
+			//------------------------------------
+
+			asignacion = buscarAsignacionSector(proximoSectorOcupado);
+			if(asignacion == NULL){
+				log_error("Error al acceder a la tabla de asignaciones");
+				free(buffer);
+				return -1;
+			}
+
+			//Realizo el cambio del sector
+			asignacion->sector = offset;
+
+
+			//--------------------------
+			// 3. Actualizo el bit array
+			//--------------------------
+
+			//Marco el actual como ocupado
+			bitarray_set_bit(bitArray, offset);
+
+			//Marco el previamente ocupado como libre
+			bitarray_clean_bit(bitArray, proximoSectorOcupado);
+
+		}
+	}
+
+
+	//Libero lo alocado
+	free(buffer);
 	return 0;
 }
 
