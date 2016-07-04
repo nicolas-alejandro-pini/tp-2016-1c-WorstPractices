@@ -28,10 +28,11 @@ int inicializar_programa(int pid, int cantidad_paginas, char* programa, int sock
 		return EXIT_FAILURE;
 	}
 
-	unInicioUMC = malloc(sizeof(stPageIni)) + strlen(programa + 1);
+	unInicioUMC = malloc(sizeof(stPageIni));
 	unInicioUMC->processId = pid;
-	unInicioUMC->programa = programa;
 	unInicioUMC->cantidadPaginas = cantidad_paginas;
+	unInicioUMC->programa = malloc(sizeof(char) * (strlen(programa) + 1));
+	strcpy(unInicioUMC->programa,programa);
 
 	crear_paquete(&paquete, INICIALIZAR_PROGRAMA);
 	serializar_inicializar_programa(&paquete, unInicioUMC);
