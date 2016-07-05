@@ -4,7 +4,7 @@
  *  Created on: 1/6/2016
  *      Author: utnso
  */
-#include "servicio_memoria.h"
+#include "includes/servicio_memoria.h"
 
 int inicializar_programa(int pid, int cantidad_paginas, char* programa, int socket_umc) {
 
