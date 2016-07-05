@@ -10,6 +10,8 @@
 
 #include "Nucleo.h"
 #include "planificador.h"
+#include "semaforos.h"
+#include "shared_vars.h"
 
 void consumidor_cpu(void *argumentos);
 

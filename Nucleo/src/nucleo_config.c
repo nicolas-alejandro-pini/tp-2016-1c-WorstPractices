@@ -5,14 +5,16 @@
  *      Author: utnso
  */
 
-#include "nucleo_config.h"
+#include "includes/nucleo_config.h"
+#include "includes/semaforos.h"
+#include "includes/shared_vars.h"
 
-void loadInfo(stEstado* info) {
+void loadInfo(stEstado* info,t_list* lista_semaforos, t_list* lista_shared_vars) {
 
 	t_config* miConf = config_create(CFGFILE); /*Estructura de configuracion*/
 	info->dispositivos = list_create();
-	info->semaforos = list_create();
-	info->sharedVars = list_create();
+	lista_semaforos = list_create();
+	lista_shared_vars = list_create();
 
 	if (miConf == NULL) {
 		log_error("Error iniciando la configuracion...\n");
@@ -65,7 +67,7 @@ void loadInfo(stEstado* info) {
 		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SEM_IDS");
 		exit(-2);
 	} else {
-		cargar_semaforos(info,config_get_array_value(miConf, "SEM_IDS"), config_get_array_value(miConf, "SEM_INIT"));
+		cargar_semaforos(config_get_array_value(miConf, "SEM_IDS"), config_get_array_value(miConf, "SEM_INIT"));
 	}
 
 	if (!config_has_property(miConf, "IO_IDS")||!config_has_property(miConf, "IO_SLEEP")) {
@@ -76,7 +78,7 @@ void loadInfo(stEstado* info) {
 	}
 
 	if (config_has_property(miConf, "SHARED_VARS")) {
-		cargar_sharedVars(info,config_get_array_value(miConf, "SHARED_VARS"));
+		cargar_sharedVars(config_get_array_value(miConf, "SHARED_VARS"));
 	} else {
 		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SHARED_VARS");
 		exit(-2);
@@ -100,23 +102,23 @@ void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep) {
 		iterator++;
 	}
 }
-void cargar_semaforos(stEstado *info,char** semIds, char** semInit) {
+void cargar_semaforos(char** semIds, char** semInit) {
 	int iterator = 0;
-	stSemaforo *unSemadoro;
+	stSemaforo *unSemaforo;
 
 	while (semIds[iterator] != NULL) {
-		unSemadoro = crear_semaforo(semIds[iterator],semInit[iterator]);
-		list_add(info->semaforos,unSemadoro);
+		unSemaforo = crear_semaforo(semIds[iterator],semInit[iterator]);
+		list_add(listaSem,unSemaforo);
 		iterator++;
 	}
 }
-void cargar_sharedVars(stEstado *info,char** sharedVars) {
+void cargar_sharedVars(char** sharedVars) {
 	int iterator = 0;
 	stSharedVar *unaSharedVar;
 
 	while (sharedVars[iterator] != NULL) {
-		unaSharedVar = crear_sharedVar(sharedVars[iterator]);
-		list_add(info->sharedVars,unaSharedVar);
+		unaSharedVar = crear_shared_var(sharedVars[iterator]);
+		list_add(listaSharedVars,unaSharedVar);
 		iterator++;
 	}
 }
@@ -129,17 +131,8 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 
 	return new;
 }
-stSemaforo *crear_semaforo(char *nombre, char* valor) {
-	stSemaforo *new = malloc(sizeof(stSemaforo));/*TODO: liberar estos semaforos al final*/
-	new->nombre = strdup(nombre);
-	new->valor = strdup(valor);
-	return new;
-}
-stSharedVar *crear_sharedVar(char *nombre) {
-	stSharedVar *new = malloc(sizeof(stSharedVar));/*TODO: liberar estas sharedVar al final*/
-	new->nombre = strdup(nombre);
-	return new;
-}
+
+
 void monitor_configuracion(stEstado* info) {
 	char buffer[BUF_LEN];
 
@@ -157,7 +150,7 @@ void monitor_configuracion(stEstado* info) {
 	if (length < 0) {
 		perror("read");
 	}
-	loadInfo(info);
+	loadInfo(info,listaSem,listaSharedVars);
 	printf("\nEl archivo de configuracion se ha modificado\n");
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);

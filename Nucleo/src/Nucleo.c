@@ -7,11 +7,11 @@
  ============================================================================
  */
 
-#include "Nucleo.h"
-#include "servicio_memoria.h"
-#include "consumidor_cpu.h"
-#include "nucleo_config.h"
-#include "planificador.h"
+#include "includes/Nucleo.h"
+#include "includes/servicio_memoria.h"
+#include "includes/consumidor_cpu.h"
+#include "includes/nucleo_config.h"
+#include "includes/planificador.h"
 
 /*
  ============================================================================
@@ -96,14 +96,7 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	t_metadata_program *unPrograma;
 	stPCB *unPCB;
-	t_paquete paquete;
 	t_UMCConfig UMCConfig;
-	stPageIni *unInicioUMC;
-
-	stIndiceStack *indiceStack;
-	stPosicion *unArgumento;
-	stVars *unaVariable;
-
 	pidCounter = 0;
 
 	int metadataSize = 0;
@@ -112,9 +105,12 @@ int main(int argc, char *argv[]) {
 
 	char* temp_file = "nucleo.log";
 
-	/*Inicializamos las colas del planificador*/
+	/*Inicializacion de las colas del planificador*/
 	colaReady = queue_create();
 	listaBlock = list_create();
+
+	listaSem =list_create();
+	listaSharedVars = list_create();
 
 	int unCliente = 0, unSocket;
 	int maximoAnterior = 0;
@@ -122,7 +118,7 @@ int main(int argc, char *argv[]) {
 
 	int agregarSock;
 
-	pthread_t p_thread, p_threadCpu, p_threadProductor;
+	pthread_t p_thread, p_threadCpu;
 
 	printf("----------------------------------Elestac------------------------------------\n");
 	printf("-----------------------------------Nucleo------------------------------------\n");
@@ -134,7 +130,7 @@ int main(int argc, char *argv[]) {
 
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
-	loadInfo(&elEstadoActual);
+	loadInfo(&elEstadoActual,&listaSem,&listaSharedVars);
 	printf("OK\n");
 	log_info("Configuracion cargada satisfactoriamente...");
 
@@ -158,7 +154,7 @@ int main(int argc, char *argv[]) {
 	elEstadoActual.fdMax = elEstadoActual.sockEscuchador;
 
 	/*Conexion con el proceso UMC*/
-	printf("Estableciendo conexion con la UMC...");
+	printf("Estableciendo conexion con la UMC...\n");
 	elEstadoActual.sockUmc = conectar(elEstadoActual.ipUmc, elEstadoActual.puertoUmc);
 
 	if (elEstadoActual.sockUmc != -1) {
@@ -303,35 +299,9 @@ int main(int argc, char *argv[]) {
 									unPCB->cantidadPaginas = calcular_cantidad_paginas(unMensaje.header.largo,UMCConfig.tamanioPagina) + elEstadoActual.stackSize;
 									unPCB->metadata_program = (t_metadata_program *) malloc(metadataSize);
 									memcpy(unPCB->metadata_program, unPrograma, metadataSize);
-									unPCB->stack = (t_list*) malloc(sizeof(t_list) + sizeof(stIndiceStack));
 									unPCB->stack = list_create();
 
-									/*Datos de prueba*/
-									indiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
-									indiceStack->argumentos = (t_list*) malloc(sizeof(t_list) + sizeof(stPosicion));
-									indiceStack->argumentos = list_create();
-									unArgumento = (stPosicion*) malloc(sizeof(stPosicion));
-									unArgumento->pagina = 0;
-									unArgumento->offset = 0;
-									unArgumento->size = 4;
-									list_add(indiceStack->argumentos, unArgumento);
-
-									indiceStack->variables = list_create();
-									unaVariable = (stVars*) malloc(sizeof(stVars));
-									unaVariable->id = 1;
-									unaVariable->posicion_memoria.pagina = 6996;
-									unaVariable->posicion_memoria.offset = 1212;
-									unaVariable->posicion_memoria.size = 123;
-									list_add(indiceStack->variables, unaVariable);
-
-									indiceStack->pos = 6;
-									indiceStack->retPosicion = 1;
-									indiceStack->retVar.pagina = 4;
-									indiceStack->retVar.offset = 121;
-									indiceStack->retVar.size = 960;
-									list_add(unPCB->stack, indiceStack);
 								}
-
 								/*TODO: Verificar UMC*/
 								if (inicializar_programa(unPCB->pid, unPCB->cantidadPaginas, unMensaje.contenido,
 										elEstadoActual.sockUmc) == EXIT_FAILURE) {

@@ -4,7 +4,7 @@
  *  Created on: 6/6/2016
  *      Author: utnso
  */
-#include "planificador.h"
+#include "includes/planificador.h"
 
 int numInQ = 0;										// number of items in the queue
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;	// mutual exclusion lock

@@ -166,49 +166,20 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	stHeaderIPC *unHeaderIPC;
-	stMensajeIPC unMensaje;
-	t_paquete paquete;
-	stSharedVar* sharedVar;
-	int type, offset=0;
-
+	stMensajeIPC unMensajeIPC;
 	t_valor_variable resultado;
 
 	unHeaderIPC = nuevoHeaderIPC(OBTENERVALOR);
-
-	unMensaje.contenido = &variable;
-
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
-
-	sharedVar->nombre = variable;
-	sharedVar->valor = 0;
-
-	crear_paquete(&paquete, OBTENERVALOR);
-	serializar_campo(&paquete, &offset, sharedVar, sizeof(stSharedVar));
-
-
-
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el SharedVar al Nucleo.");
+	unHeaderIPC = strlen(variable)+1;
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderIPC,(char)variable)){
+		printf("No se pudo enviar la variable %s",(char)variable);
 	}
 
-	recibir_paquete (configuracionInicial.sockNucleo, &paquete);
-
-	type = obtener_paquete_type(&paquete);
-
-	if (type != OBTENERVALOR)
-	{
-		log_error("Fallo al recibir paquete del nucleo.");
-		free_paquete(&paquete);
-		return (-1);
+	if(!recibirMensajeIPC(configuracionInicial.sockNucleo,unMensajeIPC)){
+		printf("No se pudo recibir la variable %s",(char*)variable);
 	}
 
-	deserializar_pcb(&sharedVar , &paquete);
-
-	resultado = sharedVar->valor;
-
-	free_paquete(&paquete);
-
-	liberarHeaderIPC(unHeaderIPC);
+	resultado = atoi(unMensajeIPC.contenido);
 
 	return resultado;
 }
@@ -218,31 +189,39 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	stHeaderIPC *unHeaderIPC;
 	t_paquete paquete;
 	stSharedVar sharedVar;
+	t_valor_variable resultado;
 	int offset = 0;
 
-
-	t_valor_variable resultado;
-
 	unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
-
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
-
-	sharedVar.nombre = &variable;
-	sharedVar.valor = valor;
-
-	crear_paquete(&paquete, GRABARVALOR);
-
-	serializar_campo(&paquete, &offset, &sharedVar, sizeof(stSharedVar));
-
-	serializar_header(&paquete);
-
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el SharedVar al Nucleo.");
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC)){
+		printf("No se pudo enviar el mensaje para grabar el valor");
 	}
 
-	free_paquete(&paquete);
+	if(unHeaderIPC->tipo== OK){
 
-	liberarHeaderIPC(unHeaderIPC);
+		unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
+		if(!enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC)){
+			printf("No se pudo enviar el mensaje para grabar el valor");
+		}
+
+		sharedVar.nombre = &variable;
+		sharedVar.valor = valor;
+
+		crear_paquete(&paquete, GRABARVALOR);
+		serializar_campo(&paquete, &offset, &sharedVar, sizeof(stSharedVar));
+		serializar_header(&paquete);
+
+		if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+			log_error("No se pudo enviar el SharedVar al Nucleo.");
+		}
+
+		free_paquete(&paquete);
+
+		liberarHeaderIPC(unHeaderIPC);
+	}else{
+		/*TODO: Esto ver de manejarlo, tenemos que hacer validaciones en caso de que no se puedan enviar los mensajes*/
+		return -1;
+	}
 
 	return resultado;
 }
@@ -363,8 +342,16 @@ void wait(t_nombre_semaforo identificador_semaforo){
 		log_error("No se pudo enviar el paquete para primitiva WAIT");
 	}
 
-	free_paquete(&paquete);
+	if (!recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)) {
+		log_error("CPU error - No se pudo recibir el mensaje");
+		error = 1;
+	}
 
+	if(unHeaderPrimitiva->tipo==ERROR){
+		/*TODO: Hacer manejo en caso de error*/
+	}
+
+	free_paquete(&paquete);
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
 
