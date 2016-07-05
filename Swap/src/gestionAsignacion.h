@@ -29,7 +29,7 @@ typedef struct{
 /**
  * Inicializa la gestion de asignacion del espacio en la particion Swap
  */
-int initGestionAsignacion(unsigned long int cantidadSectores, unsigned long int retardo);
+int initGestionAsignacion(t_swap_config *);
 
 /**
  * Termina la gestion de asignacion del espacio en la particion Swap liberando

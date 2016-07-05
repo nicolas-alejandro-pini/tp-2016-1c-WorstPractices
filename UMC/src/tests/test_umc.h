@@ -26,6 +26,7 @@ void test_creacion_tlb();
 void test_reemplazo_tlb();
 void test_busqueda_tlb();
 void test_estructuras_memoria();
+void test_flush_tlb();
 
 // Auxiliares
 void thread_cpu(void *arg);

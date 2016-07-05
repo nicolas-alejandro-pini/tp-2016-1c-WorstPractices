@@ -11,7 +11,9 @@
 #include <stdbool.h>
 #include <unistd.h>
 
+#include "Swap.h"
 #include "gestionAsignacion.h"
+#include "particionSwap.h"
 #include "commons/bitarray.h"
 #include "commons/log.h"
 #include "commons/collections/list.h"
@@ -23,24 +25,24 @@ char *bitArrayBuffer;
 //Lista de asignaciones
 t_list *assignmentList;
 
-unsigned long int retardoCompactacion;
+t_swap_config *loaded_config;
 
 /**
  * Inicializa la gestion de asignacion del espacio en la particion Swap
  */
-int initGestionAsignacion(unsigned long int cantidadSectores, unsigned long int retardo){
+int initGestionAsignacion(t_swap_config * config){
 
-	retardoCompactacion = retardo;
+	loaded_config = config;
 
 	//Reservo espacio necesario para el bitmap
-	bitArrayBuffer = malloc(cantidadSectores);
+	bitArrayBuffer = malloc(config->cantidadPaginas);
 	if(bitArrayBuffer == NULL){
 		log_error("Error al asignar espacio en memoria para el BitMap");
 		return -1;
 	}
 
 	//Creo el bit array
-	bitArray = bitarray_create(bitArrayBuffer, cantidadSectores);
+	bitArray = bitarray_create(bitArrayBuffer, config->cantidadPaginas);
 	if(bitArray == NULL){
 		log_error("Error al crear el BitMap");
 		return -2;
@@ -115,17 +117,146 @@ unsigned long int cantidadSectoresLibresContiguosMaxima(t_bloque_libre *info_blo
 }
 
 /**
+ * Busca la información de asignación realizada a un sector dado
+ *
+ */
+t_asignacion * buscarAsignacionSector(unsigned long int nroSector){
+	int cantAsignaciones = list_size(assignmentList);
+	unsigned long int i;
+	t_asignacion *asignacion;
+
+	for(i = 0; i < cantAsignaciones; i++){
+		asignacion = list_get(assignmentList, i);
+		if(asignacion->sector == nroSector)
+			return asignacion;
+	}
+
+	return NULL;
+}
+
+/**
  * Compacta la particion SWAP para crear espacio libre contiguo para nuevos procesos
  */
 int compactarParticionSwap(){
+
+	off_t offset;
+	off_t proximoSectorOcupado;
+
+	t_asignacion * asignacion;
+
+	char *buffer = malloc(loaded_config->tamanioPagina);
+
+	for(offset = 0; offset < bitArray->size; offset++){
+		if(bitarray_test_bit(bitArray, offset) == false){
+
+			//Encontré un sector libre, busco el próximo ocupado
+
+			proximoSectorOcupado = offset + 1;
+			while(proximoSectorOcupado < bitArray->size)
+				if(bitarray_test_bit(bitArray, proximoSectorOcupado) == false)
+					proximoSectorOcupado++;
+
+			//Si llegué al final de mi particion termino el procedimiento
+			if(proximoSectorOcupado == bitArray->size)
+				break;
+
+			//-------------------------------
+			// 1. actualizo la partición SWAP
+			//-------------------------------
+
+			//Tengo que traer al offset actual el próximo ocupado
+			if(leerSector(buffer, proximoSectorOcupado) < 0){
+				//Error al leer la particion SWAP
+				log_error("Error al leer la particion SWAP");
+				free(buffer);
+				return -1;
+			}
+
+			if(escribirSector(buffer, offset) < 0){
+				//Error al escribir en el offset actual
+				log_error("Error al escribir la particion SWAP");
+				free(buffer);
+				return -1;
+			}
+
+
+			//------------------------------------
+			// 2. Actualizo la tabla de asignación
+			//------------------------------------
+
+			asignacion = buscarAsignacionSector(proximoSectorOcupado);
+			if(asignacion == NULL){
+				log_error("Error al acceder a la tabla de asignaciones");
+				free(buffer);
+				return -1;
+			}
+
+			//Realizo el cambio del sector
+			asignacion->sector = offset;
+
+
+			//--------------------------
+			// 3. Actualizo el bit array
+			//--------------------------
+
+			//Marco el actual como ocupado
+			bitarray_set_bit(bitArray, offset);
+
+			//Marco el previamente ocupado como libre
+			bitarray_clean_bit(bitArray, proximoSectorOcupado);
+
+		}
+	}
+
+
+	//Libero lo alocado
+	free(buffer);
 	return 0;
 }
 
 /**
- * Reserva los sectores para el nuevo proceso
+ * Verifica la existencia del proceso en la tabla de asignacion
+ *
+ */
+unsigned long int buscarIndicePrimeraAsignacionProceso(unsigned long int pId){
+	int cantAsignaciones = list_size(assignmentList);
+	unsigned long int i;
+	t_asignacion *asignacion;
+
+	for(i = 0; i < cantAsignaciones; i++){
+		asignacion = list_get(assignmentList, i);
+		if(asignacion->pid == pId)
+			break;
+	}
+
+	if(i == cantAsignaciones)
+		return -1;
+
+	return i;
+}
+
+/**
+ * Reserva los sectores para el nuevo proceso, previamente se realizaron los controles necesarios
  *
  */
 int reservarEspacioProceso(unsigned long int pid, unsigned long int sectorInicial, unsigned long int cantidadSectores){
+
+	unsigned long int nroSector;
+	unsigned long int nroPagina = 0;
+
+	for(nroSector = sectorInicial; nroSector < sectorInicial + cantidadSectores; nroSector++){
+		//Actualizo el bitmap
+		bitarray_set_bit(bitArray, nroSector);
+
+		//Agrego el elemento a la tabla de asignacion
+		t_asignacion *nuevaAsignacion = (t_asignacion *)malloc(sizeof(t_asignacion));
+		nuevaAsignacion->pid = pid;
+		nuevaAsignacion->sector = nroSector;
+		nuevaAsignacion->pagina = nroPagina++;
+
+		list_add(assignmentList, nuevaAsignacion);
+	}
+
 	return 0;
 }
 
@@ -133,6 +264,21 @@ int reservarEspacioProceso(unsigned long int pid, unsigned long int sectorInicia
  * Libera el espacio previamente asignado al proceso
  */
 int liberarEspacioDeProceso(unsigned long int pID){
+
+	unsigned long int i;
+	t_asignacion * asignacion;
+
+	i = buscarIndicePrimeraAsignacionProceso(pID);
+	while(i >= 0){
+
+		//Libero la asignacion realizada
+		asignacion = (t_asignacion *)list_remove(assignmentList, i);
+		bitarray_clean_bit(bitArray, asignacion->sector);
+		free(asignacion);
+
+		//Busco la siguiente
+		i = buscarIndicePrimeraAsignacionProceso(pID);
+	}
 
 	return 0;
 }
@@ -146,28 +292,33 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 
 	t_bloque_libre info_bloque_libre;
 
+	if(buscarIndicePrimeraAsignacionProceso(pID) >= 0){
+		log_error("El proceso al que se desea asignar espacio ya se encuentra en la tabla de asignacion");
+		return -1;
+	}
+
 	//Si la cantidad de paginas requeridas para el PID es mayor a las disponibles totales
 	if(cantidadPaginas > bitArray->size){
 		log_info("La unidad SWAP no posee sectores suficientes para satisfacer la solicitud");
-		return -1;
+		return -2;
 	}
 
 	if(cantidadSectoresLibres() < cantidadPaginas){
 		log_info("La unidad SWAP no posee suficientes sectores libres para satisfacer la solicitud");
-		return -2;
+		return -3;
 	}
 
 	//Vamos a usar Worst Fit para la asignacion de sectores a los procesos
 	if(cantidadSectoresLibresContiguosMaxima(&info_bloque_libre) < cantidadPaginas){
 		//Debo compactar, luego tengo que poder realizar la asignacion
 		compactarParticionSwap();
-		usleep(retardoCompactacion);
+		usleep(loaded_config->retardoCompactacion);
 		cantidadSectoresLibresContiguosMaxima(&info_bloque_libre);
 	}
 
 	if(reservarEspacioProceso(pID, info_bloque_libre.offset, cantidadPaginas) < 0){
 		log_error("Ocurrio un error al reservar el espacio en el SWAP para el proceso con PID: %d", pID);
-		return -3;
+		return -4;
 	}
 
 	log_info("Asignacion de paginas satisfactoria al proceso(PID %ul): %ul->%ul",
