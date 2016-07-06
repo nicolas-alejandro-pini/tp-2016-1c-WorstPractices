@@ -111,7 +111,7 @@ void consumidor_cpu(void *args) {
 					continue;
 				}
 
-				deserializar_pcb(&unPCB , &paquete);
+				deserializar_pcb(unPCB , &paquete);
 				free_paquete(&paquete);
 
 				/*Lo alojamos en la cola de ready para que vuelva a ser tomado por algun CPU*/
@@ -127,23 +127,29 @@ void consumidor_cpu(void *args) {
 				/*Se cayo el CPU, se debe replanificar, (continue) */
 				break;
 			case OBTENERVALOR:
+				printf("\n--------------------------------------\n");
+				printf("Nuevo pedido de variable compartida...\n");
 				/*Valor de la variable compartida, devolver el valor para que el CPU siga ejecutando*/
-//				if (!recibirContenido(current_args->socketCpu, unMensajeIPC->contenido,unHeaderIPC->largo)) {
-//					log_error("CPU error - No se pudo recibir la variable");
-//					error = 1;
-//					continue;
-//				}
-//
-//				/*TODO: Falta testear*/
-//				unaSharedVar = obtener_shared_var(sharedVars, unMensajeIPC->contenido);
-//				if(!enviarMensajeIPC(current_args->socketCpu),unHeaderIPC,unaSharedVar->valor){
-//					log_error("CPU error - No se pudo enviar el valor la variable");
-//					error = 1;
-//					continue;
-//				}
+				if (!recibirContenido(current_args->socketCpu, unMensajeIPC.contenido,unHeaderIPC->largo)) {
+					log_error("CPU error - No se pudo recibir la variable");
+					error = 1;
+					continue;
+				}
 
+				/*TODO: Falta testear*/
+				unaSharedVar = obtener_shared_var(listaSharedVars, unMensajeIPC.contenido);
+				if(!enviarMensajeIPC(current_args->socketCpu,unHeaderIPC,(char*)unaSharedVar->valor)){
+					log_error("CPU error - No se pudo enviar el valor la variable");
+					error = 1;
+					continue;
+				}
+				printf("Se devolvio el valor [%d] de la variable compartida [%s]\n",unaSharedVar->nombre,unaSharedVar->valor);
+				printf("\n--------------------------------------\n");
 				break;
+
 			case GRABARVALOR:
+				printf("\n--------------------------------------\n");
+				printf("Nuevo pedido de actualizacion de variable compartida\n");
 				/*Me pasa la variable compartida y el valor*/
 				unHeaderIPC = nuevoHeaderIPC(OK);
 				if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
@@ -152,12 +158,23 @@ void consumidor_cpu(void *args) {
 					continue;
 				}
 
-				/*Recibimos el paquete*/
+				offset = 0;
+				if (recibir_paquete(current_args->socketCpu, &paquete)) {
+					log_error("No se pudo recibir el paquete\n");
+					error = 1;
+					continue;
+				}
 
+				deserializar_campo(&paquete, &offset, &unaSharedVar, sizeof(stSharedVar));
+				grabar_shared_var(listaSharedVars,unaSharedVar->nombre,unaSharedVar->valor);
 
-
+				printf("Se actualizo con el valor [%d] de la variable compartida [%s]\n",unaSharedVar->nombre,unaSharedVar->valor);
+				printf("\n--------------------------------------\n");
+				free_paquete(&paquete);
 				break;
 			case WAIT:
+				printf("\n--------------------------------------\n");
+				printf("Nuevo pedido de wait de semaforo ");
 				/*Wait del semaforo que pasa por parametro*/
 				offset = 0;
 				if (recibir_paquete(current_args->socketCpu, &paquete)) {
@@ -168,6 +185,7 @@ void consumidor_cpu(void *args) {
 
 				deserializar_campo(&paquete, &offset, &identificador_semaforo, sizeof(identificador_semaforo));
 				/*TODO: Falta testear*/
+				printf("%s\n",identificador_semaforo);
 				if(wait_semaforo(listaSem,identificador_semaforo)== EXIT_FAILURE){
 					unHeaderIPC = nuevoHeaderIPC(ERROR);
 					if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
@@ -176,20 +194,14 @@ void consumidor_cpu(void *args) {
 						continue;
 					}
 				}
-
-				/*Envio confirmacion al CPU*/
-				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
-					log_error("CPU error - No se pudo enviar header");
-					error = 1;
-					continue;
-				}
-
+				printf("\n--------------------------------------\n");
 				free_paquete(&paquete);
 
 				break;
 			case SIGNAL:
 				/*Signal del semaforo que pasa por parametro*/
+				printf("\n--------------------------------------\n");
+				printf("Nuevo pedido de signal de semaforo ");
 				offset = 0;
 				if (recibir_paquete(current_args->socketCpu, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
@@ -209,14 +221,7 @@ void consumidor_cpu(void *args) {
 					}
 				}
 
-				/*Envio confirmacion al CPU*/
-				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
-					log_error("CPU error - No se pudo enviar header");
-					error = 1;
-					continue;
-				}
-
+				printf("\n--------------------------------------\n");
 				free_paquete(&paquete);
 				break;
 

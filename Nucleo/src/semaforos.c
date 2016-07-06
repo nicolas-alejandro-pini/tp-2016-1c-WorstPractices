@@ -44,6 +44,7 @@ int wait_semaforo(t_list *lista_semaforos, char* nombre_semaforo) {
 
 	pthread_mutex_lock(&(unSemaforo->mutex));
 	count = unSemaforo->count -1;
+	printf("Valor de count [%d]",count);
 	if(count<0){
 		pthread_cond_wait(&unSemaforo->cond, &unSemaforo->mutex);
 	}
@@ -67,6 +68,7 @@ int signal_semaforo(t_list *lista_semaforos, char* nombre_semaforo){
 	}
 	pthread_mutex_lock(&unSemaforo->mutex);
 	unSemaforo->count++;
+	printf("Valor de count [%d]",unSemaforo->count);
 	pthread_cond_broadcast(&unSemaforo->cond);
 	pthread_mutex_unlock(&unSemaforo->mutex);
 	return EXIT_SUCCESS;

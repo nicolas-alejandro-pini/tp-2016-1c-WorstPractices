@@ -175,7 +175,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 		printf("No se pudo enviar la variable %s",(char)variable);
 	}
 
-	if(!recibirMensajeIPC(configuracionInicial.sockNucleo,unMensajeIPC)){
+	if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensajeIPC)){
 		printf("No se pudo recibir la variable %s",(char*)variable);
 	}
 
@@ -198,11 +198,6 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	}
 
 	if(unHeaderIPC->tipo== OK){
-
-		unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
-		if(!enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC)){
-			printf("No se pudo enviar el mensaje para grabar el valor");
-		}
 
 		sharedVar.nombre = &variable;
 		sharedVar.valor = valor;
@@ -340,15 +335,6 @@ void wait(t_nombre_semaforo identificador_semaforo){
 
 	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva WAIT");
-	}
-
-	if (!recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)) {
-		log_error("CPU error - No se pudo recibir el mensaje");
-		error = 1;
-	}
-
-	if(unHeaderPrimitiva->tipo==ERROR){
-		/*TODO: Hacer manejo en caso de error*/
 	}
 
 	free_paquete(&paquete);
@@ -637,7 +623,7 @@ int cargarPCB(void){
  */
 int calcularPaginaFisica (int paginaLogica){
 
-	int paginaFisica = unPCB->paginaInicial;
+	int paginaFisica = 0;
 	int i;
 
 	for (i=1; paginaLogica > i;i++)
