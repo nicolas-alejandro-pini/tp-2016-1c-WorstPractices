@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr addressAceptado;
 	int maximoAnterior;
 	char enviolog[TAMDATOS];
-	char elsocket[10];
+	//char elsocket[10];
 	int agregarSock;
 	pthread_attr_t attr;
 	pthread_t tid;

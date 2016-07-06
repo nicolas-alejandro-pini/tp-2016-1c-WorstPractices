@@ -71,11 +71,11 @@ void *inicializarPrograma(stIni* ini){
 }
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
-	uint16_t resTLB, resTabla, frameBuscado, marco;
+	uint16_t resTLB, resTabla, *frameBuscado;
 	void *leido, *bytesLeidos, *pos;
 	stRegistroTLB stTLB;
 	stRegistroTP regTP;
-	int hayTLB;
+	int hayTLB, ret;
 
 	/* si esta disponible cache*/
 	if ((hayTLB = estaActivadaTLB())== OK){
@@ -89,7 +89,7 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 	if(resTLB != 0 || resTabla != 0){
 
 			// acceder a memoria con el resultado encontrado en cache
-			pos = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize);
+			pos = memoriaPrincipal+((*frameBuscado-1)*losParametros.frameSize);
 			leido = leerMemoria(pos, unaLectura->size);
 
 			// con el marco obtenido separo los bytes que se pidieron leer
@@ -112,10 +112,14 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
 		leido = ejecutarPageFault(pid, unaLectura->pagina, hayTLB && resTLB!=0);
 
-		// con la pagina obtenida separo los bytes que se pidieron leer
-		bytesLeidos = calloc(1, unaLectura->size);
-		memcpy(bytesLeidos,leido+(unaLectura->offset),unaLectura->size);
+		if(leido!=NULL){
 
+			// con la pagina obtenida separo los bytes que se pidieron leer
+			bytesLeidos = calloc(1, unaLectura->size);
+			memcpy(bytesLeidos,leido+(unaLectura->offset),unaLectura->size);
+			ret=OK;
+		}else
+			ret=ERROR;
 		//envio la respuesta de la lectura a la CPU
 		if(!enviarMensajeIPC(socketCPU,nuevoHeaderIPC(OK),bytesLeidos)){
 			log_error("No se pudo enviar el MensajeIPC");
@@ -129,12 +133,12 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
 }
 void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socketCPU){
-	uint16_t resTLB, resTabla, *frameBuscado, marco;
+	uint16_t resTLB, resTabla, *frameBuscado;
 	void *leido;
 	uint16_t *posicion;
 	stRegistroTLB stTLB;
 	stRegistroTP regTP, *registro;
-	int hayTLB;
+	int hayTLB, ret;
 
 	/* si esta disponible cache*/
 	if ((hayTLB = estaActivadaTLB())== OK){
@@ -148,7 +152,7 @@ void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socke
 	if(resTLB != 0 || resTabla != 0){
 
 		// en el marco obtenido indico posicion para escribir los bytes pedidos
-		posicion = frameBuscado+unaEscritura->offset;
+		posicion = ((*frameBuscado)*losParametros.frameSize)+unaEscritura->offset;
 		escribirMemoria(posicion, unaEscritura->tamanio, unaEscritura->buffer);
 
 		//envio la respuesta de la Escritura a la CPU
@@ -163,6 +167,9 @@ void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socke
 
 		leido = ejecutarPageFault(pid, unaEscritura->nroPagina, estaActivadaTLB() && resTLB!=0);
 
+		if(leido!=NULL){
+
+
 		// busco en TLB, deberia estar porque page fault actulizo
 		resTLB = buscarEnTLB(pid, unaEscritura->nroPagina, &frameBuscado);
 
@@ -171,11 +178,15 @@ void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socke
 		registro->bitModificado=1;
 
 		// en la pagina obtenida escribo los bytes que se pidieron
-		posicion = frameBuscado+unaEscritura->offset;
+		posicion = ((*frameBuscado)*losParametros.frameSize)+unaEscritura->offset;
 		escribirMemoria(posicion, unaEscritura->tamanio, unaEscritura->buffer);
+		ret=OK;
+		}
+		else
+			ret=ERROR;
 
 		//envio la respuesta de la lectura a la CPU
-		if(!enviarHeaderIPC(socketCPU,nuevoHeaderIPC(OK))){
+		if(!enviarHeaderIPC(socketCPU,nuevoHeaderIPC(ERROR))){
 			log_error("No se pudo enviar el MensajeIPC");
 			return;
 		}
@@ -187,8 +198,8 @@ void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socke
 void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB){
 	uint16_t marco;
 	void *leido, *posicion;
-	stRegistroTLB stTLB, *registro;
-	stRegistroTP regTP;
+	stRegistroTLB stTLB;
+	stRegistroTP regTP, *registro;
 
 	// acceder a swap con las pagina que necesito
 	leido = recibirPagina(pagina);
@@ -204,6 +215,10 @@ void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB){
 		regTP.marco = marco;
 		registro = reemplazarValorTabla(pid, pagina, regTP, NULL);
 	}
+
+	if (registro==NULL)
+		// Se rechaza por no haber memoria
+		return registro;
 
 	// cargo en memoria la pagina obtenida
 	posicion = memoriaPrincipal+((registro->marco-1)*losParametros.frameSize);
