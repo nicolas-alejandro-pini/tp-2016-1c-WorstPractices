@@ -135,15 +135,15 @@ static void _log_write_in_level(t_log* logger, t_log_level level, const char* me
                                 thread_id,
                                 message);
 
+		pthread_mutex_lock(&lock);
 		if (logger->file != NULL) {
-			pthread_mutex_lock(&lock);
 			txt_write_in_file(logger->file, buffer);
-			pthread_mutex_unlock(&lock);
 		}
 
 		if (logger->is_active_console) {
 			txt_write_in_stdout(buffer);
 		}
+		pthread_mutex_unlock(&lock);
 
 		free(time);
 		free(message);
