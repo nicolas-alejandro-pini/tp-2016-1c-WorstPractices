@@ -136,8 +136,7 @@ void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socke
 	uint16_t resTLB, resTabla, *frameBuscado;
 	void *leido;
 	uint16_t *posicion;
-	stRegistroTLB stTLB;
-	stRegistroTP regTP, *registro;
+	stRegistroTP *registro;
 	int hayTLB, ret;
 
 	/* si esta disponible cache*/
@@ -202,7 +201,7 @@ void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB){
 	stRegistroTP regTP, *registro;
 
 	// acceder a swap con las pagina que necesito
-	leido = recibirPagina(pagina);
+	leido = recibirPagina(pid, pagina);
 
 	// cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
 	regTP.bit2ndChance=0;
@@ -239,14 +238,14 @@ void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
 
 	// TODO liberarTLB ?
 	//liberarTLB();
-
+    destruirPrograma(pid);
 
 
 }
 void *finalizarProgramaNucleo(stEnd *fin){
 
 	finalizarPrograma(fin->pid, fin->socketResp);
-	pthread_exit(NULL);
+	//pthread_exit(NULL);
 }
 void cambiarContexto(uint16_t pid){
 

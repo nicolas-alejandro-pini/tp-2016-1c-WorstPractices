@@ -145,6 +145,7 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 	stNodoListaTP *nodo;
 	stRegistroTP *retorno;
 	int i, presencias;
+	void *buf;
 
 	nodo = buscarPID(pid);
 // casos nueva pagina desde swap:
@@ -181,6 +182,12 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 				retorno = EjecutarClockModificado(nodo, pagina, registro,flagReemplazoAsignados);
 			else
 				log_error("No hay un algoritmo correctamente cargado");
+			// escribo en memoria secundaria si es necesario
+			if(retorno->bitModificado==1)
+				buf=malloc(losParametros.frameSize);
+				memcpy(buf, memoriaPrincipal+retorno->marco, losParametros.frameSize);
+				enviarPagina(pid, pagina, buf);
+
 		}
 	}
 
