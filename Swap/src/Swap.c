@@ -74,6 +74,15 @@ int main(void) {
     	return EXIT_FAILURE;
     }
 
+    //Creo la gestión de asignación
+    if(initGestionAsignacion(&loaded_config) < 0){
+    	//Error al arrancar la gestión de asignación de la partición SWAP
+    	log_error("Error al arrancar la gestion de asignacion de la partición SWAP");
+        log_destroy(logger);
+        config_destroy(config);
+    	return EXIT_FAILURE;
+    }
+
     //Creo el socket de escucha
     srvSock = escuchar(loaded_config.puertoEscucha);
     if(srvSock == -1){
@@ -118,22 +127,22 @@ int main(void) {
             	//Tratamiento de los diferentes mensajes desde la UMC
             	switch(ipcHeader->tipo){
 
-            	case INICIAR_PROGRAMA:
+					case INICIAR_PROGRAMA:
 
-            		break;
+						break;
 
-            	case DESTRUIR_PROGRAMA:
+					case DESTRUIR_PROGRAMA:
 
-            		break;
+						break;
 
-            	case LEER_PAGINA:
+					case LEER_PAGINA:
 
-            		break;
+						break;
 
-            	case ESCRIBIR_PAGINA:
+					case ESCRIBIR_PAGINA:
 
-            		break;
-            	}
+						break;
+					}
 
         	}
         	liberarHeaderIPC(ipcHeader);

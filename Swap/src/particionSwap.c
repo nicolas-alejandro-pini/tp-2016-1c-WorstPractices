@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <commons/log.h>
 #include <stdlib.h>
+#include <string.h>
 
 FILE *diskFile;
 
@@ -19,29 +20,32 @@ unsigned long int tamanioSector;
  */
 int crearParticionSwap(char *nombreArchivo, unsigned long int cantidadPaginas, unsigned long int tamanioPagina){
 
-	char * clearPage = malloc(tamanioPagina);
+	char clearByte = '\0';
+	unsigned long int totalAEscribir;
 
 	//Inicializo la configuracion
 	cantidadSectores = cantidadPaginas;
 	tamanioSector = tamanioPagina;
 
+	unsigned long int aux;
+
 	//Abro el archivo y lo borro si existe
 	diskFile = fopen(nombreArchivo,"w+");
 	if(diskFile == NULL){
 		log_error("Error creando el archivo de disco...");
-		free(clearPage);
 		return -1;
 	}
 
 	//Debo inicializar el archivo: lo cargo con ceros y dimensiono de acuerdo a la configuracion
-	memset(clearPage, '\0', tamanioPagina);
-	if(fwrite(clearPage, tamanioPagina, cantidadPaginas, diskFile) != cantidadPaginas){
-		log_error("Error inicializando el archivo de disco...");
-		free(clearPage);
-		return -2;
+	totalAEscribir = tamanioPagina*cantidadPaginas;
+	while(totalAEscribir-- > 0){
+		aux = fwrite(&clearByte, 1, 1, diskFile);
+		if(aux != 1){
+			log_error("Error inicializando el archivo de disco...");
+			return -2;
+		}
 	}
 
-	free(clearPage);
 	return 0;
 }
 
