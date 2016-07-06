@@ -41,7 +41,8 @@ typedef struct tTLB {
 tTLB *TLB;
 
 
-int buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t **frame);
+uint16_t buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame);
+void flushTLB(uint16_t pid);
 int reemplazarValorTLB(stRegistroTLB registro);
 int crearTLB(uint16_t cantidadRegistros);
 void destruirTLB();

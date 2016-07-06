@@ -40,6 +40,11 @@ typedef struct{
 	int tamanioPagina;
 } __attribute__((packed)) t_UMCConfig;
 
+typedef struct {
+	char* nombre; 		/*Nombre de la variable compartida*/
+	int valor; 			/*Valor de la variable compartida*/
+} __attribute__((packed)) stSharedVar;
+
 
 
 int32_t* serializar_campo(t_paquete *paquete, int32_t *offset, void *campo, int32_t size);

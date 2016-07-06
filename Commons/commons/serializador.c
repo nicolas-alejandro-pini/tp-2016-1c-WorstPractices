@@ -92,9 +92,11 @@ int deserializar_ejemplo(t_UMCConfig *self, t_paquete *paquete){
 int serializar_inicializar_programa(t_paquete *paquete, stPageIni *self) {
 
 	int offset = 0;
+	uint32_t long_prog = strlen(self->programa);
 	serializar_campo(paquete, &offset, &self->processId, sizeof(self->processId));
 	serializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
-	serializar_campo(paquete, &offset, &self->programa, strlen(self->programa+1));
+	serializar_campo(paquete, &offset, &long_prog, sizeof(uint32_t));
+	serializar_campo(paquete, &offset, self->programa, strlen(self->programa));  // char* programa
 
 	// Serializacion del header
 	serializar_header(paquete);
@@ -104,10 +106,13 @@ int serializar_inicializar_programa(t_paquete *paquete, stPageIni *self) {
 
 int deserializar_inicializar_programa(stPageIni *self,t_paquete *paquete) {
 	int offset = 0;
-	//offset = sizeof(t_header) / sizeof(t_buffer); /*Descomentar para probar sin envio*/
+	uint32_t long_prog = 0;
 	deserializar_campo(paquete, &offset, &self->processId, sizeof(self->processId));
 	deserializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
-	deserializar_campo(paquete, &offset, &self->programa, strlen(self->programa+1));
+	deserializar_campo(paquete, &offset, &long_prog, sizeof(uint32_t));
+	self->programa = (char*) malloc(long_prog + 1); // longitud string
+	deserializar_campo(paquete, &offset, self->programa, long_prog);  // char* programa
+	self->programa[long_prog + 1]='\0';
 	return EXIT_SUCCESS;
 }
 
@@ -172,7 +177,7 @@ void serializar_header(t_paquete *paquete){
 
 	// Ordenacion de bytes de red
 	header_net.type = paquete->header.type;   // htons(paquete->header.type); // para uint16_t
-	header_net.length = htons(paquete->header.length);  //htonl(paquete->header.length); // para uint32_t
+	header_net.length = paquete->header.length;  //htonl(paquete->header.length); // para uint32_t
 
 	// Copio header en buffer
 	offset_ = 0;
@@ -184,65 +189,31 @@ void serializar_header(t_paquete *paquete){
 void deserializar_header(t_header *buf_header, int32_t *offset, t_header *header){
 	t_header header_host;
 	header_host.type = buf_header->type; //ntohs(buf_header->type); // para uint16_t
-	header_host.length = ntohs(buf_header->length); //ntohl(buf_header->length); // para uint32_t
+	header_host.length = buf_header->length; //ntohl(buf_header->length); // para uint32_t
 	memcpy(&(header->type), &(header_host.type) , sizeof(header_host.type));
 	memcpy(&(header->length), &(header_host.length), sizeof(header_host.length));
 }
 
 int32_t* serializar_campo(t_paquete *paquete, int32_t *offset, void *campo, int32_t size){
 	int32_t size_header = sizeof(t_header) / sizeof(t_buffer);
-	uint16_t buffer_net, buffer_host;
-	uint32_t buffer_net32, buffer_host32;
 
 	// reservo memoria para el campo
 	paquete->data = realloc(paquete->data, sizeof(t_header) +(*offset)*sizeof(t_buffer) + size);
 	// Actualizo longitud en el header
 	paquete->header.length += size;
 
-	switch(size){
-		case sizeof(uint16_t):
-			memcpy(&buffer_host, campo, size);
-			buffer_net = htons(buffer_host);
-			memcpy(paquete->data + size_header + (*offset), &buffer_net, size);
-			*offset += size / sizeof(t_buffer);
-			break;
-		case sizeof(uint32_t):
-			memcpy(&buffer_host32, campo, size);
-			buffer_net32 = htonl(buffer_host32);
-			memcpy(paquete->data + size_header + (*offset), &buffer_net32, size);
-			*offset += size / sizeof(t_buffer);
-			break;
-		default:
-			// si es una estructura debe llevar el __attribute__((packed))
-			memcpy(paquete->data + size_header + (*offset), campo, size);
-			*offset += size / sizeof(t_buffer);
-			break;
-	}
+	// si es una estructura debe llevar el __attribute__((packed))
+	memcpy(paquete->data + size_header + (*offset), campo, size);
+	*offset += size / sizeof(t_buffer);
+
 	return offset;
 }
 
 int32_t deserializar_campo(t_paquete *paquete, int32_t *offset, void *campo, int32_t size){
-	uint16_t buffer_net, buffer_host;
-	uint32_t buffer_net32, buffer_host32;
+	// si es una estructura debe llevar el __attribute__((packed))
+	memcpy(campo, paquete->data + (*offset), size);
+	*offset += size / sizeof(t_buffer);
 
-	switch(size){
-		case sizeof(uint16_t):
-			memcpy(&buffer_net, paquete->data + (*offset), size);
-			buffer_host = ntohs(buffer_net);
-			memcpy(campo, &buffer_host, size);
-			*offset += size / sizeof(t_buffer);
-			break;
-		case sizeof(uint32_t):
-			memcpy(&buffer_net32, paquete->data + (*offset), size);
-			buffer_host32 = ntohl(buffer_net32);
-			memcpy(campo, &buffer_host32, size);
-			*offset += size / sizeof(t_buffer);
-			break;
-		default:
-			// si es una estructura debe llevar el __attribute__((packed))
-			memcpy(campo, paquete->data + (*offset), size);
-			*offset += size / sizeof(t_buffer);
-	}
 	// offset restante por deserializar
 	return ((paquete->header.length/sizeof(t_buffer)) - (*offset)*sizeof(t_buffer));
 }

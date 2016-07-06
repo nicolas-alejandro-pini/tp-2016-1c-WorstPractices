@@ -50,11 +50,6 @@ typedef struct{
 } stSemaforo;
 
 typedef struct{
-	t_nombre_compartida nombre;		/*Nombre del semaforo*/
-	int valor;						/*Valor del semaforo*/
-} stSharedVar;
-
-typedef struct{
 	char* nombre;	/*Nombre del dispositivo*/
 	int tiempo;		/*Tiempo de espera*/
 } stIO;

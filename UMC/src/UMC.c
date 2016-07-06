@@ -187,9 +187,9 @@ int main(int argc, char *argv[]) {
 		if(strcmp(argv[2], "--cunit")==0)
 			test_unit_umc();
 
-	log_info("-----------------------------------------------------------------------------\n");
-	log_info("------------------------------------UMC--------------------------------------\n");
-	log_info("------------------------------------v1.0-------------------------------------\n\n");
+	printf("-----------------------------------------------------------------------------\n");
+	printf("------------------------------------UMC--------------------------------------\n");
+	printf("------------------------------------v1.0-------------------------------------\n\n");
 
 
 
@@ -261,8 +261,8 @@ int main(int argc, char *argv[]) {
 
 	/* ........................................Ciclo Principal SERVER........................................ */
 
-		log_info(".............................................................................");
-		log_info("..............................Esperando Conexion.............................");
+		printf(".............................................................................\n");
+		printf("..............................Esperando Conexion.............................\n");
 		fflush(stdout);
 
 
@@ -392,12 +392,20 @@ int main(int argc, char *argv[]) {
 									unPageIni = (stPageIni*)malloc(sizeof(stPageIni));
 									deserializar_inicializar_programa(unPageIni,&paquete_stPageIni);
 
+	        	        			if (!enviarHeaderIPC(unCliente, unaCabecera)) {
+										liberarHeaderIPC(unaCabecera);
+										close(unCliente);
+										return -1;
+									}
+
+
 									ini = (stIni*)calloc(1,sizeof(stIni));
 	        	        			ini->socketResp = unCliente;
 	        	        			ini->sPI= unPageIni;
 
 	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);
 
+	        	        			liberarHeaderIPC(unaCabecera);
 	        	        			break;
 
 	        	        		case FINPROGRAMA:

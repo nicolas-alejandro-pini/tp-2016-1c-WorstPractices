@@ -7,6 +7,7 @@
 
 #include <stddef.h>
 #include <commons/log.h>
+#include <stdlib.h>
 
 FILE *diskFile;
 
