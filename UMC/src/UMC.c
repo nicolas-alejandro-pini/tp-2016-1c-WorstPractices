@@ -116,21 +116,34 @@ void cerrarSockets(stParametro *elEstadoActual){
  */
 int swapHandShake (int socket, char* mensaje, int tipoHeader)
 {
-	stMensajeIPC unMensaje;
+	stHeaderIPC unHeader;
 
-	if(!recibirMensajeIPC(socket,&unMensaje)){
+
+	if(!recibirHeaderIPC(socket,&unHeader)){
 		log_error("SOCKET_ERROR - No se recibe un mensaje correcto");
 		fflush(stdout);
 	}
 
-	log_info("HandShake mensaje recibido %d",unMensaje.header.tipo);
+	log_info("HandShake mensaje recibido %d",unHeader.tipo);
 
-	if (unMensaje.header.tipo == QUIENSOS)
+	if (unHeader.tipo == QUIENSOS)
 	{
-		if(!enviarMensajeIPC(socket,nuevoHeaderIPC(tipoHeader),mensaje)){
+		if(!enviarHeaderIPC(socket,&unHeader)){
 			log_error("No se pudo enviar el MensajeIPC");
 			return (-1);
 		}
+		if(!recibirHeaderIPC(socket,&unHeader)){
+			log_error("SOCKET_ERROR - No se recibe un mensaje correcto");
+			fflush(stdout);
+			return (-1);
+		}
+		if (unHeader.tipo != OK){
+			log_error("El handshake no se pudo completar");
+			return (-1);
+		}
+	}else{
+		log_error("El handshake no se pudo completar");
+		return (-1);
 	}
 
 	log_info("HandShake: establecido");

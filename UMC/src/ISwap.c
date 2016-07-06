@@ -7,6 +7,31 @@
 
 #include "ISwap.h"
 
+int inicializarSwap2(stPageIni *st){
+	stHeaderIPC* mensaje;
+
+	mensaje = nuevoHeaderIPC(INICIAR_PROGRAMA);
+	mensaje->largo = 2*sizeof(uint16_t) + strlen(st->programa) + 1;
+
+	enviarHeaderIPC(losParametros.sockSwap, mensaje);
+
+	send(losParametros.sockSwap, &st->processId, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, &st->cantidadPaginas, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, st->programa, strlen(st->programa) + 1, 0);
+
+	recibirHeaderIPC(losParametros.sockSwap, mensaje);
+
+	if(mensaje->tipo == OK){
+
+	} else {
+		//Error al inicializar el programa en el swap
+	}
+
+	liberarHeaderIPC(mensaje);
+
+	return EXIT_SUCCESS;
+}
+
 int inicializarSwap(stPageIni *st){
 
 	t_paquete *paquete;
@@ -18,10 +43,15 @@ int inicializarSwap(stPageIni *st){
 	 * devuelve OK o ERROR
 	 */
 	paquete = calloc(1,sizeof(t_paquete));
-	paquete->data=(void*)st;
-	paquete->header.type=INICIAR_PROGRAMA;
+
+	paquete->header.length = 2*sizeof(uint16_t) + strlen(st->programa) + 1;
+	paquete->header.type = INICIAR_PROGRAMA;
+
+	paquete->data = malloc(paquete->header.length);
+
 	serializar_header(paquete);
 
+	paquete->data=(void*)st;
 	enviar_paquete(losParametros.sockSwap, paquete);
 	respuesta = (stHeaderIPC*)calloc(1,sizeof(stHeader));
 	recibirHeaderIPC(losParametros.sockSwap, respuesta);
