@@ -110,9 +110,9 @@ int deserializar_inicializar_programa(stPageIni *self,t_paquete *paquete) {
 	deserializar_campo(paquete, &offset, &self->processId, sizeof(self->processId));
 	deserializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
 	deserializar_campo(paquete, &offset, &long_prog, sizeof(uint32_t));
-	self->programa = (char*) malloc(long_prog + 1); // longitud string
+	self->programa = malloc(sizeof(char) * (long_prog + 1)); // longitud string
 	deserializar_campo(paquete, &offset, self->programa, long_prog);  // char* programa
-	self->programa[long_prog + 1]='\0';
+	self->programa[long_prog]='\0';
 	return EXIT_SUCCESS;
 }
 
