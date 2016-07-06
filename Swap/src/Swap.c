@@ -74,6 +74,8 @@ int main(void) {
     	return EXIT_FAILURE;
     }
 
+    log_info("Partición SWAP creada satisfactoriamente");
+
     //Creo la gestión de asignación
     if(initGestionAsignacion(&loaded_config) < 0){
     	//Error al arrancar la gestión de asignación de la partición SWAP
@@ -82,6 +84,8 @@ int main(void) {
         config_destroy(config);
     	return EXIT_FAILURE;
     }
+
+    log_info("Gestión de asignación del SWAP inicializada satisfactoriamente");
 
     //Creo el socket de escucha
     srvSock = escuchar(loaded_config.puertoEscucha);
@@ -128,6 +132,8 @@ int main(void) {
             	switch(ipcHeader->tipo){
 
 					case INICIAR_PROGRAMA:
+						//Espero PID(uint16_t), Cantidad paginas (uint16_t), programa (buffer)
+
 
 						break;
 
