@@ -160,8 +160,8 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstad
 
 int main(int argc, char *argv[]) {
 
-	stMensajeIPC *unMensaje;
-	stHeaderIPC *unaCabecera;
+	stMensajeIPC *unMensaje = NULL;
+	stHeaderIPC *unaCabecera = NULL;
 	int unCliente = 0, unSocket;
 	struct sockaddr addressAceptado;
 	int maximoAnterior;
@@ -171,9 +171,9 @@ int main(int argc, char *argv[]) {
 	pthread_attr_t attr;
 	pthread_t tid;
 	char* temp_file = "umc.log";
-	stIni *ini;
+	stIni *ini = NULL;
 	stPageIni *unPageIni;
-	stEnd *end;
+	stEnd *end = NULL;
 	t_paquete paquete_stPageIni;
 
 	memset(&enviolog,'\0',TAMDATOS);
@@ -199,6 +199,11 @@ int main(int argc, char *argv[]) {
 
 		log_info("*****INICIO UMC*****");
 		log_info("Obteniendo configuracion...");
+		if(!argv[1])
+		{
+			log_error("./UMC <umc.conf>\n");
+			exit(-1);
+		}
 		loadInfo(&losParametros,argv[1]);
 		log_info("Configuración OK");
 
@@ -349,7 +354,12 @@ int main(int argc, char *argv[]) {
 
 	/*--------------------------------------Conexion de un cliente existente-------------------------------------*/
 					else {
-						unMensaje->contenido = calloc(1,LONGITUD_MAX_DE_CONTENIDO);
+
+						/* Valido si esta definido unMensaje */
+						if(!unMensaje)
+							unMensaje = malloc(sizeof(stMensajeIPC));
+
+						unMensaje->contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
 						memset(unMensaje->contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
 						if (!recibirMensajeIPC(unSocket,unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
