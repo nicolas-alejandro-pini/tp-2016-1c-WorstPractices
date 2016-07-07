@@ -116,21 +116,34 @@ void cerrarSockets(stParametro *elEstadoActual){
  */
 int swapHandShake (int socket, char* mensaje, int tipoHeader)
 {
-	stMensajeIPC unMensaje;
+	stHeaderIPC unHeader;
 
-	if(!recibirMensajeIPC(socket,&unMensaje)){
+
+	if(!recibirHeaderIPC(socket,&unHeader)){
 		log_error("SOCKET_ERROR - No se recibe un mensaje correcto");
 		fflush(stdout);
 	}
 
-	log_info("HandShake mensaje recibido %d",unMensaje.header.tipo);
+	log_info("HandShake mensaje recibido %d",unHeader.tipo);
 
-	if (unMensaje.header.tipo == QUIENSOS)
+	if (unHeader.tipo == QUIENSOS)
 	{
-		if(!enviarMensajeIPC(socket,nuevoHeaderIPC(tipoHeader),mensaje)){
+		if(!enviarHeaderIPC(socket,&unHeader)){
 			log_error("No se pudo enviar el MensajeIPC");
 			return (-1);
 		}
+		if(!recibirHeaderIPC(socket,&unHeader)){
+			log_error("SOCKET_ERROR - No se recibe un mensaje correcto");
+			fflush(stdout);
+			return (-1);
+		}
+		if (unHeader.tipo != OK){
+			log_error("El handshake no se pudo completar");
+			return (-1);
+		}
+	}else{
+		log_error("El handshake no se pudo completar");
+		return (-1);
 	}
 
 	log_info("HandShake: establecido");
@@ -147,20 +160,20 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstad
 
 int main(int argc, char *argv[]) {
 
-	stMensajeIPC *unMensaje;
-	stHeaderIPC *unaCabecera;
+	stMensajeIPC *unMensaje = NULL;
+	stHeaderIPC *unaCabecera = NULL;
 	int unCliente = 0, unSocket;
 	struct sockaddr addressAceptado;
 	int maximoAnterior;
 	char enviolog[TAMDATOS];
-	char elsocket[10];
+	//char elsocket[10];
 	int agregarSock;
 	pthread_attr_t attr;
 	pthread_t tid;
 	char* temp_file = "umc.log";
-	stIni *ini;
+	stIni *ini = NULL;
 	stPageIni *unPageIni;
-	stEnd *end;
+	stEnd *end = NULL;
 	t_paquete paquete_stPageIni;
 
 	memset(&enviolog,'\0',TAMDATOS);
@@ -186,6 +199,11 @@ int main(int argc, char *argv[]) {
 
 		log_info("*****INICIO UMC*****");
 		log_info("Obteniendo configuracion...");
+		if(!argv[1])
+		{
+			log_error("./UMC <umc.conf>\n");
+			exit(-1);
+		}
 		loadInfo(&losParametros,argv[1]);
 		log_info("Configuración OK");
 
@@ -336,7 +354,12 @@ int main(int argc, char *argv[]) {
 
 	/*--------------------------------------Conexion de un cliente existente-------------------------------------*/
 					else {
-						unMensaje->contenido = calloc(1,LONGITUD_MAX_DE_CONTENIDO);
+
+						/* Valido si esta definido unMensaje */
+						if(!unMensaje)
+							unMensaje = malloc(sizeof(stMensajeIPC));
+
+						unMensaje->contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
 						memset(unMensaje->contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
 						if (!recibirMensajeIPC(unSocket,unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/

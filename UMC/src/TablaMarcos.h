@@ -17,7 +17,9 @@
 #include "Parametros.h"
 
 // con este valor se conserva el valor del marco del la pagina a reemplazar
-#define REEMPLAZAR_MARCO 146ul
+#define REEMPLAZAR_MARCO	97ul
+#define ENCONTRADO			98ul
+#define NO_ENCONTRADO		99ul
 
 typedef struct{
 	// pagina es el indice

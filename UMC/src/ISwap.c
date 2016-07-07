@@ -8,34 +8,30 @@
 #include "ISwap.h"
 
 int inicializarSwap(stPageIni *st){
+	stHeaderIPC* mensaje;
+	int ret=EXIT_SUCCESS;
 
-	t_paquete *paquete;
-	stHeaderIPC* respuesta;
-	int ret;
-	/*
-	 * PASAR pid, cantidad de pagina, y codigo prg
-	 *
-	 * devuelve OK o ERROR
-	 */
-	paquete = calloc(1,sizeof(t_paquete));
-	paquete->data=(void*)st;
-	paquete->header.type=INICIAR_PROGRAMA;
-	serializar_header(paquete);
+	mensaje = nuevoHeaderIPC(INICIAR_PROGRAMA);
+	mensaje->largo = 2*sizeof(uint16_t) + strlen(st->programa) + 1;
 
-	enviar_paquete(losParametros.sockSwap, paquete);
-	respuesta = (stHeaderIPC*)calloc(1,sizeof(stHeader));
-	recibirHeaderIPC(losParametros.sockSwap, respuesta);
+	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
-	if(respuesta->tipo==OK)
-		ret=EXIT_FAILURE;
-	else
-		ret=EXIT_SUCCESS;
+	send(losParametros.sockSwap, &st->processId, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, &st->cantidadPaginas, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, st->programa, strlen(st->programa) + 1, 0);
 
-	free_paquete(paquete);
-	free(respuesta);
+	recibirHeaderIPC(losParametros.sockSwap, mensaje);
+
+	if(mensaje->tipo != OK){
+		log_error("Error al inicializar el proceso %d en el swap", st->processId);
+		ret = EXIT_FAILURE;
+	}
+
+	liberarHeaderIPC(mensaje);
+	free(st->programa);
+	free(st);
 
 	return ret;
-
 }
 
 //define INICIAR_PROGRAMA	141ul /* pid (ui), cantidad paginas (ui), (ul), codigo prg (char*) */
@@ -49,84 +45,85 @@ int inicializarSwap(stPageIni *st){
  *
  * destruirPrograma()<-NULL
  */
+int enviarPagina(uint16_t pid, uint16_t pagina, char* buffer){
+	stHeaderIPC* mensaje;
+	int ret=EXIT_SUCCESS;
 
-int enviarPagina(uint16_t pagina, char* buffer){
-	t_paquete *paquete;
-	stEscrituraPagina* ep;
-	int ret;
-		/*
-		 * PASAR pid, cantidad de pagina, y codigo prg
-		 *
-		 * devuelve OK o ERROR
-		 */
-	paquete = calloc(1,sizeof(t_paquete));
-	ep = calloc(1,sizeof(stEscrituraPagina));
-	paquete->data=ep;
-	paquete->header.type=ESCRIBIR_PAGINA;
-	serializar_header(paquete);
+	mensaje = nuevoHeaderIPC(ESCRIBIR_PAGINA);
+	mensaje->largo = 2*sizeof(uint16_t) + losParametros.frameSize;
 
-	enviar_paquete(losParametros.sockSwap, paquete);
-	//respuesta = (stHeaderIPC*)calloc(1,sizeof(stHeader));
-	//recibirHeaderIPC(losParametros.sockSwap, respuesta);
+	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
-//		if(respuesta->tipo==OK)
-//			ret=EXIT_FAILURE;
-//		else
-//			ret=EXIT_SUCCESS;
+	send(losParametros.sockSwap, pid, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, pagina, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, buffer, losParametros.frameSize, 0);
 
-		free_paquete(paquete);
-		//free(respuesta);
+	recibirHeaderIPC(losParametros.sockSwap, mensaje);
 
-		return EXIT_SUCCESS;
+	if(mensaje->tipo != OK){
+		log_error("Error al escribir pagina %d del proceso %d en el swap", pagina, pid);
+		ret = EXIT_FAILURE;
+	}
+
+	liberarHeaderIPC(mensaje);
+
+	return ret;
 }
 
-char* recibirPagina(uint16_t pagina){
-	t_paquete *paquete;
-	stPosicion * lp;
-	stMensajeIPC* respuesta;
+
+char* recibirPagina(uint16_t pid, uint16_t pagina){
+
 	unsigned char* paginaSwap;
-	int ret;
+	stHeaderIPC* mensaje;
+	int recibidos;
 
-	paquete = calloc(1,sizeof(t_paquete));
-	lp = calloc(1,sizeof(stEscrituraPagina));
-	lp->pagina=pagina;
-	paquete->data=lp;
-	paquete->header.type=LEER_PAGINA;
-	serializar_header(paquete);
+	mensaje = nuevoHeaderIPC(LEER_PAGINA);
+	mensaje->largo = 2*sizeof(uint16_t);
 
-	enviar_paquete(losParametros.sockSwap, paquete);
-	respuesta = (stMensajeIPC*)calloc(1,sizeof(stMensajeIPC));
-	recibirMensajeIPC(losParametros.sockSwap, respuesta);
+	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
-	if(respuesta->header.tipo==OK)
-		ret=EXIT_FAILURE;
-	else
-		ret=EXIT_SUCCESS;
+	send(losParametros.sockSwap, pid, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, pagina, sizeof(uint16_t), 0);
 
-	paginaSwap = calloc(1, respuesta->header.largo);
-	memcpy(paginaSwap, respuesta->contenido, respuesta->header.largo);
+	recibirHeaderIPC(losParametros.sockSwap, mensaje);
 
-	free(lp);
-	free_paquete(paquete);
-	free(respuesta->contenido);
-	free(respuesta);
+	if(mensaje->tipo != OK){
+		log_error("Error al leer pagina %d del proceso %d desde el swap", pagina, pid);
+		liberarHeaderIPC(mensaje);
+		return NULL;
+	}
+	liberarHeaderIPC(mensaje);
+
+	paginaSwap = malloc(losParametros.frameSize);
+	recibidos = recv(losParametros.sockSwap, paginaSwap, losParametros.frameSize, 0);
+
+	if(recibidos!= losParametros.frameSize){
+		log_error("Error al recibir bytes de la pagina %d del proceso %d desde el swap", pagina, pid);
+		return NULL;
+	}
+
 	return paginaSwap;
 }
 
 int destruirPrograma(uint16_t pid){
-	t_paquete *paquete;
-	uint16_t* p;
+	stHeaderIPC* mensaje;
+	int ret=EXIT_SUCCESS;
 
-	paquete = calloc(1,sizeof(t_paquete));
-	p = calloc(1,sizeof(uint16_t));
-	paquete->data=p;
-	paquete->header.type=DESTRUIR_PROGRAMA;
-	serializar_header(paquete);
+	mensaje = nuevoHeaderIPC(DESTRUIR_PROGRAMA);
+	mensaje->largo = sizeof(uint16_t);
 
-	enviar_paquete(losParametros.sockSwap, paquete);
+	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
-	free_paquete(paquete);
-	free(p);
+	send(losParametros.sockSwap, pid, sizeof(uint16_t), 0);
 
-	return EXIT_SUCCESS;
+	recibirHeaderIPC(losParametros.sockSwap, mensaje);
+
+	if(mensaje->tipo != OK){
+		log_error("Error al desruir programa %d en swap", pid);
+		ret=EXIT_FAILURE;
+	}
+
+	liberarHeaderIPC(mensaje);
+
+	return ret;
 }

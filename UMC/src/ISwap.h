@@ -14,8 +14,8 @@
 
 
 int inicializarSwap(stPageIni *st);
-int enviarPagina(uint16_t pagina, char* buffer);
-char* recibirPagina(uint16_t pagina);
+int enviarPagina(uint16_t pid, uint16_t pagina, char* buffer);
+char* recibirPagina(uint16_t pid, uint16_t pagina);
 int destruirPrograma(uint16_t pid);
 
 
