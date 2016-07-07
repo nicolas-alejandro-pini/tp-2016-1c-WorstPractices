@@ -43,5 +43,9 @@ typedef struct {
 
 int serializar_pcb(t_paquete *paquete, stPCB *self);
 int deserializar_pcb(stPCB *self, t_paquete *paquete);
+static void variables_destroy(stVars *self);
+static void argumentos_destroy(stPosicion *self);
+static void pcb_destroy(stPCB *self);
+static void stack_destroy(stIndiceStack *self);
 
 #endif /* COMMONS_PCB_H_ */
