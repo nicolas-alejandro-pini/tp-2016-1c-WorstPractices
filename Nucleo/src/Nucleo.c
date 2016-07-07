@@ -32,7 +32,10 @@ int pid_incrementer() {
 }
 
 int calcular_cantidad_paginas(int size_programa,int tamanio_paginas){
-	return (ceil(size_programa/tamanio_paginas)*10)/10;
+	int cant=0;
+	if(size_programa%tamanio_paginas > 0)
+		cant++;
+	return ((int)(size_programa/tamanio_paginas) + cant);
 }
 
 
@@ -289,6 +292,8 @@ int main(int argc, char *argv[]) {
 								metadataSize = sizeof(t_metadata_program) + (sizeof(t_intructions) * unPrograma->instrucciones_size)
 										+ (sizeof(char) * unPrograma->etiquetas_size);
 
+								int cantidadDePaginasCodigo = calcular_cantidad_paginas(unMensaje.header.largo,UMCConfig.tamanioPagina);
+
 								/***Creacion del PCB***/
 								unPCB = (stPCB*) malloc(sizeof(stPCB));
 								if (unPCB != NULL) {
@@ -296,7 +301,8 @@ int main(int argc, char *argv[]) {
 									unPCB->pc = 0;
 									unPCB->socketConsola = unCliente;
 									unPCB->socketCPU = 0;
-									unPCB->cantidadPaginas = calcular_cantidad_paginas(unMensaje.header.largo,UMCConfig.tamanioPagina) + elEstadoActual.stackSize;
+									unPCB->paginaInicioStack = cantidadDePaginasCodigo + 1;
+									unPCB->cantidadPaginas = cantidadDePaginasCodigo + elEstadoActual.stackSize;
 									unPCB->metadata_program = (t_metadata_program *) malloc(metadataSize);
 									memcpy(unPCB->metadata_program, unPrograma, metadataSize);
 									unPCB->stack = list_create();
