@@ -101,6 +101,10 @@ void consumidor_cpu(void *args) {
 				break;
 			case FINANSISOP:
 				/*Termina de ejecutar el PCB, en este caso deberia moverlo a la cola de EXIT para que luego sea liberada la memoria*/
+
+
+
+
 				break;
 			case QUANTUMFIN:
 
