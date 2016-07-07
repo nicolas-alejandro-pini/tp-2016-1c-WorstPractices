@@ -161,7 +161,7 @@ int main(void) {
 
 						//Llamo a la funcion de asignacion y armo la respuesta
 						ipcHeader->tipo = OK;
-						if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas) < 0){
+						if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
 							log_error("Error asignando espacio a proceso");
 							ipcHeader->tipo = ERROR;
 						}
