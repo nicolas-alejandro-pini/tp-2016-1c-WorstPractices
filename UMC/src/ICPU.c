@@ -21,7 +21,7 @@ void *inicializarPrograma(stIni* ini){
 
 	crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
 
-#undef TEST_SIN_SWAP
+#define TEST_SIN_SWAP
 
 #ifndef TEST_SIN_SWAP
 
@@ -33,30 +33,33 @@ void *inicializarPrograma(stIni* ini){
 	}
 #else
 	// falta agregar rutina para paginar el codigo enviado y asi guardarlo en memoria
-	uint16_t resTLB, resTabla, frameBuscado, marco;
+	uint16_t marco;
 	void *posicion;
-	stRegistroTLB stTLB;
-	stRegistroTP regTP;
-	int hayTLB;
+	stRegistroTP regTP, *registro;
 
-	marco = obtenerMarcoLibre();
-	if(marco == 0)
-		marco = reemplazarValorTabla(pid, pagina, regTP, REEMPLAZAR_MARCO);
-	else{
-		regTP.marco = marco;
-		marco = reemplazarValorTabla(pid, pagina, regTP, NULL);
-	}
+	int pagina;
 
-	// cargo en memoria la pagina obtenida
-	posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
-	escribirMemoria(posicion, losParametros.frameSize, leido);
+	for(pagina=0; pagina<ini->sPI->cantidadPaginas;pagina++){
+		marco = obtenerMarcoLibre();
+		if(marco == 0)
+			registro = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, REEMPLAZAR_MARCO);
+		else{
+			regTP.marco = marco;
+			registro = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, 0);
+		}
+		if(marco==1){
+			// cargo en memoria la pagina obtenida
+			posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
 
-	// cargo en TLB la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
-	if(usarTLB != 0){
-		stTLB.pid = pid;
-		stTLB.pagina = pagina;
-		stTLB.marco = regTP.marco;
-		reemplazarValorTLB(stTLB);
+			escribirMemoria(posicion, losParametros.frameSize, (unsigned char *)ini->sPI->programa);
+		}
+			// cargo en TLB la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
+//			if (usarTLB != 0) {
+//				stTLB.pid = pid;
+//				stTLB.pagina = pagina;
+//				stTLB.marco = regTP.marco;
+//				reemplazarValorTLB(stTLB);
+//			}
 	}
 
 #endif

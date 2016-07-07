@@ -32,6 +32,11 @@ int main(void) {
     int cliSock;
     char terminar = 0;
 
+    uint16_t pID, cantPaginas;
+    char * bufferPagina;
+    char * bufferPrograma;
+    unsigned long int tamanioPrograma;
+
     struct sockaddr sockAddress;
 
     stHeaderIPC *ipcHeader;
@@ -97,6 +102,9 @@ int main(void) {
     	return EXIT_FAILURE;
     }
 
+    //Inicializo el buffer de la pagina, lo voy a utilizar bastante
+    bufferPagina = (char *)malloc(loaded_config.tamanioPagina);
+
     //Arranco a escuchar mensajes
     log_info("Esperando conexiones...");
     while(!terminar){
@@ -134,18 +142,79 @@ int main(void) {
 					case INICIAR_PROGRAMA:
 						//Espero PID(uint16_t), Cantidad paginas (uint16_t), programa (buffer)
 
+						log_info("Nuevo comando recibido: INICIALIZAR PROGRAMA...");
+
+						//Recibo el PID
+						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
+							log_error("Error al recibir el PID del proceso");
+						}
+
+						//Recibo la cantidad de paginas
+						if(sizeof(uint16_t) != recv(cliSock, &cantPaginas, sizeof(uint16_t), 0)){
+							log_error("Error al recibir la cantidad de paginas");
+						}
+
+						//Recibo el programa
+						tamanioPrograma = ipcHeader->largo - 2 * sizeof(uint16_t);
+						bufferPrograma = (char *)malloc(tamanioPrograma);
+						if(recv(cliSock, bufferPrograma, tamanioPrograma, 0) != tamanioPrograma){
+							log_error("Error recibiendo el programa");
+						}
+
+						//Llamo a la funcion de asignacion y armo la respuesta
+						ipcHeader->tipo = OK;
+						if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
+							log_error("Error asignando espacio a proceso");
+							ipcHeader->tipo = ERROR;
+						}
+
+						if(enviarHeaderIPC(cliSock, ipcHeader) != sizeof(stHeaderIPC)){
+							log_error("Error al enviar la respuesta a la UMC");
+						}
 
 						break;
 
 					case DESTRUIR_PROGRAMA:
 
+						log_info("Nuevo comando recibido: DESTRUIR PROGRAMA...");
+
+						//Recibo el PID
+						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
+							log_error("Error al recibir el PID del proceso");
+						}
+
+						//LLamo a la funcion de asignacion y armo la respuesta
+						ipcHeader->tipo = OK;
+						if(liberarEspacioDeProceso((unsigned long int)pID)<0){
+							log_error("Error al liberar el espacio del proceso");
+							ipcHeader->tipo = ERROR;
+						}
+
+						if(enviarHeaderIPC(cliSock, ipcHeader) != sizeof(stHeaderIPC)){
+							log_error("Error al enviar la respuesta a la UMC");
+						}
+
 						break;
 
 					case LEER_PAGINA:
 
+						log_info("Nuevo comando recibido: LEER PAGINA...");
+
+						//Recibo el PID
+						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
+							log_error("Error al recibir el PID del proceso");
+						}
+
+						//Recibo la cantidad de paginas
+						if(sizeof(uint16_t) != recv(cliSock, &cantPaginas, sizeof(uint16_t), 0)){
+							log_error("Error al recibir la cantidad de paginas");
+						}
+
 						break;
 
 					case ESCRIBIR_PAGINA:
+
+						log_info("Nuevo comando recibido: ESCRIBIR PAGINA...");
 
 						break;
 					}
