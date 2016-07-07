@@ -92,8 +92,6 @@ void list_mutex_clean(t_list_mutex *self) {
 	pthread_mutex_unlock(&self->mutex);
 }
 
-/*** FALTAN TESTEAR ***/
-
 void list_mutex_clean_and_destroy_elements(t_list_mutex *self, void(*element_destroyer)(void*)){
 	list_mutex_iterate(self, element_destroyer);
 	list_mutex_clean(self);

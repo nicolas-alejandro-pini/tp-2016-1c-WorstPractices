@@ -26,7 +26,7 @@ void* leerMemoria(void *posicion, uint16_t size){
 
 	return ret;
 }
-void* escribirMemoria(void *posicion, uint16_t size, unsigned char * buffer){
+void* escribirMemoria(void *posicion, uint16_t size, void* buffer){
 
 	pthread_mutex_lock(&memoria);
 	memcpy(posicion, buffer, size);

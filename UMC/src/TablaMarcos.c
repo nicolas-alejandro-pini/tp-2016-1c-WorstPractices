@@ -12,7 +12,7 @@ stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada){
 	stNodoListaTP *nodo;
 	stRegistroTP *registro;
 
-	//nodo = buscarPID(pid);
+	nodo = buscarPID(pid);
 	registro = nodo->tabla+(sizeof(stRegistroTP)*paginaBuscada);
 
 	return registro;
@@ -243,18 +243,32 @@ stNodoListaTP *buscarPID(uint16_t pid){
 }
 
 void liberarTablaPid(uint16_t pid){
-	stNodoListaTP *nodo;
-	stRegistroTP *registro;
+	stNodoListaTP *nodo = NULL;
+	stRegistroTP *registro = NULL;
 	int i;
+	int index = 0;
+
 
 	nodo = buscarPID(pid);
-	for(i=0;i<nodo->size;i++){
-		registro = nodo->tabla+(sizeof(stRegistroTP)*i);
-		liberarMarco(registro->marco);
+	if(nodo){
+
+		for(i=0;i<nodo->size;i++){
+			registro = nodo->tabla+(sizeof(stRegistroTP)*i);
+			liberarMarco(registro->marco);
+		}
+		free(registro);
+
+		// Busco indice de TablaMarcos ( se elimina por index :( )
+		nodo = NULL;
+		i = 0;
+		void _index(stNodoListaTP *list_nodo){
+			if(list_nodo->pid == pid){
+				nodo = list_nodo;
+				index = i;
+			}
+			i++;
+		}
+		if(nodo)
+			list_mutex_remove(TablaMarcos,index);
 	}
-	free(registro);
-	list_remove(TablaMarcos,pid);
-
-	return;
-
 }

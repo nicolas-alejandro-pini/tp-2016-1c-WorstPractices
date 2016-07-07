@@ -18,13 +18,15 @@
 
 void *inicializarPrograma(stIni* ini){
 	stHeaderIPC *unHeader;
+	uint16_t longitud_tabla;
 
 	// Crea tabla con como maximo marcos_x_proceso registros
 	if(ini->sPI->cantidadPaginas > ini->marcos_x_proceso)
-		crearTabla(ini->sPI->processId, ini->marcos_x_proceso);
+		longitud_tabla = ini->marcos_x_proceso;
 	else
-		crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
+		longitud_tabla = ini->sPI->cantidadPaginas;
 
+	crearTabla(ini->sPI->processId, longitud_tabla);
 
 #define TEST_SIN_SWAP
 
@@ -40,31 +42,29 @@ void *inicializarPrograma(stIni* ini){
 	// falta agregar rutina para paginar el codigo enviado y asi guardarlo en memoria
 	uint16_t marco;
 	void *posicion;
-	stRegistroTP regTP, *registro;
+	stRegistroTP* regTP = NULL;
+	stNodoListaTP* nodoListaTP = NULL;
+	// TODO: Simulo pedido del CPU para cargar en memoria el codigo del programa
+	// 		 leido = ejecutarPageFault(pid, unaEscritura->nroPagina, estaActivadaTLB() && resTLB!=0);
+	//       no puedo usar reemplazarValorTabla por enviarpagina que se comunica con el swap
 
-	int pagina;
+	nodoListaTP = buscarPID(ini->sPI->processId);
 
-	for(pagina=0; pagina<ini->sPI->cantidadPaginas;pagina++){
+	int largo_programa = (strlen(ini->sPI->programa) / losParametros.frameSize) +1;
+	char *programa_paginado = calloc(1,sizeof(char)*(losParametros.frameSize*(largo_programa)));
+	memcpy(programa_paginado, ini->sPI->programa, losParametros.frameSize);
+	int pagina = 0;
+
+	while(pagina < nodoListaTP->size && pagina < largo_programa){
 		marco = obtenerMarcoLibre();
-		if(marco == 0)
-			registro = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, REEMPLAZAR_MARCO);
-		else{
-			regTP.marco = marco;
-			registro = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, 0);
-		}
-		if(marco==1){
-			// cargo en memoria la pagina obtenida
-			posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
-
-			escribirMemoria(posicion, losParametros.frameSize, (unsigned char *)ini->sPI->programa);
-		}
-			// cargo en TLB la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
-//			if (usarTLB != 0) {
-//				stTLB.pid = pid;
-//				stTLB.pagina = pagina;
-//				stTLB.marco = regTP.marco;
-//				reemplazarValorTLB(stTLB);
-//			}
+		regTP = nodoListaTP->tabla + sizeof(stRegistroTP)*pagina;
+		regTP->marco = marco;
+		regTP->bit2ndChance=0;
+		regTP->bitModificado=0;
+		regTP->bitPresencia=1;
+		posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
+		escribirMemoria(posicion, (uint16_t) losParametros.frameSize, (void*) programa_paginado + (losParametros.frameSize*pagina));
+		pagina++;
 	}
 
 #endif
