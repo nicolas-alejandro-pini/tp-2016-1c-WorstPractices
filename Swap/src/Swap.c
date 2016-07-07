@@ -34,6 +34,7 @@ int main(void) {
 
     uint16_t pID, cantPaginas;
     char * bufferPagina;
+    uint16_t nroPagina;
     char * bufferPrograma;
     unsigned long int tamanioPrograma;
 
@@ -167,6 +168,7 @@ int main(void) {
 							log_error("Error asignando espacio a proceso");
 							ipcHeader->tipo = ERROR;
 						}
+						free(bufferPrograma);
 
 						if(enviarHeaderIPC(cliSock, ipcHeader) != sizeof(stHeaderIPC)){
 							log_error("Error al enviar la respuesta a la UMC");
@@ -200,14 +202,35 @@ int main(void) {
 
 						log_info("Nuevo comando recibido: LEER PAGINA...");
 
+						ipcHeader->tipo = OK;
 						//Recibo el PID
 						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
 							log_error("Error al recibir el PID del proceso");
+							ipcHeader->tipo = ERROR;
 						}
 
-						//Recibo la cantidad de paginas
-						if(sizeof(uint16_t) != recv(cliSock, &cantPaginas, sizeof(uint16_t), 0)){
-							log_error("Error al recibir la cantidad de paginas");
+						//Recibo el numero de pagina
+						if(sizeof(uint16_t) != recv(cliSock, &nroPagina, sizeof(uint16_t), 0)){
+							log_error("Error al recibir el numero de paginas");
+							ipcHeader->tipo = ERROR;
+						}
+
+						//Leo la pagina del proceso
+						ipcHeader->tipo = OK;
+						if(leerPaginaProceso((unsigned long int)pID, (unsigned long int)nroPagina, bufferPagina) < 0){
+							log_error("Error al leer la pagina desde el SWAP. pID %d #pag %d", pID, nroPagina);
+							ipcHeader->tipo = ERROR;
+						}
+
+						//Envio la respuesta a la UMC
+						ipcHeader->largo = loaded_config.tamanioPagina;
+						if(enviarHeaderIPC(cliSock, ipcHeader) != sizeof(stHeaderIPC)){
+							log_error("Error al enviar la respuesta a la UMC");
+						}else{
+							if(ipcHeader->tipo == OK)
+								if(send(cliSock, bufferPagina, loaded_config.tamanioPagina, 0) != loaded_config.tamanioPagina){
+									log_error("Error escribiendo la respuesta a la UMC");
+								}
 						}
 
 						break;
@@ -215,6 +238,36 @@ int main(void) {
 					case ESCRIBIR_PAGINA:
 
 						log_info("Nuevo comando recibido: ESCRIBIR PAGINA...");
+
+						//Recibo el PID
+						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
+							log_error("Error al recibir el PID del proceso");
+							ipcHeader->tipo = ERROR;
+						}
+
+						//Recibo el numero de pagina
+						if(sizeof(uint16_t) != recv(cliSock, &nroPagina, sizeof(uint16_t), 0)){
+							log_error("Error al recibir el numero de paginas");
+							ipcHeader->tipo = ERROR;
+						}
+
+						if(recv(cliSock, bufferPagina, loaded_config->tamanioPagina, 0) != loaded_config->tamanioPagina){
+							log_error("Error al recibir la pagina");
+							ipcHeader->tipo = ERROR;
+						}
+
+						//Escribo la pagina del proceso
+						ipcHeader->tipo = OK;
+						if(escribirPaginaProceso((unsigned long int)pID, (unsigned long int)nroPagina, bufferPagina) < 0){
+							log_error("Error al escribir la pagina en el SWAP. pID %d #pag %d", pID, nroPagina);
+							ipcHeader->tipo = ERROR;
+						}
+
+						//Envio la respuesta a la UMC
+						ipcHeader->largo = loaded_config.tamanioPagina;
+						if(enviarHeaderIPC(cliSock, ipcHeader) != sizeof(stHeaderIPC)){
+							log_error("Error al enviar la respuesta a la UMC");
+						}
 
 						break;
 					}

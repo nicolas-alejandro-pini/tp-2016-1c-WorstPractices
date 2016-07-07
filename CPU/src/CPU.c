@@ -72,6 +72,11 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	tamanioStack=list_size(unPCB->stack);
 
+	if (tamanioStack == 0){
+		indiceStack->pos = 0;
+	}else
+		indiceStack->pos = indiceStack->pos ++;
+
 	indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
 	indiceStack->variables = list_create();
 	unaVariable = (stVars*)malloc(sizeof(stVars));
@@ -269,11 +274,12 @@ void imprimir(t_valor_variable valor_mostrar){
 void imprimirTexto(char* texto){
 
 	stHeaderIPC* unHeaderPrimitiva;
-	stPosicion posicionVariable;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIRTEXTO);
 
-	enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva,texto);
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva,texto)){
+			printf("No se pudo enviar al Nucleo el texto:  %s",texto);
+	}
 
 	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,&unHeaderPrimitiva)){
 		printf("Error: Fallo la impresion del texto:  %s.\n", texto);
@@ -600,10 +606,6 @@ int cargarPCB(void){
 
 
 
-
-
-
-
 		//log_info("PCB de ANSIPROG cargado. /n");
 		free_paquete(&paquete);
 		return 0;
@@ -670,7 +672,7 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
 		//enviarHeaderIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE));
 
-		enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE),&posicionInstruccion);
+		enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE),(char*)&posicionInstruccion);
 
 		recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje );
 
@@ -704,7 +706,7 @@ int ejecutarInstruccion(void){
 
 	getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
 					unPCB->metadata_program->instrucciones_serializado[programCounter].offset,
-					*instruccion);
+					&instruccion);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
@@ -753,6 +755,23 @@ int devolverPCBalNucleo(void){
 	liberarHeaderIPC(unHeaderIPC);
 
 	return resultado;
+}
+
+int cambiarContextoUMC(void){
+
+	stHeaderIPC *unHeaderIPC;
+
+	unHeaderIPC = nuevoHeaderIPC(CAMBIOCONTEXTO);
+
+	enviarHeaderIPC(configuracionInicial.sockUmc,unHeaderIPC);
+
+	recibirHeaderIPC(configuracionInicial.sockUmc, unHeaderIPC );
+
+	if(unHeaderIPC->tipo != "OK"){
+		return -1;
+	}
+
+	return 0;
 }
 
 /*
@@ -879,13 +898,19 @@ int main(void) {
 					{
 						case EXECANSISOP:
 
-//							log_info("Respondiendo solicitud ANSIPROG...");
+							log_info("Respondiendo solicitud ANSIPROG...");
 
 							unHeaderIPC = nuevoHeaderIPC(OK);
 							enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
 							if (cargarPCB() != -1)
 							{
+								//Cambio el contexto con la UMC
+								if(cambiarContextoUMC() != 0){
+									log_info("Error al cambiar de contexto...");
+									break;
+								}
+
 								/* Obtengo el quantum del programa */
 								quantum = unPCB->quantum;
 
