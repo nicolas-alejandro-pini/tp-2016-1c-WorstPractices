@@ -33,26 +33,25 @@ void *inicializarPrograma(stIni* ini){
 	}
 #else
 	// falta agregar rutina para paginar el codigo enviado y asi guardarlo en memoria
-	uint16_t resTLB, resTabla, frameBuscado, marco;
+	uint16_t marco;
 	void *posicion;
-	stRegistroTLB stTLB;
-	stRegistroTP regTP;
-	int hayTLB;
+	stRegistroTP regTP, *registro;
+
 	int pagina;
 
 	for(pagina=0; pagina<ini->sPI->cantidadPaginas;pagina++){
 		marco = obtenerMarcoLibre();
 		if(marco == 0)
-			marco = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, REEMPLAZAR_MARCO);
+			registro = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, REEMPLAZAR_MARCO);
 		else{
 			regTP.marco = marco;
-			marco = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, NULL);
+			registro = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, 0);
 		}
 		if(marco==1){
 			// cargo en memoria la pagina obtenida
 			posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
 
-			escribirMemoria(posicion, losParametros.frameSize, ini->sPI->programa);
+			escribirMemoria(posicion, losParametros.frameSize, (unsigned char *)ini->sPI->programa);
 		}
 			// cargo en TLB la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
 //			if (usarTLB != 0) {
