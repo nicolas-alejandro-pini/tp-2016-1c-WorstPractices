@@ -85,7 +85,7 @@ void loadInfo(stEstado* info,t_list* lista_semaforos, t_list* lista_shared_vars)
 	}
 
 	if (config_has_property(miConf, "STACK_SIZE")) {
-		info->quantum = config_get_int_value(miConf, "STACK_SIZE");
+		info->stackSize = config_get_int_value(miConf, "STACK_SIZE");
 	} else {
 		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "STACK_SIZE");
 		exit(-2);

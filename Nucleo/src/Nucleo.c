@@ -31,10 +31,17 @@ int pid_incrementer() {
 	return pidCounter;
 }
 
+<<<<<<< HEAD
 int calcular_cantidad_paginas(int size_programa,int tamanio_paginas){
-	return (ceil(size_programa/tamanio_paginas)*10)/10;
+	int cant=0;
+	if(size_programa%tamanio_paginas > 0)
+		cant++;
+	return ((int)(size_programa/tamanio_paginas) + cant);
+=======
+int calcular_cantidad_paginas(int size_programa, int tamanio_paginas) {
+	return (ceil(size_programa / tamanio_paginas) * 10) / 10;
+>>>>>>> 4444f53bd5976b1a2e402d7f9f039131ac1281e4
 }
-
 
 void cerrarSockets(stEstado *elEstadoActual) {
 	int unSocket;
@@ -109,7 +116,8 @@ int main(int argc, char *argv[]) {
 	colaReady = queue_create();
 	listaBlock = list_create();
 
-	listaSem =list_create();
+	/*Inicializacion de las listas del semaforos y variables compartidas*/
+	listaSem = list_create();
 	listaSharedVars = list_create();
 
 	int unCliente = 0, unSocket;
@@ -130,7 +138,7 @@ int main(int argc, char *argv[]) {
 
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
-	loadInfo(&elEstadoActual,&listaSem,&listaSharedVars);
+	loadInfo(&elEstadoActual, &listaSem, &listaSharedVars);
 	printf("OK\n");
 	log_info("Configuracion cargada satisfactoriamente...");
 
@@ -289,6 +297,8 @@ int main(int argc, char *argv[]) {
 								metadataSize = sizeof(t_metadata_program) + (sizeof(t_intructions) * unPrograma->instrucciones_size)
 										+ (sizeof(char) * unPrograma->etiquetas_size);
 
+								int cantidadDePaginasCodigo = calcular_cantidad_paginas(unMensaje.header.largo,UMCConfig.tamanioPagina);
+
 								/***Creacion del PCB***/
 								unPCB = (stPCB*) malloc(sizeof(stPCB));
 								if (unPCB != NULL) {
@@ -296,15 +306,19 @@ int main(int argc, char *argv[]) {
 									unPCB->pc = 0;
 									unPCB->socketConsola = unCliente;
 									unPCB->socketCPU = 0;
-									unPCB->cantidadPaginas = calcular_cantidad_paginas(unMensaje.header.largo,UMCConfig.tamanioPagina) + elEstadoActual.stackSize;
+<<<<<<< HEAD
+									unPCB->paginaInicioStack = cantidadDePaginasCodigo + 1;
+									unPCB->cantidadPaginas = cantidadDePaginasCodigo + elEstadoActual.stackSize;
+=======
+									unPCB->cantidadPaginas = calcular_cantidad_paginas(unMensaje.header.largo, UMCConfig.tamanioPagina) + elEstadoActual.stackSize;
+>>>>>>> 4444f53bd5976b1a2e402d7f9f039131ac1281e4
 									unPCB->metadata_program = (t_metadata_program *) malloc(metadataSize);
 									memcpy(unPCB->metadata_program, unPrograma, metadataSize);
 									unPCB->stack = list_create();
 
 								}
 								/*TODO: Verificar UMC*/
-								if (inicializar_programa(unPCB->pid, unPCB->cantidadPaginas, unMensaje.contenido,
-										elEstadoActual.sockUmc) == EXIT_FAILURE) {
+								if (inicializar_programa(unPCB->pid, unPCB->cantidadPaginas, unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
 									printf("UMC error - No se puede ejecutar el programa por falta de espacio\n");
 									/*TODO: Liberar toda la memoria del pcb!*/
 									FD_CLR(unCliente, &fds_master);

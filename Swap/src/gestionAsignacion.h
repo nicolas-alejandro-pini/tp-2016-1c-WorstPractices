@@ -43,7 +43,7 @@ void destroyGestionAsignacion();
  * En caso de que haya espacio suficiente pero no contiguo compacta.
  * En caso que no haya espacio suficiente devuelve error
  */
-int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPaginas);
+int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPaginas, char *bufferPrograma);
 
 /**
  * Libera el espacio previamente asignado al proceso

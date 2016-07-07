@@ -288,9 +288,10 @@ int liberarEspacioDeProceso(unsigned long int pID){
  * En caso de que haya espacio suficiente pero no contiguo compacta.
  * En caso que no haya espacio suficiente devuelve error
  */
-int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPaginas){
+int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPaginas, char *bufferPrograma){
 
 	t_bloque_libre info_bloque_libre;
+	unsigned long int sectorOffset;
 
 	if(buscarIndicePrimeraAsignacionProceso(pID) >= 0){
 		log_error("El proceso al que se desea asignar espacio ya se encuentra en la tabla de asignacion");
@@ -323,6 +324,19 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 
 	log_info("Asignacion de paginas satisfactoria al proceso(PID %ul): %ul->%ul",
 			pID, info_bloque_libre.offset, info_bloque_libre.offset + cantidadPaginas - 1);
+
+	//Grabo la particion SWAP con el codigo del programa
+	sectorOffset = info_bloque_libre.offset;
+	while(sectorOffset < info_bloque_libre.offset + cantidadPaginas){
+		if(escribirSector(bufferPrograma + (sectorOffset - info_bloque_libre.offset)*loaded_config->tamanioPagina, sectorOffset) < 0){
+			//Error al escribir el sector en disco con el codigo del programa
+			log_error("Error al escribir el codigo del programa en un sector del SWAP, se hace rollback de lo asignado");
+			//Libero lo asignado al programa
+			liberarEspacioDeProceso(pID);
+			return -5;
+		}
+		sectorOffset++;
+	}
 
 	return 0;
 }

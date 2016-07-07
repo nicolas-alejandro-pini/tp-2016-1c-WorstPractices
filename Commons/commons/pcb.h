@@ -31,7 +31,7 @@ typedef struct {
 typedef struct {
 	uint32_t pid; /*Numero identificador del proceso unico en el sistema */
 	uint32_t pc; /*Numero de la próxima instrucción del Programa que se debe ejecutar*/
-	uint32_t posicionStack; /*Posicion a partir de donde comienza el stack*/
+	uint32_t paginaInicioStack; /*Pagina a partir de donde comienza el stack*/
 	uint32_t cantidadPaginas; /*Numero de pagina inicial*/
 	uint32_t socketConsola; /*Numero de socket de la consola a la cual le devolvemos las salidas del programa en ejecucion*/
 	uint32_t socketCPU; /*Numero de socket de la CPU que esta ejecutando en ese momento el pcb*/
@@ -43,5 +43,9 @@ typedef struct {
 
 int serializar_pcb(t_paquete *paquete, stPCB *self);
 int deserializar_pcb(stPCB *self, t_paquete *paquete);
+static void variables_destroy(stVars *self);
+static void argumentos_destroy(stPosicion *self);
+static void pcb_destroy(stPCB *self);
+static void stack_destroy(stIndiceStack *self);
 
 #endif /* COMMONS_PCB_H_ */

@@ -17,7 +17,7 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 	//Serializamos los campos estaticos
 	serializar_campo(paquete, &offset, &self->pid, sizeof(self->pid));
 	serializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
-	serializar_campo(paquete, &offset, &self->posicionStack, sizeof(self->posicionStack));
+	serializar_campo(paquete, &offset, &self->paginaInicioStack, sizeof(self->paginaInicioStack));
 	serializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
 	serializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
 	serializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
@@ -67,7 +67,7 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 	//offset = sizeof(t_header) / sizeof(t_buffer); /*Descomentar para probar sin envio*/
 	deserializar_campo(paquete, &offset, &self->pid, sizeof(self->pid));
 	deserializar_campo(paquete, &offset, &self->pc, sizeof(self->pc));
-	deserializar_campo(paquete, &offset, &self->posicionStack, sizeof(self->posicionStack));
+	deserializar_campo(paquete, &offset, &self->paginaInicioStack, sizeof(self->paginaInicioStack));
 	deserializar_campo(paquete, &offset, &self->cantidadPaginas, sizeof(self->cantidadPaginas));
 	deserializar_campo(paquete, &offset, &self->socketConsola, sizeof(self->socketConsola));
 	deserializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
@@ -108,11 +108,27 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 		list_add(self->stack,indiceStack);
 	}
 
-	// liberar al finalizar PCB
-	// free(self->metadata_program->etiquetas);
-	// free(self->metadata_program->instrucciones_serializado);
-	// free(self->metadata_program);
-
 	return EXIT_SUCCESS;
 }
 
+static void pcb_destroy(stPCB *self) {
+	free(self->metadata_program->etiquetas);
+	free(self->metadata_program->instrucciones_serializado);
+	free(self->metadata_program);
+	list_destroy_and_destroy_elements(self->stack, (void*)stack_destroy);
+    free(self);
+}
+
+static void stack_destroy(stIndiceStack *self) {
+	list_destroy_and_destroy_elements(self->variables, (void*)variables_destroy);
+	list_destroy_and_destroy_elements(self->argumentos, (void*)argumentos_destroy);
+	free(self);
+}
+
+static void variables_destroy(stVars *self) {
+    free(self);
+}
+
+static void argumentos_destroy(stPosicion *self) {
+    free(self);
+}

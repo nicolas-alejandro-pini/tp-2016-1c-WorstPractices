@@ -123,7 +123,9 @@ static void _log_write_in_level(t_log* logger, t_log_level level, const char* me
 		char *message, *time, *buffer;
 		unsigned int thread_id;
 
-                message = string_from_vformat(message_template, list_arguments);
+		pthread_mutex_lock(&lock);
+
+		message = string_from_vformat(message_template, list_arguments);
 		time = temporal_get_string_time();
 		thread_id = process_get_thread_id();
 
@@ -135,15 +137,16 @@ static void _log_write_in_level(t_log* logger, t_log_level level, const char* me
                                 thread_id,
                                 message);
 
+
 		if (logger->file != NULL) {
-			pthread_mutex_lock(&lock);
 			txt_write_in_file(logger->file, buffer);
-			pthread_mutex_unlock(&lock);
 		}
 
 		if (logger->is_active_console) {
 			txt_write_in_stdout(buffer);
 		}
+
+		pthread_mutex_unlock(&lock);
 
 		free(time);
 		free(message);
