@@ -43,7 +43,7 @@ typedef struct{
  */
 
 /* puntero a la tabla de Marcos */
-void *TablaMarcos;
+t_list *TablaMarcos;
 
 int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t **frame);
 stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t Pagina, stRegistroTP registro, uint8_t flag);
