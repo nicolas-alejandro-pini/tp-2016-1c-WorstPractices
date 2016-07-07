@@ -108,11 +108,27 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 		list_add(self->stack,indiceStack);
 	}
 
-	// liberar al finalizar PCB
-	// free(self->metadata_program->etiquetas);
-	// free(self->metadata_program->instrucciones_serializado);
-	// free(self->metadata_program);
-
 	return EXIT_SUCCESS;
 }
 
+static void pcb_destroy(stPCB *self) {
+	free(self->metadata_program->etiquetas);
+	free(self->metadata_program->instrucciones_serializado);
+	free(self->metadata_program);
+	list_destroy_and_destroy_elements(self->stack, (void*)stack_destroy);
+    free(self);
+}
+
+static void stack_destroy(stIndiceStack *self) {
+	list_destroy_and_destroy_elements(self->variables, (void*)variables_destroy);
+	list_destroy_and_destroy_elements(self->argumentos, (void*)argumentos_destroy);
+	free(self);
+}
+
+static void variables_destroy(stVars *self) {
+    free(self);
+}
+
+static void argumentos_destroy(stPosicion *self) {
+    free(self);
+}
