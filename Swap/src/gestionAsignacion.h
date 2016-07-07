@@ -50,4 +50,15 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
  */
 int liberarEspacioDeProceso(unsigned long int pID);
 
+
+/**
+ * Realiza la lectura de la pagina de un proceso
+ */
+int leerPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *bufferPagina);
+
+/**
+ * Realiza la escritura de la pagina de un proceso
+ */
+int escribirPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *bufferPagina);
+
 #endif /* GESTIONASIGNACION_H_ */
