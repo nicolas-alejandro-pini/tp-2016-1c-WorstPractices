@@ -341,3 +341,59 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 	return 0;
 }
 
+/**
+ * Busca la asignacion realizada para un proceso y una pagina
+ */
+t_asignacion buscarAsignacionPaginaProceso(unsigned long int pID, unsigned long int nroPagina){
+	int cantAsignaciones = list_size(assignmentList);
+	unsigned long int i;
+	t_asignacion *asignacion;
+
+	for(i = 0; i < cantAsignaciones; i++){
+		asignacion = list_get(assignmentList, i);
+		if(asignacion->pid == pID && asignacion->pagina == nroPagina)
+			return asignacion;
+	}
+
+	return NULL;
+}
+
+/**
+ * Realiza la lectura de la pagina de un proceso
+ *
+ */
+int leerPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *bufferPagina){
+	t_asignacion *asignacion;
+
+	if((asignacion = buscarAsignacionPaginaProceso(pID, nroPagina)) == NULL){
+		//Asignacion no encontrada
+		return -1;
+	}
+
+	if(leerSector(bufferPagina, asignacion->sector) < 0){
+		//Error al leer el sector desde la particion SWAP
+		return -2;
+	}
+
+	return 0;
+}
+
+/**
+ * Realiza la escritura de la pagina de un proceso
+ *
+ */
+int escribirPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *bufferPagina){
+	t_asignacion *asignacion;
+
+	if((asignacion = buscarAsignacionPaginaProceso(pID, nroPagina)) == NULL){
+		//Asignacion no encontrada
+		return -1;
+	}
+
+	if(escribirSector(bufferPagina, asignacion->sector) < 0){
+		//Error al escribir el sector en la particion SWAP
+		return -2;
+	}
+
+	return 0;
+}
