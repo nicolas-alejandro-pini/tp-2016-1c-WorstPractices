@@ -19,7 +19,12 @@
 void *inicializarPrograma(stIni* ini){
 	stHeaderIPC *unHeader;
 
-	crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
+	// Crea tabla con como maximo marcos_x_proceso registros
+	if(ini->sPI->cantidadPaginas > ini->marcos_x_proceso)
+		crearTabla(ini->sPI->processId, ini->marcos_x_proceso);
+	else
+		crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
+
 
 #define TEST_SIN_SWAP
 

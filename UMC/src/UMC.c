@@ -210,8 +210,9 @@ int main(int argc, char *argv[]) {
 
 
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
-
+		t_list_mutex *TablaMarcos;
 		TablaMarcos = NULL;
+		creatListaDeTablas(TablaMarcos); // TablaMarcos global
 		crearTLB(losParametros.entradasTLB);
 		memoriaPrincipal = inicializarMemoriaDisponible(losParametros.frameSize, losParametros.frames);
 
@@ -410,7 +411,8 @@ int main(int argc, char *argv[]) {
 
 
 									ini = (stIni*)calloc(1,sizeof(stIni));
-	        	        			ini->socketResp = unCliente;
+									ini->marcos_x_proceso = frameByProc;
+									ini->socketResp = unCliente;
 	        	        			ini->sPI= unPageIni;
 
 	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);

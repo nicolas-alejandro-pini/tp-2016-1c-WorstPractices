@@ -12,7 +12,7 @@ stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada){
 	stNodoListaTP *nodo;
 	stRegistroTP *registro;
 
-	nodo = buscarPID(pid);
+	//nodo = buscarPID(pid);
 	registro = nodo->tabla+(sizeof(stRegistroTP)*paginaBuscada);
 
 	return registro;
@@ -147,7 +147,7 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 	int i, presencias;
 	void *buf;
 
-	nodo = buscarPID(pid);
+	//nodo = buscarPID(pid);
 // casos nueva pagina desde swap:
 
 
@@ -193,16 +193,24 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 
 	return retorno;
 }
-int crearTabla(uint16_t processId, uint16_t cantidadPaginas){
 
-	stNodoListaTP *nodo;
-	stRegistroTP *tabla;
+void creatListaDeTablas(){
+	//creo tabla sino existe
+	if(!TablaMarcos)
+		TablaMarcos = list_mutex_create();
+}
+
+int crearTabla(uint16_t processId, uint16_t longitud_tabla){
+
+	stNodoListaTP *nodo = NULL;
+	stRegistroTP *tabla = NULL;
 	int i;
+	int posicionEnTablaMarcos;
 
-	tabla = calloc(cantidadPaginas,sizeof(stRegistroTP));
+	tabla = calloc(longitud_tabla,sizeof(stRegistroTP));
 
 	//recorro la tabla para inicializarla
-	for(i=0;i<cantidadPaginas;i++){
+	for(i=0;i<longitud_tabla;i++){
 		(tabla+(sizeof(stRegistroTP)*i))->bit2ndChance=0;
 		(tabla+(sizeof(stRegistroTP)*i))->bitModificado=0;
 		(tabla+(sizeof(stRegistroTP)*i))->bitPresencia=0;
@@ -210,21 +218,20 @@ int crearTabla(uint16_t processId, uint16_t cantidadPaginas){
 
 	nodo = calloc(1,sizeof(stNodoListaTP));
 
-	nodo->size=cantidadPaginas;
+	nodo->pid=processId;
+	nodo->size=longitud_tabla;  // Como maximo marcos_x_proceso
 	nodo->tabla=tabla;
 
-	//creo tabla sino existe
-	if(TablaMarcos==NULL)
-		TablaMarcos = list_create();
-
 	//enlazo en la lista
-	list_add_in_index(TablaMarcos,processId, nodo);
+	posicionEnTablaMarcos = list_mutex_add(TablaMarcos, nodo);
 
-	return 0;
+	return posicionEnTablaMarcos;
 }
+
 stNodoListaTP *buscarPID(uint16_t pid){
-	return (stNodoListaTP*)list_get(TablaMarcos,pid);
+	return (stNodoListaTP*) list_mutex_get(TablaMarcos, pid);
 }
+
 void liberarTablaPid(uint16_t pid){
 	stNodoListaTP *nodo;
 	stRegistroTP *registro;

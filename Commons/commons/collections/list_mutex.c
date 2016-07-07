@@ -27,7 +27,7 @@ int list_mutex_add(t_list_mutex *self, void *data) {
 	elements_count = list_add(list, data);
 	pthread_mutex_unlock(&self->mutex);
 
-	return elements_count - 1;
+	return elements_count;
 }
 
 void* list_mutex_get(t_list_mutex *self, int index) {

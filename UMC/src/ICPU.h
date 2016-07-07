@@ -22,6 +22,7 @@
 typedef struct{
 	uint16_t socketResp;
 	stPageIni *sPI;
+	uint16_t marcos_x_proceso; // Se utiliza para definir longitud de tabla
 }stIni;
 
 typedef struct{
@@ -38,7 +39,7 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU);
 void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socketCPU);
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU);
 void *finalizarProgramaNucleo(stEnd *fin);
-void cambiarContexto(uint16_t pagina);
+void cambiarContexto(uint16_t pid);
 
 void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB);
 void realizarAccionCPU(uint16_t socket);

@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <commons/string.h>
-#include <commons/collections/list.h>
+#include <commons/collections/list_mutex.h>
 #include "Memoria.h"
 #include "Parametros.h"
 
@@ -30,7 +30,8 @@ typedef struct{
 }stRegistroTP;
 
 typedef struct{
-	int size;
+	int pid;
+	int size;   // como maximo marcos_x_proceso (puede ser menos si el programa tiene menos pag)
 	void *tabla;
 }stNodoListaTP;
 
@@ -43,11 +44,12 @@ typedef struct{
  */
 
 /* puntero a la tabla de Marcos */
-t_list *TablaMarcos;
+t_list_mutex *TablaMarcos;
 
 int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t **frame);
 stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t Pagina, stRegistroTP registro, uint8_t flag);
-int crearTabla(uint16_t processId, uint16_t cantidadPaginas);
+void creatListaDeTablas();
+int crearTabla(uint16_t processId, uint16_t longitud_tabla);
 stNodoListaTP *buscarPID(uint16_t pid);
 void liberarTablaPid(uint16_t pid);
 stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
