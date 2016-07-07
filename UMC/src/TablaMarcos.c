@@ -147,8 +147,8 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 	int i, presencias;
 	void *buf;
 
-	//nodo = buscarPID(pid);
-// casos nueva pagina desde swap:
+	nodo = buscarPID(pid);
+	// casos nueva pagina desde swap:
 
 
 	for(i=0;i<nodo->size;i++){
@@ -229,7 +229,17 @@ int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 }
 
 stNodoListaTP *buscarPID(uint16_t pid){
-	return (stNodoListaTP*) list_mutex_get(TablaMarcos, pid);
+	stNodoListaTP* nodoListaTP = NULL;
+
+	void _comparo_con_pid(stNodoListaTP *list_nodo){
+		if(list_nodo->pid == pid){
+			nodoListaTP = list_nodo;
+		}
+	}
+	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid);
+
+	// NULL: si no lo encontro, sino puntero a nodo
+	return nodoListaTP;
 }
 
 void liberarTablaPid(uint16_t pid){
