@@ -103,7 +103,7 @@ int main(void) {
     }
 
     //Inicializo el buffer de la pagina, lo voy a utilizar bastante
-    bufferPagina = (char *)malloc(tamanioSector);
+    bufferPagina = (char *)malloc(loaded_config.tamanioPagina);
 
     //Arranco a escuchar mensajes
     log_info("Esperando conexiones...");
@@ -142,6 +142,8 @@ int main(void) {
 					case INICIAR_PROGRAMA:
 						//Espero PID(uint16_t), Cantidad paginas (uint16_t), programa (buffer)
 
+						log_info("Nuevo comando recibido: INICIALIZAR PROGRAMA...");
+
 						//Recibo el PID
 						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
 							log_error("Error al recibir el PID del proceso");
@@ -174,6 +176,8 @@ int main(void) {
 
 					case DESTRUIR_PROGRAMA:
 
+						log_info("Nuevo comando recibido: DESTRUIR PROGRAMA...");
+
 						//Recibo el PID
 						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
 							log_error("Error al recibir el PID del proceso");
@@ -194,9 +198,23 @@ int main(void) {
 
 					case LEER_PAGINA:
 
+						log_info("Nuevo comando recibido: LEER PAGINA...");
+
+						//Recibo el PID
+						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
+							log_error("Error al recibir el PID del proceso");
+						}
+
+						//Recibo la cantidad de paginas
+						if(sizeof(uint16_t) != recv(cliSock, &cantPaginas, sizeof(uint16_t), 0)){
+							log_error("Error al recibir la cantidad de paginas");
+						}
+
 						break;
 
 					case ESCRIBIR_PAGINA:
+
+						log_info("Nuevo comando recibido: ESCRIBIR PAGINA...");
 
 						break;
 					}
