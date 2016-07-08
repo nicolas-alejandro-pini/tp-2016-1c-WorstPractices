@@ -321,7 +321,7 @@ int main(int argc, char *argv[]) {
 									continue;
 								}
 
-								log_info("Ingresa PCB [%d] en estado NEW", unPCB->pid);
+								//log_info("Ingresa PCB [%d] en estado NEW", unPCB->pid);
 								ready_productor(&unPCB);
 								printf("OK\n");
 								fflush(stdout);

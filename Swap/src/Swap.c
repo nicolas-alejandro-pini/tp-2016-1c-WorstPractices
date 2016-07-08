@@ -251,7 +251,7 @@ int main(void) {
 							ipcHeader->tipo = ERROR;
 						}
 
-						if(recv(cliSock, bufferPagina, loaded_config->tamanioPagina, 0) != loaded_config->tamanioPagina){
+						if(recv(cliSock, bufferPagina, loaded_config.tamanioPagina, 0) != loaded_config.tamanioPagina){
 							log_error("Error al recibir la pagina");
 							ipcHeader->tipo = ERROR;
 						}
