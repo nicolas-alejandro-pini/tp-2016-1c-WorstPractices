@@ -840,6 +840,8 @@ int main(void) {
 
 	//Recibo tamanio de pagina UMC//
 
+	configUMC = malloc(sizeof(t_UMCConfig));
+
 	if(recibirConfigUMC(configuracionInicial.sockUmc, &configUMC )!=0){
 
 		//log_info("Error al recibir paginas de UMC.");
