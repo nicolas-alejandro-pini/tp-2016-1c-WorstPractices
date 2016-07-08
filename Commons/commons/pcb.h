@@ -37,6 +37,7 @@ typedef struct {
 	uint32_t socketCPU; /*Numero de socket de la CPU que esta ejecutando en ese momento el pcb*/
 	uint32_t quantum; /*Quantum a ejecutar*/
 	uint32_t quantumSleep; /*Retardo del quantum*/
+	uint32_t offsetStack; /* Ultima posicion de offset en el stack*/
 	t_metadata_program* metadata_program;
 	t_list *stack;	/*Lista de stIndiceStack*/
 }__attribute__((packed)) stPCB;

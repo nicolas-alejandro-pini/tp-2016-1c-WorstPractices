@@ -23,6 +23,7 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 	serializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 	serializar_campo(paquete, &offset, &self->quantum, sizeof(self->quantum));
 	serializar_campo(paquete, &offset, &self->quantumSleep, sizeof(self->quantumSleep));
+	serializar_campo(paquete, &offset, &self->offsetStack, sizeof(self->offsetStack));
 
 	//Serializacion del t_metadata
 	serializar_campo(paquete, &offset, self->metadata_program, sizeof(t_metadata_program));
@@ -73,6 +74,8 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 	deserializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 	deserializar_campo(paquete, &offset, &self->quantum, sizeof(self->quantum));
 	deserializar_campo(paquete, &offset, &self->quantumSleep, sizeof(self->quantumSleep));
+	deserializar_campo(paquete, &offset, &self->offsetStack, sizeof(self->offsetStack));
+
 
 	// Reservo memoria para estructura t_metadata_program
 	self->metadata_program = malloc(sizeof(t_metadata_program));

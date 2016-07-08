@@ -78,8 +78,8 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	unaVariable = (stVars*)malloc(sizeof(stVars));
 	unaVariable->id = identificador_variable;
-	unaVariable->posicion_memoria.pagina = unPCB->paginaInicioStack;
-	unaVariable->posicion_memoria.offset = ultimaPosicionStack;
+	unaVariable->posicion_memoria.pagina = 0;
+	unaVariable->posicion_memoria.offset = unPCB->offsetStack;
 	unaVariable->posicion_memoria.size = TAMANIOVARIABLES;
 	list_add(indiceStack->variables,unaVariable);
 
@@ -87,9 +87,9 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	list_add(unPCB->stack,indiceStack);
 
-	ultimaPosicionStack = ultimaPosicionStack + TAMANIOVARIABLES;
+	unPCB->offsetStack = unPCB->offsetStack + TAMANIOVARIABLES;
 
-	return ultimaPosicionStack;
+	return unPCB->offsetStack;
 }
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
