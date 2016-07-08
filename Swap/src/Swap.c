@@ -106,6 +106,24 @@ int main(void) {
     //Inicializo el buffer de la pagina, lo voy a utilizar bastante
     bufferPagina = (char *)malloc(loaded_config.tamanioPagina);
 
+    //----------------------
+    // Correr las pruebas aca
+    // ELIMINAR ESTO!!!
+    //----------------------
+
+    pID = 1;
+    cantPaginas = 10;
+    bufferPrograma = (char *)malloc(1024);
+    strcpy(bufferPrograma, "0123456789");
+	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
+		log_error("Error asignando espacio a proceso");
+	}
+
+	//---------------------
+	//---------------------
+	//---------------------
+
+
     //Arranco a escuchar mensajes
     log_info("Esperando conexiones...");
     while(!terminar){
@@ -128,6 +146,10 @@ int main(void) {
 
     	if(ipcHeader->tipo == SOYUMC){
     		// Se me conecto un UMC por lo cual me quedo escuchando sus mensajes
+
+    		//Le envio un OK a modo respuesta de que el handshake se realizó con éxito
+    		ipcHeader->tipo = OK;
+    		enviarHeaderIPC(cliSock, ipcHeader);
 
         	while(1){
             	if(recibirHeaderIPC(cliSock, ipcHeader) <= 0){

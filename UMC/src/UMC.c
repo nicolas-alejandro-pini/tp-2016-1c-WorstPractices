@@ -116,25 +116,24 @@ void cerrarSockets(stParametro *elEstadoActual){
  */
 int swapHandShake (int socket, char* mensaje, int tipoHeader)
 {
-	stHeaderIPC unHeader;
-
+	stHeaderIPC unHeader, *otroHeader;
 
 	if(!recibirHeaderIPC(socket,&unHeader)){
 		log_error("SOCKET_ERROR - No se recibe un mensaje correcto");
-		fflush(stdout);
 	}
 
 	log_info("HandShake mensaje recibido %d",unHeader.tipo);
 
+
 	if (unHeader.tipo == QUIENSOS)
 	{
-		if(!enviarHeaderIPC(socket,&unHeader)){
+		otroHeader = nuevoHeaderIPC(tipoHeader);
+		if(!enviarHeaderIPC(socket,otroHeader)){
 			log_error("No se pudo enviar el MensajeIPC");
 			return (-1);
 		}
 		if(!recibirHeaderIPC(socket,&unHeader)){
 			log_error("SOCKET_ERROR - No se recibe un mensaje correcto");
-			fflush(stdout);
 			return (-1);
 		}
 		if (unHeader.tipo != OK){
@@ -147,7 +146,6 @@ int swapHandShake (int socket, char* mensaje, int tipoHeader)
 	}
 
 	log_info("HandShake: establecido");
-	fflush(stdout);
 
 	return 0;
 }
@@ -246,7 +244,7 @@ int main(int argc, char *argv[]) {
 		losParametros.sockSwap = conectar(losParametros.ipSwap, losParametros.puertoSwap);
 		/* Inicio el handShake con el servidor */
 		if (losParametros.sockSwap != -1){
-			if (swapHandShake(losParametros.sockSwap, "SOYUMC", SOYUMC) != -1) // TODO la pregunta esta al reves, pero sirve porque el HSK con SWAP no responde como deberia. Cambiar cuando se pueda.
+			if (swapHandShake(losParametros.sockSwap, "SOYUMC", SOYUMC) == -1)
 			{
 				log_info("CONNECTION_ERROR - No se recibe un mensaje correcto en Handshake con Swap");
 				fflush(stdout);
@@ -323,8 +321,12 @@ int main(int argc, char *argv[]) {
 									close(unCliente);
 									continue;
 								}
+								liberarHeaderIPC(unaCabecera);
 								log_info("Conexion con CPU establecida\n");
 								agregarSock=1;
+
+								// enviar tamaño de pagina a CPU
+								enviarConfigUMC(unCliente, losParametros.frameSize, losParametros.frameByProc);
 
 								pthread_create(&tid, &attr, (void*)realizarAccionCPU, &unCliente);
 
@@ -337,7 +339,9 @@ int main(int argc, char *argv[]) {
 									close(unCliente);
 									continue;
 								}
+								liberarHeaderIPC(unaCabecera);
 
+								// enviar tamaño de pagina a Nucleo
 								enviarConfigUMC(unCliente, losParametros.frameSize, losParametros.frameByProc);
 
 								log_info("Conexion con Nucleo establecida");
@@ -390,14 +394,8 @@ int main(int argc, char *argv[]) {
 
 	        	        		case INICIALIZAR_PROGRAMA:
 
-	        	        			unaCabecera = nuevoHeaderIPC(OK);
-	        	        			if (!enviarHeaderIPC(unCliente, unaCabecera)) {
-										liberarHeaderIPC(unaCabecera);
-										close(unCliente);
-										return -1;
-									}
 
-									if (recibir_paquete(unCliente, &paquete_stPageIni)) {
+	        	        			if (recibir_paquete(unCliente, &paquete_stPageIni)) {
 										printf("No se pudo recibir paquete de inicio de programa");
 										close(unCliente);
 										return -1;
@@ -405,21 +403,13 @@ int main(int argc, char *argv[]) {
 									unPageIni = (stPageIni*)malloc(sizeof(stPageIni));
 									deserializar_inicializar_programa(unPageIni,&paquete_stPageIni);
 
-	        	        			if (!enviarHeaderIPC(unCliente, unaCabecera)) {
-										liberarHeaderIPC(unaCabecera);
-										close(unCliente);
-										return -1;
-									}
-
-
-									ini = (stIni*)calloc(1,sizeof(stIni));
+	        	        			ini = (stIni*)calloc(1,sizeof(stIni));
 									ini->marcos_x_proceso = frameByProc;
 									ini->socketResp = unCliente;
 	        	        			ini->sPI= unPageIni;
 
 	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);
 
-	        	        			liberarHeaderIPC(unaCabecera);
 	        	        			break;
 
 	        	        		case FINPROGRAMA:

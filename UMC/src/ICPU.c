@@ -28,7 +28,7 @@ void *inicializarPrograma(stIni* ini){
 
 	crearTabla(ini->sPI->processId, longitud_tabla);
 
-#define TEST_SIN_SWAP
+#undef TEST_SIN_SWAP
 
 #ifndef TEST_SIN_SWAP
 
@@ -69,7 +69,12 @@ void *inicializarPrograma(stIni* ini){
 	/*Se informa al nucleo que el programa se inicializo OK*/
 	unHeader=nuevoHeaderIPC(OK);
 	enviarHeaderIPC(ini->socketResp, unHeader);
-	
+	if (!enviarHeaderIPC(ini->socketResp, unHeader)) {
+		log_error("Hubo un problema al escribir OK de inicalizacion al nucleo - pid %d", ini->sPI->processId);
+		close(ini->socketResp);
+	}
+	liberarHeaderIPC(unHeader);
+
 	/* no guardo en memoria */
 
 	/*Cierro este thread porque este es creado por Nucleo y voy a trabajar con el CPU*/
