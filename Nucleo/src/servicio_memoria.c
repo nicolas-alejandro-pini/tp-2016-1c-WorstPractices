@@ -13,21 +13,6 @@ int inicializar_programa(int pid, int cantidad_paginas, char* programa, int sock
 	stMensajeIPC unMensajeIPC;
 	stHeaderIPC *stHeaderIPC;
 
-	stHeaderIPC = nuevoHeaderIPC(INICIALIZAR_PROGRAMA);
-	if (!enviarHeaderIPC(socket_umc, stHeaderIPC)) {
-		liberarHeaderIPC(stHeaderIPC);
-		close(socket_umc);
-		return EXIT_FAILURE;
-	}
-
-	stHeaderIPC = nuevoHeaderIPC(OK);
-	if (!recibirHeaderIPC(socket_umc, stHeaderIPC)) {
-		log_error("UMC handshake error - No se pudo recibir mensaje de confirmacion");
-		liberarHeaderIPC(stHeaderIPC);
-		close(socket_umc);
-		return EXIT_FAILURE;
-	}
-
 	unInicioUMC = malloc(sizeof(stPageIni));
 	unInicioUMC->processId = pid;
 	unInicioUMC->cantidadPaginas = cantidad_paginas;

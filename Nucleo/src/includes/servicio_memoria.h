@@ -9,6 +9,8 @@
 #define SERVICIO_MEMORIA_H_
 #include <commons/serializador.h>
 #include <commons/ipctypes.h>
+#include <commons/log.h>
+#include <commons/socketsIPCIRC.h>
 
 inicializar_programa(int pid, int cantidad_paginas, char* programa, int socket_umc);
 
