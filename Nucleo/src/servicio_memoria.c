@@ -10,8 +10,16 @@ int inicializar_programa(int pid, int cantidad_paginas, char* programa, int sock
 
 	stPageIni *unInicioUMC;
 	t_paquete paquete;
-	stMensajeIPC unMensajeIPC;
 	stHeaderIPC *stHeaderIPC;
+
+	// Le indico a la UMC que inicializo el programa
+	stHeaderIPC = nuevoHeaderIPC(INICIALIZAR_PROGRAMA);
+	if (!enviarHeaderIPC(socket_umc, stHeaderIPC)) {
+	 	liberarHeaderIPC(stHeaderIPC);
+	 	close(socket_umc);
+		return EXIT_FAILURE;
+	}
+	liberarHeaderIPC(stHeaderIPC);
 
 	unInicioUMC = malloc(sizeof(stPageIni));
 	unInicioUMC->processId = pid;
@@ -30,12 +38,14 @@ int inicializar_programa(int pid, int cantidad_paginas, char* programa, int sock
 	free_paquete(&paquete);
 	free(unInicioUMC);
 
+	stHeaderIPC = nuevoHeaderIPC(ERROR);	  // por defaul reservo memoria con tipo ERROR
 	if (!recibirHeaderIPC(socket_umc, stHeaderIPC)) {
 		log_error("UMC handshake error - No se pudo recibir mensaje de confirmacion");
 		liberarHeaderIPC(stHeaderIPC);
 		close(socket_umc);
 		return EXIT_FAILURE;
 	}
+	liberarHeaderIPC(stHeaderIPC);
 
 	if (stHeaderIPC->tipo == OK) {
 		return EXIT_SUCCESS;
