@@ -28,7 +28,7 @@ void *inicializarPrograma(stIni* ini){
 
 	crearTabla(ini->sPI->processId, longitud_tabla);
 
-#define TEST_SIN_SWAP
+#undef TEST_SIN_SWAP
 
 #ifndef TEST_SIN_SWAP
 

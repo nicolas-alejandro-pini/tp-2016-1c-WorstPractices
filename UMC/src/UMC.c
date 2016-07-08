@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
 		losParametros.sockSwap = conectar(losParametros.ipSwap, losParametros.puertoSwap);
 		/* Inicio el handShake con el servidor */
 		if (losParametros.sockSwap != -1){
-			if (swapHandShake(losParametros.sockSwap, "SOYUMC", SOYUMC) != -1) // TODO la pregunta esta al reves, pero sirve porque el HSK con SWAP no responde como deberia. Cambiar cuando se pueda.
+			if (swapHandShake(losParametros.sockSwap, "SOYUMC", SOYUMC) == -1)
 			{
 				log_info("CONNECTION_ERROR - No se recibe un mensaje correcto en Handshake con Swap");
 				fflush(stdout);
