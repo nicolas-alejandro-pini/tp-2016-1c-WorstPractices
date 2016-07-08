@@ -226,11 +226,10 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	return resultado;
 }
 
-t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
-
-	t_puntero_instruccion PUNTERO;
-	printf("Llamo a irAlLabel");
-	return PUNTERO;
+void irAlLabel(t_nombre_etiqueta etiqueta){
+	t_puntero_instruccion ptr_instruccion;
+	ptr_instruccion = metadata_buscar_etiqueta(etiqueta,unPCB->metadata_program->etiquetas,unPCB->metadata_program->etiquetas_size);
+	unPCB->pc = (uint32_t)ptr_instruccion;
 }
 
 void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
@@ -238,9 +237,7 @@ void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorna
 	/*Buscamos la etiqueta definida en el metadata, para actualizar el program counter del PCB*/
 	printf("Llamada a llamarFuncionConRetorno\n");
 	stIndiceStack *unIndiceStack;
-	t_puntero_instruccion ptr_instruccion;
-	ptr_instruccion = metadata_buscar_etiqueta(etiqueta,unPCB->metadata_program->etiquetas,unPCB->metadata_program->etiquetas_size);
-	unPCB->pc = (uint32_t)ptr_instruccion;
+	irAlLabel(etiqueta);
 	unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
 	unIndiceStack->argumentos = list_create();
 	unIndiceStack->pos = list_size(unPCB->stack) + 1;
@@ -254,7 +251,6 @@ void retornar(t_valor_variable retorno){
 	stIndiceStack *unIndiceStack;
 	/*Sacamos del stack la variable a retornar*/
 	unIndiceStack = list_remove(unPCB->stack,list_size(unPCB->stack));
-
 	/*Actualizamos el program counter del pcb*/
 	unPCB->pc = unIndiceStack->retPosicion;
 	asignar(unIndiceStack->retVar.offset,retorno);
