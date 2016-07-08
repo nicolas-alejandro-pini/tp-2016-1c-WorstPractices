@@ -98,6 +98,7 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	t_metadata_program *unPrograma;
 	stPCB *unPCB;
+	stIndiceStack *unIndiceStack;
 	t_UMCConfig UMCConfig;
 	pidCounter = 0;
 
@@ -308,7 +309,15 @@ int main(int argc, char *argv[]) {
 									unPCB->stack = list_create();
 
 								}
-								/*TODO: Verificar UMC*/
+								/*Inicializo el stack con un elemento*/
+								unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
+								if (unIndiceStack != NULL) {
+									unIndiceStack->argumentos = list_create();
+									unIndiceStack->pos = 0;
+									unIndiceStack->variables = list_create();
+									list_add(unPCB->stack,unIndiceStack);
+								}
+
 								if (inicializar_programa(unPCB->pid, unPCB->cantidadPaginas, unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
 									printf("UMC error - No se puede ejecutar el programa por falta de espacio\n");
 									/*TODO: Liberar toda la memoria del pcb!*/
