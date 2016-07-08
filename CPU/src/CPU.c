@@ -16,7 +16,7 @@ fd_set fds_master;		/* Lista de todos mis sockets. */
 fd_set read_fds;		/* Sublista de fds_master. */
 
 int SocketAnterior = 0;
-int tamanioPaginaUCM ;
+int tamanioPaginaUMC ;
 t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
@@ -72,7 +72,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	tamanioStack=list_size(unPCB->stack);
 
-	indiceStack = list_get_element(unPCB->stack, tamanioStack);
+	indiceStack = list_get(unPCB->stack, tamanioStack);
 
 
 
@@ -652,14 +652,14 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 	int sizeToUMC;
 	int pagina;
 
-	int cantidadPaginas = (sizeRequest / tamanioPaginaUCM) + 1;
+	int cantidadPaginas = (sizeRequest / tamanioPaginaUMC) + 1;
 
 	for (pagina=1;pagina<cantidadPaginas;pagina++)
 	{
-		sizeToUMC = tamanioPaginaUCM - startToUMC;
+		sizeToUMC = tamanioPaginaUMC - startToUMC;
 
 		if (sizeToUMC > sizeRequest)
-			sizeToUMC = pagina*tamanioPaginaUCM - sizeRequest;
+			sizeToUMC = pagina*tamanioPaginaUMC - sizeRequest;
 
 		paginaToUMC = calcularPaginaInstruccion(pagina);
 
@@ -782,6 +782,7 @@ int cambiarContextoUMC(void){
 int main(void) {
 
 	stHeaderIPC *unHeaderIPC;
+	t_UMCConfig *configUMC;
 	int unSocket;
 	int quantum=0;
 	int quantumSleep=0;
@@ -836,7 +837,18 @@ int main(void) {
 		fflush(stdout);
 
 	}
-		//Fin de conexion al UMC//
+
+	//Recibo tamanio de pagina UMC//
+
+	if(recibirConfigUMC(configuracionInicial.sockUmc, &configUMC )!=0){
+
+		//log_info("Error al recibir paginas de UMC.");
+		configuracionInicial.salir = 1;
+	}
+
+	tamanioPaginaUMC = configUMC->tamanioPagina; //Guardo el tamaño de la pagina de la umc.
+
+	//Fin de conexion al UMC//
 
 	while(configuracionInicial.salir == 0)
 	{
