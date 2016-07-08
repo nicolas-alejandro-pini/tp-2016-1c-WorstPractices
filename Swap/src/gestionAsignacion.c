@@ -35,7 +35,7 @@ int initGestionAsignacion(t_swap_config * config){
 	loaded_config = config;
 
 	//Reservo espacio necesario para el bitmap
-	bitArrayBuffer = malloc(config->cantidadPaginas);
+	bitArrayBuffer = (char *)calloc(1, config->cantidadPaginas);
 	if(bitArrayBuffer == NULL){
 		log_error("Error al asignar espacio en memoria para el BitMap");
 		return -1;
@@ -43,10 +43,6 @@ int initGestionAsignacion(t_swap_config * config){
 
 	//Creo el bit array
 	bitArray = bitarray_create(bitArrayBuffer, config->cantidadPaginas);
-	if(bitArray == NULL){
-		log_error("Error al crear el BitMap");
-		return -2;
-	}
 
 	//Inicializo la lista de asignaciones
 	assignmentList = list_create();
@@ -223,6 +219,11 @@ unsigned long int buscarIndicePrimeraAsignacionProceso(unsigned long int pId){
 	unsigned long int i;
 	t_asignacion *asignacion;
 
+	//Si no tengo asignaciones previas realizadas
+	if(cantAsignaciones == 0)
+		return -1;
+
+	//Busco la primera asignación realizada al PID
 	for(i = 0; i < cantAsignaciones; i++){
 		asignacion = list_get(assignmentList, i);
 		if(asignacion->pid == pId)
@@ -265,7 +266,7 @@ int reservarEspacioProceso(unsigned long int pid, unsigned long int sectorInicia
  */
 int liberarEspacioDeProceso(unsigned long int pID){
 
-	unsigned long int i;
+	long int i;
 	t_asignacion * asignacion;
 
 	i = buscarIndicePrimeraAsignacionProceso(pID);
@@ -292,8 +293,10 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 
 	t_bloque_libre info_bloque_libre;
 	unsigned long int sectorOffset;
+	int r;
 
-	if(buscarIndicePrimeraAsignacionProceso(pID) >= 0){
+	r = buscarIndicePrimeraAsignacionProceso(pID);
+	if(r >= 0){
 		log_error("El proceso al que se desea asignar espacio ya se encuentra en la tabla de asignacion");
 		return -1;
 	}
@@ -322,7 +325,7 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 		return -4;
 	}
 
-	log_info("Asignacion de paginas satisfactoria al proceso(PID %ul): %ul->%ul",
+	log_info("Asignacion de paginas satisfactoria al proceso(PID %u): %u->%u",
 			pID, info_bloque_libre.offset, info_bloque_libre.offset + cantidadPaginas - 1);
 
 	//Grabo la particion SWAP con el codigo del programa
