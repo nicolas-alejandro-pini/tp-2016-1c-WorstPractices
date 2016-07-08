@@ -323,8 +323,12 @@ int main(int argc, char *argv[]) {
 									close(unCliente);
 									continue;
 								}
+								liberarHeaderIPC(unaCabecera);
 								log_info("Conexion con CPU establecida\n");
 								agregarSock=1;
+
+								// enviar tamaño de pagina a CPU
+								enviarConfigUMC(unCliente, losParametros.frameSize, losParametros.frameByProc);
 
 								pthread_create(&tid, &attr, (void*)realizarAccionCPU, &unCliente);
 
@@ -337,7 +341,9 @@ int main(int argc, char *argv[]) {
 									close(unCliente);
 									continue;
 								}
+								liberarHeaderIPC(unaCabecera);
 
+								// enviar tamaño de pagina a Nucleo
 								enviarConfigUMC(unCliente, losParametros.frameSize, losParametros.frameByProc);
 
 								log_info("Conexion con Nucleo establecida");
@@ -390,14 +396,8 @@ int main(int argc, char *argv[]) {
 
 	        	        		case INICIALIZAR_PROGRAMA:
 
-	        	        			unaCabecera = nuevoHeaderIPC(OK);
-	        	        			if (!enviarHeaderIPC(unCliente, unaCabecera)) {
-										liberarHeaderIPC(unaCabecera);
-										close(unCliente);
-										return -1;
-									}
 
-									if (recibir_paquete(unCliente, &paquete_stPageIni)) {
+	        	        			if (recibir_paquete(unCliente, &paquete_stPageIni)) {
 										printf("No se pudo recibir paquete de inicio de programa");
 										close(unCliente);
 										return -1;
@@ -405,21 +405,13 @@ int main(int argc, char *argv[]) {
 									unPageIni = (stPageIni*)malloc(sizeof(stPageIni));
 									deserializar_inicializar_programa(unPageIni,&paquete_stPageIni);
 
-	        	        			if (!enviarHeaderIPC(unCliente, unaCabecera)) {
-										liberarHeaderIPC(unaCabecera);
-										close(unCliente);
-										return -1;
-									}
-
-
-									ini = (stIni*)calloc(1,sizeof(stIni));
+	        	        			ini = (stIni*)calloc(1,sizeof(stIni));
 									ini->marcos_x_proceso = frameByProc;
 									ini->socketResp = unCliente;
 	        	        			ini->sPI= unPageIni;
 
 	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);
 
-	        	        			liberarHeaderIPC(unaCabecera);
 	        	        			break;
 
 	        	        		case FINPROGRAMA:
