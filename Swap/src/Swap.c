@@ -129,6 +129,10 @@ int main(void) {
     	if(ipcHeader->tipo == SOYUMC){
     		// Se me conecto un UMC por lo cual me quedo escuchando sus mensajes
 
+    		//Le envio un OK a modo respuesta de que el handshake se realizó con éxito
+    		ipcHeader->tipo = OK;
+    		enviarHeaderIPC(cliSock, ipcHeader);
+
         	while(1){
             	if(recibirHeaderIPC(cliSock, ipcHeader) <= 0){
             		log_error("La UMC se desconecto u ocurrio un error de comunicacion");
