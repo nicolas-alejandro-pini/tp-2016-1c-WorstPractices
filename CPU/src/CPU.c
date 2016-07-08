@@ -22,7 +22,7 @@ t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de
 
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 
-
+/* EML: Lo comento xq no lo uso por ahora
 int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 
 	stHeaderIPC* unHeader;
@@ -52,7 +52,7 @@ int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
 	return resultado;
 
 }
-
+*/
 
 /*
  ============================================================================
@@ -72,18 +72,14 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	tamanioStack=list_size(unPCB->stack);
 
-	if (tamanioStack == 0){
-		indiceStack->pos = 0;
-	}else
-		indiceStack->pos = indiceStack->pos ++;
+	indiceStack = list_get_element(unPCB->stack, tamanioStack);
 
-	indiceStack->variables = (t_list*)malloc(sizeof(t_list)+sizeof(stVars));
-	indiceStack->variables = list_create();
+
+
 	unaVariable = (stVars*)malloc(sizeof(stVars));
 	unaVariable->id = identificador_variable;
-	//unaVariable->posicion_memoria = (stPosicion*)malloc(sizeof(stPosicion));
-	unaVariable->posicion_memoria.pagina=0;
-	unaVariable->posicion_memoria.offset= ultimaPosicionStack;
+	unaVariable->posicion_memoria.pagina = unPCB->paginaInicioStack;
+	unaVariable->posicion_memoria.offset = ultimaPosicionStack;
 	unaVariable->posicion_memoria.size = TAMANIOVARIABLES;
 	list_add(indiceStack->variables,unaVariable);
 
@@ -233,7 +229,7 @@ t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
 	return PUNTERO;
 }
 
-t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, t_puntero donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
+t_puntero_instruccion llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
 
 	t_puntero_instruccion PUNTERO;
 	printf("Llamo a llamarFuncion");
@@ -384,7 +380,7 @@ AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
 		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
 		.AnSISOP_irAlLabel				= irAlLabel,
-		.AnSISOP_llamarConRetorno		= llamarFuncion,
+		.AnSISOP_llamarConRetorno		= llamarFuncionConRetorno,
 		.AnSISOP_retornar				= retornar,
 		.AnSISOP_entradaSalida			= entradaSalida,
 };
@@ -616,16 +612,16 @@ int cargarPCB(void){
 
 /*
  =========================================================================================
- Name        : calcularPaginaFisica()
+ Name        : calcularPaginaInstruccion()
  Author      : Ezequiel Martinez
  Inputs      : Recibe la dirección logica
  Outputs     : .
  Description : Funcion para obtener
  =========================================================================================
  */
-int calcularPaginaFisica (int paginaLogica){
+int calcularPaginaInstruccion (int paginaLogica){
 
-	int paginaFisica = 0;
+	int paginaFisica = 0; //Definimos que el codigo arranca en la pagina 0.
 	int i;
 
 	for (i=1; paginaLogica > i;i++)
@@ -649,6 +645,7 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
 	stPosicion posicionInstruccion;
 	stMensajeIPC *unMensaje;
+	stHeaderIPC *unHeader;
 
 	int paginaToUMC;
 	int startToUMC = startRequest;
@@ -664,21 +661,20 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 		if (sizeToUMC > sizeRequest)
 			sizeToUMC = pagina*tamanioPaginaUCM - sizeRequest;
 
-		paginaToUMC = calcularPaginaFisica(pagina);
+		paginaToUMC = calcularPaginaInstruccion(pagina);
 
 		posicionInstruccion.pagina = paginaToUMC;
 		posicionInstruccion.offset = startRequest;
 		posicionInstruccion.size = sizeToUMC;
 
-		//enviarHeaderIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE));
+		unHeader=nuevoHeaderIPC(READ_BTYES_PAGE);
+		unHeader->largo = sizeof(posicionInstruccion);
 
-		enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(READ_BTYES_PAGE),(char*)&posicionInstruccion);
+		enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion);
 
 		recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje );
 
-		//enviar_paquete (UMC, posicionInstruccion);
-		//recibir_paquete (UCM, unPaquete);
-		instruccionTemp = (char*)unMensaje->contenido; //unPaquete.contenido;
+		instruccionTemp = (char*)unMensaje->contenido;
 
 		string_append (*instruccion,instruccionTemp);
 
