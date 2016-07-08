@@ -39,14 +39,12 @@ void *inicializarPrograma(stIni* ini){
 		pthread_exit(NULL);
 	}
 #else
-	// falta agregar rutina para paginar el codigo enviado y asi guardarlo en memoria
+
 	uint16_t marco;
 	void *posicion;
 	stRegistroTP* regTP = NULL;
 	stNodoListaTP* nodoListaTP = NULL;
-	// TODO: Simulo pedido del CPU para cargar en memoria el codigo del programa
-	// 		 leido = ejecutarPageFault(pid, unaEscritura->nroPagina, estaActivadaTLB() && resTLB!=0);
-	//       no puedo usar reemplazarValorTabla por enviarpagina que se comunica con el swap
+	// TODO Simulo pedido del CPU para cargar en memoria el codigo del programa
 
 	nodoListaTP = buscarPID(ini->sPI->processId);
 
@@ -75,7 +73,7 @@ void *inicializarPrograma(stIni* ini){
 	/* no guardo en memoria */
 
 	/*Cierro este thread porque este es creado por Nucleo y voy a trabajar con el CPU*/
-	pthread_exit(NULL);
+	return NULL;
 }
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
@@ -241,30 +239,40 @@ void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB){
 	return leido;
 }
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
+	stHeaderIPC *unHeader;
 
+	// liberar tabla de paginas para el pid
 	liberarTablaPid(pid);
 
-	// TODO liberarTLB ?
-	//liberarTLB();
+	// liberar TLB
+	flushTLB(pid);
+
+	// liberar de swap del pid
     destruirPrograma(pid);
 
+    unHeader = nuevoHeaderIPC(OK);
+    enviarHeaderIPC(socketCPU, unHeader);
+    liberarHeaderIPC(unHeader);
 
+    return;
 }
 void *finalizarProgramaNucleo(stEnd *fin){
 
 	finalizarPrograma(fin->pid, fin->socketResp);
-	//pthread_exit(NULL);
+	return NULL;
 }
 void cambiarContexto(uint16_t pid){
 
 	stRegistroTP *data;
 	data = buscarPID(pid);
+	if(data==NULL)
+		log_error("pid %d no encontrado en el cambio de contexto - programa no inicializado", pid);
 
-	// TODO es necesario actualizar swap con paginas que tienen byte modificado ??
+	// No se actuliza tabla de pagina del otro proceso asi qeu no es necesario actualizar swap con paginas que tienen byte modificado
 
-	// TODO es necesario hacer un flush del pid en TLB ???
+	// TODO es necesario hacer un flush del pid en TLB ??? creo que no
 
-
+	return;
 }
 
 void realizarAccionCPU(uint16_t socket){
@@ -283,7 +291,7 @@ void realizarAccionCPU(uint16_t socket){
 			free(unMensaje->contenido);
 			free(unMensaje);
 			close(socket);
-			pthread_exit(NULL);
+			return;//pthread_exit(NULL);
 		}
 
 		switch(unMensaje->header.tipo){
@@ -312,7 +320,7 @@ void realizarAccionCPU(uint16_t socket){
 		case CAMBIOCONTEXTO:
 
 			pidActivo = (uint16_t)*(unMensaje->contenido);
-			//cambiarContexto(pidActivo);
+			cambiarContexto(pidActivo);
 
 			break;
 
