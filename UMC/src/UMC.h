@@ -25,6 +25,7 @@
 #include "ICPU.h"
 #include "Parametros.h"
 #include "Memoria.h"
+#include "Consola.h"
 #include "tests/test_umc.h"
 
 fd_set fds_master;			/* Lista de todos mis sockets.*/

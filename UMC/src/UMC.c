@@ -210,8 +210,9 @@ int main(int argc, char *argv[]) {
 
 
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
-
+		t_list_mutex *TablaMarcos;
 		TablaMarcos = NULL;
+		creatListaDeTablas(TablaMarcos); // TablaMarcos global
 		crearTLB(losParametros.entradasTLB);
 		memoriaPrincipal = inicializarMemoriaDisponible(losParametros.frameSize, losParametros.frames);
 
@@ -245,7 +246,7 @@ int main(int argc, char *argv[]) {
 		losParametros.sockSwap = conectar(losParametros.ipSwap, losParametros.puertoSwap);
 		/* Inicio el handShake con el servidor */
 		if (losParametros.sockSwap != -1){
-			if (swapHandShake(losParametros.sockSwap, "SOYUMC", SOYUMC) != -1)
+			if (swapHandShake(losParametros.sockSwap, "SOYUMC", SOYUMC) != -1) // TODO la pregunta esta al reves, pero sirve porque el HSK con SWAP no responde como deberia. Cambiar cuando se pueda.
 			{
 				log_info("CONNECTION_ERROR - No se recibe un mensaje correcto en Handshake con Swap");
 				fflush(stdout);
@@ -263,6 +264,8 @@ int main(int argc, char *argv[]) {
 			log_info("No se pudo conectar con el Swap");
 			log_destroy(logger);
 		}
+	/* ........................................Lanzo consola UMC............................................. */
+		pthread_create(&tid, &attr, (void*)consolaUMC, NULL);
 
 	/* ........................................Ciclo Principal SERVER........................................ */
 
@@ -410,7 +413,8 @@ int main(int argc, char *argv[]) {
 
 
 									ini = (stIni*)calloc(1,sizeof(stIni));
-	        	        			ini->socketResp = unCliente;
+									ini->marcos_x_proceso = frameByProc;
+									ini->socketResp = unCliente;
 	        	        			ini->sPI= unPageIni;
 
 	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);

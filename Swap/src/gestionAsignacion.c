@@ -344,7 +344,7 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 /**
  * Busca la asignacion realizada para un proceso y una pagina
  */
-t_asignacion buscarAsignacionPaginaProceso(unsigned long int pID, unsigned long int nroPagina){
+t_asignacion *buscarAsignacionPaginaProceso(unsigned long int pID, unsigned long int nroPagina){
 	int cantAsignaciones = list_size(assignmentList);
 	unsigned long int i;
 	t_asignacion *asignacion;

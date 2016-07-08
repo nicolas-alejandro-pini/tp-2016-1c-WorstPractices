@@ -18,8 +18,15 @@
 
 void *inicializarPrograma(stIni* ini){
 	stHeaderIPC *unHeader;
+	uint16_t longitud_tabla;
 
-	crearTabla(ini->sPI->processId, ini->sPI->cantidadPaginas);
+	// Crea tabla con como maximo marcos_x_proceso registros
+	if(ini->sPI->cantidadPaginas > ini->marcos_x_proceso)
+		longitud_tabla = ini->marcos_x_proceso;
+	else
+		longitud_tabla = ini->sPI->cantidadPaginas;
+
+	crearTabla(ini->sPI->processId, longitud_tabla);
 
 #define TEST_SIN_SWAP
 
@@ -32,34 +39,30 @@ void *inicializarPrograma(stIni* ini){
 		pthread_exit(NULL);
 	}
 #else
-	// falta agregar rutina para paginar el codigo enviado y asi guardarlo en memoria
+
 	uint16_t marco;
 	void *posicion;
-	stRegistroTP regTP, *registro;
+	stRegistroTP* regTP = NULL;
+	stNodoListaTP* nodoListaTP = NULL;
+	// TODO Simulo pedido del CPU para cargar en memoria el codigo del programa
 
-	int pagina;
+	nodoListaTP = buscarPID(ini->sPI->processId);
 
-	for(pagina=0; pagina<ini->sPI->cantidadPaginas;pagina++){
+	int largo_programa = (strlen(ini->sPI->programa) / losParametros.frameSize) +1;
+	char *programa_paginado = calloc(1,sizeof(char)*(losParametros.frameSize*(largo_programa)));
+	memcpy(programa_paginado, ini->sPI->programa, losParametros.frameSize);
+	int pagina = 0;
+
+	while(pagina < nodoListaTP->size && pagina < largo_programa){
 		marco = obtenerMarcoLibre();
-		if(marco == 0)
-			registro = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, REEMPLAZAR_MARCO);
-		else{
-			regTP.marco = marco;
-			registro = reemplazarValorTabla(ini->sPI->processId, pagina, regTP, 0);
-		}
-		if(marco==1){
-			// cargo en memoria la pagina obtenida
-			posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
-
-			escribirMemoria(posicion, losParametros.frameSize, (unsigned char *)ini->sPI->programa);
-		}
-			// cargo en TLB la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
-//			if (usarTLB != 0) {
-//				stTLB.pid = pid;
-//				stTLB.pagina = pagina;
-//				stTLB.marco = regTP.marco;
-//				reemplazarValorTLB(stTLB);
-//			}
+		regTP = nodoListaTP->tabla + sizeof(stRegistroTP)*pagina;
+		regTP->marco = marco;
+		regTP->bit2ndChance=0;
+		regTP->bitModificado=0;
+		regTP->bitPresencia=1;
+		posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
+		escribirMemoria(posicion, (uint16_t) losParametros.frameSize, (void*) programa_paginado + (losParametros.frameSize*pagina));
+		pagina++;
 	}
 
 #endif
@@ -70,7 +73,7 @@ void *inicializarPrograma(stIni* ini){
 	/* no guardo en memoria */
 
 	/*Cierro este thread porque este es creado por Nucleo y voy a trabajar con el CPU*/
-	pthread_exit(NULL);
+	return NULL;
 }
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
@@ -236,30 +239,40 @@ void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB){
 	return leido;
 }
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
+	stHeaderIPC *unHeader;
 
+	// liberar tabla de paginas para el pid
 	liberarTablaPid(pid);
 
-	// TODO liberarTLB ?
-	//liberarTLB();
+	// liberar TLB
+	flushTLB(pid);
+
+	// liberar de swap del pid
     destruirPrograma(pid);
 
+    unHeader = nuevoHeaderIPC(OK);
+    enviarHeaderIPC(socketCPU, unHeader);
+    liberarHeaderIPC(unHeader);
 
+    return;
 }
 void *finalizarProgramaNucleo(stEnd *fin){
 
 	finalizarPrograma(fin->pid, fin->socketResp);
-	//pthread_exit(NULL);
+	return NULL;
 }
 void cambiarContexto(uint16_t pid){
 
 	stRegistroTP *data;
 	data = buscarPID(pid);
+	if(data==NULL)
+		log_error("pid %d no encontrado en el cambio de contexto - programa no inicializado", pid);
 
-	// TODO es necesario actualizar swap con paginas que tienen byte modificado ??
+	// No se actuliza tabla de pagina del otro proceso asi qeu no es necesario actualizar swap con paginas que tienen byte modificado
 
-	// TODO es necesario hacer un flush del pid en TLB ???
+	// TODO es necesario hacer un flush del pid en TLB ??? creo que no
 
-
+	return;
 }
 
 void realizarAccionCPU(uint16_t socket){
@@ -278,7 +291,7 @@ void realizarAccionCPU(uint16_t socket){
 			free(unMensaje->contenido);
 			free(unMensaje);
 			close(socket);
-			pthread_exit(NULL);
+			return;//pthread_exit(NULL);
 		}
 
 		switch(unMensaje->header.tipo){
@@ -307,7 +320,7 @@ void realizarAccionCPU(uint16_t socket){
 		case CAMBIOCONTEXTO:
 
 			pidActivo = (uint16_t)*(unMensaje->contenido);
-			//cambiarContexto(pidActivo);
+			cambiarContexto(pidActivo);
 
 			break;
 

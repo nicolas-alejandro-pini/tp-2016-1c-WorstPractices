@@ -148,7 +148,7 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 	void *buf;
 
 	nodo = buscarPID(pid);
-// casos nueva pagina desde swap:
+	// casos nueva pagina desde swap:
 
 
 	for(i=0;i<nodo->size;i++){
@@ -193,16 +193,24 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 
 	return retorno;
 }
-int crearTabla(uint16_t processId, uint16_t cantidadPaginas){
 
-	stNodoListaTP *nodo;
-	stRegistroTP *tabla;
+void creatListaDeTablas(){
+	//creo tabla sino existe
+	if(!TablaMarcos)
+		TablaMarcos = list_mutex_create();
+}
+
+int crearTabla(uint16_t processId, uint16_t longitud_tabla){
+
+	stNodoListaTP *nodo = NULL;
+	stRegistroTP *tabla = NULL;
 	int i;
+	int posicionEnTablaMarcos;
 
-	tabla = calloc(cantidadPaginas,sizeof(stRegistroTP));
+	tabla = calloc(longitud_tabla,sizeof(stRegistroTP));
 
 	//recorro la tabla para inicializarla
-	for(i=0;i<cantidadPaginas;i++){
+	for(i=0;i<longitud_tabla;i++){
 		(tabla+(sizeof(stRegistroTP)*i))->bit2ndChance=0;
 		(tabla+(sizeof(stRegistroTP)*i))->bitModificado=0;
 		(tabla+(sizeof(stRegistroTP)*i))->bitPresencia=0;
@@ -210,34 +218,57 @@ int crearTabla(uint16_t processId, uint16_t cantidadPaginas){
 
 	nodo = calloc(1,sizeof(stNodoListaTP));
 
-	nodo->size=cantidadPaginas;
+	nodo->pid=processId;
+	nodo->size=longitud_tabla;  // Como maximo marcos_x_proceso
 	nodo->tabla=tabla;
 
-	//creo tabla sino existe
-	if(TablaMarcos==NULL)
-		TablaMarcos = list_create();
-
 	//enlazo en la lista
-	list_add_in_index(TablaMarcos,processId, nodo);
+	posicionEnTablaMarcos = list_mutex_add(TablaMarcos, nodo);
 
-	return 0;
+	return posicionEnTablaMarcos;
 }
+
 stNodoListaTP *buscarPID(uint16_t pid){
-	return (stNodoListaTP*)list_get(TablaMarcos,pid);
+	stNodoListaTP* nodoListaTP = NULL;
+
+	void _comparo_con_pid(stNodoListaTP *list_nodo){
+		if(list_nodo->pid == pid){
+			nodoListaTP = list_nodo;
+		}
+	}
+	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid);
+
+	// NULL: si no lo encontro, sino puntero a nodo
+	return nodoListaTP;
 }
+
 void liberarTablaPid(uint16_t pid){
-	stNodoListaTP *nodo;
-	stRegistroTP *registro;
+	stNodoListaTP *nodo = NULL;
+	stRegistroTP *registro = NULL;
 	int i;
+	int index = 0;
+
 
 	nodo = buscarPID(pid);
-	for(i=0;i<nodo->size;i++){
-		registro = nodo->tabla+(sizeof(stRegistroTP)*i);
-		liberarMarco(registro->marco);
+	if(nodo){
+
+		for(i=0;i<nodo->size;i++){
+			registro = nodo->tabla+(sizeof(stRegistroTP)*i);
+			liberarMarco(registro->marco);
+		}
+		free(registro);
+
+		// Busco indice de TablaMarcos ( se elimina por index :( )
+		nodo = NULL;
+		i = 0;
+		void _index(stNodoListaTP *list_nodo){
+			if(list_nodo->pid == pid){
+				nodo = list_nodo;
+				index = i;
+			}
+			i++;
+		}
+		if(nodo)
+			list_mutex_remove(TablaMarcos,index);
 	}
-	free(registro);
-	list_remove(TablaMarcos,pid);
-
-	return;
-
 }
