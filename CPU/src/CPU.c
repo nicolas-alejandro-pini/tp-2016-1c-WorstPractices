@@ -233,16 +233,31 @@ t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
 	return PUNTERO;
 }
 
-t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta, t_puntero donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
-
-	t_puntero_instruccion PUNTERO;
-	printf("Llamo a llamarFuncion");
-	return PUNTERO;
+void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
+	/*Creamos una nuevo indice de stack correspondiente al nuevo call de la funcion*/
+	/*Buscamos la etiqueta definida en el metadata, para actualizar el program counter del PCB*/
+	printf("Llamada a llamarFuncionConRetorno\n");
+	stIndiceStack *unIndiceStack;
+	t_puntero_instruccion ptr_instruccion;
+	ptr_instruccion = metadata_buscar_etiqueta(etiqueta,unPCB->metadata_program->etiquetas,unPCB->metadata_program->etiquetas_size);
+	unPCB->pc = (uint32_t)ptr_instruccion;
+	unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
+	unIndiceStack->argumentos = list_create();
+	unIndiceStack->pos = list_size(unPCB->stack) + 1;
+	unIndiceStack->variables = list_create();
+	unIndiceStack->retPosicion = (uint32_t)donde_retornar;
+	list_add(unPCB->stack,unIndiceStack);
 }
 
 void retornar(t_valor_variable retorno){
+	printf("Llamada a funcion retornar\n");
+	stIndiceStack *unIndiceStack;
+	/*Sacamos del stack la variable a retornar*/
+	unIndiceStack = list_remove(unPCB->stack,list_size(unPCB->stack));
 
-	printf("Llamo a retornar");
+	/*Actualizamos el program counter del pcb*/
+	unPCB->pc = unIndiceStack->retPosicion;
+	asignar(unIndiceStack->retVar.offset,retorno);
 }
 
 void imprimir(t_valor_variable valor_mostrar){
@@ -384,7 +399,7 @@ AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
 		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
 		.AnSISOP_irAlLabel				= irAlLabel,
-		.AnSISOP_llamarConRetorno		= llamarFuncion,
+		.AnSISOP_llamarConRetorno		= llamarFuncionConRetorno,
 		.AnSISOP_retornar				= retornar,
 		.AnSISOP_entradaSalida			= entradaSalida,
 };
