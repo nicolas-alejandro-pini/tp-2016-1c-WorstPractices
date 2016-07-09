@@ -158,7 +158,7 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstad
 
 int main(int argc, char *argv[]) {
 
-	stMensajeIPC *unMensaje = NULL;
+	stMensajeIPC unMensaje;
 	stHeaderIPC *unaCabecera = NULL;
 	int i, unCliente = 0, unSocket;
 	struct sockaddr addressAceptado;
@@ -370,13 +370,10 @@ int main(int argc, char *argv[]) {
 					else {
 
 						/* Valido si esta definido unMensaje */
-						if(!unMensaje)
-							unMensaje = malloc(sizeof(stMensajeIPC));
+						unMensaje.contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
+						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
-						unMensaje->contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
-						memset(unMensaje->contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
-
-						if (!recibirMensajeIPC(unSocket,unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
+						if (!recibirMensajeIPC(unSocket,&unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
 
 							if(unSocket==losParametros.sockSwap){
 								log_error("Se perdio conexion con el swap.. Finalizando UMC.");
@@ -399,7 +396,7 @@ int main(int argc, char *argv[]) {
 
 	        	        	/* Se sigue comunicado con el Nucleo, podría recibir otros mensajes */
 
-	        	        	switch(unMensaje->header.tipo){
+	        	        	switch(unMensaje.header.tipo){
 
 	        	        		case INICIALIZAR_PROGRAMA:
 
@@ -425,14 +422,14 @@ int main(int argc, char *argv[]) {
 
 	        	        			end = calloc(1,sizeof(stEnd));
 	        	        			end->socketResp = socket;
-	        	        			end->pid = atoi(unMensaje->contenido);
+	        	        			end->pid = atoi(unMensaje.contenido);
 
 	        	        			pthread_create(&tid,&attr,(void*)finalizarProgramaNucleo,end);
 	        	        			break;
 
 
 	        	        		default:
-	        	        			printf("Se recibio una peticion con un codigo desconocido...%ld", unMensaje->header.tipo);
+	        	        			printf("Se recibio una peticion con un codigo desconocido...%ld", unMensaje.header.tipo);
 	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;
