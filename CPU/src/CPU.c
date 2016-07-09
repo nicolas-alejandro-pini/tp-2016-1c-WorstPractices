@@ -74,8 +74,6 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	indiceStack = list_get(unPCB->stack, tamanioStack);
 
-
-
 	unaVariable = (stVars*)malloc(sizeof(stVars));
 	unaVariable->id = identificador_variable;
 	unaVariable->posicion_memoria.pagina = 0;
@@ -866,7 +864,7 @@ int main(void) {
 
 	configUMC = malloc(sizeof(t_UMCConfig));
 
-	if(recibirConfigUMC(configuracionInicial.sockUmc, &configUMC )!=0){
+	if(recibirConfigUMC(configuracionInicial.sockUmc, configUMC )!=0){
 
 		//log_info("Error al recibir paginas de UMC.");
 		configuracionInicial.salir = 1;
