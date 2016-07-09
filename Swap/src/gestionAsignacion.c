@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "Swap.h"
 #include "gestionAsignacion.h"
@@ -292,7 +293,8 @@ int liberarEspacioDeProceso(unsigned long int pID){
 int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPaginas, char *bufferPrograma){
 
 	t_bloque_libre info_bloque_libre;
-	unsigned long int sectorOffset;
+	unsigned long int largoPrograma, offset;
+	char * bufferSector;
 	int r;
 
 	r = buscarIndicePrimeraAsignacionProceso(pID);
@@ -329,16 +331,29 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 			pID, info_bloque_libre.offset, info_bloque_libre.offset + cantidadPaginas - 1);
 
 	//Grabo la particion SWAP con el codigo del programa
-	sectorOffset = info_bloque_libre.offset;
-	while(sectorOffset < info_bloque_libre.offset + cantidadPaginas){
-		if(escribirSector(bufferPrograma + (sectorOffset - info_bloque_libre.offset)*loaded_config->tamanioPagina, sectorOffset) < 0){
+	largoPrograma = strlen(bufferPrograma);
+	offset = 0;
+	bufferSector = (char *)calloc(1, loaded_config->tamanioPagina);
+	while(offset < largoPrograma){
+
+		//Cargo el buffer del sector con el código del programa
+		if((largoPrograma - offset) < loaded_config->tamanioPagina){
+			memset(bufferSector, '\0', loaded_config->tamanioPagina);
+			memcpy(bufferSector, (bufferPrograma + offset), (largoPrograma - offset));
+		} else {
+			memcpy(bufferSector, (bufferPrograma + offset), loaded_config->tamanioPagina);
+		}
+
+		if(escribirSector(bufferSector, offset/loaded_config->tamanioPagina) < 0){
 			//Error al escribir el sector en disco con el codigo del programa
 			log_error("Error al escribir el codigo del programa en un sector del SWAP, se hace rollback de lo asignado");
 			//Libero lo asignado al programa
 			liberarEspacioDeProceso(pID);
 			return -5;
 		}
-		sectorOffset++;
+
+		//Me muevo el siguiente sector
+		offset += loaded_config->tamanioPagina;
 	}
 
 	return 0;
