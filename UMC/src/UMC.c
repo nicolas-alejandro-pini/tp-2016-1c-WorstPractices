@@ -262,8 +262,11 @@ int main(int argc, char *argv[]) {
 			log_info("No se pudo conectar con el Swap");
 			log_destroy(logger);
 		}
-	/* ........................................Lanzo consola UMC............................................. */
-		pthread_create(&tid, &attr, (void*)consolaUMC, NULL);
+
+	/* Agrego el stdin a la lista de sockets............................................................................. */
+			FD_SET(fileno(stdin),&(fds_master));
+			mostrarHelp();
+			log_info("fdMax: %d",losParametros.fdMax);
 
 	/* ........................................Ciclo Principal SERVER........................................ */
 
@@ -288,7 +291,10 @@ int main(int argc, char *argv[]) {
 				if(FD_ISSET(unSocket,&read_fds)){
 
 	/*----------------------------------------------------Conexion Nueva--------------------------------------*/
-		        	if(unSocket == losParametros.sockEscuchador){
+					if(unSocket == fileno(stdin)){
+						consolaUMC();
+					}
+					else if(unSocket == losParametros.sockEscuchador){
 
 		        		unCliente = aceptar(losParametros.sockEscuchador,&addressAceptado);
 
