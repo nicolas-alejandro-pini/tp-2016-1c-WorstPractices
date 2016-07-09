@@ -16,7 +16,7 @@ fd_set fds_master;		/* Lista de todos mis sockets. */
 fd_set read_fds;		/* Sublista de fds_master. */
 
 int SocketAnterior = 0;
-int tamanioPaginaUCM ;
+int tamanioPaginaUMC ;
 t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
@@ -72,14 +72,12 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	tamanioStack=list_size(unPCB->stack);
 
-	indiceStack = list_get_element(unPCB->stack, tamanioStack);
-
-
+	indiceStack = list_get(unPCB->stack, tamanioStack);
 
 	unaVariable = (stVars*)malloc(sizeof(stVars));
 	unaVariable->id = identificador_variable;
-	unaVariable->posicion_memoria.pagina = unPCB->paginaInicioStack;
-	unaVariable->posicion_memoria.offset = ultimaPosicionStack;
+	unaVariable->posicion_memoria.pagina = 0;
+	unaVariable->posicion_memoria.offset = unPCB->offsetStack;
 	unaVariable->posicion_memoria.size = TAMANIOVARIABLES;
 	list_add(indiceStack->variables,unaVariable);
 
@@ -87,9 +85,9 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	list_add(unPCB->stack,indiceStack);
 
-	ultimaPosicionStack = ultimaPosicionStack + TAMANIOVARIABLES;
+	unPCB->offsetStack = unPCB->offsetStack + TAMANIOVARIABLES;
 
-	return ultimaPosicionStack;
+	return unPCB->offsetStack;
 }
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
@@ -125,7 +123,6 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	char* estructuraSerializada;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(VALORVARIABLE),estructuraSerializada);
-
 	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Fallo en deferenciar variable.\n");
 		return NULL;
@@ -142,6 +139,21 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 
 }
+
+stPosicion *obtenerPosicion(t_puntero direccion_variable){
+	stPosicion *unaPosicion;
+	int pagina, offset;
+
+	unaPosicion = (stPosicion*)malloc(sizeof(stPosicion));
+	pagina = (direccion_variable/tamanioPaginaUMC);
+
+	offset = (tamanioPaginaUMC * pagina) - direccion_variable;
+	unaPosicion->size = TAMANIOVARIABLES;
+	unaPosicion->pagina = pagina + unPCB->paginaInicioStack;
+	unaPosicion->offset= offset;
+	return unaPosicion;
+}
+
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
@@ -222,23 +234,33 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 	return resultado;
 }
 
-t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta){
-
-	t_puntero_instruccion PUNTERO;
-	printf("Llamo a irAlLabel");
-	return PUNTERO;
+void irAlLabel(t_nombre_etiqueta etiqueta){
+	t_puntero_instruccion ptr_instruccion;
+	ptr_instruccion = metadata_buscar_etiqueta(etiqueta,unPCB->metadata_program->etiquetas,unPCB->metadata_program->etiquetas_size);
+	unPCB->pc = ptr_instruccion;
 }
 
-t_puntero_instruccion llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar, t_puntero_instruccion linea_en_ejecuccion){
-
-	t_puntero_instruccion PUNTERO;
-	printf("Llamo a llamarFuncion");
-	return PUNTERO;
+void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
+	/*Creamos una nuevo indice de stack correspondiente al nuevo call de la funcion*/
+	/*Buscamos la etiqueta definida en el metadata, para actualizar el program counter del PCB*/
+	printf("Llamada a llamarFuncionConRetorno\n");
+	stIndiceStack *unIndiceStack;
+	irAlLabel(etiqueta);
+	unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
+	unIndiceStack->argumentos = list_create();
+	unIndiceStack->pos = list_size(unPCB->stack) + 1;
+	unIndiceStack->variables = list_create();
+	unIndiceStack->retPosicion = (uint32_t)donde_retornar;
+	list_add(unPCB->stack,unIndiceStack);
 }
-
 void retornar(t_valor_variable retorno){
-
-	printf("Llamo a retornar");
+	printf("Llamada a funcion retornar\n");
+	stIndiceStack *unIndiceStack;
+	/*Sacamos del stack la variable a retornar*/
+	unIndiceStack = list_remove(unPCB->stack,list_size(unPCB->stack));
+	/*Actualizamos el program counter del pcb*/
+	unPCB->pc = unIndiceStack->retPosicion;
+	asignar(unIndiceStack->retVar.offset,retorno);
 }
 
 void imprimir(t_valor_variable valor_mostrar){
@@ -652,14 +674,14 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 	int sizeToUMC;
 	int pagina;
 
-	int cantidadPaginas = (sizeRequest / tamanioPaginaUCM) + 1;
+	int cantidadPaginas = (sizeRequest / tamanioPaginaUMC) + 1;
 
 	for (pagina=1;pagina<cantidadPaginas;pagina++)
 	{
-		sizeToUMC = tamanioPaginaUCM - startToUMC;
+		sizeToUMC = tamanioPaginaUMC - startToUMC;
 
 		if (sizeToUMC > sizeRequest)
-			sizeToUMC = pagina*tamanioPaginaUCM - sizeRequest;
+			sizeToUMC = pagina*tamanioPaginaUMC - sizeRequest;
 
 		paginaToUMC = calcularPaginaInstruccion(pagina);
 
@@ -782,6 +804,7 @@ int cambiarContextoUMC(void){
 int main(void) {
 
 	stHeaderIPC *unHeaderIPC;
+	t_UMCConfig *configUMC;
 	int unSocket;
 	int quantum=0;
 	int quantumSleep=0;
@@ -836,7 +859,20 @@ int main(void) {
 		fflush(stdout);
 
 	}
-		//Fin de conexion al UMC//
+
+	//Recibo tamanio de pagina UMC//
+
+	configUMC = malloc(sizeof(t_UMCConfig));
+
+	if(recibirConfigUMC(configuracionInicial.sockUmc, configUMC )!=0){
+
+		//log_info("Error al recibir paginas de UMC.");
+		configuracionInicial.salir = 1;
+	}
+
+	tamanioPaginaUMC = configUMC->tamanioPagina; //Guardo el tamaño de la pagina de la umc.
+
+	//Fin de conexion al UMC//
 
 	while(configuracionInicial.salir == 0)
 	{

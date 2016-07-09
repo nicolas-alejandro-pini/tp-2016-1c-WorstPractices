@@ -307,6 +307,7 @@ int main(int argc, char *argv[]) {
 									unPCB->metadata_program = (t_metadata_program *) malloc(metadataSize);
 									memcpy(unPCB->metadata_program, unPrograma, metadataSize);
 									unPCB->stack = list_create();
+									unPCB->offsetStack = 0;
 
 								}
 								/*Inicializo el stack con un elemento*/

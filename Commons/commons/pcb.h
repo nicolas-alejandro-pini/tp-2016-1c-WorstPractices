@@ -37,15 +37,16 @@ typedef struct {
 	uint32_t socketCPU; /*Numero de socket de la CPU que esta ejecutando en ese momento el pcb*/
 	uint32_t quantum; /*Quantum a ejecutar*/
 	uint32_t quantumSleep; /*Retardo del quantum*/
+	uint32_t offsetStack; /* Ultima posicion de offset en el stack*/
 	t_metadata_program* metadata_program;
 	t_list *stack;	/*Lista de stIndiceStack*/
 }__attribute__((packed)) stPCB;
 
 int serializar_pcb(t_paquete *paquete, stPCB *self);
 int deserializar_pcb(stPCB *self, t_paquete *paquete);
-static void variables_destroy(stVars *self);
-static void argumentos_destroy(stPosicion *self);
-static void pcb_destroy(stPCB *self);
-static void stack_destroy(stIndiceStack *self);
+void variables_destroy(stVars *self);
+void argumentos_destroy(stPosicion *self);
+void pcb_destroy(stPCB *self);
+void stack_destroy(stIndiceStack *self);
 
 #endif /* COMMONS_PCB_H_ */

@@ -23,6 +23,7 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 	serializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 	serializar_campo(paquete, &offset, &self->quantum, sizeof(self->quantum));
 	serializar_campo(paquete, &offset, &self->quantumSleep, sizeof(self->quantumSleep));
+	serializar_campo(paquete, &offset, &self->offsetStack, sizeof(self->offsetStack));
 
 	//Serializacion del t_metadata
 	serializar_campo(paquete, &offset, self->metadata_program, sizeof(t_metadata_program));
@@ -73,6 +74,8 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 	deserializar_campo(paquete, &offset, &self->socketCPU, sizeof(self->socketCPU));
 	deserializar_campo(paquete, &offset, &self->quantum, sizeof(self->quantum));
 	deserializar_campo(paquete, &offset, &self->quantumSleep, sizeof(self->quantumSleep));
+	deserializar_campo(paquete, &offset, &self->offsetStack, sizeof(self->offsetStack));
+
 
 	// Reservo memoria para estructura t_metadata_program
 	self->metadata_program = malloc(sizeof(t_metadata_program));
@@ -111,7 +114,7 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 	return EXIT_SUCCESS;
 }
 
-static void pcb_destroy(stPCB *self) {
+void pcb_destroy(stPCB *self) {
 	free(self->metadata_program->etiquetas);
 	free(self->metadata_program->instrucciones_serializado);
 	free(self->metadata_program);
@@ -119,16 +122,16 @@ static void pcb_destroy(stPCB *self) {
     free(self);
 }
 
-static void stack_destroy(stIndiceStack *self) {
+void stack_destroy(stIndiceStack *self) {
 	list_destroy_and_destroy_elements(self->variables, (void*)variables_destroy);
 	list_destroy_and_destroy_elements(self->argumentos, (void*)argumentos_destroy);
 	free(self);
 }
 
-static void variables_destroy(stVars *self) {
+void variables_destroy(stVars *self) {
     free(self);
 }
 
-static void argumentos_destroy(stPosicion *self) {
+void argumentos_destroy(stPosicion *self) {
     free(self);
 }

@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "Swap.h"
 #include "gestionAsignacion.h"
@@ -35,7 +36,7 @@ int initGestionAsignacion(t_swap_config * config){
 	loaded_config = config;
 
 	//Reservo espacio necesario para el bitmap
-	bitArrayBuffer = malloc(config->cantidadPaginas);
+	bitArrayBuffer = (char *)calloc(1, config->cantidadPaginas);
 	if(bitArrayBuffer == NULL){
 		log_error("Error al asignar espacio en memoria para el BitMap");
 		return -1;
@@ -43,10 +44,6 @@ int initGestionAsignacion(t_swap_config * config){
 
 	//Creo el bit array
 	bitArray = bitarray_create(bitArrayBuffer, config->cantidadPaginas);
-	if(bitArray == NULL){
-		log_error("Error al crear el BitMap");
-		return -2;
-	}
 
 	//Inicializo la lista de asignaciones
 	assignmentList = list_create();
@@ -223,6 +220,11 @@ unsigned long int buscarIndicePrimeraAsignacionProceso(unsigned long int pId){
 	unsigned long int i;
 	t_asignacion *asignacion;
 
+	//Si no tengo asignaciones previas realizadas
+	if(cantAsignaciones == 0)
+		return -1;
+
+	//Busco la primera asignación realizada al PID
 	for(i = 0; i < cantAsignaciones; i++){
 		asignacion = list_get(assignmentList, i);
 		if(asignacion->pid == pId)
@@ -265,7 +267,7 @@ int reservarEspacioProceso(unsigned long int pid, unsigned long int sectorInicia
  */
 int liberarEspacioDeProceso(unsigned long int pID){
 
-	unsigned long int i;
+	long int i;
 	t_asignacion * asignacion;
 
 	i = buscarIndicePrimeraAsignacionProceso(pID);
@@ -291,9 +293,12 @@ int liberarEspacioDeProceso(unsigned long int pID){
 int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPaginas, char *bufferPrograma){
 
 	t_bloque_libre info_bloque_libre;
-	unsigned long int sectorOffset;
+	unsigned long int largoPrograma, offset;
+	char * bufferSector;
+	int r;
 
-	if(buscarIndicePrimeraAsignacionProceso(pID) >= 0){
+	r = buscarIndicePrimeraAsignacionProceso(pID);
+	if(r >= 0){
 		log_error("El proceso al que se desea asignar espacio ya se encuentra en la tabla de asignacion");
 		return -1;
 	}
@@ -322,20 +327,33 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 		return -4;
 	}
 
-	log_info("Asignacion de paginas satisfactoria al proceso(PID %ul): %ul->%ul",
+	log_info("Asignacion de paginas satisfactoria al proceso(PID %u): %u->%u",
 			pID, info_bloque_libre.offset, info_bloque_libre.offset + cantidadPaginas - 1);
 
 	//Grabo la particion SWAP con el codigo del programa
-	sectorOffset = info_bloque_libre.offset;
-	while(sectorOffset < info_bloque_libre.offset + cantidadPaginas){
-		if(escribirSector(bufferPrograma + (sectorOffset - info_bloque_libre.offset)*loaded_config->tamanioPagina, sectorOffset) < 0){
+	largoPrograma = strlen(bufferPrograma);
+	offset = 0;
+	bufferSector = (char *)calloc(1, loaded_config->tamanioPagina);
+	while(offset < largoPrograma){
+
+		//Cargo el buffer del sector con el código del programa
+		if((largoPrograma - offset) < loaded_config->tamanioPagina){
+			memset(bufferSector, '\0', loaded_config->tamanioPagina);
+			memcpy(bufferSector, (bufferPrograma + offset), (largoPrograma - offset));
+		} else {
+			memcpy(bufferSector, (bufferPrograma + offset), loaded_config->tamanioPagina);
+		}
+
+		if(escribirSector(bufferSector, offset/loaded_config->tamanioPagina) < 0){
 			//Error al escribir el sector en disco con el codigo del programa
 			log_error("Error al escribir el codigo del programa en un sector del SWAP, se hace rollback de lo asignado");
 			//Libero lo asignado al programa
 			liberarEspacioDeProceso(pID);
 			return -5;
 		}
-		sectorOffset++;
+
+		//Me muevo el siguiente sector
+		offset += loaded_config->tamanioPagina;
 	}
 
 	return 0;
