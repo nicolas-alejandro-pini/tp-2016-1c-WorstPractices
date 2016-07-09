@@ -92,24 +92,28 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
-	stMensajeIPC mensajePrimitiva;
-	t_puntero posicionVariable;
+	stVars *unaVariable;
+	unaVariable = malloc(sizeof(stVars));
 
-	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
+	stIndiceStack *indiceStack;
+	indiceStack = malloc(sizeof(stIndiceStack));
 
-	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
-		printf("Error: Falló la obtencion de posicion de la variable %s.\n", identificador_variable);
-		return posicionVariable;
-	}
+	int tamanioStack;
 
-	if (mensajePrimitiva.header.tipo == OK) {
+	tamanioStack = list_size(unPCB->stack); //considero que en pila del stack el ultimo es el contexto actual.
 
-		/*TODO Deserializar el mensaje*/
+	indiceStack = list_get(unPCB->stack, tamanioStack);
 
-	}
+	int _es_la_var(stVars *var) {
+			return var->id == identificador_variable;
+		}
 
-	//free(mensajePrimitiva);
-	return posicionVariable;
+	unaVariable = list_find(indiceStack->variables, (void*) _es_la_var);
+
+
+	return unaVariable->posicion_memoria.offset;
+
+	/*TODO falta ver el caso en que no la encuentra para devolver -1*/
 
 }
 
@@ -119,7 +123,6 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	stMensajeIPC mensajePrimitiva;
 	t_valor_variable valor;
 
-	/*TODO Serializar el mensaje de estructura */
 	char* estructuraSerializada;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(VALORVARIABLE),estructuraSerializada);
@@ -468,44 +471,46 @@ void cargarConf(t_configCPU* config,char* file_name){
  */
 int cpuHandShake (int socket, int tipoHeader)
 {
-	stHeaderIPC *stHeaderIPC;
-
-	if(!recibirHeaderIPC(socket,stHeaderIPC)){
-		printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+	stHeaderIPC *headerIPC, *stHeaderIPCQuienSos;  // Hace falta definirlo porque dentro de QUIEN SOS el nuevo header pisa la referencia de stHeaderIPC
+	headerIPC = nuevoHeaderIPC(ERROR);             // reserva memoria para recibir el header
+	if(!recibirHeaderIPC(socket,headerIPC)){       // stHeaderIPC *stHeaderIPC ,no puede tener el mismo nombre que la estructura
+		log_info("SOCKET_ERROR - No se recibe un mensaje correcto.");
+		liberarHeaderIPC(headerIPC);
 		fflush(stdout);
+		return(-1);
 	}
+	printf("HandShake mensaje recibido %ld\n", headerIPC->tipo);
 
-	printf("HandShake mensaje recibido %d",stHeaderIPC->tipo);
-
-	if (stHeaderIPC->tipo == QUIENSOS)
+	if (headerIPC->tipo == QUIENSOS)
 	{
-		stHeaderIPC = nuevoHeaderIPC(tipoHeader);
-		if(!enviarHeaderIPC(socket,stHeaderIPC)){
-			printf("No se pudo enviar el MensajeIPC\n");
-			liberarHeaderIPC(stHeaderIPC);
+		stHeaderIPCQuienSos = nuevoHeaderIPC(tipoHeader);
+		if(!enviarHeaderIPC(socket,stHeaderIPCQuienSos)){
+			log_info("No se pudo enviar el MensajeIPC.");
+			liberarHeaderIPC(stHeaderIPCQuienSos);
 			return (-1);
 		}
+		liberarHeaderIPC(stHeaderIPCQuienSos);
 	}
+	liberarHeaderIPC(headerIPC);
 
-	if(!recibirHeaderIPC(socket,stHeaderIPC)){
-			printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+	headerIPC = nuevoHeaderIPC(ERROR); // Libero primer recibir (al hacer un nuevoHeader pierde la referencia de la memoria allocada antes
+	if(!recibirHeaderIPC(socket,headerIPC)){
+			log_info("SOCKET_ERROR - No se recibe un mensaje correcto.");
 			fflush(stdout);
-			liberarHeaderIPC(stHeaderIPC);
+			liberarHeaderIPC(headerIPC);
 			return (-1);
 	}
-
-	printf("HandShake: mensaje recibido %d",stHeaderIPC->tipo);
+	log_info("HandShake: mensaje recibido: ",headerIPC->tipo);
 	fflush(stdout);
 
-	if(stHeaderIPC->tipo == OK)
+	if(headerIPC->tipo == OK)
 	{
-		printf("Conexión establecida con id: %d...\n",tipoHeader);
+		log_info("Conexión establecida con id: ",tipoHeader);
 		fflush(stdout);
-		liberarHeaderIPC(stHeaderIPC);
+		liberarHeaderIPC(headerIPC);
 		return socket;
 	}
-
-	liberarHeaderIPC(stHeaderIPC);
+	liberarHeaderIPC(headerIPC);   // Libera segundo recibir
 	return (-1);
 }
 
@@ -522,7 +527,7 @@ int cpuConectarse(char* IP, int puerto, char* aQuien){
 
 	int socket = 0;
 
-	printf("Conectando con %d...\n",puerto);
+	log_info("Conectando con: ",aQuien);
 	fflush(stdout);
 	socket = conectar(IP, puerto);
 
@@ -689,18 +694,26 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 		posicionInstruccion.offset = startRequest;
 		posicionInstruccion.size = sizeToUMC;
 
-		unHeader=nuevoHeaderIPC(READ_BTYES_PAGE);
+		unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
 		unHeader->largo = sizeof(posicionInstruccion);
 
-		enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion);
+		if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
+			log_error("Error al enviar mensaje de leer bytes intruccion.");
+		}
 
-		recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje );
+		if(!recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje )){
+
+			log_error("Error al recibir mensaje de bytes intruccion.");
+		}
+
 
 		instruccionTemp = (char*)unMensaje->contenido;
 
 		string_append (*instruccion,instruccionTemp);
 
 		startToUMC = startToUMC + sizeToUMC;
+
+		liberarHeaderIPC(unHeader);
 
 	}
 
@@ -837,16 +850,16 @@ int main(void) {
 		FD_SET(configuracionInicial.sockNucleo,&(fds_master));
 		configuracionInicial.socketMax = configuracionInicial.sockNucleo;
 		SocketAnterior = configuracionInicial.socketMax;
-		//log_info("OK - Nucleo conectado.");
+		log_info("OK - Nucleo conectado.");
 		fflush(stdout);
-		//loguear(OK_LOG,"Nucleo conectado","Nucleo"); TODO Agregar funcion de logueo.
+		log_info("Nucleo conectado.");
 
 	}	//Fin de conexion al Nucleo//
 
 
 	/***** Lanzo conexión con el UMC ********/
 
-	//log_info("Conectando al UMC...");
+	log_info("Conectando al UMC...");
 
 	configuracionInicial.sockUmc = cpuConectarse(configuracionInicial.ipUmc, configuracionInicial.puertoUmc, "UMC");
 
@@ -855,7 +868,7 @@ int main(void) {
 		FD_SET(configuracionInicial.sockUmc,&(fds_master));
 		configuracionInicial.socketMax = configuracionInicial.sockUmc;
 		SocketAnterior = configuracionInicial.socketMax;
-		//log_info("OK - UMC conectada.");
+		log_info("OK - UMC conectada.");
 		fflush(stdout);
 
 	}
@@ -866,7 +879,7 @@ int main(void) {
 
 	if(recibirConfigUMC(configuracionInicial.sockUmc, configUMC )!=0){
 
-		//log_info("Error al recibir paginas de UMC.");
+		log_info("Error al recibir paginas de UMC.");
 		configuracionInicial.salir = 1;
 	}
 
@@ -905,7 +918,7 @@ int main(void) {
 							configuracionInicial.socketMax = unSocket;
 						}
 
-						//loguear(INFO_LOG,"Se perdio conexion con Nucleo","Nucleo");//TODO Funciones de logueo
+						log_info("Se perdio conexion con Nucleo.");
 
 					}else if (configuracionInicial.sockUmc == unSocket)
 					{
@@ -930,7 +943,7 @@ int main(void) {
 					{
 						case EXECANSISOP:
 
-							/*log_info("Respondiendo solicitud ANSIPROG...");*/
+							log_info("Respondiendo solicitud ANSIPROG...");
 
 							unHeaderIPC = nuevoHeaderIPC(OK);
 							enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
