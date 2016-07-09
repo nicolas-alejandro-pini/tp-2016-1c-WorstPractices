@@ -6,6 +6,49 @@
  */
 #include "pcb.h"
 
+pthread_mutex_t mutex_pid = PTHREAD_MUTEX_INITIALIZER;
+
+int pid_incrementer() {
+
+	pthread_mutex_lock(&mutex_pid);
+	pidCounter = pidCounter + 1;
+	pthread_mutex_unlock(&mutex_pid);
+	return pidCounter;
+}
+
+stPCB *crear_pcb(int socket_consola, int cantidad_pag_codigo, int stack_size, stMensajeIPC *unMensajeIPC) {
+
+	stPCB *unPCB = (stPCB*)malloc(sizeof(stPCB));
+	stIndiceStack *unIndiceStack;
+
+	unPCB->pid = pid_incrementer();
+	unPCB->pc = 0;
+	unPCB->socketConsola = socket_consola;
+	unPCB->socketCPU = 0;
+	unPCB->paginaInicioStack = cantidad_pag_codigo + 1;
+	unPCB->cantidadPaginas = cantidad_pag_codigo + stack_size;
+
+	if(unMensajeIPC->contenido==NULL){
+		return NULL;
+	}
+
+	unPCB->metadata_program = metadata_desde_literal(unMensajeIPC->contenido);
+	unPCB->stack = list_create();
+	unPCB->offsetStack = 0;
+
+
+	/*Inicializo el stack con un elemento*/
+	unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
+	if (unIndiceStack != NULL) {
+		unIndiceStack->argumentos = list_create();
+		unIndiceStack->pos = 0;
+		unIndiceStack->variables = list_create();
+		list_add(unPCB->stack,unIndiceStack);
+	}
+
+	return unPCB;
+}
+
 int serializar_pcb(t_paquete *paquete, stPCB *self) {
 
 	// Iniciar en 0

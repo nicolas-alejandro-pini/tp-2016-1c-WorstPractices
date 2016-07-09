@@ -19,17 +19,14 @@
  ============================================================================
  */
 
-int pidCounter;
+
 
 /*
  ============================================================================
  Funciones
  ============================================================================
  */
-int pid_incrementer() {
-	pidCounter = pidCounter + 1;
-	return pidCounter;
-}
+
 
 int calcular_cantidad_paginas(int size_programa,int tamanio_paginas){
 	int cant=0;
@@ -82,7 +79,7 @@ void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
 //		pthread_mutex_lock(&mutexColaReady);
 //		queue_push(colaReady, unPCB);
 //		pthread_mutex_unlock(&mutexColaReady);
-		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
+		printf("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
 
 	}
 }
@@ -93,19 +90,12 @@ void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
  ============================================================================
  */
 int main(int argc, char *argv[]) {
-	stHeaderIPC *stHeaderIPC;
+	stHeaderIPC *stHeaderIPC, *stHeaderSwitch = NULL;
 	stEstado elEstadoActual;
 	stMensajeIPC unMensaje;
-	t_metadata_program *unPrograma;
-	stPCB *unPCB;
-	stIndiceStack *unIndiceStack;
+	stPCB *unPCB = NULL;
 	t_UMCConfig UMCConfig;
-	pidCounter = 0;
-
-	int metadataSize = 0;
-
 	struct thread_cpu_arg_struct cpu_arg_struct;
-
 	char* temp_file = "nucleo.log";
 
 	/*Inicializacion de las colas del planificador*/
@@ -136,7 +126,7 @@ int main(int argc, char *argv[]) {
 	printf("Obteniendo configuracion...");
 	loadInfo(&elEstadoActual, &listaSem, &listaSharedVars);
 	printf("OK\n");
-	log_info("Configuracion cargada satisfactoriamente...");
+	printf("Configuracion cargada satisfactoriamente...\n");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
 	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*) &elEstadoActual);
@@ -152,7 +142,7 @@ int main(int argc, char *argv[]) {
 	/*Iniciando escucha en el socket escuchador de Consola*/
 	elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
 	FD_SET(elEstadoActual.sockEscuchador, &(fds_master));
-	log_info("Se establecio conexion con el socket de escucha...");
+	printf("Se establecio conexion con el socket de escucha...\n");
 
 	/*Seteamos el maximo socket*/
 	elEstadoActual.fdMax = elEstadoActual.sockEscuchador;
@@ -172,7 +162,6 @@ int main(int argc, char *argv[]) {
 			close(unCliente);
 
 		}
-
 		if (stHeaderIPC->tipo == QUIENSOS) {
 			stHeaderIPC = nuevoHeaderIPC(CONNECTNUCLEO);
 			if (!enviarHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
@@ -181,7 +170,7 @@ int main(int argc, char *argv[]) {
 				close(unCliente);
 			}
 		}
-
+		liberarHeaderIPC(stHeaderIPC);
 		stHeaderIPC = nuevoHeaderIPC(OK);
 		if (!recibirHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
 			log_error("UMC handshake error - No se pudo recibir mensaje de confirmacion");
@@ -233,47 +222,43 @@ int main(int argc, char *argv[]) {
 				if (unSocket == elEstadoActual.sockEscuchador) {
 					unCliente = aceptar(elEstadoActual.sockEscuchador, &addressAceptado);
 
-					log_info("Se recibe un pedido de conexion...");
+					printf("Se recibe un pedido de conexion...\n");
 
 					stHeaderIPC = nuevoHeaderIPC(QUIENSOS);
 					if (!enviarHeaderIPC(unCliente, stHeaderIPC)) {
-
 						log_error("Handshake error - No se puede enviar el mensaje de reconocimiento de cliente");
-
 						liberarHeaderIPC(stHeaderIPC);
 						close(unCliente);
 						continue;
-
 					}
-
+					liberarHeaderIPC(stHeaderIPC);
+					stHeaderIPC = nuevoHeaderIPC(ERROR);
 					if (!recibirHeaderIPC(unCliente, stHeaderIPC)) {
 						log_error("Handshake error - No se puede recibir el mensaje de reconocimiento de cliente");
-
 						liberarHeaderIPC(stHeaderIPC);
 						close(unCliente);
 						continue;
-
 					}
 
 					/*Identifico quien se conecto y procedo*/
 					switch (stHeaderIPC->tipo) {
 					case CONNECTCONSOLA:
 
-						stHeaderIPC = nuevoHeaderIPC(OK);
-						if (!enviarHeaderIPC(unCliente, stHeaderIPC)) {
+						stHeaderSwitch = nuevoHeaderIPC(OK);
+						if (!enviarHeaderIPC(unCliente, stHeaderSwitch)) {
 							log_error("Handshake Consola - No se puede recibir el mensaje de reconocimiento de cliente");
-							liberarHeaderIPC(stHeaderIPC);
+							liberarHeaderIPC(stHeaderSwitch);
 							close(unCliente);
 							continue;
 						}
-
-						log_info("Nueva consola conectada");
+						liberarHeaderIPC(stHeaderSwitch);
+						printf("Nueva consola conectada\n");
 						agregarSock = 1;
 
 						/*Agrego el socket conectado a la lista Master*/
 						if (agregarSock == 1) {
 							FD_SET(unCliente, &(fds_master));
-							log_info("Se agrega la consola conectada a la lista FDS_MASTER");
+							printf("Se agrega la consola conectada a la lista FDS_MASTER\n");
 							if (unCliente > elEstadoActual.fdMax) {
 								maximoAnterior = elEstadoActual.fdMax;
 								elEstadoActual.fdMax = unCliente;
@@ -288,35 +273,15 @@ int main(int argc, char *argv[]) {
 							continue;
 						} else {
 							if (unMensaje.header.tipo == SENDANSISOP) {
-
-								unPrograma = metadata_desde_literal(unMensaje.contenido);
-								metadataSize = sizeof(t_metadata_program) + (sizeof(t_intructions) * unPrograma->instrucciones_size)
-										+ (sizeof(char) * unPrograma->etiquetas_size);
-
+								/*metadata_desde_literal hace un malloc adentro*/
 								int cantidadDePaginasCodigo = calcular_cantidad_paginas(unMensaje.header.largo,UMCConfig.tamanioPagina);
 
 								/***Creacion del PCB***/
-								unPCB = (stPCB*) malloc(sizeof(stPCB));
-								if (unPCB != NULL) {
-									unPCB->pid = pid_incrementer();
-									unPCB->pc = 0;
-									unPCB->socketConsola = unCliente;
-									unPCB->socketCPU = 0;
-									unPCB->paginaInicioStack = cantidadDePaginasCodigo + 1;
-									unPCB->cantidadPaginas = cantidadDePaginasCodigo + elEstadoActual.stackSize;
-									unPCB->metadata_program = (t_metadata_program *) malloc(metadataSize);
-									memcpy(unPCB->metadata_program, unPrograma, metadataSize);
-									unPCB->stack = list_create();
-									unPCB->offsetStack = 0;
-
-								}
-								/*Inicializo el stack con un elemento*/
-								unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
-								if (unIndiceStack != NULL) {
-									unIndiceStack->argumentos = list_create();
-									unIndiceStack->pos = 0;
-									unIndiceStack->variables = list_create();
-									list_add(unPCB->stack,unIndiceStack);
+								unPCB = crear_pcb(unCliente,cantidadDePaginasCodigo,elEstadoActual.stackSize,&unMensaje);
+								if(unPCB==NULL){
+									printf("Error al crear el PCB\n");
+									close(unCliente);
+									continue;
 								}
 
 								if (inicializar_programa(unPCB->pid, unPCB->cantidadPaginas, unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
@@ -331,8 +296,8 @@ int main(int argc, char *argv[]) {
 									continue;
 								}
 
-								//log_info("Ingresa PCB [%d] en estado NEW", unPCB->pid);
-								ready_productor(&unPCB);
+								printf("Ingresa PCB [%d] en estado NEW\n", unPCB->pid);
+								ready_productor(unPCB);
 								printf("OK\n");
 								fflush(stdout);
 							}
@@ -341,14 +306,15 @@ int main(int argc, char *argv[]) {
 						break;
 
 					case CONNECTCPU:
-						stHeaderIPC = nuevoHeaderIPC(OK);
-						if (!enviarHeaderIPC(unCliente, stHeaderIPC)) {
-							liberarHeaderIPC(stHeaderIPC);
+						stHeaderSwitch = nuevoHeaderIPC(OK);
+						if (!enviarHeaderIPC(unCliente, stHeaderSwitch)) {
+							liberarHeaderIPC(stHeaderSwitch);
 							printf("CPU error - No se pudo enviar confirmacion de recepcion\n");
 							log_error("CPU error - No se pudo enviar confirmacion de recepcion");
 							continue;
 						}
-						log_info("Nuevo CPU conectado");
+						liberarHeaderIPC(stHeaderSwitch);
+						printf("Nuevo CPU conectado\n");
 						agregarSock = 1;
 						/*Agrego el socket conectado A la lista Master*/
 						if (agregarSock == 1) {
@@ -377,6 +343,7 @@ int main(int argc, char *argv[]) {
 					default:
 						break;
 					}
+					liberarHeaderIPC(stHeaderIPC);
 				} else {
 					/*Conexion existente*/
 					memset(unMensaje.contenido, '\0', LONGITUD_MAX_DE_CONTENIDO);

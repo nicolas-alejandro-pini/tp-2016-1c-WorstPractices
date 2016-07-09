@@ -19,7 +19,7 @@ void *ready_productor(void* arg) {
 	numInQ++;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
 	pthread_mutex_unlock(&empty);	// Comienzo de espera de consumidor
-	printf("[PID-%d] Ingresa a la cola de Ready...\n", pcb_to_produce->pid);
+	printf("[PID-%d] Ingresa a la cola de Ready...", pcb_to_produce->pid);
 	fflush(stdout);
 	sleep(1);
 

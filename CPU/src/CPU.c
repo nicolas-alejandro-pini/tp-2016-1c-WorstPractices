@@ -930,7 +930,7 @@ int main(void) {
 					{
 						case EXECANSISOP:
 
-							log_info("Respondiendo solicitud ANSIPROG...");
+							/*log_info("Respondiendo solicitud ANSIPROG...");*/
 
 							unHeaderIPC = nuevoHeaderIPC(OK);
 							enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);

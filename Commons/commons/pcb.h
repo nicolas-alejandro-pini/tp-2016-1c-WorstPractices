@@ -12,6 +12,7 @@
 #include "collections/list.h"
 #include "collections/queue.h"
 #include "serializador.h"
+#include  <pthread.h>
 
 
 typedef struct {
@@ -42,6 +43,9 @@ typedef struct {
 	t_list *stack;	/*Lista de stIndiceStack*/
 }__attribute__((packed)) stPCB;
 
+int pidCounter; /*Ultimo PID asignado*/
+
+stPCB *crear_pcb(int socket_consola, int cantidad_pag_codigo,int stack_size, stMensajeIPC *unMensajeIPC);
 int serializar_pcb(t_paquete *paquete, stPCB *self);
 int deserializar_pcb(stPCB *self, t_paquete *paquete);
 void variables_destroy(stVars *self);
