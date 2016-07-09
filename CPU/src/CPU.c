@@ -788,21 +788,16 @@ int devolverPCBalNucleo(void){
 	return resultado;
 }
 
-int cambiarContextoUMC(void){
+int cambiarContextoUMC(int pid){
 
-	stHeaderIPC *unHeaderIPC;
+	stMensajeIPC unMensajeIPC;
+	unMensajeIPC.header.tipo = CAMBIOCONTEXTO;
+	unMensajeIPC.header.largo = sizeof(pid);
 
-	unHeaderIPC = nuevoHeaderIPC(CAMBIOCONTEXTO);
+	if(!enviarMensajeIPC(configuracionInicial.sockUmc,&unMensajeIPC.header, (char*) &pid))
+		return EXIT_FAILURE;
 
-	enviarHeaderIPC(configuracionInicial.sockUmc,unHeaderIPC);
-
-	recibirHeaderIPC(configuracionInicial.sockUmc, unHeaderIPC );
-
-	if(unHeaderIPC->tipo != "OK"){
-		return -1;
-	}
-
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 /*
@@ -951,7 +946,7 @@ int main(void) {
 							if (cargarPCB() != -1)
 							{
 								//Cambio el contexto con la UMC
-								if(cambiarContextoUMC() != 0){
+								if(cambiarContextoUMC(unPCB->pid)!=EXIT_SUCCESS){
 									log_info("Error al cambiar de contexto...");
 									break;
 								}
