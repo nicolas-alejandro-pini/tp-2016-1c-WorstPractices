@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
 
 	stMensajeIPC *unMensaje = NULL;
 	stHeaderIPC *unaCabecera = NULL;
-	int unCliente = 0, unSocket;
+	int i, unCliente = 0, unSocket;
 	struct sockaddr addressAceptado;
 	int maximoAnterior;
 	char enviolog[TAMDATOS];
@@ -253,6 +253,7 @@ int main(int argc, char *argv[]) {
 			}
 			else
 			{
+				FD_SET(losParametros.sockSwap, &(fds_master));
 				log_info("OK - Swap conectado.");
 				fflush(stdout);
 
@@ -377,8 +378,10 @@ int main(int argc, char *argv[]) {
 
 						if (!recibirMensajeIPC(unSocket,unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
 
-							if(unSocket==losParametros.sockEscuchador){
-								log_error("Se perdio conexion con el cliente - Conexion perdida: %d",unSocket);
+							if(unSocket==losParametros.sockSwap){
+								log_error("Se perdio conexion con el swap.. Finalizando UMC.");
+								cerrarSockets(&losParametros);
+								exit(EXIT_FAILURE);
 							}
 
 							/*Saco el socket de la lista Master*/

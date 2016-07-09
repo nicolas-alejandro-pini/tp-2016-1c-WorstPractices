@@ -282,7 +282,7 @@ void cambiarContexto(uint16_t pid){
 
 void realizarAccionCPU(uint16_t socket){
 
-	stMensajeIPC *unMensaje;
+	stMensajeIPC unMensaje;
 	uint16_t pidActivo, pagina;
 	stEnd *end;
 	stPosicion *posR;
@@ -290,20 +290,18 @@ void realizarAccionCPU(uint16_t socket){
 
 	while(1){
 
-		if(!recibirMensajeIPC(socket, unMensaje)){
+		if(!recibirMensajeIPC(socket, &unMensaje)){
 			log_error("Thread Error - No se pudo recibir mensaje de respuesta - socket: %d", socket);
 			//liberarHeaderIPC(unMensaje->header);
-			free(unMensaje->contenido);
-			free(unMensaje);
 			close(socket);
 			return;//pthread_exit(NULL);
 		}
 
-		switch(unMensaje->header.tipo){
+		switch(unMensaje.header.tipo){
 
 		case READ_BTYES_PAGE:
 
-			posR =(stPosicion*)(unMensaje->contenido);
+			posR =(stPosicion*)(unMensaje.contenido);
 
 			leerBytes(posR, pidActivo, socket);
 
@@ -311,7 +309,7 @@ void realizarAccionCPU(uint16_t socket){
 
 		case WRITE_BYTES_PAGE:
 
-			posW =(stEscrituraPagina*)(unMensaje->contenido);
+			posW =(stEscrituraPagina*)(unMensaje.contenido);
 
 			escribirBytes(posW, pidActivo, socket);
 
@@ -324,13 +322,13 @@ void realizarAccionCPU(uint16_t socket){
 
 		case CAMBIOCONTEXTO:
 
-			pidActivo = (uint16_t)*(unMensaje->contenido);
+			pidActivo = (uint16_t)*(unMensaje.contenido);
 			cambiarContexto(pidActivo);
 
 			break;
 
 		default:
-			log_info("Se recibio una peticion con un codigo desconocido...%i\n", unMensaje->header.tipo);
+			log_info("Se recibio una peticion con un codigo desconocido...%i\n", unMensaje.header.tipo);
 			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 			break;
