@@ -13,7 +13,7 @@
 #include "semaforos.h"
 #include "shared_vars.h"
 
-void consumidor_cpu(void *argumentos);
+void *consumidor_cpu(int unCliente);
 
 
 

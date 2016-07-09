@@ -6,9 +6,7 @@
  */
 #include "includes/consumidor_cpu.h"
 
-void consumidor_cpu(void *args) {
-	struct thread_cpu_arg_struct *current_args = args;
-
+void *consumidor_cpu(int unCliente) {
 	stHeaderIPC *unHeaderIPC;
 	stMensajeIPC unMensajeIPC;
 	stPCB *unPCB;
@@ -23,17 +21,17 @@ void consumidor_cpu(void *args) {
 
 	while (!error) {
 		unPCB = ready_consumidor();
-		unPCB->quantum = current_args->estado->quantum;
-		unPCB->quantumSleep = current_args->estado->quantumSleep;
+		unPCB->quantum = obtenerEstadoActual().quantum;
+		unPCB->quantumSleep = obtenerEstadoActual().quantumSleep;
 
 		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
-		if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
+		if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 			log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
 			error = 1;
 			continue;
 		}
 
-		if (!recibirHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
+		if (!recibirHeaderIPC(unCliente, unHeaderIPC)) {
 			log_error("CPU error - No se pudo recibir el mensaje");
 			error = 1;
 		}
@@ -42,7 +40,7 @@ void consumidor_cpu(void *args) {
 			crear_paquete(&paquete, EXECANSISOP);
 			serializar_pcb(&paquete, unPCB);
 
-			if (enviar_paquete(current_args->socketCpu, &paquete)) {
+			if (enviar_paquete(unCliente, &paquete)) {
 				log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
 				error = 1;
 				continue;
@@ -50,10 +48,10 @@ void consumidor_cpu(void *args) {
 			free_paquete(&paquete);
 		}
 
-		if (!recibirMensajeIPC(current_args->socketCpu, &unMensajeIPC)) {
+		if (!recibirMensajeIPC(unCliente, &unMensajeIPC)) {
 			log_error("CPU error - No se pudo recibir header");
 			error = 1;
-			close(current_args->socketCpu);
+			close(unCliente);
 			continue;
 		} else {
 			switch (unMensajeIPC.header.tipo) {
@@ -63,17 +61,17 @@ void consumidor_cpu(void *args) {
 				int _es_el_dispositivo(stDispositivo *d) {
 					return string_equals_ignore_case(d->nombre, dispositivo_name);
 				}
-				unDispositivo = list_remove_by_condition(current_args->estado->dispositivos, (void*) _es_el_dispositivo);
+				unDispositivo = list_remove_by_condition(obtenerEstadoActual().dispositivos, (void*) _es_el_dispositivo);
 
 				/*Envio confirmacion al CPU*/
 				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
+				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 					log_error("CPU error - No se pudo enviar header");
 					error = 1;
 					continue;
 				}
 				/*Recibo el PCB*/
-				if (!recibir_paquete(current_args->socketCpu, &paquete)) {
+				if (!recibir_paquete(unCliente, &paquete)) {
 					log_error("CPU error - No se pudo recibir header");
 					error = 1;
 					continue;
@@ -89,7 +87,7 @@ void consumidor_cpu(void *args) {
 				queue_push(unDispositivo->rafagas, unaRafagaIO);
 
 				/*Volvemos a almacenar el dispositivo en la lista*/
-				list_add(current_args->estado->dispositivos, unDispositivo);
+				list_add(obtenerEstadoActual().dispositivos, unDispositivo);
 				list_add(listaBlock, &unPCB);
 
 				printf("PCB[%d] en estado BLOCK\n", unPCB->pid);
@@ -108,7 +106,7 @@ void consumidor_cpu(void *args) {
 				break;
 			case QUANTUMFIN:
 
-				if(recibir_paquete (current_args->socketCpu, &paquete)){
+				if(recibir_paquete (unCliente, &paquete)){
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					free_paquete(&paquete);
@@ -134,7 +132,7 @@ void consumidor_cpu(void *args) {
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de variable compartida...\n");
 				/*Valor de la variable compartida, devolver el valor para que el CPU siga ejecutando*/
-				if (!recibirContenido(current_args->socketCpu, unMensajeIPC.contenido,unHeaderIPC->largo)) {
+				if (!recibirContenido(unCliente, unMensajeIPC.contenido,unHeaderIPC->largo)) {
 					log_error("CPU error - No se pudo recibir la variable");
 					error = 1;
 					continue;
@@ -142,7 +140,7 @@ void consumidor_cpu(void *args) {
 
 				/*TODO: Falta testear*/
 				unaSharedVar = obtener_shared_var(listaSharedVars, unMensajeIPC.contenido);
-				if(!enviarMensajeIPC(current_args->socketCpu,unHeaderIPC,(char*)unaSharedVar->valor)){
+				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar->valor)){
 					log_error("CPU error - No se pudo enviar el valor la variable");
 					error = 1;
 					continue;
@@ -156,14 +154,14 @@ void consumidor_cpu(void *args) {
 				printf("Nuevo pedido de actualizacion de variable compartida\n");
 				/*Me pasa la variable compartida y el valor*/
 				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
+				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 					log_error("CPU error - No se pudo enviar header");
 					error = 1;
 					continue;
 				}
 
 				offset = 0;
-				if (recibir_paquete(current_args->socketCpu, &paquete)) {
+				if (recibir_paquete(unCliente, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					continue;
@@ -181,7 +179,7 @@ void consumidor_cpu(void *args) {
 				printf("Nuevo pedido de wait de semaforo ");
 				/*Wait del semaforo que pasa por parametro*/
 				offset = 0;
-				if (recibir_paquete(current_args->socketCpu, &paquete)) {
+				if (recibir_paquete(unCliente, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					continue;
@@ -192,7 +190,7 @@ void consumidor_cpu(void *args) {
 				printf("%s\n",identificador_semaforo);
 				if(wait_semaforo(listaSem,identificador_semaforo)== EXIT_FAILURE){
 					unHeaderIPC = nuevoHeaderIPC(ERROR);
-					if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
+					if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 						log_error("CPU error - No se pudo enviar header");
 						error = 1;
 						continue;
@@ -207,7 +205,7 @@ void consumidor_cpu(void *args) {
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de signal de semaforo ");
 				offset = 0;
-				if (recibir_paquete(current_args->socketCpu, &paquete)) {
+				if (recibir_paquete(unCliente, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					continue;
@@ -218,7 +216,7 @@ void consumidor_cpu(void *args) {
 				/*TODO: Falta testear*/
 				if(signal_semaforo(listaSem,identificador_semaforo)== EXIT_FAILURE){
 					unHeaderIPC = nuevoHeaderIPC(ERROR);
-					if (!enviarHeaderIPC(current_args->socketCpu, unHeaderIPC)) {
+					if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 						log_error("CPU error - No se pudo enviar header");
 						error = 1;
 						continue;
@@ -239,11 +237,13 @@ void consumidor_cpu(void *args) {
 		ready_productor(&unPCB);
 		log_info("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
 		liberarHeaderIPC(unHeaderIPC);
-		close(current_args->socketCpu);
+		close(unCliente);
 		pthread_exit(NULL);
 	}
 
 	liberarHeaderIPC(unHeaderIPC);
+	pthread_exit(NULL);
+	return NULL;
 }
 
 

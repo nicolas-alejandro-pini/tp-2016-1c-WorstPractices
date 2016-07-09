@@ -19,7 +19,7 @@
  ============================================================================
  */
 
-
+pthread_mutex_t mutex_estado = PTHREAD_MUTEX_INITIALIZER;
 
 /*
  ============================================================================
@@ -33,6 +33,14 @@ int calcular_cantidad_paginas(int size_programa,int tamanio_paginas){
 	if(size_programa%tamanio_paginas > 0)
 		cant++;
 	return ((int)(size_programa/tamanio_paginas) + cant);
+}
+
+stEstado obtenerEstadoActual(){
+	stEstado unEstado;
+	pthread_mutex_lock(&mutex_estado);
+	unEstado = elEstadoActual;
+	pthread_mutex_unlock(&mutex_estado);
+	return unEstado;
 }
 
 void cerrarSockets(stEstado *elEstadoActual) {
@@ -90,8 +98,7 @@ void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
  ============================================================================
  */
 int main(int argc, char *argv[]) {
-	stHeaderIPC *stHeaderIPC, *stHeaderSwitch = NULL;
-	stEstado elEstadoActual;
+	stHeaderIPC *unHeaderIPC, *stHeaderSwitch = NULL;
 	stMensajeIPC unMensaje;
 	stPCB *unPCB = NULL;
 	t_UMCConfig UMCConfig;
@@ -154,27 +161,27 @@ int main(int argc, char *argv[]) {
 	if (elEstadoActual.sockUmc != -1) {
 		FD_SET(elEstadoActual.sockUmc, &(fds_master));
 
-		stHeaderIPC = nuevoHeaderIPC(ERROR);
-		if (!recibirHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
+		unHeaderIPC = nuevoHeaderIPC(ERROR);
+		if (!recibirHeaderIPC(elEstadoActual.sockUmc, unHeaderIPC)) {
 			log_error("UMC handshake error - No se pudo recibir mensaje de respuesta");
-			liberarHeaderIPC(stHeaderIPC);
+			liberarHeaderIPC(unHeaderIPC);
 			/*TODO: Para la entrega si no es posible conectar la UMC hacer un exit*/
 			close(unCliente);
 
 		}
-		if (stHeaderIPC->tipo == QUIENSOS) {
-			stHeaderIPC = nuevoHeaderIPC(CONNECTNUCLEO);
-			if (!enviarHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
+		if (unHeaderIPC->tipo == QUIENSOS) {
+			unHeaderIPC = nuevoHeaderIPC(CONNECTNUCLEO);
+			if (!enviarHeaderIPC(elEstadoActual.sockUmc, unHeaderIPC)) {
 				log_error("UMC handshake error - No se pudo enviar mensaje de conexion");
-				liberarHeaderIPC(stHeaderIPC);
+				liberarHeaderIPC(unHeaderIPC);
 				close(unCliente);
 			}
 		}
-		liberarHeaderIPC(stHeaderIPC);
-		stHeaderIPC = nuevoHeaderIPC(OK);
-		if (!recibirHeaderIPC(elEstadoActual.sockUmc, stHeaderIPC)) {
+		liberarHeaderIPC(unHeaderIPC);
+		unHeaderIPC = nuevoHeaderIPC(OK);
+		if (!recibirHeaderIPC(elEstadoActual.sockUmc, unHeaderIPC)) {
 			log_error("UMC handshake error - No se pudo recibir mensaje de confirmacion");
-			liberarHeaderIPC(stHeaderIPC);
+			liberarHeaderIPC(unHeaderIPC);
 			close(unCliente);
 		}
 
@@ -224,24 +231,24 @@ int main(int argc, char *argv[]) {
 
 					printf("Se recibe un pedido de conexion...\n");
 
-					stHeaderIPC = nuevoHeaderIPC(QUIENSOS);
-					if (!enviarHeaderIPC(unCliente, stHeaderIPC)) {
+					unHeaderIPC = nuevoHeaderIPC(QUIENSOS);
+					if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 						log_error("Handshake error - No se puede enviar el mensaje de reconocimiento de cliente");
-						liberarHeaderIPC(stHeaderIPC);
+						liberarHeaderIPC(unHeaderIPC);
 						close(unCliente);
 						continue;
 					}
-					liberarHeaderIPC(stHeaderIPC);
-					stHeaderIPC = nuevoHeaderIPC(ERROR);
-					if (!recibirHeaderIPC(unCliente, stHeaderIPC)) {
+					liberarHeaderIPC(unHeaderIPC);
+					unHeaderIPC = nuevoHeaderIPC(ERROR);
+					if (!recibirHeaderIPC(unCliente, unHeaderIPC)) {
 						log_error("Handshake error - No se puede recibir el mensaje de reconocimiento de cliente");
-						liberarHeaderIPC(stHeaderIPC);
+						liberarHeaderIPC(unHeaderIPC);
 						close(unCliente);
 						continue;
 					}
 
 					/*Identifico quien se conecto y procedo*/
-					switch (stHeaderIPC->tipo) {
+					switch (unHeaderIPC->tipo) {
 					case CONNECTCONSOLA:
 
 						stHeaderSwitch = nuevoHeaderIPC(OK);
@@ -284,7 +291,7 @@ int main(int argc, char *argv[]) {
 									continue;
 								}
 
-								if (inicializar_programa(unPCB->pid, unPCB->cantidadPaginas, unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
+								if (inicializar_programa(unPCB, unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
 									printf("UMC error - No se puede ejecutar el programa por falta de espacio\n");
 									/*TODO: Liberar toda la memoria del pcb!*/
 									FD_CLR(unCliente, &fds_master);
@@ -295,6 +302,9 @@ int main(int argc, char *argv[]) {
 									}
 									continue;
 								}
+
+								/*Cuando se usa mensajeIPC liberar el contenido*/
+								free(unMensaje.contenido);
 
 								printf("Ingresa PCB [%d] en estado NEW\n", unPCB->pid);
 								ready_productor(unPCB);
@@ -326,12 +336,9 @@ int main(int argc, char *argv[]) {
 							agregarSock = 0;
 						}
 
-						cpu_arg_struct.estado = &elEstadoActual;
-						cpu_arg_struct.socketCpu = unCliente;
-
 						printf("Lanzamiento de hilo dedicado al cpu...");
 
-						if (pthread_create(&p_threadCpu, NULL, (void*) &consumidor_cpu, (void *) &cpu_arg_struct) != 0) {
+						if (pthread_create(&p_threadCpu, NULL, (void*)consumidor_cpu, unCliente) != 0) {
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							continue;
 						}
@@ -343,7 +350,7 @@ int main(int argc, char *argv[]) {
 					default:
 						break;
 					}
-					liberarHeaderIPC(stHeaderIPC);
+					liberarHeaderIPC(unHeaderIPC);
 				} else {
 					/*Conexion existente*/
 					memset(unMensaje.contenido, '\0', LONGITUD_MAX_DE_CONTENIDO);

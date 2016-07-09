@@ -77,12 +77,14 @@ typedef struct {
 
 t_list *listaSem; 		/*Lista de todos los semaforos del sistema*/
 t_list *listaSharedVars; 	/* Lista con las variables compartidas*/
+stEstado elEstadoActual; /*Estado con toda la configuracion del Nucleo*/
 
 void threadCPU(void *argumentos);
 void cerrarSockets(stEstado *elEstadoActual);
 void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado);
 int calcular_cantidad_paginas(int size_programa, int tamanio_paginas);
 void threadDispositivo(stEstado* info, stDispositivo* unDispositivo);
+stEstado obtenerEstadoActual();
 
 #endif
 

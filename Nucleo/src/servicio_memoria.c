@@ -6,48 +6,47 @@
  */
 #include "includes/servicio_memoria.h"
 
-int inicializar_programa(int pid, int cantidad_paginas, char* programa, int socket_umc) {
+int inicializar_programa(stPCB *unPCB, char* unPrograma, int socket_umc) {
 
 	stPageIni *unInicioUMC;
 	t_paquete paquete;
-	stHeaderIPC *stHeaderIPC;
+	stHeaderIPC *unHeaderIPC;
 
 	// Le indico a la UMC que inicializo el programa
-	stHeaderIPC = nuevoHeaderIPC(INICIALIZAR_PROGRAMA);
-	if (!enviarHeaderIPC(socket_umc, stHeaderIPC)) {
-	 	liberarHeaderIPC(stHeaderIPC);
+	unHeaderIPC = nuevoHeaderIPC(INICIALIZAR_PROGRAMA);
+	if (!enviarHeaderIPC(socket_umc, unHeaderIPC)) {
+	 	liberarHeaderIPC(unHeaderIPC);
 	 	close(socket_umc);
 		return EXIT_FAILURE;
 	}
-	liberarHeaderIPC(stHeaderIPC);
+	liberarHeaderIPC(unHeaderIPC);
 
 	unInicioUMC = malloc(sizeof(stPageIni));
-	unInicioUMC->processId = pid;
-	unInicioUMC->cantidadPaginas = cantidad_paginas;
-	unInicioUMC->programa = malloc(sizeof(char) * (strlen(programa) + 1));
-	strcpy(unInicioUMC->programa,programa);
+	unInicioUMC->processId = unPCB->pid;
+	unInicioUMC->cantidadPaginas = unPCB->cantidadPaginas;
+	unInicioUMC->programa = unPrograma;
 
 	crear_paquete(&paquete, INICIALIZAR_PROGRAMA);
 	serializar_inicializar_programa(&paquete, unInicioUMC);
 
 	if (enviar_paquete(socket_umc, &paquete)) {
-		printf("No se pudo enviar paquete de inicio de programa para PID [%d]", pid);
+		printf("No se pudo enviar paquete de inicio de programa para PID [%d]", unPCB->pid);
 		close(socket_umc);
 		return EXIT_FAILURE;
 	}
 	free_paquete(&paquete);
 	free(unInicioUMC);
 
-	stHeaderIPC = nuevoHeaderIPC(ERROR);	  // por defaul reservo memoria con tipo ERROR
-	if (!recibirHeaderIPC(socket_umc, stHeaderIPC)) {
+	unHeaderIPC = nuevoHeaderIPC(ERROR);// por default reservo memoria con tipo ERROR
+	if (!recibirHeaderIPC(socket_umc, unHeaderIPC)) {
 		log_error("UMC handshake error - No se pudo recibir mensaje de confirmacion");
-		liberarHeaderIPC(stHeaderIPC);
+		liberarHeaderIPC(unHeaderIPC);
 		close(socket_umc);
 		return EXIT_FAILURE;
 	}
-	liberarHeaderIPC(stHeaderIPC);
+	liberarHeaderIPC(unHeaderIPC);
 
-	if (stHeaderIPC->tipo == OK) {
+	if (unHeaderIPC->tipo == OK) {
 		return EXIT_SUCCESS;
 	}
 	return EXIT_FAILURE;
