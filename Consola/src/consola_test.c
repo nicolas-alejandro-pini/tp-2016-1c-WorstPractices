@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 	connect_console(&tConsola);
 	handshake_console(&tConsola);
 	send_program(&tConsola);
-	destroy_console(&tConsola);
+	//destroy_console(&tConsola);
 
 	puts("Console Application"); /* prints Console Application */
 	return EXIT_SUCCESS;
