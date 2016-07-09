@@ -468,44 +468,46 @@ void cargarConf(t_configCPU* config,char* file_name){
  */
 int cpuHandShake (int socket, int tipoHeader)
 {
-	stHeaderIPC *stHeaderIPC;
-
-	if(!recibirHeaderIPC(socket,stHeaderIPC)){
+	stHeaderIPC *headerIPC, *stHeaderIPCQuienSos;  // Hace falta definirlo porque dentro de QUIEN SOS el nuevo header pisa la referencia de stHeaderIPC
+	headerIPC = nuevoHeaderIPC(ERROR);             // reserva memoria para recibir el header
+	if(!recibirHeaderIPC(socket,headerIPC)){       // stHeaderIPC *stHeaderIPC ,no puede tener el mismo nombre que la estructura
 		printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
+		liberarHeaderIPC(headerIPC);
 		fflush(stdout);
+		return(-1);
 	}
+	printf("HandShake mensaje recibido %ld\n", headerIPC->tipo);
 
-	printf("HandShake mensaje recibido %d",stHeaderIPC->tipo);
-
-	if (stHeaderIPC->tipo == QUIENSOS)
+	if (headerIPC->tipo == QUIENSOS)
 	{
-		stHeaderIPC = nuevoHeaderIPC(tipoHeader);
-		if(!enviarHeaderIPC(socket,stHeaderIPC)){
+		stHeaderIPCQuienSos = nuevoHeaderIPC(tipoHeader);
+		if(!enviarHeaderIPC(socket,stHeaderIPCQuienSos)){
 			printf("No se pudo enviar el MensajeIPC\n");
-			liberarHeaderIPC(stHeaderIPC);
+			liberarHeaderIPC(stHeaderIPCQuienSos);
 			return (-1);
 		}
+		liberarHeaderIPC(stHeaderIPCQuienSos);
 	}
+	liberarHeaderIPC(headerIPC);
 
-	if(!recibirHeaderIPC(socket,stHeaderIPC)){
+	headerIPC = nuevoHeaderIPC(ERROR); // Libero primer recibir (al hacer un nuevoHeader pierde la referencia de la memoria allocada antes
+	if(!recibirHeaderIPC(socket,headerIPC)){
 			printf("SOCKET_ERROR - No se recibe un mensaje correcto\n");
 			fflush(stdout);
-			liberarHeaderIPC(stHeaderIPC);
+			liberarHeaderIPC(headerIPC);
 			return (-1);
 	}
-
-	printf("HandShake: mensaje recibido %d",stHeaderIPC->tipo);
+	printf("HandShake: mensaje recibido %ld\n",headerIPC->tipo);
 	fflush(stdout);
 
-	if(stHeaderIPC->tipo == OK)
+	if(headerIPC->tipo == OK)
 	{
 		printf("Conexión establecida con id: %d...\n",tipoHeader);
 		fflush(stdout);
-		liberarHeaderIPC(stHeaderIPC);
+		liberarHeaderIPC(headerIPC);
 		return socket;
 	}
-
-	liberarHeaderIPC(stHeaderIPC);
+	liberarHeaderIPC(headerIPC);   // Libera segundo recibir
 	return (-1);
 }
 
