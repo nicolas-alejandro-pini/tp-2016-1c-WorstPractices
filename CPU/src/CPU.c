@@ -693,9 +693,15 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 		unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
 		unHeader->largo = sizeof(posicionInstruccion);
 
-		enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion);
+		if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
+			log_error("Error al enviar mensaje de leer bytes intruccion.");
+		}
 
-		recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje );
+		if(!recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje )){
+
+			log_error("Error al recibir mensaje de bytes intruccion.");
+		}
+
 
 		instruccionTemp = (char*)unMensaje->contenido;
 
