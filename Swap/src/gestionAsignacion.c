@@ -81,7 +81,7 @@ unsigned long int cantidadSectoresLibres(){
 unsigned long int cantidadSectoresLibresContiguosMaxima(t_bloque_libre *info_bloque){
 
 	unsigned long int sectoresLibres = 0;
-	unsigned long int maximoSectoresLibres = -1;
+	unsigned long int maximoSectoresLibres = 0;
 	off_t offset;
 
 	//Chequeo la cantidad requerida contra el total libre
@@ -355,6 +355,7 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 		//Me muevo el siguiente sector
 		offset += loaded_config->tamanioPagina;
 	}
+	free(bufferSector);
 
 	return 0;
 }

@@ -64,6 +64,7 @@ int seekSector(unsigned long int numeroSector){
  */
 int escribirSector(char *buffer, unsigned long int numeroSector){
 
+	unsigned long int offset;
 	//Me posiciono en el sector a escribir
 	if(seekSector(numeroSector) < 0){
 		log_error("Error en seek sobre la particion de Swap");
@@ -71,10 +72,11 @@ int escribirSector(char *buffer, unsigned long int numeroSector){
 	}
 
 	//Escribo el sector en la particion Swap
-	if(fwrite(buffer, tamanioSector, 1, diskFile) != tamanioSector){
-		log_error("Error de escritura en la particion de Swap");
-		return -2;
-	}
+	for(offset = 0; offset < tamanioSector; offset++)
+		if(fwrite((buffer + offset), 1, 1, diskFile) != 1){
+			log_error("Error de escritura en la particion de Swap");
+			return -2;
+		}
 
 	return 0;
 }
