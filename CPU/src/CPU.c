@@ -123,7 +123,6 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	char* estructuraSerializada;
 
 	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(VALORVARIABLE),estructuraSerializada);
-
 	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
 		printf("Error: Fallo en deferenciar variable.\n");
 		return NULL;
@@ -140,6 +139,21 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 
 }
+
+stPosicion *obtenerPosicion(t_puntero direccion_variable){
+	stPosicion *unaPosicion;
+	int pagina, offset;
+
+	unaPosicion = (stPosicion*)malloc(sizeof(stPosicion));
+	pagina = (direccion_variable/tamanioPaginaUMC);
+
+	offset = (tamanioPaginaUMC * pagina) - direccion_variable;
+	unaPosicion->size = TAMANIOVARIABLES;
+	unaPosicion->pagina = pagina + unPCB->paginaInicioStack;
+	unaPosicion->offset= offset;
+	return unaPosicion;
+}
+
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
@@ -223,7 +237,7 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_va
 void irAlLabel(t_nombre_etiqueta etiqueta){
 	t_puntero_instruccion ptr_instruccion;
 	ptr_instruccion = metadata_buscar_etiqueta(etiqueta,unPCB->metadata_program->etiquetas,unPCB->metadata_program->etiquetas_size);
-	unPCB->pc = (uint32_t)ptr_instruccion;
+	unPCB->pc = ptr_instruccion;
 }
 
 void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
