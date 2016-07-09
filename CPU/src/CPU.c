@@ -92,24 +92,28 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
-	stMensajeIPC mensajePrimitiva;
-	t_puntero posicionVariable;
+	stVars *unaVariable;
+	unaVariable = malloc(sizeof(stVars));
 
-	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(POSICIONVARIABLE),identificador_variable);
+	stIndiceStack *indiceStack;
+	indiceStack = malloc(sizeof(stIndiceStack));
 
-	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
-		printf("Error: Falló la obtencion de posicion de la variable %s.\n", identificador_variable);
-		return posicionVariable;
-	}
+	int tamanioStack;
 
-	if (mensajePrimitiva.header.tipo == OK) {
+	tamanioStack = list_size(unPCB->stack); //considero que en pila del stack el ultimo es el contexto actual.
 
-		/*TODO Deserializar el mensaje*/
+	indiceStack = list_get(unPCB->stack, tamanioStack);
 
-	}
+	int _es_la_var(stVars *var) {
+			return var->id == identificador_variable;
+		}
 
-	//free(mensajePrimitiva);
-	return posicionVariable;
+	unaVariable = list_find(indiceStack->variables, (void*) _es_la_var);
+
+
+	return unaVariable->posicion_memoria.offset;
+
+	/*TODO falta ver el caso en que no la encuentra para devolver -1*/
 
 }
 
