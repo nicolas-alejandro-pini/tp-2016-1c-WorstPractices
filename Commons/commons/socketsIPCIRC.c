@@ -99,6 +99,8 @@ int recibirMensajeIPC(int unSocket, stMensajeIPC* unNuevoMensaje)
 	if(!(recibirHeaderIPC(unSocket, &(unNuevoMensaje->header))))
 		return(0);
 
+	unNuevoMensaje->contenido = (char *) malloc(unNuevoMensaje->header.largo);
+
 	if (unNuevoMensaje->header.largo > 0 )
 		return(recibirContenido(unSocket,unNuevoMensaje->contenido,unNuevoMensaje->header.largo));
 	else {
