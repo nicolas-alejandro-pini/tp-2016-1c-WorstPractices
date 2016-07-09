@@ -328,7 +328,7 @@ int main(int argc, char *argv[]) {
 								// enviar tamaño de pagina a CPU
 								enviarConfigUMC(unCliente, losParametros.frameSize, losParametros.frameByProc);
 
-								pthread_create(&tid, &attr, (void*)realizarAccionCPU, &unCliente);
+								pthread_create(&tid, &attr, (void*)realizarAccionCPU, unCliente);
 
 								break;
 							case CONNECTNUCLEO:
