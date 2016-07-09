@@ -106,22 +106,38 @@ int main(void) {
     //Inicializo el buffer de la pagina, lo voy a utilizar bastante
     bufferPagina = (char *)malloc(loaded_config.tamanioPagina);
 
-    //----------------------
-    // Correr las pruebas aca
-    // ELIMINAR ESTO!!!
-    //----------------------
-
+//    //----------------------
+//    // Correr las pruebas aca
+//    // ELIMINAR ESTO!!!
+//    //----------------------
+//
 //    pID = 1;
-//    cantPaginas = 10;
-//    bufferPrograma = (char *)malloc(1024);
+//    cantPaginas = 2;
+//    bufferPrograma = (char *)malloc(11);
 //    strcpy(bufferPrograma, "0123456789");
 //	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
 //		log_error("Error asignando espacio a proceso");
 //	}
-
-	//---------------------
-	//---------------------
-	//---------------------
+//
+//	strcpy(bufferPagina, "AB");
+//
+//	if(escribirPaginaProceso((unsigned long int)pID, (unsigned long int)1, bufferPagina) < 0){
+//		log_error("Error al escribir la pagina en el SWAP. pID %d #pag %d", pID, 1);
+//	}
+//
+//	memset(bufferPagina, '\0', loaded_config.tamanioPagina);
+//
+//	if(leerPaginaProceso((unsigned long int)pID, (unsigned long int)1, bufferPagina) < 0){
+//		log_error("Error al leer la pagina desde el SWAP. pID %d #pag %d", pID, 1);
+//	}
+//
+//	if(liberarEspacioDeProceso(pID) < 0){
+//		log_error("Error al liberar el espacio del proceso");
+//	}
+//
+//	//---------------------
+//	//---------------------
+//	//---------------------
 
 
     //Arranco a escuchar mensajes
@@ -184,6 +200,10 @@ int main(void) {
 							log_error("Error recibiendo el programa");
 						}
 
+						log_info("PID: %d", pID);
+						log_info("Cantidad de paginas solicitadas: %d", cantPaginas);
+						log_info("Programa: %s", bufferPrograma);
+
 						//Llamo a la funcion de asignacion y armo la respuesta
 						ipcHeader->tipo = OK;
 						if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
@@ -206,6 +226,8 @@ int main(void) {
 						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
 							log_error("Error al recibir el PID del proceso");
 						}
+
+						log_info("PID: %d", pID);
 
 						//LLamo a la funcion de asignacion y armo la respuesta
 						ipcHeader->tipo = OK;
@@ -244,6 +266,10 @@ int main(void) {
 							ipcHeader->tipo = ERROR;
 						}
 
+						log_info("PID: %d", pID);
+						log_info("Numero de pagina solicitada: %d", nroPagina);
+						log_info("Pagina leida: %s", bufferPagina);
+
 						//Envio la respuesta a la UMC
 						ipcHeader->largo = loaded_config.tamanioPagina;
 						if(enviarHeaderIPC(cliSock, ipcHeader) != sizeof(stHeaderIPC)){
@@ -277,6 +303,10 @@ int main(void) {
 							log_error("Error al recibir la pagina");
 							ipcHeader->tipo = ERROR;
 						}
+
+						log_info("PID: %d", pID);
+						log_info("Numero de pagina solicitada: %d", nroPagina);
+						log_info("Pagina a escribir: %s", bufferPagina);
 
 						//Escribo la pagina del proceso
 						ipcHeader->tipo = OK;

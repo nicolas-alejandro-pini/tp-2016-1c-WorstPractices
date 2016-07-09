@@ -34,6 +34,7 @@ t_swap_config *loaded_config;
 int initGestionAsignacion(t_swap_config * config){
 
 	loaded_config = config;
+//	int i = 0;
 
 	//Reservo espacio necesario para el bitmap
 	bitArrayBuffer = (char *)calloc(1, config->cantidadPaginas);
@@ -44,6 +45,11 @@ int initGestionAsignacion(t_swap_config * config){
 
 	//Creo el bit array
 	bitArray = bitarray_create(bitArrayBuffer, config->cantidadPaginas);
+
+	//ELIMINAR ESTO!!!!
+//	for(i = 0; i < config->cantidadPaginas; i+=2)
+//		bitarray_set_bit(bitArray, i);
+	///////////////////
 
 	//Inicializo la lista de asignaciones
 	assignmentList = list_create();
@@ -149,9 +155,11 @@ int compactarParticionSwap(){
 			//Encontré un sector libre, busco el próximo ocupado
 
 			proximoSectorOcupado = offset + 1;
-			while(proximoSectorOcupado < bitArray->size)
-				if(bitarray_test_bit(bitArray, proximoSectorOcupado) == false)
-					proximoSectorOcupado++;
+			while(proximoSectorOcupado < bitArray->size){
+				if(bitarray_test_bit(bitArray, proximoSectorOcupado) == true)
+					break;
+				proximoSectorOcupado++;
+			}
 
 			//Si llegué al final de mi particion termino el procedimiento
 			if(proximoSectorOcupado == bitArray->size)
