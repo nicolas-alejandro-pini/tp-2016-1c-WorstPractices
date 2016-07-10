@@ -195,9 +195,8 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 }
 
 void creatListaDeTablas(){
-	//creo tabla sino existe
-	if(!TablaMarcos)
-		TablaMarcos = list_mutex_create();
+	//sleep(losParametros.delay);
+	TablaMarcos = list_mutex_create();
 }
 
 int crearTabla(uint16_t processId, uint16_t longitud_tabla){
@@ -219,9 +218,11 @@ int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 	nodo = calloc(1,sizeof(stNodoListaTP));
 
 	nodo->pid=processId;
-	nodo->size=longitud_tabla;  // Como maximo marcos_x_proceso
+	nodo->size=longitud_tabla;  // Como maximo marcos_x_proceso --> NO
 	nodo->tabla=tabla;
 
+	// agrego retardo
+	sleep(losParametros.delay);
 	//enlazo en la lista
 	posicionEnTablaMarcos = list_mutex_add(TablaMarcos, nodo);
 
@@ -236,10 +237,35 @@ stNodoListaTP *buscarPID(uint16_t pid){
 			nodoListaTP = list_nodo;
 		}
 	}
+	sleep(losParametros.delay);
 	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid);
 
 	// NULL: si no lo encontro, sino puntero a nodo
 	return nodoListaTP;
+}
+void _mostrarContenido(stNodoListaTP *list_nodo){
+	int i;
+	stRegistroTP *nodo;
+
+	printf("pid: %d\n", list_nodo->pid);
+	nodo= ((stRegistroTP*)list_nodo->tabla);
+	for(i=0;i<list_nodo->size;i++){
+		printf("Pagina: %d ", i);
+		printf("Marco: %d ", nodo->marco);
+		printf("bit2ndChance: %d ", nodo->bit2ndChance);
+		printf("bitModificado: %d ", nodo->bitModificado);
+		printf("bitPresencia: %d ", nodo->bitPresencia);
+		printf("\n");
+	}
+}
+void mostrarTabla(){
+
+	sleep(losParametros.delay);
+	list_mutex_iterate(TablaMarcos, (void*)_mostrarContenido);
+	return;
+}
+void mostrarTablaPid(uint16_t pid){
+	_mostrarContenido(buscarPID(pid));
 }
 
 void liberarTablaPid(uint16_t pid){
@@ -269,6 +295,7 @@ void liberarTablaPid(uint16_t pid){
 			i++;
 		}
 		if(nodo)
+			sleep(losParametros.delay);
 			list_mutex_remove(TablaMarcos,index);
 	}
 }
