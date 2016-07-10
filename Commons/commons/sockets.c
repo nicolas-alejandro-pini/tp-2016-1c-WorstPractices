@@ -235,11 +235,11 @@ int recibirHeader(int unSocket, stHeader* nuevoPtrAHeader)
 
 /*----------------------------------------------------------------------------*/
 
-int enviarContenido(int unSocket, char* unContenido)
+int enviarContenido(int unSocket, char* unContenido, unsigned long int largo)
 /*Envía un string por el socket que recibe como parametro y devuelve la cantidad enviada.*/
 {
 	int resultado;
-	if((resultado = send(unSocket, unContenido, strlen(unContenido)+1,0)) == -1)
+	if((resultado = send(unSocket, unContenido, largo, 0)) == -1)
 		error("No se pudo enviar el contenido!");
 	return(resultado);
 }
@@ -335,11 +335,9 @@ int seleccionar(int fdMax, fd_set *ptrARead_fds, int segundos)
 int enviarMensaje(int unSocket,stHeader unHeader, char* unContenido)
 /*Envía primero unHeader y luego unContenido por el socket que recibe como parametro. Devuelve 0 si hubieron errores y el tamaño del contenido enviado -sin contar el header- si no.*/
 {
-	int unLargo = strlen(unContenido)+1;
-	unHeader.largo = unLargo;
 	if (!enviarHeader(unSocket, unHeader))
 		return(0);
-	return(enviarContenido(unSocket,unContenido));
+	return(enviarContenido(unSocket,unContenido, unHeader.largo));
 }
 
 int enviarMensajeA(int unSocket,stHeader unHeader, char* unContenido)

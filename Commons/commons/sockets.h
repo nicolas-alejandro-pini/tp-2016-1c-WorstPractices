@@ -56,7 +56,7 @@
 
 	int enviarMensajeA(int unSocket,stHeader unHeader, char* unContenido);
 
-	int enviarContenido(int unSocket, char* unContenido);
+	int enviarContenido(int unSocket, char* unContenido, unsigned long int largo);
 
 	int recibirContenido(int unSocket, char* unNuevoContenido, int unLargo);
 
