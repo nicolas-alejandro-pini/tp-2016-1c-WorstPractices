@@ -31,9 +31,9 @@
 
 static char *enum_names[LOG_ENUM_SIZE] = {"TRACE", "DEBUG", "INFO", "WARNING", "ERROR"};
 
-static pthread_mutex_t lock;
+pthread_mutex_t lock;
 
-static t_log *logId;
+t_log *logId;
 
 /**
  * Private Functions
