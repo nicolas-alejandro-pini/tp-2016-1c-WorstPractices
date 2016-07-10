@@ -150,7 +150,6 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 		deserializar_lista(paquete, &offset, indiceStack->variables, sizeof(stVars));
 		deserializar_campo(paquete, &offset, &indiceStack->retPosicion, sizeof(uint32_t));
 		deserializar_campo(paquete, &offset, &indiceStack->retVar, sizeof(stPosicion));
-		deserializar_campo(paquete, &offset, &indiceStack->pos, sizeof(uint32_t));
 		list_add(self->stack,indiceStack);
 	}
 

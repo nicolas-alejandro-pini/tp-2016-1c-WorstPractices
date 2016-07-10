@@ -282,24 +282,29 @@ void retornar(t_valor_variable retorno){
 void imprimir(t_valor_variable valor_mostrar){
 
 	stHeaderIPC* unHeaderPrimitiva;
-	t_paquete paquete;
-	int offset = 0;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIR);
+	unHeaderPrimitiva->largo = sizeof(t_valor_variable);
 
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva);
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)valor_mostrar))
+		log_error("Error al enviar mensaje de IMPRIMIR.");
 
-	crear_paquete(&paquete, IMPRIMIR);
+	unHeaderPrimitiva = nuevoHeaderIPC(CONSOLA);
+	unHeaderPrimitiva = sizeof(uint32_t);
 
-	serializar_campo(&paquete, &offset, &valor_mostrar, sizeof(valor_mostrar));
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)unPCB->socketConsola))
+			log_error("Error al enviar mensaje de IMPRIMIR.");
 
-	serializar_header(&paquete);
+	unHeaderPrimitiva = nuevoHeaderIPC(ERROR);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el paquete para primitiva IMPRIMIR");
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
+		log_error("Error al recibir la confirmacion del nucleo.");
 	}
 
-	free_paquete(&paquete);
+	if(unHeaderPrimitiva->tipo != OK)
+		log_error("Error de primitiva IMPRIMIR");
+
+	log_info("Se imprimio correctamente la variable.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 
@@ -310,18 +315,30 @@ void imprimirTexto(char* texto){
 	stHeaderIPC* unHeaderPrimitiva;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIRTEXTO);
+	unHeaderPrimitiva->largo = strlen(texto) + 1;
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva,texto)){
-			printf("No se pudo enviar al Nucleo el texto:  %s",texto);
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva,texto))
+			log_error("No se pudo enviar al Nucleo el texto: ",texto);
+
+
+	unHeaderPrimitiva = nuevoHeaderIPC(CONSOLA);
+		unHeaderPrimitiva = sizeof(uint32_t);
+
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)unPCB->socketConsola))
+			log_error("Error al enviar mensaje de IMPRIMIR.");
+
+	unHeaderPrimitiva = nuevoHeaderIPC(ERROR);
+
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
+		log_error("Error al recibir la confirmacion del nucleo.");
 	}
 
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,&unHeaderPrimitiva)){
-		printf("Error: Fallo la impresion del texto:  %s.\n", texto);
+	if(unHeaderPrimitiva->tipo != OK)
+		log_error("Error de primitiva IMPRIMIR");
 
-	}
+	log_info("Se imprimio correctamente la variable.");
 
-	if (unHeaderPrimitiva->tipo == OK)
-		printf("Se imprime texto: %s \n", texto);
+	liberarHeaderIPC(unHeaderPrimitiva);
 
 }
 
@@ -684,13 +701,13 @@ int calcularPaginaInstruccion (int paginaLogica){
  Description : Funcion para obtener instruccion del progracma ANSISOP en memoria.
  =========================================================================================
  */
-void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
+void getInstruccion (int startRequest, int sizeRequest,char* instruccion){
 
-	char* instruccionTemp="\0";
+	char* instruccionTemp = NULL;
 
 	stPosicion posicionInstruccion;
-	stMensajeIPC *unMensaje;
-	stHeaderIPC *unHeader;
+	stMensajeIPC *unMensaje = NULL;
+	stHeaderIPC *unHeader = NULL;
 
 	int paginaToUMC;
 	int startToUMC = startRequest;
@@ -713,15 +730,19 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
 			paginaToUMC = calcularPaginaInstruccion(pagina);
 
-			posicionInstruccion.pagina = paginaToUMC;
-			posicionInstruccion.offset = startToUMC;
-			posicionInstruccion.size = sizeToUMC;
-
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
 			unHeader->largo = sizeof(stPosicion);
 
-			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
-				log_error("Error al enviar mensaje de leer bytes intruccion.");
+			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)paginaToUMC)){
+				log_error("Error al enviar mensaje de leer bytes pagina.");
+			}
+
+			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)startToUMC)){
+				log_error("Error al enviar mensaje de leer bytes offSet.");
+			}
+
+			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)sizeToUMC)){
+				log_error("Error al enviar mensaje de leer bytes size.");
 			}
 
 			if(!recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje )){
@@ -730,9 +751,15 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 			}
 
 
-			instruccionTemp = (char*)unMensaje->contenido;
+			instruccionTemp = unMensaje->contenido;
 
-			string_append (*instruccion,instruccionTemp);
+			if(instruccion==NULL){
+				instruccion = malloc(sizeof(char)*(strlen(instruccionTemp) + 1 ));
+				strcpy(instruccion, instruccionTemp);
+
+			}else{
+				string_append (&instruccion,instruccionTemp);
+			}
 
 			startToUMC = startToUMC + sizeToUMC;
 			sizeToUMC = sizeRequest - sizeToUMC;
@@ -762,7 +789,7 @@ int ejecutarInstruccion(void){
 
 	getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
 					unPCB->metadata_program->instrucciones_serializado[programCounter].offset,
-					&instruccion);
+					instruccion);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);

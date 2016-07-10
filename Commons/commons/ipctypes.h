@@ -26,6 +26,7 @@
 #define SENDPID				104ul
 #define KILLPID				105ul
 
+
 /*Definicion de Parametros de Nucleo - UMC*/
 #define CONNECTNUCLEO		110ul
 
@@ -43,6 +44,7 @@
 #define SIGNAL				130ul
 #define QUANTUM				131ul
 #define QUANTUMSLEEP		132ul
+#define CONSOLA				133ul
 
 /*Definicion de tipos de mensaje enre la UMC y el Swap*/
 #define SOYUMC				140ul
