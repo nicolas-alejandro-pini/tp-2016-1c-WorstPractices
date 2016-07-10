@@ -600,6 +600,7 @@ int cargarPCB(void){
 	//if (cargarPCB(unMensaje.contenido) != -1)
 	if (type == EXECANSISOP)
 	{
+		log_info("Comiendo a deserealizar el PCB.");
 		unPCB = (stPCB*)malloc(sizeof(stPCB));
 		deserializar_pcb(unPCB , &paquete);
 
@@ -644,9 +645,13 @@ int cargarPCB(void){
 
 		//log_info("PCB de ANSIPROG cargado. /n");
 		free_paquete(&paquete);
+		log_info("Recibi correctamente el PCB del nucleo.");
 		return 0;
-	}else
-		return (-1);
+	}else{
+		log_error("Error al recibir el PCB del nucleo.");
+		return EXIT_FAILURE;
+	}
+
 
 }
 
@@ -695,7 +700,7 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
 	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
 
-	for (pagina=1;pagina<cantidadPaginas;pagina++)
+	for (pagina=1;pagina<=cantidadPaginas;pagina++)
 	{
 
 		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
@@ -713,7 +718,7 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 			posicionInstruccion.size = sizeToUMC;
 
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-			unHeader->largo = sizeof(posicionInstruccion);
+			unHeader->largo = sizeof(stPosicion);
 
 			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
 				log_error("Error al enviar mensaje de leer bytes intruccion.");
@@ -898,7 +903,11 @@ int main(void) {
 		configuracionInicial.salir = 1;
 	}
 
+	log_info("Recibiendo de la UMC el tamaño de pagina.");
+
 	tamanioPaginaUMC = configUMC->tamanioPagina; //Guardo el tamaño de la pagina de la umc.
+
+	log_info("Recibí tamaño de pagina.",tamanioPaginaUMC);
 
 	//Fin de conexion al UMC//
 
