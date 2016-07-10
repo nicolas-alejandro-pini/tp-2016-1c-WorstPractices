@@ -38,11 +38,12 @@ stPCB *crear_pcb(int socket_consola, int cantidad_pag_codigo, int stack_size, st
 
 
 	/*Inicializo el stack con un elemento*/
-	unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
+	unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack)); /*Alocamos memoria*/
 	if (unIndiceStack != NULL) {
 		unIndiceStack->argumentos = list_create();
 		unIndiceStack->pos = 0;
 		unIndiceStack->variables = list_create();
+		unIndiceStack->retPosicion = 0;
 		list_add(unPCB->stack,unIndiceStack);
 	}
 
@@ -90,7 +91,6 @@ int serializar_pcb(t_paquete *paquete, stPCB *self) {
 		serializar_lista(paquete, &offset, stack->variables, sizeof(stVars));
 		serializar_campo(paquete, &offset, &stack->retPosicion, sizeof(uint32_t));
 		serializar_campo(paquete, &offset, &stack->retVar, sizeof(stPosicion));
-		serializar_campo(paquete, &offset, &stack->pos, sizeof(uint32_t));
 	}
 
 	// Serializacion del header
@@ -137,8 +137,6 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 
 	// Obtengo la cantidad de nodos de la lista
 	deserializar_campo(paquete, &offset, &max_stack, sizeof(max_stack));
-
-	self->stack = (t_list*)malloc(sizeof(t_list)+sizeof(stIndiceStack));
 	self->stack = list_create();
 
 	for (i = 0; i < max_stack; i++) {

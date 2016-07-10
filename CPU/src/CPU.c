@@ -8,6 +8,7 @@
  ============================================================================
  */
 #include "CPU.h"
+#include "cpuSignals.h"
 
 
 //Variables Globales//
@@ -870,11 +871,12 @@ int main(void) {
 	int quantumSleep=0;
 	char* temp_file = "cpu.log";
 
-	 //Primero instancio el log
-	 t_log* logger = log_create(temp_file, "CPU",-1, LOG_LEVEL_INFO);
+	//Primero instancio el log
+	t_log* logger = log_create(temp_file, "CPU",-1, LOG_LEVEL_INFO);
 
 	log_info("Iniciando el proceo CPU..."); /* prints CPU Application */
 
+	init_signal_handler(&configuracionInicial);
 
 	// Limpio las listas //
 	FD_ZERO(&(fds_master));
@@ -1045,16 +1047,16 @@ int main(void) {
 							break;
 
 
-						case SIGUSR1:
+/*						case SIGUSR1:
 
 							log_info("Respondiendo solicitud SIGUSR1...");
 
 							unHeaderIPC = nuevoHeaderIPC(SIGUSR1CPU);
-							/* Notifico al nucleo mi desconexion*/
+							 Notifico al nucleo mi desconexion
 							enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
 							configuracionInicial.salir = 1;
-							break;
+							break;*/
 
 					}
 				}
@@ -1064,7 +1066,11 @@ int main(void) {
 		}
 	}
 
+	//Informo al Nucleo que estoy terminando
+	unHeaderIPC = nuevoHeaderIPC(SIGUSR1CPU);
+	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 	liberarHeaderIPC(unHeaderIPC);
+
 	cerrarSockets(&configuracionInicial);
 	log_info("CPU: Fin del programa");
 	log_destroy(logger);
