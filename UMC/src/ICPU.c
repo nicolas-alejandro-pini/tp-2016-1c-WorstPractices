@@ -68,7 +68,6 @@ void *inicializarPrograma(stIni* ini){
 #endif
 	/*Se informa al nucleo que el programa se inicializo OK*/
 	unHeader=nuevoHeaderIPC(OK);
-	enviarHeaderIPC(ini->socketResp, unHeader);
 	if (!enviarHeaderIPC(ini->socketResp, unHeader)) {
 		log_error("Hubo un problema al escribir OK de inicalizacion al nucleo - pid %d", ini->sPI->processId);
 		close(ini->socketResp);
@@ -268,7 +267,7 @@ void *finalizarProgramaNucleo(stEnd *fin){
 }
 void cambiarContexto(uint16_t pid){
 
-	stRegistroTP *data;
+	stNodoListaTP *data;
 	data = buscarPID(pid);
 	if(data==NULL)
 		log_error("pid %d no encontrado en el cambio de contexto - programa no inicializado", pid);
@@ -282,28 +281,36 @@ void cambiarContexto(uint16_t pid){
 
 void realizarAccionCPU(uint16_t socket){
 
+	stHeaderIPC unHeader;
 	stMensajeIPC unMensaje;
 	uint16_t pidActivo, pagina;
 	stEnd *end;
-	stPosicion *posR;
+	stPosicion posR;
 	stEscrituraPagina *posW;
 
 	while(1){
 
-		if(!recibirMensajeIPC(socket, &unMensaje)){
+		if(!recibirHeaderIPC(socket, &unHeader)){
 			log_error("Thread Error - No se pudo recibir mensaje de respuesta - socket: %d", socket);
 			//liberarHeaderIPC(unMensaje->header);
 			close(socket);
 			return;//pthread_exit(NULL);
 		}
 
-		switch(unMensaje.header.tipo){
+		switch(unHeader.tipo){
 
 		case READ_BTYES_PAGE:
 
-			posR =(stPosicion*)(unMensaje.contenido);
+			recibirMensajeIPC(socket, &unMensaje);
+			memcpy(&(posR.pagina), unMensaje.contenido, sizeof(uint16_t));
 
-			leerBytes(posR, pidActivo, socket);
+			recibirMensajeIPC(socket, &unMensaje);
+			memcpy(&(posR.offset), unMensaje.contenido, sizeof(uint16_t));
+
+			recibirMensajeIPC(socket, &unMensaje);
+			memcpy(&(posR.size), unMensaje.contenido, sizeof(uint16_t));
+
+			leerBytes(&posR, pidActivo, socket);
 
 			break;
 
@@ -322,7 +329,12 @@ void realizarAccionCPU(uint16_t socket){
 
 		case CAMBIOCONTEXTO:
 
-			pidActivo = (uint16_t)*(unMensaje.contenido);
+			unMensaje.contenido = (char *) malloc(unHeader.largo);
+
+			if (unHeader.largo > 0 )
+				recibirContenido(socket, (char*)unMensaje.contenido, unHeader.largo);
+
+			memcpy(&(pidActivo), unMensaje.contenido, sizeof(uint16_t));
 			cambiarContexto(pidActivo);
 
 			break;
