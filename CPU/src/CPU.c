@@ -117,32 +117,6 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 }
 
-
-t_valor_variable dereferenciar(t_puntero direccion_variable){
-
-	stMensajeIPC mensajePrimitiva;
-	t_valor_variable valor;
-
-	char* estructuraSerializada;
-
-	enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(VALORVARIABLE),estructuraSerializada);
-	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
-		printf("Error: Fallo en deferenciar variable.\n");
-		return NULL;
-	}
-
-	if (mensajePrimitiva.header.tipo == OK) {
-
-		/*TODO Deserializar el mensaje*/
-
-	}
-
-	//free(mensajePrimitiva);
-	return valor;
-
-
-}
-
 stPosicion *obtenerPosicion(t_puntero direccion_variable){
 	stPosicion *unaPosicion;
 	int pagina, offset;
@@ -157,25 +131,64 @@ stPosicion *obtenerPosicion(t_puntero direccion_variable){
 	return unaPosicion;
 }
 
+t_valor_variable dereferenciar(t_puntero direccion_variable){
+
+	stPosicion *posicionVariable;
+	stMensajeIPC unMensaje;
+	stHeaderIPC *unHeader;
+	t_valor_variable valor_variable;
+
+	posicionVariable = obtenerPosicion(direccion_variable);
+
+	unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
+	unHeader->largo = sizeof(stPosicion);
+
+	if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)posicionVariable)){
+		log_error("Error al enviar mensaje de leer bytes de variables.");
+	}
+
+
+	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&unMensaje)){
+		log_error("No se pudo recibir la variable.");
+	}
+
+	valor_variable = atoi(unMensaje.contenido);
+	liberarHeaderIPC(unHeader);
+
+	return valor_variable;
+
+
+}
 
 void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
-	stMensajeIPC mensajePrimitiva;
+	stPosicion *posicionVariable;
+	stHeaderIPC *unHeader;
+	stEscrituraPagina * aEscribirUMC;
 
-	//enviarMensajeIPC(configuracionInicial.sockUmc,nuevoHeaderIPC(ASIGNARVARIABLE),estructuraSerializada);
+	aEscribirUMC = (stEscrituraPagina *) malloc(sizeof(stEscrituraPagina));
 
-	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&mensajePrimitiva)){
-		printf("Error: Fallo en asignacion de la variable.\n");
+	posicionVariable = obtenerPosicion(direccion_variable);
 
+	aEscribirUMC->nroPagina = posicionVariable->pagina;
+	aEscribirUMC->offset = posicionVariable->offset;
+	aEscribirUMC->tamanio = posicionVariable->size;
+	aEscribirUMC->buffer = (void*) valor ;
+
+	unHeader = nuevoHeaderIPC(WRITE_BYTES_PAGE);
+	unHeader->largo = sizeof(stEscrituraPagina);
+
+	if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)aEscribirUMC)){
+		log_error("Error al enviar mensaje de leer bytes intruccion.");
 	}
 
-	if (mensajePrimitiva.header.tipo == OK) {
+	unHeader = nuevoHeaderIPC(ERROR);
+	if(!recibirHeaderIPC(configuracionInicial.sockUmc, unHeader)){
 
-		/*TODO Deserializar el mensaje*/
-
+		log_error("Error al recibir confirmacion de asignar en UMC.");
 	}
 
-	//free(mensajePrimitiva); /*TODO Arreglar el free de las estructuras*/
+	liberarHeaderIPC(unHeader);
 
 }
 
@@ -676,44 +689,51 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
 	int paginaToUMC;
 	int startToUMC = startRequest;
-	int sizeToUMC;
+	int sizeToUMC = sizeRequest;
+	int sizeAux;
 	int pagina;
 
-	int cantidadPaginas = (sizeRequest / tamanioPaginaUMC) + 1;
+	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
 
 	for (pagina=1;pagina<cantidadPaginas;pagina++)
 	{
-		sizeToUMC = tamanioPaginaUMC - startToUMC;
 
-		if (sizeToUMC > sizeRequest)
-			sizeToUMC = pagina*tamanioPaginaUMC - sizeRequest;
+		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
+		{
+			sizeAux = (pagina*tamanioPaginaUMC) - (startRequest + sizeRequest);
 
-		paginaToUMC = calcularPaginaInstruccion(pagina);
+			if (sizeAux < 0)
+				sizeToUMC = pagina*tamanioPaginaUMC - startToUMC;
 
-		posicionInstruccion.pagina = paginaToUMC;
-		posicionInstruccion.offset = startRequest;
-		posicionInstruccion.size = sizeToUMC;
 
-		unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-		unHeader->largo = sizeof(posicionInstruccion);
+			paginaToUMC = calcularPaginaInstruccion(pagina);
 
-		if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
-			log_error("Error al enviar mensaje de leer bytes intruccion.");
+			posicionInstruccion.pagina = paginaToUMC;
+			posicionInstruccion.offset = startToUMC;
+			posicionInstruccion.size = sizeToUMC;
+
+			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
+			unHeader->largo = sizeof(posicionInstruccion);
+
+			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
+				log_error("Error al enviar mensaje de leer bytes intruccion.");
+			}
+
+			if(!recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje )){
+
+				log_error("Error al recibir mensaje de bytes intruccion.");
+			}
+
+
+			instruccionTemp = (char*)unMensaje->contenido;
+
+			string_append (*instruccion,instruccionTemp);
+
+			startToUMC = startToUMC + sizeToUMC;
+			sizeToUMC = sizeRequest - sizeToUMC;
+
+			liberarHeaderIPC(unHeader);
 		}
-
-		if(!recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje )){
-
-			log_error("Error al recibir mensaje de bytes intruccion.");
-		}
-
-
-		instruccionTemp = (char*)unMensaje->contenido;
-
-		string_append (*instruccion,instruccionTemp);
-
-		startToUMC = startToUMC + sizeToUMC;
-
-		liberarHeaderIPC(unHeader);
 
 	}
 
