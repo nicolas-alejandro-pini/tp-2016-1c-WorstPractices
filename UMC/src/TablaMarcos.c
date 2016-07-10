@@ -183,11 +183,11 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 			else
 				log_error("No hay un algoritmo correctamente cargado");
 			// escribo en memoria secundaria si es necesario
-			if(retorno->bitModificado==1)
+			if(retorno->bitModificado==1){
 				buf=malloc(losParametros.frameSize);
 				memcpy(buf, memoriaPrincipal+retorno->marco, losParametros.frameSize);
 				enviarPagina(pid, pagina, buf);
-
+			}
 		}
 	}
 

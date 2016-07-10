@@ -54,8 +54,8 @@ int enviarPagina(uint16_t pid, uint16_t pagina, char* buffer){
 
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
-	send(losParametros.sockSwap, pid, sizeof(uint16_t), 0);
-	send(losParametros.sockSwap, pagina, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, &pid, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, &pagina, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, buffer, losParametros.frameSize, 0);
 
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
@@ -82,8 +82,8 @@ char* recibirPagina(uint16_t pid, uint16_t pagina){
 
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
-	send(losParametros.sockSwap, pid, sizeof(uint16_t), 0);
-	send(losParametros.sockSwap, pagina, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, &pid, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, &pagina, sizeof(uint16_t), 0);
 
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
 
@@ -114,7 +114,7 @@ int destruirPrograma(uint16_t pid){
 
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
-	send(losParametros.sockSwap, pid, sizeof(uint16_t), 0);
+	send(losParametros.sockSwap, &pid, sizeof(uint16_t), 0);
 
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
 
