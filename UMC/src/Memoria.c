@@ -21,6 +21,7 @@ void* leerMemoria(void *posicion, uint16_t size){
 	//posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
 
 	pthread_mutex_lock(&memoria);
+	sleep(losParametros.delay);
 	memcpy(ret, posicion, size);
 	pthread_mutex_unlock(&memoria);
 
@@ -29,6 +30,7 @@ void* leerMemoria(void *posicion, uint16_t size){
 void* escribirMemoria(void *posicion, uint16_t size, void* buffer){
 
 	pthread_mutex_lock(&memoria);
+	sleep(losParametros.delay);
 	memcpy(posicion, buffer, size);
 	pthread_mutex_unlock(&memoria);
 

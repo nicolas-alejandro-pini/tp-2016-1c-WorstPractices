@@ -31,7 +31,7 @@ typedef struct{
 
 typedef struct{
 	int pid;
-	int size;   // como maximo marcos_x_proceso (puede ser menos si el programa tiene menos pag)
+	int size;
 	void *tabla;
 }stNodoListaTP;
 
@@ -51,7 +51,10 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t Pagina, stRegistroTP r
 void creatListaDeTablas();
 int crearTabla(uint16_t processId, uint16_t longitud_tabla);
 stNodoListaTP *buscarPID(uint16_t pid);
+void mostrarTabla();
+void mostrarTablaPid(uint16_t);
 void liberarTablaPid(uint16_t pid);
+stNodoListaTP* obtenerPrimerPidTabla();
 stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
 stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
 stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada);

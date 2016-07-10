@@ -20,10 +20,10 @@ void *inicializarPrograma(stIni* ini){
 	stHeaderIPC *unHeader;
 	uint16_t longitud_tabla;
 
-	// Crea tabla con como maximo marcos_x_proceso registros
-	if(ini->sPI->cantidadPaginas > ini->marcos_x_proceso)
-		longitud_tabla = ini->marcos_x_proceso;
-	else
+	// Crea tabla con como maximo marcos_x_proceso registros ---> NO, siempre asigno lo que piden, limito la asignacion de marcos
+	//if(ini->sPI->cantidadPaginas > ini->marcos_x_proceso)
+		//longitud_tabla = ini->marcos_x_proceso;
+//	else
 		longitud_tabla = ini->sPI->cantidadPaginas;
 
 	crearTabla(ini->sPI->processId, longitud_tabla);
