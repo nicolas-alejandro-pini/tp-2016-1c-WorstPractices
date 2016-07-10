@@ -132,14 +132,12 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 		}else
 			ret=ERROR;
 		//envio la respuesta de la lectura a la CPU
-		unHeader = nuevoHeader(OK);
+		unHeader.tipo = OK;
 		unHeader.largo = unaLectura->size;
 		if(!enviarMensajeIPC(socketCPU,&unHeader,bytesLeidos)){
 			log_error("No se pudo enviar el MensajeIPC");
-			liberarHeaderIPC(unHeader);
 			return;
 		}
-		liberarHeaderIPC(unHeader);
 		// libero lo enviado
 		free(bytesLeidos);
 		// libero pagina obtenida
