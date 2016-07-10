@@ -38,18 +38,18 @@
 	 */
 	typedef struct
 	{
-		char id[16];
-		char respuesta_a_id[16]; 	//No se si va a ser necesario, pero a veces esto
+		uint8_t id[16];
+		uint8_t respuesta_a_id[16]; 	//No se si va a ser necesario, pero a veces esto
 									//ayuda en la comunicacion asincronica
-		unsigned long int tipo;
-		unsigned long largo;
+		uint32_t tipo;
+		uint32_t largo;
 	/*} __attribute__((packed)) stHeaderIPC; */
 	} stHeaderIPC;
 
 	typedef struct
 	{
 		stHeaderIPC header;
-		char *contenido;	/* } __attribute__((packed)) stMensajeIPC;*/
+		uint8_t *contenido;	/* } __attribute__((packed)) stMensajeIPC;*/
 	}stMensajeIPC;
 
 	/*
