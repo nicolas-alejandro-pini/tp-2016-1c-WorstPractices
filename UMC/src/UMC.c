@@ -338,6 +338,10 @@ int main(int argc, char *argv[]) {
 
 								pthread_create(&tid, &attr, (void*)realizarAccionCPU, unCliente);
 
+								FD_CLR(unCliente,&fds_master);
+								if(unCliente>losParametros.fdMax){
+									unCliente=losParametros.fdMax;
+								}
 								break;
 							case CONNECTNUCLEO:
 								unaCabecera2 = nuevoHeaderIPC(OK);
@@ -416,17 +420,17 @@ int main(int argc, char *argv[]) {
 									ini->socketResp = unCliente;
 	        	        			ini->sPI= unPageIni;
 
-	        	        			pthread_create(&tid,&attr,(void*)inicializarPrograma,ini);
+	        	        			inicializarPrograma(ini);
 
 	        	        			break;
 
 	        	        		case FINPROGRAMA:
 
 	        	        			end = calloc(1,sizeof(stEnd));
-	        	        			end->socketResp = socket;
+	        	        			end->socketResp = unCliente;
 	        	        			end->pid = atoi(unMensaje.contenido);
 
-	        	        			pthread_create(&tid,&attr,(void*)finalizarProgramaNucleo,end);
+	        	        			finalizarProgramaNucleo(end);
 	        	        			break;
 
 
