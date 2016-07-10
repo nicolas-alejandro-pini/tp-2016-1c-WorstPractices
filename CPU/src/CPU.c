@@ -689,44 +689,51 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
 	int paginaToUMC;
 	int startToUMC = startRequest;
-	int sizeToUMC;
+	int sizeToUMC = sizeRequest;
+	int sizeAux;
 	int pagina;
 
-	int cantidadPaginas = (sizeRequest / tamanioPaginaUMC) + 1;
+	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
 
 	for (pagina=1;pagina<cantidadPaginas;pagina++)
 	{
-		sizeToUMC = tamanioPaginaUMC - startToUMC;
 
-		if (sizeToUMC > sizeRequest)
-			sizeToUMC = pagina*tamanioPaginaUMC - sizeRequest;
+		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
+		{
+			sizeAux = (pagina*tamanioPaginaUMC) - (startRequest + sizeRequest);
 
-		paginaToUMC = calcularPaginaInstruccion(pagina);
+			if (sizeAux < 0)
+				sizeToUMC = pagina*tamanioPaginaUMC - startToUMC;
 
-		posicionInstruccion.pagina = paginaToUMC;
-		posicionInstruccion.offset = startRequest;
-		posicionInstruccion.size = sizeToUMC;
 
-		unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-		unHeader->largo = sizeof(posicionInstruccion);
+			paginaToUMC = calcularPaginaInstruccion(pagina);
 
-		if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
-			log_error("Error al enviar mensaje de leer bytes intruccion.");
+			posicionInstruccion.pagina = paginaToUMC;
+			posicionInstruccion.offset = startToUMC;
+			posicionInstruccion.size = sizeToUMC;
+
+			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
+			unHeader->largo = sizeof(posicionInstruccion);
+
+			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
+				log_error("Error al enviar mensaje de leer bytes intruccion.");
+			}
+
+			if(!recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje )){
+
+				log_error("Error al recibir mensaje de bytes intruccion.");
+			}
+
+
+			instruccionTemp = (char*)unMensaje->contenido;
+
+			string_append (*instruccion,instruccionTemp);
+
+			startToUMC = startToUMC + sizeToUMC;
+			sizeToUMC = sizeRequest - sizeToUMC;
+
+			liberarHeaderIPC(unHeader);
 		}
-
-		if(!recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje )){
-
-			log_error("Error al recibir mensaje de bytes intruccion.");
-		}
-
-
-		instruccionTemp = (char*)unMensaje->contenido;
-
-		string_append (*instruccion,instruccionTemp);
-
-		startToUMC = startToUMC + sizeToUMC;
-
-		liberarHeaderIPC(unHeader);
 
 	}
 
