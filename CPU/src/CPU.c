@@ -700,7 +700,7 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 
 	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
 
-	for (pagina=1;pagina<cantidadPaginas;pagina++)
+	for (pagina=1;pagina<=cantidadPaginas;pagina++)
 	{
 
 		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
@@ -718,7 +718,7 @@ void getInstruccion (int startRequest, int sizeRequest,char** instruccion){
 			posicionInstruccion.size = sizeToUMC;
 
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-			unHeader->largo = sizeof(posicionInstruccion);
+			unHeader->largo = sizeof(stPosicion);
 
 			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)&posicionInstruccion)){
 				log_error("Error al enviar mensaje de leer bytes intruccion.");
