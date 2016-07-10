@@ -86,6 +86,7 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 	stRegistroTLB stTLB;
 	stRegistroTP regTP;
 	int hayTLB, ret;
+	stHeaderIPC unHeader;
 
 	/* si esta disponible cache*/
 	if ((hayTLB = estaActivadaTLB())== OK){
@@ -131,10 +132,14 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 		}else
 			ret=ERROR;
 		//envio la respuesta de la lectura a la CPU
-		if(!enviarMensajeIPC(socketCPU,nuevoHeaderIPC(OK),bytesLeidos)){
+		unHeader = nuevoHeader(OK);
+		unHeader.largo = unaLectura->size;
+		if(!enviarMensajeIPC(socketCPU,&unHeader,bytesLeidos)){
 			log_error("No se pudo enviar el MensajeIPC");
+			liberarHeaderIPC(unHeader);
 			return;
 		}
+		liberarHeaderIPC(unHeader);
 		// libero lo enviado
 		free(bytesLeidos);
 		// libero pagina obtenida
@@ -301,14 +306,17 @@ void realizarAccionCPU(uint16_t socket){
 
 		case READ_BTYES_PAGE:
 
-			recibirMensajeIPC(socket, &unMensaje);
-			memcpy(&(posR.pagina), unMensaje.contenido, sizeof(uint16_t));
+//			recibirMensajeIPC(socket, &unMensaje);
+			recv(socket, &(posR.pagina), sizeof(uint16_t),0);
+//			memcpy(&(posR.pagina), unMensaje.contenido, sizeof(uint16_t));
 
-			recibirMensajeIPC(socket, &unMensaje);
-			memcpy(&(posR.offset), unMensaje.contenido, sizeof(uint16_t));
+//			recibirMensajeIPC(socket, &unMensaje);
+			recv(socket, &(posR.offset), sizeof(uint16_t),0);
+//			memcpy(&(posR.offset), unMensaje.contenido, sizeof(uint16_t));
 
-			recibirMensajeIPC(socket, &unMensaje);
-			memcpy(&(posR.size), unMensaje.contenido, sizeof(uint16_t));
+//			recibirMensajeIPC(socket, &unMensaje);
+			recv(socket, &(posR.size), sizeof(uint16_t),0);
+//			memcpy(&(posR.size), unMensaje.contenido, sizeof(uint16_t));
 
 			leerBytes(&posR, pidActivo, socket);
 
