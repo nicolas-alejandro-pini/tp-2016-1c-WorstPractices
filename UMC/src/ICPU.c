@@ -68,7 +68,6 @@ void *inicializarPrograma(stIni* ini){
 #endif
 	/*Se informa al nucleo que el programa se inicializo OK*/
 	unHeader=nuevoHeaderIPC(OK);
-	enviarHeaderIPC(ini->socketResp, unHeader);
 	if (!enviarHeaderIPC(ini->socketResp, unHeader)) {
 		log_error("Hubo un problema al escribir OK de inicalizacion al nucleo - pid %d", ini->sPI->processId);
 		close(ini->socketResp);
