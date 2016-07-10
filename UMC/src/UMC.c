@@ -160,6 +160,7 @@ int main(int argc, char *argv[]) {
 
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unaCabecera = NULL;
+	stHeaderIPC *unaCabecera2 = NULL;
 	int i, unCliente = 0, unSocket;
 	struct sockaddr addressAceptado;
 	int maximoAnterior;
@@ -321,14 +322,14 @@ int main(int argc, char *argv[]) {
 						switch(unaCabecera->tipo){
 							case CONNECTCPU:
 
-								unaCabecera = nuevoHeaderIPC(OK);
-								if(!enviarHeaderIPC(unCliente, unaCabecera)){
+								unaCabecera2 = nuevoHeaderIPC(OK);
+								if(!enviarHeaderIPC(unCliente, unaCabecera2)){
 									log_error("No se pudo enviar un mensaje de confirmacion a la consola conectada");
-									liberarHeaderIPC(unaCabecera);
+									liberarHeaderIPC(unaCabecera2);
 									close(unCliente);
 									continue;
 								}
-								liberarHeaderIPC(unaCabecera);
+								liberarHeaderIPC(unaCabecera2);
 								log_info("Conexion con CPU establecida\n");
 								agregarSock=1;
 
@@ -339,14 +340,14 @@ int main(int argc, char *argv[]) {
 
 								break;
 							case CONNECTNUCLEO:
-								unaCabecera = nuevoHeaderIPC(OK);
-								if(!enviarHeaderIPC(unCliente, unaCabecera)){
+								unaCabecera2 = nuevoHeaderIPC(OK);
+								if(!enviarHeaderIPC(unCliente, unaCabecera2)){
 									log_error("No se pudo enviar un mensaje de confirmacion a la consola conectada");
-									liberarHeaderIPC(unaCabecera);
+									liberarHeaderIPC(unaCabecera2);
 									close(unCliente);
 									continue;
 								}
-								liberarHeaderIPC(unaCabecera);
+								liberarHeaderIPC(unaCabecera2);
 
 								// enviar tamaño de pagina a Nucleo
 								enviarConfigUMC(unCliente, losParametros.frameSize, losParametros.frameByProc);
@@ -364,6 +365,7 @@ int main(int argc, char *argv[]) {
 									agregarSock=0;
 								}
 						}
+						liberarHeaderIPC(unaCabecera);
 					}/*-Cierro if-Conexion Nueva-*/
 
 	/*--------------------------------------Conexion de un cliente existente-------------------------------------*/
