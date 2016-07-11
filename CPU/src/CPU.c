@@ -760,18 +760,21 @@ char* getInstruccion (int startRequest, int sizeRequest){
 			/*Me quedo esperando que vuelva el contenido*/
 			if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
 				log_error("Error al recibir mensaje de bytes intruccion.");
-			}
-
-			if(instruccion==NULL){
-				instruccion = malloc(sizeof(char)*(strlen(unMensaje.contenido) + 1 ));
-				strcpy(instruccion, unMensaje.contenido);
-
 			}else{
-				string_append (&instruccion,unMensaje.contenido);
-			}
 
-			startToUMC = startToUMC + sizeToUMC;
-			sizeToUMC = sizeRequest - sizeToUMC;
+				log_info("Recibi de la UMC la instrucción.",unMensaje.contenido);
+
+				if(instruccion==NULL){
+					instruccion = malloc(sizeof(char)*(strlen(unMensaje.contenido) + 1 ));
+					strcpy(instruccion, unMensaje.contenido);
+
+				}else{
+					string_append (&instruccion,unMensaje.contenido);
+				}
+
+				startToUMC = startToUMC + sizeToUMC;
+				sizeToUMC = sizeRequest - sizeToUMC;
+			}
 
 		}
 
@@ -802,11 +805,11 @@ int ejecutarInstruccion(void){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
 	}else{
 		printf("Error: fallo la ejecución de instrucción.\n");
-		return (-1);
+		return EXIT_FAILURE;
 	}
 
 	free(instruccion);
-	return 0;
+	return OK;
 
 }
 
