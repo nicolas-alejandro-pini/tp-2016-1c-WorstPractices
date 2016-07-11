@@ -137,16 +137,25 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	stPosicion *posicionVariable;
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader;
-	t_valor_variable valor_variable;
+	uint16_t pagina,offset,tamanio,valor_variable;
 
 	posicionVariable = obtenerPosicion(direccion_variable);
 
-	unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-	unHeader->largo = sizeof(stPosicion);
+	pagina = posicionVariable->pagina;
+	offset = posicionVariable->offset;
+	tamanio = posicionVariable->size;
 
-	if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)posicionVariable)){
-		log_error("Error al enviar mensaje de leer bytes de variables.");
+	unHeader = nuevoHeaderIPC(WRITE_BYTES_PAGE);
+	unHeader->largo = sizeof(uint16_t);
+
+	if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
+		log_error("Error al enviar mensaje de leer bytes intruccion.");
 	}
+
+	/*Envio los tres datos a la UMC*/
+	send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+	send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
+	send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
 
 
 	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&unMensaje)){
@@ -166,22 +175,28 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 	stPosicion *posicionVariable;
 	stHeaderIPC *unHeader;
 	stEscrituraPagina * aEscribirUMC;
+	uint16_t pagina, offset,tamanio;
 
 	aEscribirUMC = (stEscrituraPagina *) malloc(sizeof(stEscrituraPagina));
 
 	posicionVariable = obtenerPosicion(direccion_variable);
 
-	aEscribirUMC->nroPagina = posicionVariable->pagina;
-	aEscribirUMC->offset = posicionVariable->offset;
-	aEscribirUMC->tamanio = posicionVariable->size;
-	aEscribirUMC->buffer = (void*) valor ;
+	pagina = posicionVariable->pagina;
+	offset = posicionVariable->offset;
+	tamanio = posicionVariable->size;
 
 	unHeader = nuevoHeaderIPC(WRITE_BYTES_PAGE);
-	unHeader->largo = sizeof(stEscrituraPagina);
+	unHeader->largo = sizeof(uint16_t);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)aEscribirUMC)){
+	if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
 		log_error("Error al enviar mensaje de leer bytes intruccion.");
 	}
+
+	/*Envio los tres datos a la UMC*/
+	send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+	send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
+	send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
+	send(configuracionInicial.sockUmc,&valor,sizeof(uint16_t),0);
 
 	unHeader = nuevoHeaderIPC(ERROR);
 	if(!recibirHeaderIPC(configuracionInicial.sockUmc, unHeader)){
@@ -702,17 +717,16 @@ int calcularPaginaInstruccion (int paginaLogica){
  Description : Funcion para obtener instruccion del progracma ANSISOP en memoria.
  =========================================================================================
  */
-void getInstruccion (int startRequest, int sizeRequest,char* instruccion){
+char* getInstruccion (int startRequest, int sizeRequest){
 
-	char* instruccionTemp = NULL;
+	char* instruccion = NULL;
 
-	stPosicion posicionInstruccion;
-	stMensajeIPC *unMensaje = NULL;
+	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader = NULL;
 
-	int paginaToUMC;
-	int startToUMC = startRequest;
-	int sizeToUMC = sizeRequest;
+	uint16_t paginaToUMC;
+	uint16_t startToUMC = startRequest;
+	uint16_t sizeToUMC = sizeRequest;
 	int sizeAux;
 	int pagina;
 
@@ -732,45 +746,38 @@ void getInstruccion (int startRequest, int sizeRequest,char* instruccion){
 			paginaToUMC = calcularPaginaInstruccion(pagina);
 
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-			unHeader->largo = sizeof(stPosicion);
+			unHeader->largo = sizeof(uint16_t);
 
-			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)paginaToUMC)){
+			if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
 				log_error("Error al enviar mensaje de leer bytes pagina.");
 			}
 
-			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)startToUMC)){
-				log_error("Error al enviar mensaje de leer bytes offSet.");
-			}
+			/*Envio los tres datos a la UMC*/
+			send(configuracionInicial.sockUmc,&paginaToUMC,sizeof(uint16_t),0);
+			send(configuracionInicial.sockUmc,&startToUMC,sizeof(uint16_t),0);
+			send(configuracionInicial.sockUmc,&sizeToUMC,sizeof(uint16_t),0);
 
-			if(!enviarMensajeIPC(configuracionInicial.sockUmc,unHeader,(char*)sizeToUMC)){
-				log_error("Error al enviar mensaje de leer bytes size.");
-			}
-
-			if(!recibirMensajeIPC(configuracionInicial.sockUmc, unMensaje )){
-
+			/*Me quedo esperando que vuelva el contenido*/
+			if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
 				log_error("Error al recibir mensaje de bytes intruccion.");
 			}
 
-
-			instruccionTemp = unMensaje->contenido;
-
 			if(instruccion==NULL){
-				instruccion = malloc(sizeof(char)*(strlen(instruccionTemp) + 1 ));
-				strcpy(instruccion, instruccionTemp);
+				instruccion = malloc(sizeof(char)*(strlen(unMensaje.contenido) + 1 ));
+				strcpy(instruccion, unMensaje.contenido);
 
 			}else{
-				string_append (&instruccion,instruccionTemp);
+				string_append (&instruccion,unMensaje.contenido);
 			}
 
 			startToUMC = startToUMC + sizeToUMC;
 			sizeToUMC = sizeRequest - sizeToUMC;
 
-			liberarHeaderIPC(unHeader);
 		}
 
 	}
-
-	free(instruccionTemp);
+	liberarHeaderIPC(unHeader);
+	return instruccion;
 
 }
 
@@ -788,9 +795,8 @@ int ejecutarInstruccion(void){
 	int programCounter = unPCB->pc;
 	char* instruccion = NULL;
 
-	getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
-					unPCB->metadata_program->instrucciones_serializado[programCounter].offset,
-					instruccion);
+	instruccion=getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
+					unPCB->metadata_program->instrucciones_serializado[programCounter].offset);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
