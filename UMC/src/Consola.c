@@ -105,9 +105,12 @@ void consolaUMC(){
 			}
 		}else if(!strcmp(parametros[0],"memoria")){
 
-			if (parametros[1][0]=='\0')
+			if (parametros[1][0]=='\0'){
 				log_info("se hace el dump de la memoria de todos los procesos");
 				// TODO dump memoria todos los procesos
+
+
+			}
 			if (parametros[1][0]!='\0')
 				log_info("se hace el dump de la memoria de un proceso");
 				// TODO dump memoria de un proceso

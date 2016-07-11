@@ -88,7 +88,7 @@ int enviarMensajeIPC(int unSocket,stHeaderIPC *unHeader, char* unContenido)
 	if (enviarHeaderIPC(unSocket, unHeader) <= 0)
 		return(0);
 
-	return(enviarContenido(unSocket,unContenido));
+	return(enviarContenido(unSocket,unContenido,unHeader->largo));
 }
 
 /*----------------------------------------------------------------------------*/

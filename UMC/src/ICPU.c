@@ -68,7 +68,6 @@ void *inicializarPrograma(stIni* ini){
 #endif
 	/*Se informa al nucleo que el programa se inicializo OK*/
 	unHeader=nuevoHeaderIPC(OK);
-	enviarHeaderIPC(ini->socketResp, unHeader);
 	if (!enviarHeaderIPC(ini->socketResp, unHeader)) {
 		log_error("Hubo un problema al escribir OK de inicalizacion al nucleo - pid %d", ini->sPI->processId);
 		close(ini->socketResp);
@@ -87,6 +86,7 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 	stRegistroTLB stTLB;
 	stRegistroTP regTP;
 	int hayTLB, ret;
+	stHeaderIPC unHeader;
 
 	/* si esta disponible cache*/
 	if ((hayTLB = estaActivadaTLB())== OK){
@@ -132,7 +132,9 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 		}else
 			ret=ERROR;
 		//envio la respuesta de la lectura a la CPU
-		if(!enviarMensajeIPC(socketCPU,nuevoHeaderIPC(OK),bytesLeidos)){
+		unHeader.tipo = OK;
+		unHeader.largo = unaLectura->size;
+		if(!enviarMensajeIPC(socketCPU,&unHeader,bytesLeidos)){
 			log_error("No se pudo enviar el MensajeIPC");
 			return;
 		}
@@ -268,7 +270,7 @@ void *finalizarProgramaNucleo(stEnd *fin){
 }
 void cambiarContexto(uint16_t pid){
 
-	stRegistroTP *data;
+	stNodoListaTP *data;
 	data = buscarPID(pid);
 	if(data==NULL)
 		log_error("pid %d no encontrado en el cambio de contexto - programa no inicializado", pid);
@@ -282,36 +284,43 @@ void cambiarContexto(uint16_t pid){
 
 void realizarAccionCPU(uint16_t socket){
 
+	stHeaderIPC unHeader;
 	stMensajeIPC unMensaje;
 	uint16_t pidActivo, pagina;
 	stEnd *end;
-	stPosicion *posR;
-	stEscrituraPagina *posW;
+	stPosicion posR;
+	stEscrituraPagina posW;
 
 	while(1){
 
-		if(!recibirMensajeIPC(socket, &unMensaje)){
+		if(!recibirHeaderIPC(socket, &unHeader)){
 			log_error("Thread Error - No se pudo recibir mensaje de respuesta - socket: %d", socket);
 			//liberarHeaderIPC(unMensaje->header);
 			close(socket);
 			return;//pthread_exit(NULL);
 		}
 
-		switch(unMensaje.header.tipo){
+		switch(unHeader.tipo){
 
 		case READ_BTYES_PAGE:
 
-			posR =(stPosicion*)(unMensaje.contenido);
+			recv(socket, &(posR.pagina), sizeof(uint16_t),0);
+			recv(socket, &(posR.offset), sizeof(uint16_t),0);
+			recv(socket, &(posR.size), sizeof(uint16_t),0);
 
-			leerBytes(posR, pidActivo, socket);
+			leerBytes(&posR, pidActivo, socket);
 
 			break;
 
 		case WRITE_BYTES_PAGE:
 
-			posW =(stEscrituraPagina*)(unMensaje.contenido);
+			recv(socket, &(posW.nroPagina), sizeof(uint16_t),0);
+			recv(socket, &(posW.offset), sizeof(uint16_t),0);
+			recv(socket, &(posW.tamanio), sizeof(uint16_t),0);
+			recv(socket, posW.buffer, posR.size,0);
+			//posW =(stEscrituraPagina*)(unMensaje.contenido);
 
-			escribirBytes(posW, pidActivo, socket);
+			escribirBytes(&posW, pidActivo, socket);
 
 			break;
 
@@ -322,7 +331,12 @@ void realizarAccionCPU(uint16_t socket){
 
 		case CAMBIOCONTEXTO:
 
-			pidActivo = (uint16_t)*(unMensaje.contenido);
+			unMensaje.contenido = (char *) malloc(unHeader.largo);
+
+			if (unHeader.largo > 0 )
+				recibirContenido(socket, (char*)unMensaje.contenido, unHeader.largo);
+
+			memcpy(&(pidActivo), unMensaje.contenido, sizeof(uint16_t));
 			cambiarContexto(pidActivo);
 
 			break;
