@@ -289,7 +289,7 @@ void realizarAccionCPU(uint16_t socket){
 	uint16_t pidActivo, pagina;
 	stEnd *end;
 	stPosicion posR;
-	stEscrituraPagina *posW;
+	stEscrituraPagina posW;
 
 	while(1){
 
@@ -304,17 +304,9 @@ void realizarAccionCPU(uint16_t socket){
 
 		case READ_BTYES_PAGE:
 
-//			recibirMensajeIPC(socket, &unMensaje);
 			recv(socket, &(posR.pagina), sizeof(uint16_t),0);
-//			memcpy(&(posR.pagina), unMensaje.contenido, sizeof(uint16_t));
-
-//			recibirMensajeIPC(socket, &unMensaje);
 			recv(socket, &(posR.offset), sizeof(uint16_t),0);
-//			memcpy(&(posR.offset), unMensaje.contenido, sizeof(uint16_t));
-
-//			recibirMensajeIPC(socket, &unMensaje);
 			recv(socket, &(posR.size), sizeof(uint16_t),0);
-//			memcpy(&(posR.size), unMensaje.contenido, sizeof(uint16_t));
 
 			leerBytes(&posR, pidActivo, socket);
 
@@ -322,9 +314,13 @@ void realizarAccionCPU(uint16_t socket){
 
 		case WRITE_BYTES_PAGE:
 
-			posW =(stEscrituraPagina*)(unMensaje.contenido);
+			recv(socket, &(posW.nroPagina), sizeof(uint16_t),0);
+			recv(socket, &(posW.offset), sizeof(uint16_t),0);
+			recv(socket, &(posW.tamanio), sizeof(uint16_t),0);
+			recv(socket, posW.buffer, posR.size,0);
+			//posW =(stEscrituraPagina*)(unMensaje.contenido);
 
-			escribirBytes(posW, pidActivo, socket);
+			escribirBytes(&posW, pidActivo, socket);
 
 			break;
 
