@@ -325,7 +325,7 @@ int main(void) {
 					}
 
         	}
-        	liberarHeaderIPC(ipcHeader);
+        	//liberarHeaderIPC(ipcHeader);
     	} else {
     		// Se me conecto cualquiera, lo tengo que rechazar
     		liberarHeaderIPC(ipcHeader);
