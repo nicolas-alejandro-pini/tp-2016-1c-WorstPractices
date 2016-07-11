@@ -48,6 +48,7 @@ typedef struct {
 	int quantumSleep; 		/* Retardo en milisegundos que el nucleo esperara luego de ejecutar cada sentencia. */
 	int stackSize; 			/* Tamaño en páginas del Stack */
 	t_list *dispositivos; 	/* Lista de stDispositivos*/
+	t_list *consolas_activas;/* Lista de consolas conectadas */
 	int fdMax; 				/* Numero que representa al mayor socket de fds_master. */
 	int fdMax_ant; 			/*Numero que representa al mayor socket de fds_master anterior al proximo. */
 	int tamanio_paginas; 	/*Tamaño de paginas configurado en la UMC*/
@@ -69,6 +70,11 @@ typedef struct {
 	uint32_t pid; 		/*PID del proceso que realiza el pedido de I/O*/
 	int unidades; 		/*Unidades de ejecucion */
 } stRafaga;
+
+typedef struct {
+	uint32_t pid;
+	int socket;
+} stConsola;
 
 t_list *listaSem; 		/*Lista de todos los semaforos del sistema*/
 t_list *listaSharedVars; /* Lista con las variables compartidas*/
