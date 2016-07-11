@@ -7,6 +7,8 @@
 
 #include "TablaMarcos.h"
 
+
+
 stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada){
 
 	stNodoListaTP *nodo;
@@ -244,7 +246,7 @@ stNodoListaTP *buscarPID(uint16_t pid){
 	// NULL: si no lo encontro, sino puntero a nodo
 	return nodoListaTP;
 }
-void _mostrarContenido(stNodoListaTP *list_nodo){
+void _mostrarContenidoTP(stNodoListaTP *list_nodo){
 	int i;
 	stRegistroTP *nodo;
 
@@ -252,21 +254,74 @@ void _mostrarContenido(stNodoListaTP *list_nodo){
 	nodo= ((stRegistroTP*)list_nodo->tabla);
 	for(i=0;i<list_nodo->size;i++){
 		printf("Pagina: %d ", i);
-		printf("Marco: %d ", nodo->marco);
-		printf("bit2ndChance: %d ", nodo->bit2ndChance);
-		printf("bitModificado: %d ", nodo->bitModificado);
-		printf("bitPresencia: %d ", nodo->bitPresencia);
+		printf("Marco: %d ", (nodo+(i*sizeof(stRegistroTP)))->marco);
+		printf("bit2ndChance: %d ", (nodo+(i*sizeof(stRegistroTP)))->bit2ndChance);
+		printf("bitModificado: %d ", (nodo+(i*sizeof(stRegistroTP)))->bitModificado);
+		printf("bitPresencia: %d ", (nodo+(i*sizeof(stRegistroTP)))->bitPresencia);
 		printf("\n");
 	}
 }
+void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
+	stRegistroTP *nodo;
+	int i;
+	uint16_t  offset;
+	void *posicion;
+	char* buffer, *bufferTemp;
+
+	printf("\npid: %d\n", nodoPid->pid);
+	nodo= ((stRegistroTP*)nodoPid->tabla);
+	for(i=0;i<nodoPid->size;i++){
+		if(((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->bitPresencia==1){
+			printf("Pagina %d:\n", i);
+			offset = ((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->marco*losParametros.frameSize;
+			posicion=memoriaPrincipal+offset;
+			bufferTemp = (char*)leerMemoria(posicion, losParametros.frameSize);
+			buffer = calloc(1, losParametros.frameSize+1);
+			memcpy(buffer, bufferTemp, losParametros.frameSize);
+			free(bufferTemp);
+			printf("%s", buffer);
+			free(buffer);
+		}
+	}
+}
+void marcarMemoriaModificada(uint16_t pid){
+	int i;
+	stRegistroTP *nodo;
+	stNodoListaTP *list_nodo;
+
+	list_nodo = buscarPID(pid);
+	printf("pid: %d\n", list_nodo->pid);
+	nodo= ((stRegistroTP*)list_nodo->tabla);
+	for(i=0;i<list_nodo->size;i++){
+		printf("Pagina: %d ", i);
+		printf("Marco: %d ", (nodo+(i*sizeof(stRegistroTP)))->marco);
+		(nodo+(i*sizeof(stRegistroTP)))->bitModificado=1;
+		printf("Marcado como modificado");
+		printf("\n");
+	}
+}
+void listarMemoria(){
+
+	list_mutex_iterate(TablaMarcos, (void*)_mostrarContenidoMemoria);
+
+}
+
+void listarMemoriaPid(uint16_t pid){
+	stNodoListaTP* nodoPid;
+
+	//sleep(losParametros.delay);
+	nodoPid = buscarPID(pid);
+	_mostrarContenidoMemoria(nodoPid);
+}
 void mostrarTabla(){
 
-	sleep(losParametros.delay);
-	list_mutex_iterate(TablaMarcos, (void*)_mostrarContenido);
+	//sleep(losParametros.delay);
+	list_mutex_iterate(TablaMarcos, (void*)_mostrarContenidoTP);
 	return;
 }
 void mostrarTablaPid(uint16_t pid){
-	_mostrarContenido(buscarPID(pid));
+	//sleep(losParametros.delay);
+	_mostrarContenidoTP(buscarPID(pid));
 }
 
 void liberarTablaPid(uint16_t pid){

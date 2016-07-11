@@ -12,13 +12,7 @@
 pthread_mutex_t memoria;
 pthread_mutex_t freeFrames;
 
-void listarMemoria(){
 
-}
-
-void listarMemoriaPid(uint16_t pid){
-
-}
 
 void* leerMemoria(void *posicion, uint16_t size){
 	void *ret;

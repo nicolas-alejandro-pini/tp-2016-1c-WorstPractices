@@ -10,6 +10,8 @@
 
 #include "Parametros.h"
 #include "string.h"
+#include "TablaMarcos.h"
+#include "TLB.h"
 #include <stdlib.h>
 
 #define MAX_BUFFER 200ul

@@ -286,8 +286,7 @@ void realizarAccionCPU(uint16_t socket){
 
 	stHeaderIPC unHeader;
 	stMensajeIPC unMensaje;
-	uint16_t pidActivo, pagina;
-	stEnd *end;
+	uint16_t pidActivo;
 	stPosicion posR;
 	stEscrituraPagina posW;
 
