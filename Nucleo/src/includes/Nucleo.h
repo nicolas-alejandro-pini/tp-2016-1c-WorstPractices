@@ -60,11 +60,12 @@ typedef struct {
 } stEstado;
 
 typedef struct {
-	char* nombre; 		/*Nombre del dispositivo de I/O*/
-	char* retardo; 		/*Retardo en milisegundos*/
-	t_queue* rafagas; 	/*Cola de rafagas de ejecucion*/
-	pthread_mutex_t mutex;
-	pthread_cond_t 	cond;
+	char* nombre; 			/*Nombre del dispositivo de I/O*/
+	char* retardo; 			/*Retardo en milisegundos*/
+	t_queue* rafagas; 		/*Cola de rafagas de ejecucion*/
+	pthread_mutex_t mutex;	/*Sem Mutex*/
+	pthread_cond_t 	empty;	/*Sem Empty*/
+	int numInq;
 } stDispositivo;
 
 typedef struct {
@@ -80,7 +81,7 @@ void threadCPU(void *argumentos);
 void cerrarSockets(stEstado *elEstadoActual);
 void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado);
 int calcular_cantidad_paginas(int size_programa, int tamanio_paginas);
-void threadDispositivo(stEstado* info, stDispositivo* unDispositivo);
+void threadDispositivo(stDispositivo* unDispositivo);
 stEstado obtenerEstadoActual();
 
 #endif
