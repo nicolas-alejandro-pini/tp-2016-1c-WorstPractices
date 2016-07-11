@@ -195,7 +195,6 @@ int main(int argc, char *argv[]) {
 		unHeaderIPC = nuevoHeaderIPC(ERROR);
 		if (!recibirHeaderIPC(elEstadoActual.sockUmc, unHeaderIPC)) {
 			log_error("UMC handshake error - No se pudo recibir mensaje de respuesta");
-			liberarHeaderIPC(unHeaderIPC);
 			log_error("No se pudo conectar a la UMC");
 			elEstadoActual.salir = 1;
 		}
@@ -203,7 +202,6 @@ int main(int argc, char *argv[]) {
 			unHeaderIPC = nuevoHeaderIPC(CONNECTNUCLEO);
 			if (!enviarHeaderIPC(elEstadoActual.sockUmc, unHeaderIPC)) {
 				log_error("UMC handshake error - No se pudo enviar mensaje de conexion");
-				liberarHeaderIPC(unHeaderIPC);
 				log_error("No se pudo conectar a la UMC");
 				elEstadoActual.salir = 1;
 			}
@@ -212,7 +210,6 @@ int main(int argc, char *argv[]) {
 		unHeaderIPC = nuevoHeaderIPC(OK);
 		if (!recibirHeaderIPC(elEstadoActual.sockUmc, unHeaderIPC)) {
 			log_error("UMC handshake error - No se pudo recibir mensaje de confirmacion");
-			liberarHeaderIPC(unHeaderIPC);
 			log_error("No se pudo conectar a la UMC");
 			elEstadoActual.salir = 1;
 		}else{
@@ -228,6 +225,7 @@ int main(int argc, char *argv[]) {
 
 			elEstadoActual.tamanio_paginas = UMCConfig.tamanioPagina;
 		}
+		liberarHeaderIPC(unHeaderIPC);
 	} else {
 		log_error("No se pudo conectar a la UMC");
 		elEstadoActual.salir = 1;
