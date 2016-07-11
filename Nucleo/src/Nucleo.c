@@ -128,6 +128,7 @@ int main(int argc, char *argv[]) {
 	pthread_t p_thread, p_threadCpu;
 	char* temp_file = "nucleo.log";
 	elEstadoActual.path_conf = argv[1];
+	uint32_t pid_desconectado = 0;
 	int unCliente = 0,maximoAnterior = 0, unSocket, agregarSock;
 	struct sockaddr addressAceptado;
 
@@ -354,7 +355,6 @@ int main(int argc, char *argv[]) {
 					if (!recibirMensajeIPC(unSocket, &unMensaje)) {
 
 						// Desconexion de una consola
-						uint32_t pid_desconectado = 0;
 						pid_desconectado = consola_desconectada(&elEstadoActual, unSocket);
 						if (pid_desconectado != 0){
 							printf("Se desconecto la consola PID[%d]", pid_desconectado);
