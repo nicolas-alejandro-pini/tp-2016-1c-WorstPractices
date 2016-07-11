@@ -102,7 +102,6 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	stPCB *unPCB = NULL;
 	t_UMCConfig UMCConfig;
-	struct thread_cpu_arg_struct cpu_arg_struct;
 	char* temp_file = "nucleo.log";
 
 	/*Inicializacion de las colas del planificador*/
@@ -198,14 +197,7 @@ int main(int argc, char *argv[]) {
 		elEstadoActual.tamanio_paginas = UMCConfig.tamanioPagina;
 
 	} else {
-		/*Cargamos datos dummy*/
-		elEstadoActual.tamanio_paginas = UMCConfig.tamanioPagina;
-		printf("----------------------------\n");
-		printf("Tamanio de pagina dummy:[%d]\n", 1024);
-		printf("----------------------------\n");
-
-		log_error("UMC connection error - No se pudo establecer el enlace");
-		/*TODO: Para la entrega si no es posible conectar la UMC hacer un exit*/
+		elEstadoActual.salir = 1;
 	}
 
 	/*Ciclo Principal del Nucleo*/
@@ -265,7 +257,6 @@ int main(int argc, char *argv[]) {
 						/*Agrego el socket conectado a la lista Master*/
 						if (agregarSock == 1) {
 							FD_SET(unCliente, &(fds_master));
-							printf("Se agrega la consola conectada a la lista FDS_MASTER\n");
 							if (unCliente > elEstadoActual.fdMax) {
 								maximoAnterior = elEstadoActual.fdMax;
 								elEstadoActual.fdMax = unCliente;
@@ -306,7 +297,7 @@ int main(int argc, char *argv[]) {
 								/*Cuando se usa mensajeIPC liberar el contenido*/
 								free(unMensaje.contenido);
 
-								printf("Ingresa PCB [%d] en estado NEW\n", unPCB->pid);
+								printf("PCB [PID - %d] en estado NEW\n", unPCB->pid);
 								ready_productor(unPCB);
 								printf("OK\n");
 								fflush(stdout);
@@ -326,15 +317,6 @@ int main(int argc, char *argv[]) {
 						liberarHeaderIPC(stHeaderSwitch);
 						printf("Nuevo CPU conectado\n");
 						agregarSock = 1;
-						/*Agrego el socket conectado A la lista Master*/
-						if (agregarSock == 1) {
-							FD_SET(unCliente, &(fds_master));
-							if (unCliente > elEstadoActual.fdMax) {
-								maximoAnterior = elEstadoActual.fdMax;
-								elEstadoActual.fdMax = unCliente;
-							}
-							agregarSock = 0;
-						}
 
 						printf("Lanzamiento de hilo dedicado al cpu...");
 

@@ -59,15 +59,12 @@ typedef struct {
 	int salir; 				/*Indica si debo o no salir de la aplicacion. */
 } stEstado;
 
-struct thread_cpu_arg_struct {
-	stEstado *estado;
-	int socketCpu;
-};
-
 typedef struct {
 	char* nombre; 		/*Nombre del dispositivo de I/O*/
 	char* retardo; 		/*Retardo en milisegundos*/
 	t_queue* rafagas; 	/*Cola de rafagas de ejecucion*/
+	pthread_mutex_t mutex;
+	pthread_cond_t 	cond;
 } stDispositivo;
 
 typedef struct {
@@ -76,7 +73,7 @@ typedef struct {
 } stRafaga;
 
 t_list *listaSem; 		/*Lista de todos los semaforos del sistema*/
-t_list *listaSharedVars; 	/* Lista con las variables compartidas*/
+t_list *listaSharedVars; /* Lista con las variables compartidas*/
 stEstado elEstadoActual; /*Estado con toda la configuracion del Nucleo*/
 
 void threadCPU(void *argumentos);

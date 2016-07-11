@@ -16,10 +16,10 @@ void *ready_productor(void* arg) {
 
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	queue_push(colaReady, pcb_to_produce);
+	printf("PCB [PID - %d] en estado READY...", pcb_to_produce->pid);
 	numInQ++;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
 	pthread_mutex_unlock(&empty);	// Comienzo de espera de consumidor
-	printf("[PID-%d] Ingresa a la cola de Ready...", pcb_to_produce->pid);
 	fflush(stdout);
 	sleep(1);
 
