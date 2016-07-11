@@ -16,7 +16,7 @@ void *consumidor_cpu(int unCliente) {
 	stDispositivo *unDispositivo;
 	stRafaga *unaRafagaIO;
 	stSharedVar *unaSharedVar;
-	char *dispositivo_name, *identificador_semaforo;
+	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
 	int error = 0, offset = 0, valor_impresion, socket_consola_to_print;
 
 	while (!error) {
@@ -42,9 +42,9 @@ void *consumidor_cpu(int unCliente) {
 		if (unHeaderIPC->tipo == OK) {
 			crear_paquete(&paquete, EXECANSISOP);
 			serializar_pcb(&paquete, unPCB);
-
 			if (enviar_paquete(unCliente, &paquete)) {
-				log_error("CPU error - No se pudo enviar el PCB[%d]", unPCB->pid);
+				log_error("Error al enviar el PCB [PID - %d]", unPCB->pid);
+				free_paquete(&paquete);
 				error = 1;
 				continue;
 			}
@@ -52,7 +52,7 @@ void *consumidor_cpu(int unCliente) {
 		}
 
 		if (!recibirMensajeIPC(unCliente, &unMensajeIPC)) {
-			log_error("CPU error - No se pudo recibir header");
+			log_error("Error al recibir respuesta del CPU");
 			error = 1;
 			close(unCliente);
 			continue;
@@ -75,7 +75,7 @@ void *consumidor_cpu(int unCliente) {
 				}
 				deserializar_pcb(unPCB, &paquete);
 
-				/*Busqueda de dispositivo*/
+				/*Busqueda de dispositivo de I/O*/
 				dispositivo_name = strdup(unMensajeIPC.contenido);
 				int _es_el_dispositivo(stDispositivo *d) {
 					return string_equals_ignore_case(d->nombre, dispositivo_name);
@@ -97,10 +97,7 @@ void *consumidor_cpu(int unCliente) {
 				list_add(obtenerEstadoActual().dispositivos, unDispositivo);
 				list_add(listaBlock, &unPCB);
 				pthread_mutex_unlock(&mutex_lista_dispositivos);
-
 				printf("PCB [PID - %d] en estado BLOCK / dispositivo [%s]\n", unPCB->pid,unDispositivo->nombre);
-				//log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
-				continue;
 
 				break;
 			case FINANSISOP:
@@ -130,11 +127,11 @@ void *consumidor_cpu(int unCliente) {
 			case OBTENERVALOR:
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de variable compartida...\n");
-				/*Valor de la variable compartida, devolver el valor para que el CPU siga ejecutando*/
+
 				/*TODO: Falta testear*/
 				unaSharedVar = obtener_shared_var(listaSharedVars, unMensajeIPC.contenido);
 				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar->valor)){
-					log_error("CPU error - No se pudo enviar el valor la variable");
+					log_error("Error al enviar el valor la variable");
 					error = 1;
 					continue;
 				}
@@ -163,7 +160,7 @@ void *consumidor_cpu(int unCliente) {
 				deserializar_campo(&paquete, &offset, &unaSharedVar, sizeof(stSharedVar));
 				grabar_shared_var(listaSharedVars,unaSharedVar->nombre,unaSharedVar->valor);
 
-				printf("Se actualizo con el valor [%d] de la variable compartida [%s]\n",unaSharedVar->nombre,unaSharedVar->valor);
+				printf("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
 				printf("\n--------------------------------------\n");
 				free_paquete(&paquete);
 				break;
@@ -179,18 +176,11 @@ void *consumidor_cpu(int unCliente) {
 				}
 
 				deserializar_campo(&paquete, &offset, &identificador_semaforo, sizeof(identificador_semaforo));
+				free_paquete(&paquete);
 				/*TODO: Falta testear*/
 				printf("%s\n",identificador_semaforo);
-				if(wait_semaforo(listaSem,identificador_semaforo)== EXIT_FAILURE){
-					unHeaderIPC = nuevoHeaderIPC(ERROR);
-					if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
-						log_error("CPU error - No se pudo enviar header");
-						error = 1;
-						continue;
-					}
-				}
+				wait_semaforo(listaSem,identificador_semaforo);
 				printf("\n--------------------------------------\n");
-				free_paquete(&paquete);
 
 				break;
 			case SIGNAL:
@@ -215,7 +205,6 @@ void *consumidor_cpu(int unCliente) {
 						continue;
 					}
 				}
-
 				printf("\n--------------------------------------\n");
 				free_paquete(&paquete);
 				break;
@@ -237,9 +226,24 @@ void *consumidor_cpu(int unCliente) {
 					continue;
 				}
 				liberarHeaderIPC(unHeaderIPC);
-				unHeaderIPC = nuevoHeaderIPC(OK);
-				if(!enviarHeaderIPC(unCliente,unHeaderIPC)){
-					log_error("CPU error - No se pudo enviar la confirmacion de impresion");
+				printf("Se imprimio el valor [%d]\n",valor_impresion);
+				printf("\n--------------------------------------\n");
+
+				break;
+			case IMPRIMIRTEXTO:
+				/*Me comunico con la correspondiente consola que inicio el PCB*/
+				printf("\n--------------------------------------\n");
+				printf("Nuevo pedido de impresion...\n");
+				texto_imprimir = unMensajeIPC.contenido;
+				if (!recibirMensajeIPC(unCliente, &unMensajeIPC)) {
+					log_error("Error al recibir el mensaje de impresion");
+					error = 1;
+					continue;
+				}
+				socket_consola_to_print = atoi(unMensajeIPC.contenido);
+				unHeaderIPC = nuevoHeaderIPC(IMPRIMIRTEXTO);
+				if(!enviarMensajeIPC(socket_consola_to_print,unHeaderIPC,texto_imprimir)){
+					log_error("Error al enviar el texto a imprimir");
 					error = 1;
 					continue;
 				}
@@ -248,11 +252,8 @@ void *consumidor_cpu(int unCliente) {
 				printf("\n--------------------------------------\n");
 
 				break;
-
 			}
-
 		}
-
 	}
 	if (error) {
 		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
