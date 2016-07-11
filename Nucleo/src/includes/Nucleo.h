@@ -32,10 +32,6 @@
 #define EVENT_SIZE  ( sizeof (struct inotify_event) + 24 )
 #define BUF_LEN     ( 1024 * EVENT_SIZE )
 
-/* Listas globales */
-fd_set fds_master; /* Lista de todos mis sockets.*/
-fd_set read_fds; /* Sublista de fds_master.*/
-
 /*
  ============================================================================
  Estructuras del nucleo
@@ -64,7 +60,7 @@ typedef struct {
 	char* retardo; 			/*Retardo en milisegundos*/
 	t_queue* rafagas; 		/*Cola de rafagas de ejecucion*/
 	pthread_mutex_t mutex;	/*Sem Mutex*/
-	pthread_cond_t 	empty;	/*Sem Empty*/
+	pthread_mutex_t empty;	/*Sem Empty*/
 	int numInq;
 } stDispositivo;
 
