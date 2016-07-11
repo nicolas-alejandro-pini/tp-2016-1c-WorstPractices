@@ -69,13 +69,69 @@ int server_test(void)
 
 int main(int argc, char *argv[]) {
 	t_console tConsola;
-	load_program(&tConsola, argc, argv);
-	create_console(&tConsola);
-	connect_console(&tConsola);
-	handshake_console(&tConsola);
-	send_program(&tConsola);
-	//destroy_console(&tConsola);
+    char *log = "consola.log";
+	t_log *logger = log_create(log,"CONSOLA", -1, LOG_LEVEL_INFO);
+	log_info("Inicio consola...");
 
-	puts("Console Application"); /* prints Console Application */
+	if(load_program(&tConsola, argc, argv))
+	{
+		log_error("Error al cargar cargar el programa.");
+	    log_destroy(logger);
+	    exit(EXIT_FAILURE);
+	}
+	else{
+		log_info("\nPrograma: \n[%s]\n", tConsola.pProgram);
+	}
+
+	if(create_console(&tConsola))
+	{
+		log_error("Error al crear la consola.");
+	    log_destroy(logger);
+	    destroy_console(&tConsola);
+	    exit(EXIT_FAILURE);
+	}
+	else
+	{
+		log_info("Puerto [%d]", config_get_int_value(tConsola.tConfigFile, PARAM_PORT));
+		log_info("IP [%d]", config_get_int_value(tConsola.tConfigFile, PARAM_IP));
+	}
+
+	if(connect_console(&tConsola))
+	{
+		log_error("Error al conectar consola.");
+	    log_destroy(logger);
+	    destroy_console(&tConsola);
+	    exit(EXIT_FAILURE);
+	}
+
+	if(handshake_console(&tConsola))
+	{
+		log_error("Error al realizar handshake con el nucleo.");
+	    log_destroy(logger);
+	    destroy_console(&tConsola);
+	    exit(EXIT_FAILURE);
+	}
+	else{
+		log_info("\Handshake OK  IP[]", tConsola.pProgram);
+	}
+
+	if(send_program(&tConsola))
+	{
+		log_error("Error al enviar programa al nucleo.");
+	    log_destroy(logger);
+	    destroy_console(&tConsola);
+	    exit(EXIT_FAILURE);
+	}
+
+	if(recv_print(&tConsola))
+	{
+		log_error("Error al realizar impresion o finalizar programa.");
+	    log_destroy(logger);
+	    destroy_console(&tConsola);
+	    exit(EXIT_FAILURE);
+	}
+
+	destroy_console(&tConsola);
+	log_info("Fin consola...OK");
 	return EXIT_SUCCESS;
 }
