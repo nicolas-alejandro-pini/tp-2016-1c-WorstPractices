@@ -49,7 +49,7 @@ int server_test(void)
 	}
 	while(1) {  // main accept() loop
 		sin_size = sizeof(struct sockaddr_in);
-	    if ((newfd = accept(sockfd, (struct sockaddr *)&theirAddr, &sin_size)) == -1){
+	    if ((newfd = accept(sockfd, (struct sockaddr *)&theirAddr, (socklen_t *) &sin_size)) == -1){
 	    	perror("accept");
 	    	continue;
 	    }
@@ -69,21 +69,47 @@ int server_test(void)
 
 int main(int argc, char *argv[]) {
 	t_console tConsola;
-    char *log = "consola.log";
+	char *argumento = NULL;
+    char log[] = PATH FILE_LOG;
+    char *fd_config = NULL;
+    char fd_config_usr[] =  PATH FILE_CONFIG;
+    char fd_config_eclipse[] =  PATH_ECLIPSE FILE_CONFIG;
+
+	// Para debug desde eclipse
+	if(!strcmp(argv[0], BIN_USR))
+		fd_config = fd_config_usr;
+	else
+		fd_config = fd_config_eclipse;
+
+	// Creacion del log e inicio estructura de la consola
 	t_log *logger = log_create(log,"CONSOLA", -1, LOG_LEVEL_INFO);
 	log_info("Inicio consola...");
+	init_console(&tConsola);
 
-	if(load_program(&tConsola, argc, argv))
+	// Parametro Hashbang
+	if(argc < 2){
+		log_error("Uso: /usr/bin/ansisop <programa>");
+	    log_destroy(logger);
+	    exit(EXIT_FAILURE);
+	}
+	else
+	{
+		log_info("Consola: [%s]", argv[0]);
+		log_info("Programa: [%s]", argv[1]);
+		argumento = argv[1];
+	}
+
+	if(load_program(&tConsola, argumento))
 	{
 		log_error("Error al cargar cargar el programa.");
 	    log_destroy(logger);
 	    exit(EXIT_FAILURE);
 	}
 	else{
-		log_info("\nPrograma: \n[%s]\n", tConsola.pProgram);
+		log_info("Programa codigo: \n[%s]", tConsola.pProgram);
 	}
 
-	if(create_console(&tConsola))
+	if(create_console(&tConsola, fd_config))
 	{
 		log_error("Error al crear la consola.");
 	    log_destroy(logger);
@@ -93,7 +119,7 @@ int main(int argc, char *argv[]) {
 	else
 	{
 		log_info("Puerto [%d]", config_get_int_value(tConsola.tConfigFile, PARAM_PORT));
-		log_info("IP [%d]", config_get_int_value(tConsola.tConfigFile, PARAM_IP));
+		log_info("IP [%s]", config_get_string_value(tConsola.tConfigFile, PARAM_IP));
 	}
 
 	if(connect_console(&tConsola))
@@ -102,6 +128,9 @@ int main(int argc, char *argv[]) {
 	    log_destroy(logger);
 	    destroy_console(&tConsola);
 	    exit(EXIT_FAILURE);
+	}
+	else{
+		log_info("Conectado al nucleo.");
 	}
 
 	if(handshake_console(&tConsola))
@@ -112,7 +141,7 @@ int main(int argc, char *argv[]) {
 	    exit(EXIT_FAILURE);
 	}
 	else{
-		log_info("\Handshake OK  IP[]", tConsola.pProgram);
+		log_info("Handshake OK.");
 	}
 
 	if(send_program(&tConsola))
@@ -122,6 +151,9 @@ int main(int argc, char *argv[]) {
 	    destroy_console(&tConsola);
 	    exit(EXIT_FAILURE);
 	}
+	else{
+		log_info("Programa enviado OK.");
+	}
 
 	if(recv_print(&tConsola))
 	{
@@ -130,8 +162,12 @@ int main(int argc, char *argv[]) {
 	    destroy_console(&tConsola);
 	    exit(EXIT_FAILURE);
 	}
+	else{
+		log_info("Finalizando consola...");
+	}
 
 	destroy_console(&tConsola);
-	log_info("Fin consola...OK");
+	log_info("Fin Consola OK.");
+	log_destroy(logger);
 	return EXIT_SUCCESS;
 }

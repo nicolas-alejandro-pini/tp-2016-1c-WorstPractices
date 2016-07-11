@@ -15,6 +15,7 @@
 #include <commons/collections/list_mutex.h>
 #include "Memoria.h"
 #include "Parametros.h"
+#include "ISwap.h"
 
 // con este valor se conserva el valor del marco del la pagina a reemplazar
 #define REEMPLAZAR_MARCO	97ul
@@ -51,9 +52,12 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t Pagina, stRegistroTP r
 void creatListaDeTablas();
 int crearTabla(uint16_t processId, uint16_t longitud_tabla);
 stNodoListaTP *buscarPID(uint16_t pid);
+void listarMemoria();
+void listarMemoriaPid(uint16_t pid);
 void mostrarTabla();
-void mostrarTablaPid(uint16_t);
+void mostrarTablaPid(uint16_t pid);
 void liberarTablaPid(uint16_t pid);
+void marcarMemoriaModificada(uint16_t pid);
 stNodoListaTP* obtenerPrimerPidTabla();
 stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
 stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);

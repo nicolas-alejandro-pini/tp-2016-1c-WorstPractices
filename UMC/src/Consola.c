@@ -9,12 +9,14 @@
 
 void mostrarHelp(){
 
-	printf("Comandos disponibles a ejecutar: (Se puede elegir)\n");
+	printf("\nComandos disponibles a ejecutar: (Elegir el nuemro correspondiente)\n");
 	printf("\t1. retardo <tiempo>\n");
-	printf("\t2. dump tabla [<pid>]\n");
-	printf("\t3. dump memoria [<pid>]\n");
-	printf("\t4. flush tlb\n");
-	printf("\t5. flush memoria [<pid>]\n");
+	printf("\t2. dump tabla\n");
+	printf("\t3. dump tabla <pid>\n");
+	printf("\t4. dump memoria\n");
+	printf("\t5. dump memoria <pid>\n");
+	printf("\t6. flush tlb\n");
+	printf("\t7. flush memoria <pid>\n");
 	printf("\n>>>");
 
 }
@@ -58,6 +60,12 @@ void readConsole(char* buffer, char* comando, char parametros[CANTIDAD_PARAMETRO
 
 	}
 }
+void inicializar(char* buffer, int longitud){
+	// inicializo comando
+	int j;
+	for(j=0;j<longitud;j++)
+		buffer[j]='\0';
+}
 
 void consolaUMC(){
 	char buffer[MAX_BUFFER];
@@ -65,17 +73,23 @@ void consolaUMC(){
 	char parametros[CANTIDAD_PARAMETROS][MAX_PARAMETROS];
 	int retardo, pid;
 
-	fgets(buffer,200,stdin);
+	fgets(buffer,MAX_BUFFER,stdin);
 
-	readConsole(buffer, comando, parametros);
+	inicializar(comando,MAX_COMANDO);
+	inicializar(parametros[0],MAX_PARAMETROS);
+	inicializar(parametros[1],MAX_PARAMETROS);
+	//readConsole(buffer, comando, parametros);
 
 	/*
 	 * Este comando permitirá modificar la cantidad de milisegundos que debe
 	 * esperar el proceso UMC antes de responder una solicitud. Este parámetro será
 	 * de ayuda para evaluar el funcionamiento del sistema.
 	 */
-	if(!strcmp(comando,"retardo"))
+	//2. retardo <tiempo>
+	if(!strcmp(comando,"1"))
 	{
+		printf("Especificar retardo en segundos:");
+		fgets(parametros[0], MAX_PARAMETROS, stdin);
 
 		retardo = atoi(parametros[0]);
 		log_info("se cambia el retardo. Ahora es %d", retardo);
@@ -89,54 +103,59 @@ void consolaUMC(){
  * 		○ Contenido de memoria: Datos almacenados en la memoria de todos los
  * 		procesos o de un proceso en particular.
  */
-	}else if(!strcmp(comando,"dump"))
+		// 2. dump tabla
+	}else if(!strcmp(comando,"2"))
 	{
-		if(!strcmp(parametros[0],"tabla"))
-		{
-			if (parametros[1][0]=='\0'){
-				log_info("se hace el dump de la tabla de todos los procesos");
-				mostrarTabla();
-			}
-			if (parametros[1][0]!='\0'){
-				log_info("se hace el dump de la tabla de un proceso");
-				pid = atoi(parametros[1]);
-				mostrarTablaPid(pid);
+		log_info("se hace el dump de la tabla de todos los procesos");
+		mostrarTabla();
 
-			}
-		}else if(!strcmp(parametros[0],"memoria")){
+		// 2. dump tabla <pid>
+	}else if (!strcmp(comando,"3")){
 
-			if (parametros[1][0]=='\0'){
-				log_info("se hace el dump de la memoria de todos los procesos");
-				// TODO dump memoria todos los procesos
+		log_info("se hace el dump de la tabla de un proceso");
+		printf("Especificar proceso:");
+		fgets(parametros[0], MAX_PARAMETROS, stdin);
 
+		pid = atoi(parametros[0]);
+		mostrarTablaPid(pid);
 
-			}
-			if (parametros[1][0]!='\0')
-				log_info("se hace el dump de la memoria de un proceso");
-				// TODO dump memoria de un proceso
+		// 4. dump memoria
+	}else if(!strcmp(parametros[0],"4")){
 
-		}
+		log_info("se hace el dump de la memoria de todos los procesos");
+		listarMemoria();
+
+		// 5. dump memoria <pid>
+	}else if (!strcmp(parametros[0],"5")){
+
+		log_info("se hace el dump de la memoria de un proceso");
+
+		printf("Especificar proceso:");
+		fgets(parametros[0], MAX_PARAMETROS, stdin);
+
+		pid = atoi(parametros[0]);
+		listarMemoriaPid(pid);
 
 /*
  * ○ tlb: Este comando deberá limpiar completamente el contenido de la TLB.
  * ○ memory: Este comando marcará todas las páginas del proceso como modificadas
  */
-	}else if(!strcmp(comando,"flush"))
+		// 6. flush tlb
+	}else if(!strcmp(comando,"6"))
 	{
-		if(!strcmp(parametros[0],"tlb"))
-		{
-			log_info("se hace el flush de la TLB");
-			// TODO flush tlb
-		}else if(!strcmp(parametros[0],"memoria"))
-		{
-			if (parametros[1][0]=='\0')
-				log_info("se hace el flush de la memoria de todos los procesos");
-			// TODO flush memoria todos los procesos
-			if (parametros[1][0]!='\0')
-				log_info("se hace el flush de la memoria de un proceso");
-			// TODO flush memoria de un proceso
+		log_info("se hace el flush de la TLB");
+		flushTLB();
 
-		}
+		// 7. flush memoria <pid>
+	}else if (!strcmp(comando,"7")){
+
+		log_info("se hace el flush de la memoria de un proceso");
+		printf("Especificar proceso:");
+		fgets(parametros[0], MAX_PARAMETROS, stdin);
+
+		pid = atoi(parametros[0]);
+		marcarMemoriaModificada(pid);
+
 	}else{
 		printf("Comando no interpretado\n");
 

@@ -15,15 +15,25 @@
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
 
-int create_console(t_console* tConsole){
+void init_console(t_console* tConsole){
+	tConsole->pProgram = NULL;
+	tConsole->pSockfd = NULL;
+	tConsole->tConfigFile = NULL;
+	tConsole->tDest_addr = NULL;
+}
+
+int create_console(t_console* tConsole, char *path_config){
 
 	int sockfd;
+
+	if(!path_config)
+		return EXIT_FAILURE;
 
 	if(tConsole)
 	{
 		tConsole->pSockfd = (int*) malloc(sizeof(int));
 		tConsole->tDest_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
-		tConsole->tConfigFile = config_create(PATH_CONFIG);
+		tConsole->tConfigFile = config_create(path_config);
 	}
 	else
 		return EXIT_FAILURE;
@@ -102,6 +112,9 @@ int handshake_console(t_console* tConsole){
 		perror("Handshake: Error, se esperaba confirmacion del handshake");
 	}
 
+	liberarHeaderIPC(hQuienSos);
+	liberarHeaderIPC(hConnectConsola);
+	liberarHeaderIPC(hConfirm);
 	//printf("Conectado al Nucleo...\n");
     return EXIT_SUCCESS;
 }
@@ -121,6 +134,7 @@ int send_program(t_console* tConsole){
 		return EXIT_FAILURE;
 	}
 
+	liberarHeaderIPC(header);
 	//printf("Programa enviado...\n");
 	return EXIT_SUCCESS;
 }
@@ -140,30 +154,38 @@ void destroy_console(t_console* tConsole){
 
 }
 
-int load_program(t_console* tConsole, int argc, char* argv[])
+int load_program(t_console* tConsole, char* argv)
 {
-	FILE* body;
-	char *program = (char*) malloc(10);
+	FILE* body = NULL;
 	char buffer[BUFFERSIZE];
+	char *program = NULL;
 
-	if(argc < 2)
-		body = fopen(argv[0], "r");    // Hashbang
-	else
-		body = fopen(argv[1], "r");    // Consola <path>
+	// Abro el archivo arg de entrada
+	if(!argv)
+		return EXIT_FAILURE;
+
+	// Si no esta definida la consola
+	if(!tConsole)
+		return EXIT_FAILURE;
+
+	body = fopen(argv, "r");
 
 	while(fgets(buffer, BUFFERSIZE, body)){
-		program = (char*) realloc( program, strlen(program)+1+strlen(buffer));
-		if(program)
-			strcat(program, buffer);  /* concatena un salto de linea cada vez */
+
+		if(!program)
+		{
+			program = malloc(strlen(buffer)+1);
+			strcpy(program, buffer);
+		}
+		else
+		{
+			program = realloc( program, strlen(program)+strlen(buffer)+1);
+			strcat(program, buffer);
+		}
 	}
 	fclose(body);
 
-	// Agrego el programa a t_console
-	if(!tConsole)
-	{
-		free(program);
-		return EXIT_FAILURE;
-	}
+	// Copio programa a la estructura de la consola
 	tConsole->pProgram = program;
 
 	return EXIT_SUCCESS;
@@ -180,10 +202,10 @@ int recv_print(t_console* tConsole){
 		switch(unMensaje.header.tipo)
 		{
 			case IMPRIMIR:
+					printf("IMPRIMIR [%d]", (int) unMensaje.contenido);
 				break;
 			case IMPRIMIRTEXTO:
-				break;
-			case SENDPID:
+					printf("IMPRIMIR [%s]", unMensaje.contenido);
 				break;
 			case KILLPID:
 					printf("Finalizando consola...\n");

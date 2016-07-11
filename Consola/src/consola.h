@@ -21,8 +21,12 @@
 #include <arpa/inet.h>
 #include <commons/config.h>
 
-//#define PATH_CONFIG "/usr/local/share/consola.config"
-#define PATH_CONFIG "/home/utnso/workspace/tp-2016-1c-WorstPractices/Consola/consola.config"
+#define BIN_USR "/usr/bin/ansisop"
+#define PATH_ECLIPSE "/home/utnso/workspace/tp-2016-1c-WorstPractices/Consola/Debug/"
+#define PATH "/usr/local/share/"
+#define FILE_CONFIG "consola.config"
+#define FILE_LOG "consola.log"
+
 #define PARAM_PORT "DEST_PORT"
 #define PARAM_IP "DEST_IP"
 #define BUFFERSIZE 128
@@ -37,10 +41,10 @@ typedef struct t_console {
 
 /**
  * @NAME: create_console
- * @PRE:  un puntero a una estructura tipo t_console
+ * @PRE:  un puntero a una estructura tipo t_console, path del archivo de config
  * @POST: Inicializa coneccion segun archivo de config.
  */
-int create_console(t_console* tConsole);
+int create_console(t_console* tConsole, char *path_config);
 
 /**
  * @NAME: connect_console
@@ -61,7 +65,7 @@ void destroy_console(t_console* tConsole);
  * @PRE:  un puntero a una estructura tipo t_console, program ansisop por argumento
  * @POST: Lee archivo ansiop en modo interprete, o por parametro (path completo del archivo)
  */
-int load_program(t_console* tConsole, int argc, char* argv[]);
+int load_program(t_console* tConsole, char* argv);
 
 /**
  * @NAME: handshake_console
@@ -77,7 +81,19 @@ int handshake_console(t_console* tConsole);
  */
 int send_program(t_console* tConsole);
 
+/**
+ * @NAME: recv_print
+ * @PRE:
+ * @POST:
+ */
 int recv_print(t_console* tConsole);
+
+/**
+ * @NAME: init_console
+ * @PRE:
+ * @POST:
+ */
+void init_console(t_console* tConsole);
 
 /* AUXILIAR
  */
