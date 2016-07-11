@@ -121,7 +121,7 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 	// Page fault Lectura
 	else{
 
-		leido = ejecutarPageFault(pid, unaLectura->pagina, hayTLB && resTLB!=0);
+		leido = ejecutarPageFault(pid, unaLectura->pagina, estaActivadaTLB()==OK && resTLB==0);
 
 		if(leido!=NULL){
 
@@ -177,7 +177,7 @@ void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socke
 	// Page fault Escritura
 	else{
 
-		leido = ejecutarPageFault(pid, unaEscritura->nroPagina, estaActivadaTLB() && resTLB!=0);
+		leido = ejecutarPageFault(pid, unaEscritura->nroPagina, estaActivadaTLB()==OK && resTLB==0);
 
 		if(leido!=NULL){
 

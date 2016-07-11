@@ -185,6 +185,7 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 			// escribo en memoria secundaria si es necesario
 			if(retorno->bitModificado==1){
 				buf=malloc(losParametros.frameSize);
+				//TODO ver como regresa marco y porque escribo en memoria directamente
 				memcpy(buf, memoriaPrincipal+retorno->marco, losParametros.frameSize);
 				enviarPagina(pid, pagina, buf);
 			}

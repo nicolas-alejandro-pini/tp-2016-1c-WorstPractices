@@ -9,6 +9,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+static tTLB *TLB;
+
 // Funciones privadas
 void destruirNodoTLB(void *nodo);
 void imprimirNodoTLB(void *nodo);

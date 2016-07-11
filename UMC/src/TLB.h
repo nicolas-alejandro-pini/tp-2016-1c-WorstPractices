@@ -38,7 +38,7 @@ typedef struct tTLB {
 } tTLB;
 
 // global.
-tTLB *TLB;
+
 
 
 uint16_t buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame);
