@@ -6,6 +6,8 @@
  */
 #include "includes/consumidor_cpu.h"
 
+pthread_mutex_t mutex_lista_dispositivos = PTHREAD_MUTEX_INITIALIZER;
+
 void *consumidor_cpu(int unCliente) {
 	stHeaderIPC *unHeaderIPC;
 	stMensajeIPC unMensajeIPC;
@@ -57,13 +59,6 @@ void *consumidor_cpu(int unCliente) {
 		} else {
 			switch (unMensajeIPC.header.tipo) {
 			case IOANSISOP:
-				/*Busqueda de dispositivo*/
-				dispositivo_name = strdup(unMensajeIPC.contenido);
-				int _es_el_dispositivo(stDispositivo *d) {
-					return string_equals_ignore_case(d->nombre, dispositivo_name);
-				}
-				unDispositivo = list_remove_by_condition(obtenerEstadoActual().dispositivos, (void*) _es_el_dispositivo);
-
 				/*Envio confirmacion al CPU*/
 				unHeaderIPC = nuevoHeaderIPC(OK);
 				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
@@ -79,16 +74,29 @@ void *consumidor_cpu(int unCliente) {
 					continue;
 				}
 				deserializar_pcb(unPCB, &paquete);
+
+				/*Busqueda de dispositivo*/
+				dispositivo_name = strdup(unMensajeIPC.contenido);
+				int _es_el_dispositivo(stDispositivo *d) {
+					return string_equals_ignore_case(d->nombre, dispositivo_name);
+				}
+				pthread_mutex_lock(&mutex_lista_dispositivos);
+				unDispositivo = list_remove_by_condition(obtenerEstadoActual().dispositivos, (void*) _es_el_dispositivo);
 				/*Almacenamos la rafaga de ejecucion de entrada salida*/
 				unaRafagaIO = malloc(sizeof(stRafaga));
 				unaRafagaIO->pid = unPCB->pid;
 				unaRafagaIO->unidades = 2;
 
+				pthread_mutex_lock(&unDispositivo->mutex); // Se lockea el acceso a la cola
 				queue_push(unDispositivo->rafagas, unaRafagaIO);
+				unDispositivo->numInq++;
+				pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
+				pthread_mutex_unlock(&unDispositivo->empty);	// Comienzo de espera de consumidor
 
 				/*Volvemos a almacenar el dispositivo en la lista*/
 				list_add(obtenerEstadoActual().dispositivos, unDispositivo);
 				list_add(listaBlock, &unPCB);
+				pthread_mutex_unlock(&mutex_lista_dispositivos);
 
 				printf("PCB [PID - %d] en estado BLOCK / dispositivo [%s]\n", unPCB->pid,unDispositivo->nombre);
 				//log_info("PCB[%d] ingresa a la cola de ejecucion de %s \n", unPCB->pid, unDispositivo->nombre);
@@ -110,7 +118,7 @@ void *consumidor_cpu(int unCliente) {
 				/*Lo alojamos en la cola de ready para que vuelva a ser tomado por algun CPU*/
 				printf("PCB [PID - %d] FIN QUANTUM\n", unPCB->pid);
 				ready_productor(unPCB);
-				printf("PCB [PID - %d] en estado READY\n", unPCB->pid);
+				printf("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
 				break;
 			case EXECERROR:
 				/*Se produjo una excepcion por acceso a una posicion de memoria invalida (segmentation fault), imprimir error
@@ -123,12 +131,6 @@ void *consumidor_cpu(int unCliente) {
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de variable compartida...\n");
 				/*Valor de la variable compartida, devolver el valor para que el CPU siga ejecutando*/
-				if (!recibirContenido(unCliente, unMensajeIPC.contenido,unHeaderIPC->largo)) {
-					log_error("CPU error - No se pudo recibir la variable");
-					error = 1;
-					continue;
-				}
-
 				/*TODO: Falta testear*/
 				unaSharedVar = obtener_shared_var(listaSharedVars, unMensajeIPC.contenido);
 				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar->valor)){
@@ -221,11 +223,6 @@ void *consumidor_cpu(int unCliente) {
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de impresion...\n");
-				if (!recibirContenido(unCliente, unMensajeIPC.contenido, unHeaderIPC->largo)) {
-					log_error("CPU error - No se pudo recibir la variable");
-					error = 1;
-					continue;
-				}
 				valor_impresion = atoi(unMensajeIPC.contenido);
 				if (!recibirMensajeIPC(unCliente, &unMensajeIPC)) {
 					log_error("CPU error - No se pudo recibir header");
@@ -260,6 +257,7 @@ void *consumidor_cpu(int unCliente) {
 	if (error) {
 		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
 		ready_productor(unPCB);
+		printf("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
 		liberarHeaderIPC(unHeaderIPC);
 		close(unCliente);
 		pthread_exit(NULL);

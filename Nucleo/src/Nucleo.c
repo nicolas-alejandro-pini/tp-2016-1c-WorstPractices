@@ -56,7 +56,19 @@ void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado)
 	unEstado->salir = 1;
 	unMensaje->header.tipo = -1;
 }
-void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
+void inicializarThreadsDispositivos(stEstado* unEstado){
+	int i = 0;
+	pthread_t unThread;
+	for (i = 0; i < list_size(unEstado->dispositivos); ++i) {
+		stDispositivo *unDispositivo = list_get(unEstado->dispositivos, i);
+		if (pthread_create(&unThread, NULL, (void*)threadDispositivo, unDispositivo) != 0) {
+			log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
+			continue;
+		}
+	}
+}
+
+void threadDispositivo(stDispositivo* unDispositivo) {
 	int error = 0;
 	t_queue *colaRafaga;
 	stRafaga *unaRafaga;
@@ -66,11 +78,11 @@ void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
 	colaRafaga = unDispositivo->rafagas;
 
 	while (!error) {
-		if (queue_size(colaRafaga) == 0) {
-			continue;
-		}
-
+		while (unDispositivo->numInq == 0) pthread_mutex_lock(&unDispositivo->empty);
+		pthread_mutex_lock(&unDispositivo->mutex);		// Se lockea el acceso a la cola
 		unaRafaga = queue_pop(colaRafaga);
+		unDispositivo->numInq--;
+		pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
 
 		for (unidad = 0; unidad < unaRafaga->unidades; ++unidad) {
 			usleep(atoi(unDispositivo->retardo));
@@ -82,12 +94,10 @@ void threadDispositivo(stEstado* info, stDispositivo* unDispositivo) {
 		}
 
 		unPCB = list_remove_by_condition(listaBlock, (void*) _es_el_pcb);
-
 		/*Ponemos en la cola de Ready para que lo vuelva a ejecutar un CPU*/
-//		pthread_mutex_lock(&mutexColaReady);
-//		queue_push(colaReady, unPCB);
-//		pthread_mutex_unlock(&mutexColaReady);
-		printf("PCB[%d] vuelve a ingresar a la cola de Ready \n", unPCB->pid);
+		ready_productor(unPCB);
+		free(unaRafaga);
+		printf("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
 
 	}
 }
@@ -136,6 +146,8 @@ int main(int argc, char *argv[]) {
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
 	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*) &elEstadoActual);
+
+	inicializarThreadsDispositivos(&elEstadoActual);
 
 	/*Inicializacion de listas de socket*/
 	FD_ZERO(&(fds_master));
@@ -197,6 +209,7 @@ int main(int argc, char *argv[]) {
 		elEstadoActual.tamanio_paginas = UMCConfig.tamanioPagina;
 
 	} else {
+		log_error("No se pudo conectar a la UMC");
 		elEstadoActual.salir = 1;
 	}
 
@@ -293,13 +306,10 @@ int main(int argc, char *argv[]) {
 									}
 									continue;
 								}
-
 								/*Cuando se usa mensajeIPC liberar el contenido*/
 								free(unMensaje.contenido);
-
-								printf("PCB [PID - %d] en estado NEW\n", unPCB->pid);
 								ready_productor(unPCB);
-								printf("OK\n");
+								printf("PCB [PID - %d] NEW a READY\n", unPCB->pid);
 								fflush(stdout);
 							}
 

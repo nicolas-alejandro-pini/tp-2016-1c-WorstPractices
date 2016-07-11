@@ -127,6 +127,8 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 	new->nombre = strdup(nombre);
 	new->retardo = retardo;
 	new->rafagas = queue_create();
+	pthread_mutex_init(&(new->mutex), 0);
+	pthread_cond_init(&(new->empty),0);
 	/*Lanzar hilo para que haga el tratamiento de cada una da las rafagas de la cola*/
 
 	return new;
