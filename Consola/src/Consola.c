@@ -26,22 +26,22 @@ int create_console(t_console* tConsole){
 		tConsole->tConfigFile = config_create(PATH_CONFIG);
 	}
 	else
-		return -1;
+		return EXIT_FAILURE;
 
 	if(tConsole->tConfigFile == NULL)
 	{
 		perror("config_create");
-		return -1;
+		return EXIT_FAILURE;
 	}
 	// Valido parametros del archivo de configuracion.
 	if(!config_has_property(tConsole->tConfigFile, PARAM_PORT)
 	|| !config_has_property(tConsole->tConfigFile, PARAM_IP)) {
-		return -1;
+		return EXIT_FAILURE;
 	}
 	// Creo socket para conectar la consola al nucleo
 	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
 		perror("socket");
-		return -1;
+		return EXIT_FAILURE;
 	}
 	*(tConsole->pSockfd) = sockfd;
 
@@ -52,7 +52,7 @@ int create_console(t_console* tConsole){
 	memset(tConsole->tDest_addr->sin_zero, '\0', 8);
 
 	//printf("Consola creada.\n");
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 int connect_console(t_console* tConsole){
@@ -63,10 +63,10 @@ int connect_console(t_console* tConsole){
 	if((connect(*(tConsole->pSockfd), (struct sockaddr *) tConsole->tDest_addr, sizeof(struct sockaddr))) == -1)
 	{
 		perror("connect");
-		return -1;
+		return EXIT_FAILURE;
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 int handshake_console(t_console* tConsole){
@@ -77,24 +77,24 @@ int handshake_console(t_console* tConsole){
     if(!recibirHeaderIPC(*(tConsole->pSockfd), hQuienSos))
     {
     	perror("Handshake: Error. se cerro la coneccion.");
-    	return -1;
+    	return EXIT_FAILURE;
     }
 
 	if(hQuienSos->tipo != QUIENSOS)
 	{
 		perror("Handshake: Error. Mensaje desconocido");
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	if(!enviarHeaderIPC(*(tConsole->pSockfd), hConnectConsola)){
 		perror("Handshake: Error. no se pudo responder al Nucleo.");
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	if(!recibirHeaderIPC(*(tConsole->pSockfd), hConfirm))
 	{
 		perror("Handshake: Error, de comunicacion.");
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	if(hConfirm->tipo != OK)
@@ -102,8 +102,8 @@ int handshake_console(t_console* tConsole){
 		perror("Handshake: Error, se esperaba confirmacion del handshake");
 	}
 
-	printf("Conectado al Nucleo...\n");
-    return 0;
+	//printf("Conectado al Nucleo...\n");
+    return EXIT_SUCCESS;
 }
 
 int send_program(t_console* tConsole){
@@ -118,11 +118,11 @@ int send_program(t_console* tConsole){
 	if(!enviarMensajeIPC(*(tConsole->pSockfd),header,tConsole->pProgram))
 	{
 		perror("send_program: Error. no se pudo enviar el programa al Nucleo.");
-		return -1;
+		return EXIT_FAILURE;
 	}
 
-	printf("Programa enviado...\n");
-	return 0;
+	//printf("Programa enviado...\n");
+	return EXIT_SUCCESS;
 }
 
 void destroy_console(t_console* tConsole){
@@ -162,11 +162,38 @@ int load_program(t_console* tConsole, int argc, char* argv[])
 	if(!tConsole)
 	{
 		free(program);
-		return -1;
+		return EXIT_FAILURE;
 	}
 	tConsole->pProgram = program;
 
-	// Imprimo programa por stdout
-	printf("\nPrograma: \n[%s]\n", program);
-	return 0;
+	return EXIT_SUCCESS;
 }
+
+int recv_print(t_console* tConsole){
+	stMensaje unMensaje;
+	unMensaje.header.tipo = ERROR;
+
+	while(unMensaje.header.tipo != KILLPID){
+
+		recibirMensaje(*(tConsole->pSockfd), &unMensaje);
+
+		switch(unMensaje.header.tipo)
+		{
+			case IMPRIMIR:
+				break;
+			case IMPRIMIRTEXTO:
+				break;
+			case SENDPID:
+				break;
+			case KILLPID:
+					printf("Finalizando consola...\n");
+				break;
+			default:
+				break;
+		}
+	}
+
+	return EXIT_SUCCESS;
+}
+
+

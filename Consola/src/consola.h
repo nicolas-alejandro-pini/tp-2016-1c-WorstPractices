@@ -13,13 +13,16 @@
 #include <errno.h>
 #include <netdb.h>
 #include <string.h>
+#include <unistd.h>
+#include <commons/log.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <commons/config.h>
 
-#define PATH_CONFIG "/usr/local/share/consola.config"
+//#define PATH_CONFIG "/usr/local/share/consola.config"
+#define PATH_CONFIG "/home/utnso/workspace/tp-2016-1c-WorstPractices/Consola/consola.config"
 #define PARAM_PORT "DEST_PORT"
 #define PARAM_IP "DEST_IP"
 #define BUFFERSIZE 128
@@ -73,6 +76,8 @@ int handshake_console(t_console* tConsole);
  * @POST:
  */
 int send_program(t_console* tConsole);
+
+int recv_print(t_console* tConsole);
 
 /* AUXILIAR
  */
