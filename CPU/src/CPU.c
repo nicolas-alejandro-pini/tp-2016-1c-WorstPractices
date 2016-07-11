@@ -622,7 +622,6 @@ int cargarPCB(void){
 	t_paquete paquete;
 	int type;
 	stVars *unaVar;
-	uint32_t i, j, k, max_stack, max_args, max_vars;
 	stIndiceStack *stack;
 	stPosicion *argumento;
 
@@ -636,45 +635,6 @@ int cargarPCB(void){
 		log_info("Comiendo a deserealizar el PCB.");
 		unPCB = (stPCB*)malloc(sizeof(stPCB));
 		deserializar_pcb(unPCB , &paquete);
-
-		max_stack = list_size(unPCB->stack);
-
-		for (i = 0; i < max_stack; ++i) {
-			stack = list_get(unPCB->stack, i);
-			max_args = list_size(stack->argumentos);
-			max_vars = list_size(stack->variables);
-			printf("Posicion: %d\n",stack->pos);
-			printf("Argumentos\n");
-			printf("----------------------------\n");
-			for (j = 0; j < max_args; ++j) {
-				printf("Argumento [%d] --> ",j);
-				argumento  = list_get(stack->argumentos, j);
-				printf("Pagina:[%d] - ",argumento->pagina);
-				printf("Offset:[%d] - ",argumento->offset);
-				printf("Size:[%d]\n",argumento->size);
-			}
-			printf("----------------------------\n");
-			printf("Variables\n");
-			printf("----------------------------\n");
-			for (k = 0; k < max_args; ++k) {
-				printf("Variable [%d] --> ",k);
-				unaVar  = list_get(stack->variables, k);
-				printf("Id:[%d] - ",unaVar->id);
-				printf("Pagina:[%d] - ",unaVar->posicion_memoria.pagina);
-				printf("Offset:[%d] - ",unaVar->posicion_memoria.offset);
-				printf("Size:[%d]\n",unaVar->posicion_memoria.size);
-			}
-			printf("----------------------------\n");
-
-			printf("Posicion de stack retorno: %d\n",stack->retPosicion);
-			printf("Posicion de memoria de variable de retorno:\n");
-			printf("Pagina:[%d] - ",stack->retVar.pagina);
-			printf("Offset:[%d] - ",stack->retVar.offset);
-			printf("Size:[%d]\n",stack->retVar.size);
-			fflush(stdout);
-		}
-
-
 
 		//log_info("PCB de ANSIPROG cargado. /n");
 		free_paquete(&paquete);
@@ -789,7 +749,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
  Name        : ejecutarInstruccion()
  Author      : Ezequiel Martinez
  Inputs      : N/A
- Outputs     : Retorna -1 en caso de haber algun error.
+ Outputs     : Retorna 1 en caso de haber algun error.
  Description : Ejecuta una instrucción del PCB.
  =========================================================================================
  */
@@ -798,8 +758,8 @@ int ejecutarInstruccion(void){
 	int programCounter = unPCB->pc;
 	char* instruccion = NULL;
 
-	instruccion=getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
-					unPCB->metadata_program->instrucciones_serializado[programCounter].offset);
+	instruccion = getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
+								 unPCB->metadata_program->instrucciones_serializado[programCounter].offset);
 
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
