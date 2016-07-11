@@ -10,7 +10,7 @@
 #include "Nucleo.h"
 #include <pthread.h>
 
-void loadInfo(stEstado* info,t_list* lista_semaforos, t_list* lista_shared_vars);
+int loadInfo(stEstado* info, t_list* lista_semaforos,t_list* lista_shared_vars);
 void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep);
 void cargar_semaforos(char** semIds, char** semInit);
 void cargar_sharedVars(char** sharedVars);

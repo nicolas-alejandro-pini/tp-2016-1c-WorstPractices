@@ -22,6 +22,7 @@
 pthread_mutex_t mutex_estado = PTHREAD_MUTEX_INITIALIZER;
 fd_set fds_master; /* Lista de todos mis sockets.*/
 fd_set read_fds; /* Sublista de fds_master.*/
+stEstado elEstadoActual; /*Estado con toda la configuracion del Nucleo*/
 
 /*
  ============================================================================
@@ -124,7 +125,12 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	stPCB *unPCB = NULL;
 	t_UMCConfig UMCConfig;
+	pthread_t p_thread, p_threadCpu;
 	char* temp_file = "nucleo.log";
+	elEstadoActual.path_conf = argv[1];
+	int unCliente = 0,maximoAnterior = 0, unSocket, agregarSock;
+	struct sockaddr addressAceptado;
+
 
 	/*Inicializacion de las colas del planificador*/
 	colaReady = queue_create();
@@ -134,11 +140,6 @@ int main(int argc, char *argv[]) {
 	listaSem = list_create();
 	listaSharedVars = list_create();
 
-	int unCliente = 0,maximoAnterior = 0, unSocket, agregarSock;
-	struct sockaddr addressAceptado;
-
-	pthread_t p_thread, p_threadCpu;
-
 	printf("----------------------------------Elestac------------------------------------\n");
 	printf("-----------------------------------Nucleo------------------------------------\n");
 	printf("------------------------------------v0.1-------------------------------------\n\n");
@@ -147,11 +148,21 @@ int main(int argc, char *argv[]) {
 	/*Logger*/
 	t_log* logger = log_create(temp_file, "NUCLEO", -1, LOG_LEVEL_INFO);
 
+	if(!elEstadoActual.path_conf)
+	{
+		log_error("Falta el parametro de configuracion");
+		exit(-1);
+	}
+
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
-	loadInfo(&elEstadoActual, &listaSem, &listaSharedVars);
+	if(loadInfo(&elEstadoActual, &listaSem, &listaSharedVars)){
+		printf("Error");
+		exit(-2);
+	}
 	printf("OK\n");
-	printf("Configuracion cargada satisfactoriamente...\n");
+
+//	log_info("Configuracion cargada satisfactoriamente...\n");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
 	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*) &elEstadoActual);

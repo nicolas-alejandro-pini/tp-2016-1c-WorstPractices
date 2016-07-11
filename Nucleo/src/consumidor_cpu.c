@@ -159,7 +159,6 @@ void *consumidor_cpu(int unCliente) {
 
 				deserializar_campo(&paquete, &offset, &unaSharedVar, sizeof(stSharedVar));
 				grabar_shared_var(listaSharedVars,unaSharedVar->nombre,unaSharedVar->valor);
-
 				printf("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
 				printf("\n--------------------------------------\n");
 				free_paquete(&paquete);
@@ -174,7 +173,6 @@ void *consumidor_cpu(int unCliente) {
 					error = 1;
 					continue;
 				}
-
 				deserializar_campo(&paquete, &offset, &identificador_semaforo, sizeof(identificador_semaforo));
 				free_paquete(&paquete);
 				/*TODO: Falta testear*/

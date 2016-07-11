@@ -9,96 +9,115 @@
 #include "includes/semaforos.h"
 #include "includes/shared_vars.h"
 
-void loadInfo(stEstado* info,t_list* lista_semaforos, t_list* lista_shared_vars) {
+int inotify = 0;
 
-	t_config* miConf = config_create(CFGFILE); /*Estructura de configuracion*/
-	info->dispositivos = list_create();
-	lista_semaforos = list_create();
-	lista_shared_vars = list_create();
+int loadInfo(stEstado* info, t_list* lista_semaforos, t_list* lista_shared_vars) {
 
-	if (miConf == NULL) {
-		log_error("Error iniciando la configuracion...\n");
-		return exit(-2);;
-	}
+	t_config* miConf, *otraConf;
 
-	if (config_has_property(miConf, "IP")) {
-		info->miIP = config_get_string_value(miConf, "IP");
+	if (!inotify) {
+		miConf = config_create(info->path_conf); /*Estructura de configuracion*/
+		info->dispositivos = list_create();
+		lista_semaforos = list_create();
+		lista_shared_vars = list_create();
+
+		if (miConf == NULL) {
+			log_error("Error iniciando la configuracion...\n");
+			return EXIT_FAILURE;
+		}
+		if (config_has_property(miConf, "IP")) {
+			info->miIP = config_get_string_value(miConf, "IP");
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "IP");
+			return EXIT_FAILURE;
+		}
+
+		if (config_has_property(miConf, "PUERTO")) {
+			info->miPuerto = config_get_int_value(miConf, "PUERTO");
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "PUERTO");
+			return EXIT_FAILURE;
+		}
+
+		if (config_has_property(miConf, "IP_UMC")) {
+			info->ipUmc = config_get_string_value(miConf, "IP_UMC");
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "IP_UMC");
+			return EXIT_FAILURE;
+		}
+
+		if (config_has_property(miConf, "PUERTO_UMC")) {
+			info->puertoUmc = config_get_int_value(miConf, "PUERTO_UMC");
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "PUERTO_UMC");
+			return EXIT_FAILURE;
+		}
+
+		if (config_has_property(miConf, "QUANTUM")) {
+			info->quantum = config_get_int_value(miConf, "QUANTUM");
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM");
+			return EXIT_FAILURE;
+		}
+
+		if (config_has_property(miConf, "QUANTUM_SLEEP")) {
+			info->quantumSleep = config_get_int_value(miConf, "QUANTUM_SLEEP");
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM_SLEEP");
+			return EXIT_FAILURE;
+		}
+
+		if (!config_has_property(miConf, "SEM_IDS") || !config_has_property(miConf, "SEM_INIT")) {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SEM_IDS");
+			return EXIT_FAILURE;
+		} else {
+			cargar_semaforos(config_get_array_value(miConf, "SEM_IDS"), config_get_array_value(miConf, "SEM_INIT"));
+		}
+
+		if (!config_has_property(miConf, "IO_IDS") || !config_has_property(miConf, "IO_SLEEP")) {
+			log_error("Parametros de dispositivos no cargados en el archivo de configuracion");
+			return EXIT_FAILURE;
+		} else {
+			cargar_dipositivos(info, config_get_array_value(miConf, "IO_IDS"), config_get_array_value(miConf, "IO_SLEEP"));
+		}
+
+		if (config_has_property(miConf, "SHARED_VARS")) {
+			cargar_sharedVars(config_get_array_value(miConf, "SHARED_VARS"));
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SHARED_VARS");
+			return EXIT_FAILURE;
+		}
+
+		if (config_has_property(miConf, "STACK_SIZE")) {
+			info->stackSize = config_get_int_value(miConf, "STACK_SIZE");
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "STACK_SIZE");
+			return EXIT_FAILURE;
+		}
+		inotify++;
+		return EXIT_SUCCESS;
 	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "IP");
-		exit(-2);
-	}
+		otraConf = config_create(info->path_conf);
+		if (config_has_property(otraConf, "QUANTUM")) {
+			info->quantum = config_get_int_value(otraConf, "QUANTUM");
+		} else {
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM");
+			return EXIT_FAILURE;
+		}
 
-	if (config_has_property(miConf, "PUERTO")) {
-		info->miPuerto = config_get_int_value(miConf, "PUERTO");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "PUERTO");
-		exit(-2);
-	}
+		printf("Valor del quantum [%d]\n", info->quantum);
+		return EXIT_SUCCESS;
 
-	if (config_has_property(miConf, "IP_UMC")) {
-		info->ipUmc = config_get_string_value(miConf, "IP_UMC");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "IP_UMC");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "PUERTO_UMC")) {
-		info->puertoUmc = config_get_int_value(miConf, "PUERTO_UMC");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "PUERTO_UMC");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "QUANTUM")) {
-		info->quantum = config_get_int_value(miConf, "QUANTUM");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "QUANTUM_SLEEP")) {
-		info->quantumSleep = config_get_int_value(miConf, "QUANTUM_SLEEP");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM_SLEEP");
-		exit(-2);
-	}
-
-	if (!config_has_property(miConf, "SEM_IDS")||!config_has_property(miConf, "SEM_INIT")) {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SEM_IDS");
-		exit(-2);
-	} else {
-		cargar_semaforos(config_get_array_value(miConf, "SEM_IDS"), config_get_array_value(miConf, "SEM_INIT"));
-	}
-
-	if (!config_has_property(miConf, "IO_IDS")||!config_has_property(miConf, "IO_SLEEP")) {
-		log_error("Parametros de dispositivos no cargados en el archivo de configuracion");
-		exit(-2);
-	} else {
-		cargar_dipositivos(info,config_get_array_value(miConf, "IO_IDS"), config_get_array_value(miConf, "IO_SLEEP"));
-	}
-
-	if (config_has_property(miConf, "SHARED_VARS")) {
-		cargar_sharedVars(config_get_array_value(miConf, "SHARED_VARS"));
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "SHARED_VARS");
-		exit(-2);
-	}
-
-	if (config_has_property(miConf, "STACK_SIZE")) {
-		info->stackSize = config_get_int_value(miConf, "STACK_SIZE");
-	} else {
-		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "STACK_SIZE");
-		exit(-2);
 	}
 }
 
-void cargar_dipositivos(stEstado *info,char** ioIds, char** ioSleep) {
+void cargar_dipositivos(stEstado *info, char** ioIds, char** ioSleep) {
 	int iterator = 0;
 	stDispositivo *unDispositivo;
 
 	while (ioIds[iterator] != NULL) {
-		unDispositivo = crear_dispositivo(ioIds[iterator],ioSleep[iterator]);
-		list_add(info->dispositivos,unDispositivo);
+		unDispositivo = crear_dispositivo(ioIds[iterator], ioSleep[iterator]);
+		list_add(info->dispositivos, unDispositivo);
 		iterator++;
 	}
 }
@@ -107,8 +126,8 @@ void cargar_semaforos(char** semIds, char** semInit) {
 	stSemaforo *unSemaforo;
 
 	while (semIds[iterator] != NULL) {
-		unSemaforo = crear_semaforo(semIds[iterator],semInit[iterator]);
-		list_add(listaSem,unSemaforo);
+		unSemaforo = crear_semaforo(semIds[iterator], semInit[iterator]);
+		list_add(listaSem, unSemaforo);
 		iterator++;
 	}
 }
@@ -118,7 +137,7 @@ void cargar_sharedVars(char** sharedVars) {
 
 	while (sharedVars[iterator] != NULL) {
 		unaSharedVar = crear_shared_var(sharedVars[iterator]);
-		list_add(listaSharedVars,unaSharedVar);
+		list_add(listaSharedVars, unaSharedVar);
 		iterator++;
 	}
 }
@@ -128,12 +147,9 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 	new->retardo = retardo;
 	new->rafagas = queue_create();
 	pthread_mutex_init(&(new->mutex), 0);
-	pthread_cond_init(&(new->empty),0);
-	/*Lanzar hilo para que haga el tratamiento de cada una da las rafagas de la cola*/
-
+	pthread_mutex_init(&(new->empty), 0);
 	return new;
 }
-
 
 void monitor_configuracion(stEstado* info) {
 	char buffer[BUF_LEN];
@@ -152,8 +168,7 @@ void monitor_configuracion(stEstado* info) {
 	if (length < 0) {
 		perror("read");
 	}
-	loadInfo(info,listaSem,listaSharedVars);
-	printf("\nEl archivo de configuracion se ha modificado\n");
+	loadInfo(info, listaSem, listaSharedVars);
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
 	monitor_configuracion(info);

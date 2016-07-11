@@ -53,6 +53,7 @@ typedef struct {
 	int tamanio_paginas; 	/*Tamaño de paginas configurado en la UMC*/
 	int pidCounter;
 	int salir; 				/*Indica si debo o no salir de la aplicacion. */
+	char* path_conf;
 } stEstado;
 
 typedef struct {
@@ -71,7 +72,6 @@ typedef struct {
 
 t_list *listaSem; 		/*Lista de todos los semaforos del sistema*/
 t_list *listaSharedVars; /* Lista con las variables compartidas*/
-stEstado elEstadoActual; /*Estado con toda la configuracion del Nucleo*/
 
 void threadCPU(void *argumentos);
 void cerrarSockets(stEstado *elEstadoActual);
