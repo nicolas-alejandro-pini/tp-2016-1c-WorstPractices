@@ -54,7 +54,7 @@ int finalizar_umc(){
 	for( i=0; i<CANT_CPU; i++)
 		pthread_join(tests_threads[i], NULL);
 
-	destruirTLB(TLB);
+	destruirTLB();
 	return EXIT_SUCCESS;
 }
 
@@ -86,7 +86,7 @@ void test_reemplazo_tlb(){
 		//imprimirTLB();
 		//sleep(1);
 	}
-	destruirTLB(TLB);
+	destruirTLB();
 }
 
 // Prueba 3
@@ -128,7 +128,7 @@ void test_busqueda_tlb(){
 	//[1][9][109][0]
 	//[1][10][110][4]
 	imprimirTLB();
-	destruirTLB(TLB);
+	destruirTLB();
 }
 
 // Prueba 4
@@ -153,7 +153,7 @@ void test_flush_tlb(){
 	imprimirTLB();
 	flushTLB(1);
 	imprimirTLB();
-	destruirTLB(TLB);
+	destruirTLB();
 }
 
 // Prueba X
