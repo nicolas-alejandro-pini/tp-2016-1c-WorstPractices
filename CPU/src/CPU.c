@@ -93,7 +93,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
-	stVars *unaVariable;
+	stVars *unaVariable = NULL;
 	unaVariable = malloc(sizeof(stVars));
 
 	stIndiceStack *indiceStack;
@@ -111,11 +111,10 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	unaVariable = list_find(indiceStack->variables, (void*) _es_la_var);
 
-
-	return unaVariable->posicion_memoria.offset;
-
-	/*TODO falta ver el caso en que no la encuentra para devolver -1*/
-
+	if (unaVariable !=NULL)
+		return unaVariable->posicion_memoria.offset;
+	else
+		return (-1);
 }
 
 stPosicion *obtenerPosicion(t_puntero direccion_variable){
