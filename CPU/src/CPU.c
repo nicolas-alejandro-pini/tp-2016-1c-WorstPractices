@@ -71,7 +71,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	stVars *unaVariable;
 	int tamanioStack;
 
-	tamanioStack=list_size(unPCB->stack);
+	tamanioStack=list_size(unPCB->stack) - 1 ;
 
 	indiceStack = list_get(unPCB->stack, tamanioStack);
 
