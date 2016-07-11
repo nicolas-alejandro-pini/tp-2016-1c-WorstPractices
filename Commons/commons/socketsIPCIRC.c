@@ -47,11 +47,14 @@ void nuevoID(char *id)
  *
  */
 stHeaderIPC * nuevoHeaderIPC(unsigned long unTipo){
-
+	int i;
 	stHeaderIPC * unHeader = malloc(sizeof(stHeaderIPC));
-	nuevoID(unHeader->id);
+	nuevoID( (char*) unHeader->id);
 	unHeader->tipo = unTipo;
 	unHeader->largo = 0;
+	for(i=0; i<16; i++){
+		unHeader->respuesta_a_id[i] = 0;
+	}
 	return (unHeader);
 }
 
