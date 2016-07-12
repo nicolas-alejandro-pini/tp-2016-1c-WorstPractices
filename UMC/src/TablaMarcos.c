@@ -20,18 +20,22 @@ stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada){
 	return registro;
 }
 
-int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t **frame){
+int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame){
 
-	stRegistroTP *registro;
+	stRegistroTP *registro = NULL;
 
 	registro = buscarRegistroEnTabla(pid, paginaBuscada);
-	if(registro->bitPresencia==0)
-		return 0;
-	registro->bit2ndChance=1;
-	*frame = malloc(sizeof(uint16_t));
-	**frame = registro->marco;
-	return registro->marco;
+	if(registro){
+
+		if(registro->bitPresencia==0)
+			return 0;
+		registro->bit2ndChance=1;
+		*frame = registro->marco;
+		return registro->marco;
+	}
+	return 0;
 }
+
 // voy a elegir uno de los registros de la tabla y lo reemplazo con el parametro registro
 stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag){
 	stRegistroTP *regTP;
@@ -142,6 +146,13 @@ stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRe
 
 	return regTP;
 }
+
+int agregarMarcoATabla(uint16_t pid,
+		uint16_t pagina, stRegistroTP registro, uint8_t flagReemplazoAsignados){
+
+}
+
+
 stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP registro, uint8_t flagReemplazoAsignados){
 
 	stNodoListaTP *nodo;
@@ -166,7 +177,10 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 		retorno = nodo->tabla+(sizeof(stRegistroTP)*pagina);
 		if(retorno->bitModificado==1){
 			buf=malloc(losParametros.frameSize);
-			buf = leerMemoria(memoriaPrincipal+retorno->marco, losParametros.frameSize);
+
+			// TODO void leerMemoria(void *buffer, uint16_t frameBuscado, stPosicion* posLogica)
+
+			leerMemoria(buf, memoriaPrincipal+retorno->marco, losParametros.frameSize);
 			enviarPagina(pid, pagina, buf);
 			free(buf);
 			retorno->bitModificado=0;
@@ -223,7 +237,7 @@ int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 	nodo->tabla=tabla;
 
 	// agrego retardo
-	sleep(losParametros.delay);
+	// TODO Sacar // sleep(losParametros.delay);
 	//enlazo en la lista
 	posicionEnTablaMarcos = list_mutex_add(TablaMarcos, nodo);
 
@@ -265,7 +279,7 @@ void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 	uint16_t  offset;
 	void *posicion;
 	char* buffer, *bufferTemp;
-
+/*
 	printf("\npid: %d\n", nodoPid->pid);
 	nodo= ((stRegistroTP*)nodoPid->tabla);
 	for(i=0;i<nodoPid->size;i++){
@@ -273,7 +287,9 @@ void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 			printf("Pagina %d:\n", i);
 			offset = ((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->marco*losParametros.frameSize;
 			posicion=memoriaPrincipal+offset;
-			bufferTemp = (char*)leerMemoria(posicion, losParametros.frameSize);
+
+
+			bufferTemp = (char*)leerMemoria(buffer,posicion, losParametros.frameSize);
 			buffer = calloc(1, losParametros.frameSize+1);
 			memcpy(buffer, bufferTemp, losParametros.frameSize);
 			free(bufferTemp);
@@ -281,6 +297,7 @@ void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 			free(buffer);
 		}
 	}
+*/
 }
 void marcarMemoriaModificada(uint16_t pid){
 	int i;

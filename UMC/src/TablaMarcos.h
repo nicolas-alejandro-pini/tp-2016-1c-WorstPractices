@@ -46,8 +46,7 @@ typedef struct{
 
 /* puntero a la tabla de Marcos */
 t_list_mutex *TablaMarcos;
-
-int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t **frame);
+int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame);
 stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t Pagina, stRegistroTP registro, uint8_t flag);
 void creatListaDeTablas();
 int crearTabla(uint16_t processId, uint16_t longitud_tabla);

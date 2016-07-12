@@ -100,14 +100,58 @@ void test_cambio_de_contexto(){
 
 void test_read_bytes_page(){
 	stPosicion posR;
+	char *buffer = NULL;
+
+	/* Tamaño pagina 20
+	 *
+	 #!/usr/bin/ansisop\
+	 nbegin\n#primero de
+	 claro las variables
+	 \nvariables a, b\na
+ 	 = 20\nprint a\nend
+	*/
 
 	//READ_BTYES_PAGE:
 	posR.pagina = 0;
-	posR.offset = 10;
-	posR.size = 7;
+	posR.offset = 2;
+	posR.size = 4;
+	// /usr
 
-	if(1 == gPidActivo)
-		leerBytes(&posR, gPidActivo, losParametros.sockSwap);
+	if(1 == gPidActivo){
+		reservarPosicion((void*)&buffer, posR.size + 1);
+		leerBytes((void*) &buffer, &posR, gPidActivo);
+		//buffer[posR.size + 1]='\0';
+		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+		log_info("Valor[%s]", (char*) buffer);
+		limpiarPosicion(buffer, &posR);
+	}
+
+	// /bin
+	posR.pagina = 0;
+	posR.offset = 6;
+	posR.size = 4;
+
+	if(1 == gPidActivo){
+		reservarPosicion((void*)&buffer, posR.size + 1);
+		leerBytes((void*)&buffer, &posR, gPidActivo);
+		//buffer[posR.size + 1]='\0';
+		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+		log_info("Valor[%s]", (char*) buffer);
+		limpiarPosicion(buffer, &posR);
+	}
+
+	// /ansisop
+	posR.pagina = 0;
+	posR.offset = 10;
+	posR.size = 9;
+	if(1 == gPidActivo){
+		reservarPosicion((void*)&buffer, posR.size + 1);
+		leerBytes((void*)&buffer, &posR, gPidActivo);
+		//buffer[posR.size + 1]='\0';
+		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+		log_info("Valor[%s]", (char*) buffer);
+		limpiarPosicion(buffer, &posR);
+	}
 
 }
 

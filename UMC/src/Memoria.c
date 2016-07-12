@@ -14,21 +14,17 @@ pthread_mutex_t freeFrames;
 
 
 
-void* leerMemoria(void *posicion, uint16_t size){
-	void *ret;
+void leerMemoria(void **buffer, uint16_t frameBuscado, stPosicion* posLogica){
+	void *posFisica = NULL;
 
-	// TODO ver porque devuelve null cuando se pide marco 0
-	//if(posicion > losParametros.frames*losParametros.frameSize || posicion + size> losParametros.frames*losParametros.frameSize)
-	//	return NULL;
-	ret = malloc(size);
-	//posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
+	// Calculo de la memoria fisica
+	posFisica = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize);
 
 	pthread_mutex_lock(&memoria);
-	sleep(losParametros.delay);
-	memcpy(ret, posicion, size);
+	// sleep(losParametros.delay);
+	memcpy(*buffer, posFisica + posLogica->offset, posLogica->size);
 	pthread_mutex_unlock(&memoria);
 
-	return ret;
 }
 void* escribirMemoria(void *posicion, uint16_t size, void* buffer){
 

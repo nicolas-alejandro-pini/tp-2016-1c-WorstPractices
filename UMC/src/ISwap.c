@@ -68,6 +68,7 @@ int enviarPagina(uint16_t pid, uint16_t pagina, char* buffer){
 }
 
 
+// TODO: Estos pedidos deberian estar sincronizados? Atiende por otra coneccion?
 char* recibirPagina(uint16_t pid, uint16_t pagina){
 
 	unsigned char* paginaSwap;

@@ -35,15 +35,20 @@ int gFrameSize;
 int gFrameByProc;
 
 int inicializarPrograma(int unCliente);
-void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU);
+int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid);
 void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socketCPU);
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU);
 void *finalizarProgramaNucleo(stEnd *fin);
 uint32_t cambiarContexto(stMensajeIPC *unMensaje);
 
-void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB);
+stRegistroTP* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *frameNuevo);
 void realizarAccionCPU(uint16_t socket);
 
 int guardarEnTabla(uint16_t cantidadPaginas);
+
+
+/* Auxiliares */
+void limpiarPosicion(void *buffer, stPosicion *pPos);
+void reservarPosicion(void **buffer, uint16_t size);
 
 #endif /* ICPU_H_ */

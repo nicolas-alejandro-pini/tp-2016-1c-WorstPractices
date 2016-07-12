@@ -55,69 +55,51 @@ int inicializarPrograma(int unCliente){
 	return EXIT_SUCCESS;
 }
 
-void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
-
-	uint16_t resTLB = 0, resTabla = 0, frameBuscado = 0;
-	void *leido = NULL, *bytesLeidos = NULL, *pos = NULL;
-	int hayTLB = 0, ret = 0;
-	stHeaderIPC *unHeader;
+int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
+	uint16_t frameBuscado = 0;
+	uint16_t frameNuevo = 0;
+	stRegistroTLB stTLB;
 
 	/* si esta disponible cache*/
-	if ((hayTLB = estaActivadaTLB())== OK){
-		resTLB =  buscarEnTLB(pid, unaLectura->pagina, &frameBuscado);
+	if (estaActivadaTLB()== OK){
+		buscarEnTLB(pid, posLogica->pagina, &frameBuscado);
 	}
 	// no hay TLB o es un TLB miss
-	if(hayTLB==ERROR || resTLB==0)
-		resTabla = buscarEnTabla(pid, unaLectura->pagina, &frameBuscado);
+	if(estaActivadaTLB()==ERROR || frameBuscado==0)
+		buscarEnTabla(pid, posLogica->pagina, &frameBuscado);
 
 	// leo el frame desde memoria si estan en tabla o TLB
-	if(resTLB != 0 || resTabla != 0){
+	if(frameBuscado != 0){
 
-			// acceder a memoria con el resultado encontrado en cache
-			pos = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize);
-			leido = leerMemoria(pos, losParametros.frameSize);
-
-			//envio la respuesta de la lectura a la CPU
-			unHeader = nuevoHeaderIPC(OK);
-			unHeader->largo=unaLectura->size;
-			if(!enviarMensajeIPC(socketCPU,unHeader,leido+unaLectura->offset)){
-				log_error("No se pudo enviar el MensajeIPC");
-				return;
-			}
-
-			//libero memoria
-			free(leido);
-			liberarHeaderIPC(unHeader);
-
+		// acceder a memoria con el resultado encontrado en cache
+		leerMemoria(buffer, frameBuscado, posLogica);
+		return EXIT_SUCCESS;
 	}
-	// Page fault Lectura
-	else{
 
-		leido = ejecutarPageFault(pid, unaLectura->pagina, estaActivadaTLB()==OK && resTLB==0);
+	if(frameBuscado == 0){
 
-		if(leido!=NULL){
+		ejecutarPageFault(pid, posLogica->pagina, &frameNuevo);
+
+		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
+		if(estaActivadaTLB()== OK){
+			stTLB.pid = pid;
+			stTLB.pagina = posLogica->pagina;
+			stTLB.marco = frameNuevo;
+			reemplazarValorTLB(stTLB);
+		}
+
+		if(frameNuevo!=0){
 
 			// con la pagina obtenida separo los bytes que se pidieron leer
-			bytesLeidos = calloc(1, unaLectura->size);
-			memcpy(bytesLeidos,leido+(unaLectura->offset),unaLectura->size);
-			ret=OK;
+			leerMemoria(buffer, frameNuevo, posLogica);
+			return EXIT_SUCCESS;
 		}else
-			ret=ERROR;
-		//envio la respuesta de la lectura a la CPU
-		unHeader = nuevoHeaderIPC(OK);
-		unHeader->largo = unaLectura->size;
-		if(!enviarMensajeIPC(socketCPU,unHeader,bytesLeidos)){
-			log_error("No se pudo enviar el MensajeIPC");
-			return;
-		}
-		// libero lo enviado
-		liberarHeaderIPC(unHeader);
-		free(bytesLeidos);
-		// libero pagina obtenida
-		free(leido);
+			return EXIT_FAILURE;
 	}
 
+	return EXIT_FAILURE;
 }
+
 void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socketCPU){
 	uint16_t resTLB, resTabla, *frameBuscado;
 	void *leido;
@@ -150,7 +132,7 @@ void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socke
 	// Page fault Escritura
 	else{
 
-		leido = ejecutarPageFault(pid, unaEscritura->nroPagina, estaActivadaTLB()==OK && resTLB==0);
+		leido = ejecutarPageFault(pid, unaEscritura->nroPagina, frameBuscado);
 
 		if(leido!=NULL){
 
@@ -180,24 +162,30 @@ void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socke
 		free(leido);
 	}
 }
-void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB){
+stRegistroTP* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *frameNuevo){
 	uint16_t marco;
-	void *leido, *posicion;
-	stRegistroTLB stTLB;
+	void *paginaLeidaSwap, *posicionMemoriaPrincipal;
 	stRegistroTP regTP, *registro;
 
 	// acceder a swap con las pagina que necesito
-	leido = recibirPagina(pid, pagina);
+	// TODO Mismo socket , deberia ser mutex?
+	paginaLeidaSwap = recibirPagina(pid, pagina);
 
 	// cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
 	regTP.bit2ndChance=0;
 	regTP.bitModificado=0;
 	regTP.bitPresencia=1;
+
 	marco = obtenerMarcoLibre();
 	if(marco == 0)
+	{
 		registro = reemplazarValorTabla(pid, pagina, regTP, REEMPLAZAR_MARCO);
-	else{
+		*frameNuevo = registro->marco;
+	}
+	else
+	{
 		regTP.marco = marco;
+		*frameNuevo = marco;
 		registro = reemplazarValorTabla(pid, pagina, regTP, NULL);
 	}
 
@@ -206,17 +194,12 @@ void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB){
 		return registro;
 
 	// cargo en memoria la pagina obtenida
-	posicion = memoriaPrincipal+((registro->marco-1)*losParametros.frameSize);
-	escribirMemoria(posicion, losParametros.frameSize, leido);
+	posicionMemoriaPrincipal = memoriaPrincipal+((registro->marco-1)*losParametros.frameSize);
+	escribirMemoria(posicionMemoriaPrincipal, losParametros.frameSize, paginaLeidaSwap);
 
-	// cargo en TLB la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
-	if(usarTLB != 0){
-		stTLB.pid = pid;
-		stTLB.pagina = pagina;
-		stTLB.marco = regTP.marco;
-		reemplazarValorTLB(stTLB);
-	}
-	return leido;
+	free(paginaLeidaSwap);
+
+	return posicionMemoriaPrincipal;
 }
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
 	stHeaderIPC *unHeader;
@@ -270,8 +253,10 @@ uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 void realizarAccionCPU(uint16_t unSocket){
 
 	stMensajeIPC unMensaje;
+	stHeaderIPC *unHeader;
 	uint32_t pidActivo;
 	stPosicion posR;
+	void *buffer = NULL;
 	stEscrituraPagina posW;
 
 	/* Inicializo pidActivo */
@@ -281,7 +266,6 @@ void realizarAccionCPU(uint16_t unSocket){
 
 		if(!recibirHeaderIPC(unSocket, &unMensaje.header)){
 			log_error("Thread[ID] No se recibe respuesta del CPU Socket[%d], Ultimo Pid[%d]: %d", unSocket, pidActivo);
-			//liberarHeaderIPC(unMensaje->header);
 			close(unSocket);
 			return;//pthread_exit(NULL);
 		}
@@ -294,7 +278,19 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posR.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.size), sizeof(uint16_t),0);
 
-			leerBytes(&posR, pidActivo, unSocket);
+			if(posR.size > 0)
+			{
+				reservarPosicion((void*)&buffer, posR.size);
+				leerBytes(&buffer, &posR, pidActivo);
+
+				//envio la respuesta de la lectura a la CPU
+				unHeader = nuevoHeaderIPC(OK);
+				unHeader->largo = posR.size;
+				if(!enviarMensajeIPC(unSocket,unHeader,buffer)){
+					log_error("No se pudo enviar el MensajeIPC");
+					return;
+				}
+			}
 
 			break;
 
@@ -346,4 +342,19 @@ void realizarAccionCPU(uint16_t unSocket){
 
 		}/*Cierro switch(unMensaje.header.tipo)*/
 	}/*Cierro while*/
+}
+
+void limpiarPosicion(void *buffer, stPosicion *pPos){
+	if(pPos){
+		pPos->offset=0;
+		pPos->pagina=0;
+		pPos->size=0;
+	}
+	// liberado antes con liberar buffer
+	free(buffer);
+	buffer = NULL;
+}
+
+void reservarPosicion(void **buffer, uint16_t size){
+	*buffer = malloc(size);
 }
