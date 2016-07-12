@@ -20,9 +20,6 @@
 #ifndef NUCLEO_H_
 #define NUCLEO_H_
 
-/*Archivos de Configuracion*/
-#define CFGFILE		"nucleo.conf"
-
 /*Definicion de MACROS*/
 #define LONGITUD_MAX_DE_CONTENIDO 	1024
 #define UNLARGO 					255
@@ -84,6 +81,7 @@ void threadDispositivo(stDispositivo* unDispositivo);
 stEstado obtenerEstadoActual();
 void agregar_pcb_listaBlock(stPCB *unPCB);
 stDispositivo *buscar_dispositivo_io(char *dispositivo_name);
+int inicializar_programa(stPCB *unPCB, char* unPrograma, int socket_umc);
 
 #endif
 
