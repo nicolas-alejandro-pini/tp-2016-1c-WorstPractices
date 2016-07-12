@@ -7,17 +7,21 @@
 #include "includes/shared_vars.h"
 
 pthread_mutex_t mutex_lista_shared_var = PTHREAD_MUTEX_INITIALIZER;
+t_list *lista_shared_vars;
 
-stSharedVar *crear_shared_var(char *nombre) {
-	stSharedVar *new = malloc(sizeof(stSharedVar));/*TODO: liberar estas sharedVar al final*/
-	new->nombre = strdup(nombre);
-	new->valor = 0;
-	return new;
+void inicializar_lista_shared_var(){
+	lista_shared_vars = list_create();
 }
 
-stSharedVar *buscar_shared_var(t_list *lista_shared_vars,char *nombre){
+void crear_shared_var(char *nombre) {
+	stSharedVar *new = malloc(sizeof(stSharedVar));
+	new->nombre = strdup(nombre);
+	new->valor = 0;
+	list_add(lista_shared_vars,new);
+}
+
+stSharedVar *quitar_shared_var(char *nombre){
 	stSharedVar *unaSharedVar;
-	unaSharedVar = malloc(sizeof(stSharedVar));
 	/*Busqueda del semaforo*/
 	int _es_la_shared_var(stSharedVar *s) {
 		return string_equals_ignore_case(s->nombre, nombre);
@@ -28,19 +32,17 @@ stSharedVar *buscar_shared_var(t_list *lista_shared_vars,char *nombre){
 	return unaSharedVar;
 }
 
-void grabar_shared_var(t_list *lista_shared_vars,char *nombre,int *valor){
-	stSharedVar *unaSharedVar = buscar_shared_var(lista_shared_vars,nombre);
+void grabar_shared_var(char *nombre,int valor){
+	stSharedVar *unaSharedVar = quitar_shared_var(nombre);
 	unaSharedVar->valor = valor;
 	pthread_mutex_lock(&mutex_lista_shared_var);
 	list_add(lista_shared_vars,unaSharedVar);
 	pthread_mutex_unlock(&mutex_lista_shared_var);
-	free(unaSharedVar);
 }
 
-stSharedVar *obtener_shared_var(t_list *lista_shared_vars,char *nombre){
+stSharedVar *obtener_shared_var(char *nombre){
 	stSharedVar *unaSharedVar;
-	unaSharedVar = (stSharedVar*)malloc(sizeof(stSharedVar));
-	/*Busqueda del semaforo*/
+	/*Busqueda de la variable compartida*/
 	int _es_la_shared_var(stSharedVar *s) {
 		return string_equals_ignore_case(s->nombre, nombre);
 	}

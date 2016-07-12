@@ -6,14 +6,14 @@
  */
 #include "includes/consumidor_cpu.h"
 
-pthread_mutex_t mutex_lista_dispositivos = PTHREAD_MUTEX_INITIALIZER;
+
 
 /*Corroboramos  si el pcb corresponde a una consola activa*/
-int consola_desconectada(stPCB *unPCB) {
+int consola_activa(stPCB *unPCB) {
 	stHeaderIPC *unHeaderIPC;
 	if (buscar_consola_activa(unPCB->pid) == 0) {
 		unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
-		if (!enviarMensajeIPC(obtenerEstadoActual()->sockUmc, unHeaderIPC, (char*) unPCB->pid)) {
+		if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*) unPCB->pid)) {
 			log_error("Error al enviar el fin de programa a la UMC");
 			return (-4);
 		}
@@ -24,13 +24,37 @@ int consola_desconectada(stPCB *unPCB) {
 	return 1;
 }
 
+int bloquear_pcb(stPCB *unPCB,char *dispositivo_name,int dispositivo_time){
+	stDispositivo *unDispositivo = NULL;
+	stRafaga *unaRafagaIO = NULL;
+
+	unDispositivo = buscar_dispositivo_io(dispositivo_name);
+	if(unDispositivo==NULL)
+		return EXIT_FAILURE;
+
+	/*Almacenamos la rafaga de ejecucion de entrada salida*/
+	unaRafagaIO = malloc(sizeof(stRafaga));
+	unaRafagaIO->pid = unPCB->pid;
+	unaRafagaIO->unidades = dispositivo_time;
+
+	pthread_mutex_lock(&unDispositivo->mutex); // Se lockea el acceso a la cola
+	queue_push(unDispositivo->rafagas, unaRafagaIO);
+	unDispositivo->numInq++;
+	pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
+	pthread_mutex_unlock(&unDispositivo->empty);	// Comienzo de espera de consumidor
+
+	/*Agregamos el pcb a la lista de bloqueados*/
+	agregar_pcb_listaBlock(unPCB);
+	printf("PCB [PID - %d] en estado BLOCK / dispositivo [%s]\n", unPCB->pid,unDispositivo->nombre);
+
+	return EXIT_SUCCESS;
+}
+
 void *consumidor_cpu(int unCliente) {
 	stHeaderIPC *unHeaderIPC;
 	stMensajeIPC unMensajeIPC;
 	stPCB *unPCB;
 	t_paquete paquete;
-	stDispositivo *unDispositivo;
-	stRafaga *unaRafagaIO;
 	stSharedVar *unaSharedVar;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
 	int error = 0, offset = 0, valor_impresion, socket_consola_to_print, dispositivo_time;
@@ -38,7 +62,7 @@ void *consumidor_cpu(int unCliente) {
 	while (!error) {
 		unPCB = ready_consumidor();
 
-		if(consola_desconectada(unPCB))
+		if(consola_activa(unPCB))
 			continue;
 
 		unPCB->quantum = obtenerEstadoActual().quantum;
@@ -98,33 +122,14 @@ void *consumidor_cpu(int unCliente) {
 				}
 				deserializar_pcb(unPCB, &paquete);
 				free_paquete(&paquete);
-
-				if(consola_desconectada(unPCB))
+				/*Se comprueba que el PCB corresponda a una consola que este conectada, si esta desconectada libera el pcb que pide I/O y el CPU sigue con otro pcb*/
+				if(consola_activa(unPCB)){
 					continue;
-
-				/*Busqueda de dispositivo de I/O*/
-				int _es_el_dispositivo(stDispositivo *d) {
-					return string_equals_ignore_case(d->nombre, dispositivo_name);
 				}
-				pthread_mutex_lock(&mutex_lista_dispositivos);
-				unDispositivo = list_remove_by_condition(obtenerEstadoActual().dispositivos, (void*) _es_el_dispositivo);
-
-				/*Almacenamos la rafaga de ejecucion de entrada salida*/
-				unaRafagaIO = malloc(sizeof(stRafaga));
-				unaRafagaIO->pid = unPCB->pid;
-				unaRafagaIO->unidades = dispositivo_time;
-
-				pthread_mutex_lock(&unDispositivo->mutex); // Se lockea el acceso a la cola
-				queue_push(unDispositivo->rafagas, unaRafagaIO);
-				unDispositivo->numInq++;
-				pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
-				pthread_mutex_unlock(&unDispositivo->empty);	// Comienzo de espera de consumidor
-
-				/*Volvemos a almacenar el dispositivo en la lista*/
-				list_add(obtenerEstadoActual().dispositivos, unDispositivo);
-				list_add(listaBlock, &unPCB);
-				pthread_mutex_unlock(&mutex_lista_dispositivos);
-				printf("PCB [PID - %d] en estado BLOCK / dispositivo [%s]\n", unPCB->pid,unDispositivo->nombre);
+				if(bloquear_pcb(unPCB,dispositivo_name,dispositivo_time)!=EXIT_SUCCESS){
+					log_error("No se pudo bloquear el PCB [PID - %d]",unPCB->pid);
+					continue;
+				}
 
 				break;
 			case FINANSISOP:
@@ -156,13 +161,13 @@ void *consumidor_cpu(int unCliente) {
 				printf("Nuevo pedido de variable compartida...\n");
 
 				/*TODO: Falta testear*/
-				unaSharedVar = obtener_shared_var(listaSharedVars, unMensajeIPC.contenido);
+				unaSharedVar = obtener_shared_var(unMensajeIPC.contenido);
 				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar->valor)){
 					log_error("Error al enviar el valor la variable");
 					error = 1;
 					continue;
 				}
-				printf("Se devolvio el valor [%d] de la variable compartida [%s]\n",unaSharedVar->nombre,unaSharedVar->valor);
+				printf("Se devolvio el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
 				printf("\n--------------------------------------\n");
 				break;
 
@@ -185,7 +190,7 @@ void *consumidor_cpu(int unCliente) {
 				}
 
 				deserializar_campo(&paquete, &offset, &unaSharedVar, sizeof(stSharedVar));
-				grabar_shared_var(listaSharedVars,unaSharedVar->nombre,unaSharedVar->valor);
+				grabar_shared_var(unaSharedVar->nombre,&unaSharedVar->valor);
 				printf("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
 				printf("\n--------------------------------------\n");
 				free_paquete(&paquete);
@@ -204,7 +209,7 @@ void *consumidor_cpu(int unCliente) {
 				free_paquete(&paquete);
 				/*TODO: Falta testear*/
 				printf("%s\n",identificador_semaforo);
-				wait_semaforo(listaSem,identificador_semaforo);
+				wait_semaforo(identificador_semaforo);
 				printf("\n--------------------------------------\n");
 
 				break;
@@ -222,7 +227,7 @@ void *consumidor_cpu(int unCliente) {
 				deserializar_campo(&paquete, &offset, &identificador_semaforo, sizeof(identificador_semaforo));
 
 				/*TODO: Falta testear*/
-				if(signal_semaforo(listaSem,identificador_semaforo)== EXIT_FAILURE){
+				if(signal_semaforo(identificador_semaforo)== EXIT_FAILURE){
 					unHeaderIPC = nuevoHeaderIPC(ERROR);
 					if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 						log_error("CPU error - No se pudo enviar header");

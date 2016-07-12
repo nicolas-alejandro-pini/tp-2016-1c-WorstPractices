@@ -10,15 +10,15 @@
 #include "includes/semaforos.h"
 #include "includes/shared_vars.h"
 
-int loadInfo(stEstado* info, t_list* lista_semaforos, t_list* lista_shared_vars, char inotify) {
+int loadInfo(stEstado* info, char inotify) {
 
 	t_config* miConf, *otraConf;
 
 	if (inotify==0) {
 		miConf = config_create(info->path_conf); /*Estructura de configuracion*/
 		info->dispositivos = list_create();
-		lista_semaforos = list_create();
-		lista_shared_vars = list_create();
+		inicializar_semaforos();
+		inicializar_lista_shared_var();
 
 		if (miConf == NULL) {
 			log_error("Error iniciando la configuracion...\n");
@@ -139,7 +139,7 @@ uint32_t consola_desconectada(stEstado *pEstado, int unSocket){
 uint32_t buscar_consola_activa(int pid){
 	stConsola *consola = NULL;
 	int i=0;
-	t_list *list = obtenerEstadoActual()->consolas_activas;
+	t_list *list = obtenerEstadoActual().consolas_activas;
 	int size = list_size(list);
 
 	for(i=0; i<size; i++){
@@ -174,21 +174,15 @@ void cargar_dipositivos(stEstado *info, char** ioIds, char** ioSleep) {
 }
 void cargar_semaforos(char** semIds, char** semInit) {
 	int iterator = 0;
-	stSemaforo *unSemaforo;
-
 	while (semIds[iterator] != NULL) {
-		unSemaforo = crear_semaforo(semIds[iterator], semInit[iterator]);
-		list_add(listaSem, unSemaforo);
+		crear_semaforo(semIds[iterator], semInit[iterator]);
 		iterator++;
 	}
 }
 void cargar_sharedVars(char** sharedVars) {
 	int iterator = 0;
-	stSharedVar *unaSharedVar;
-
 	while (sharedVars[iterator] != NULL) {
-		unaSharedVar = crear_shared_var(sharedVars[iterator]);
-		list_add(listaSharedVars, unaSharedVar);
+		crear_shared_var(sharedVars[iterator]);
 		iterator++;
 	}
 }
@@ -217,13 +211,11 @@ void monitor_configuracion(stEstado* info) {
 		watch_descriptor = inotify_add_watch(file_descriptor, info->path_conf,
 		IN_MODIFY | IN_CREATE | IN_DELETE);
 
-		log_info("");
-
 		int length = read(file_descriptor, buffer, BUF_LEN);
 		if (length < 0) {
 			perror("read");
 		}
-		loadInfo(info, listaSem, listaSharedVars, -1);
+		loadInfo(info,-1);
 	}
 
 	inotify_rm_watch(file_descriptor, watch_descriptor);

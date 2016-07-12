@@ -19,10 +19,11 @@ typedef struct {
 	pthread_cond_t 	cond;
 } __attribute__((packed)) stSemaforo;
 
-stSemaforo *crear_semaforo(char *nombre, char* valor);
-stSemaforo *buscar_semaforo(t_list *lista_semaforos,char *nombre );
-int wait_semaforo(t_list *lista_semaforos, char* nombre_semaforo);
-int signal_semaforo(t_list *lista_semaforos, char* nombre_semaforo);
+void crear_semaforo(char *nombre, char* valor);
+stSemaforo *buscar_semaforo(char *nombre );
+int wait_semaforo(char* nombre_semaforo);
+int signal_semaforo(char* nombre_semaforo);
+void inicializar_semaforos();
 
 
 #endif /* SEMAFOROS_H_ */

@@ -20,9 +20,6 @@
 #ifndef NUCLEO_H_
 #define NUCLEO_H_
 
-/*Archivos de Configuracion*/
-#define CFGFILE		"nucleo.conf"
-
 /*Definicion de MACROS*/
 #define LONGITUD_MAX_DE_CONTENIDO 	1024
 #define UNLARGO 					255
@@ -76,15 +73,15 @@ typedef struct {
 	int socket;
 } stConsola;
 
-t_list *listaSem; 		/*Lista de todos los semaforos del sistema*/
-t_list *listaSharedVars; /* Lista con las variables compartidas*/
-
 void threadCPU(void *argumentos);
 void cerrarSockets(stEstado *elEstadoActual);
 void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado);
 int calcular_cantidad_paginas(int size_programa, int tamanio_paginas);
 void threadDispositivo(stDispositivo* unDispositivo);
 stEstado obtenerEstadoActual();
+void agregar_pcb_listaBlock(stPCB *unPCB);
+stDispositivo *buscar_dispositivo_io(char *dispositivo_name);
+int inicializar_programa(stPCB *unPCB, char* unPrograma, int socket_umc);
 
 #endif
 

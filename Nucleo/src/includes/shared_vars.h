@@ -12,8 +12,10 @@
 #include <commons/collections/list.h>
 #include <commons/serializador.h>
 
-stSharedVar *crear_sharedVar(char *nombre);
-void grabar_shared_var(t_list *lista_shared_vars,char *nombre,int *valor);
-stSharedVar *obtener_shared_var(t_list *lista_shared_vars,char *nombre);
+void inicializar_lista_shared_var();
+void crear_shared_var(char *nombre);
+stSharedVar *quitar_shared_var(char *nombre);
+void grabar_shared_var(char *nombre,int valor);
+stSharedVar *obtener_shared_var(char *nombre);
 
 #endif /* INCLUDES_SHARED_VARS_H_ */
