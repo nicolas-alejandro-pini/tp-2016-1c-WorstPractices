@@ -18,8 +18,8 @@ void* leerMemoria(void *posicion, uint16_t size){
 	void *ret;
 
 	// TODO ver porque devuelve null cuando se pide marco 0
-	if(posicion > losParametros.frames*losParametros.frameSize || posicion + size> losParametros.frames*losParametros.frameSize)
-		return NULL;
+	//if(posicion > losParametros.frames*losParametros.frameSize || posicion + size> losParametros.frames*losParametros.frameSize)
+	//	return NULL;
 	ret = malloc(size);
 	//posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
 
