@@ -14,7 +14,6 @@
 #include	<stdio.h>
 #include	<pthread.h>
 
-t_list *listaBlock; /*Lista de todos los PCB bloqueados*/
 t_queue *colaReady; /*Cola de todos los PCB listos para ejecutar*/
 t_queue *colaExit; /*Cola de todos los PCB listos para liberar*/
 

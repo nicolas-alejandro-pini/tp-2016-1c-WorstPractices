@@ -7,20 +7,23 @@
 #include "includes/semaforos.h"
 
 pthread_mutex_t mutex_lista_sem = PTHREAD_MUTEX_INITIALIZER;	// mutual exclusion lock
+t_list *lista_semaforos;
 
-stSemaforo *crear_semaforo(char *nombre, char* valor) {
+void inicializar_semaforos(){
+	lista_semaforos = list_create();
+}
+
+void crear_semaforo(char *nombre, char* valor) {
 	stSemaforo *new = malloc(sizeof(stSemaforo));/*TODO: liberar estos semaforos al final*/
 	new->nombre = strdup(nombre);
 	new->count = atoi(valor);
 	pthread_mutex_init(&(new->mutex), 0);
 	pthread_cond_init(&(new->cond),0);
-	return new;
+	list_add(lista_semaforos,new);
 }
 
-stSemaforo *buscar_semaforo(t_list *lista_semaforos,char *nombre ){
+stSemaforo *buscar_semaforo(char *nombre ){
 	stSemaforo *unSemaforo;
-
-	unSemaforo = malloc(sizeof(stSemaforo));
 	/*Busqueda del semaforo*/
 	int _es_el_semaforo(stSemaforo *s) {
 		return string_equals_ignore_case(s->nombre, nombre);
@@ -32,9 +35,9 @@ stSemaforo *buscar_semaforo(t_list *lista_semaforos,char *nombre ){
 	return unSemaforo;
 }
 
-int wait_semaforo(t_list *lista_semaforos, char* nombre_semaforo) {
+int wait_semaforo(char* nombre_semaforo) {
 	int count;
-	stSemaforo *unSemaforo = buscar_semaforo(lista_semaforos,nombre_semaforo);
+	stSemaforo *unSemaforo = buscar_semaforo(nombre_semaforo);
 
 	if(unSemaforo==NULL){
 		/*No se encontro el semaforo buscado*/
@@ -53,13 +56,11 @@ int wait_semaforo(t_list *lista_semaforos, char* nombre_semaforo) {
 	list_add(lista_semaforos,unSemaforo);
 	pthread_mutex_unlock(&mutex_lista_sem);
 	pthread_mutex_unlock(&(unSemaforo->mutex));
-
-	free(unSemaforo);
 	return EXIT_SUCCESS;
 }
 
-int signal_semaforo(t_list *lista_semaforos, char* nombre_semaforo){
-	stSemaforo *unSemaforo = buscar_semaforo(lista_semaforos,nombre_semaforo);
+int signal_semaforo(char* nombre_semaforo){
+	stSemaforo *unSemaforo = buscar_semaforo(nombre_semaforo);
 
 	if (unSemaforo == NULL) {
 		/*No se encontro el semaforo buscado*/

@@ -20,10 +20,13 @@
  */
 
 pthread_mutex_t mutex_estado = PTHREAD_MUTEX_INITIALIZER;
-fd_set fds_master; /* Lista de todos mis sockets.*/
-fd_set read_fds; /* Sublista de fds_master.*/
-stEstado elEstadoActual; /*Estado con toda la configuracion del Nucleo*/
+pthread_mutex_t mutex_listaBlock = PTHREAD_MUTEX_INITIALIZER;
 
+fd_set fds_master; 		 /* Lista de todos mis sockets.*/
+fd_set read_fds; 		 /* Sublista de fds_master.*/
+stEstado elEstadoActual; /* Estado con toda la configuracion del Nucleo*/
+
+t_list *listaBlock; 	 /* Lista de todos los PCB bloqueados*/
 /*
  ============================================================================
  Funciones
@@ -59,6 +62,23 @@ stEstado obtenerEstadoActual(){
 	pthread_mutex_unlock(&mutex_estado);
 	return unEstado;
 }
+
+stDispositivo *buscar_dispositivo_io(char *dispositivo_name){
+	stDispositivo *unDispositivo = NULL;
+	/*Busqueda de dispositivo de I/O*/
+	int _es_el_dispositivo(stDispositivo *d) {
+		return string_equals_ignore_case(d->nombre, dispositivo_name);
+	}
+	unDispositivo = list_find(obtenerEstadoActual().dispositivos, (void*) _es_el_dispositivo);
+	return unDispositivo;
+}
+
+void agregar_pcb_listaBlock(stPCB *unPCB){
+	pthread_mutex_lock(&mutex_listaBlock);
+	list_add(listaBlock, unPCB);
+	pthread_mutex_unlock(&mutex_listaBlock);
+}
+
 void cerrarSockets(stEstado *elEstadoActual) {
 	int unSocket;
 	for (unSocket = 3; unSocket <= elEstadoActual->fdMax; unSocket++)
@@ -83,6 +103,7 @@ void inicializarThreadsDispositivos(stEstado* unEstado){
 		}
 	}
 }
+
 void threadDispositivo(stDispositivo* unDispositivo) {
 	int error = 0;
 	t_queue *colaRafaga;
@@ -106,7 +127,10 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 		int _es_el_pcb(stPCB *p) {
 			return p->pid == unaRafaga->pid;
 		}
+		pthread_mutex_lock(&mutex_listaBlock);
 		unPCB = list_remove_by_condition(listaBlock, (void*) _es_el_pcb);
+		pthread_mutex_lock(&mutex_listaBlock);
+
 		/*Ponemos en la cola de Ready para que lo vuelva a ejecutar un CPU*/
 		ready_productor(unPCB);
 		free(unaRafaga);
@@ -132,14 +156,9 @@ int main(int argc, char *argv[]) {
 	int unCliente = 0,maximoAnterior = 0, unSocket, agregarSock;
 	struct sockaddr addressAceptado;
 
-
 	/*Inicializacion de las colas del planificador*/
 	colaReady = queue_create();
 	listaBlock = list_create();
-
-	/*Inicializacion de las listas del semaforos y variables compartidas*/
-	listaSem = list_create();
-	listaSharedVars = list_create();
 
 	printf("----------------------------------Elestac------------------------------------\n");
 	printf("-----------------------------------Nucleo------------------------------------\n");
@@ -157,7 +176,7 @@ int main(int argc, char *argv[]) {
 
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
-	if(loadInfo(&elEstadoActual, &listaSem, &listaSharedVars, 0)){
+	if(loadInfo(&elEstadoActual,0)){
 		printf("Error");
 		exit(-2);
 	}
@@ -335,7 +354,7 @@ int main(int argc, char *argv[]) {
 						}
 						liberarHeaderIPC(stHeaderSwitch);
 						printf("Nuevo CPU conectado, lanzamiento de hilo...");
-						if (pthread_create(&p_threadCpu, NULL, (void*)consumidor_cpu, unCliente) != 0) {
+						if (pthread_create(&p_threadCpu, NULL, (void*)consumidor_cpu, (void*)unCliente) != 0) {
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							close(unCliente);
 							break;/*Sale del switch*/

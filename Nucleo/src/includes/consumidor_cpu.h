@@ -14,6 +14,8 @@
 #include "shared_vars.h"
 #include "nucleo_config.h"
 
+int consola_activa(stPCB *unPCB);
+int bloquear_pcb(stPCB *unPCB,char *dispositivo_name,int dispositivo_time);
 void *consumidor_cpu(int unCliente);
 
 
