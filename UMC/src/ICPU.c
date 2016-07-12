@@ -278,6 +278,7 @@ void cambiarContexto(uint16_t pid){
 	// No se actuliza tabla de pagina del otro proceso asi qeu no es necesario actualizar swap con paginas que tienen byte modificado
 
 	// TODO es necesario hacer un flush del pid en TLB ??? creo que no
+	log_info("Se realizo el cambio de contexto del pid %d", pid);
 
 	return;
 }

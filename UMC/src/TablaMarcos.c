@@ -146,7 +146,7 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 
 	stNodoListaTP *nodo;
 	stRegistroTP *retorno;
-	int i, presencias;
+	int i, presencias=0;
 	void *buf;
 
 	nodo = buscarPID(pid);
@@ -158,39 +158,37 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 		if(retorno->bitPresencia==1)
 			presencias++;
 	}
-// - si es un nuevo proceso, y no hay memoria-> rechazo el pedido.
-	if(presencias==0 && REEMPLAZAR_MARCO)
+// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
+	if(presencias==0 && flagReemplazoAsignados==REEMPLAZAR_MARCO && registro.marco==0)
 		return NULL;
 // - Hay espacio en memoria y es menor a la cantidad de pag por pid-> la ubico en un nuevo marco y nuevo registro de Tabla.
-	if(presencias <= losParametros.frameByProc && !REEMPLAZAR_MARCO){
-		for(i=0;i<nodo->size;i++){
-			retorno = nodo->tabla+(sizeof(stRegistroTP)*i);
-			if(retorno->bitPresencia==1){
-				retorno->bit2ndChance=registro.bit2ndChance;
-				retorno->bitModificado=registro.bitModificado;
-				retorno->bitPresencia=registro.bitPresencia;
-				retorno->marco=registro.marco;
-				break;
-			}
+	if(presencias < losParametros.frameByProc && flagReemplazoAsignados!=REEMPLAZAR_MARCO){
+		retorno = nodo->tabla+(sizeof(stRegistroTP)*pagina);
+		if(retorno->bitModificado==1){
+			buf=malloc(losParametros.frameSize);
+			buf = leerMemoria(memoriaPrincipal+retorno->marco, losParametros.frameSize);
+			enviarPagina(pid, pagina, buf);
+			free(buf);
+			retorno->bitModificado=0;
 		}
+
+		retorno->bit2ndChance=registro.bit2ndChance;
+		retorno->bitModificado=registro.bitModificado;
+		retorno->bitPresencia=registro.bitPresencia;
+		retorno->marco=registro.marco;
+
 // - Hay espacio en memoria y es mayor a la cantidad de pag por pid-> la ubico en un nuevo marco y reemplazo un registro de Tabla.
 // - No hay espacio en memoria y es menor a la cantidad de pag por pid-> la ubico en un marco asignado y reemplazo un registro de Tabla.
 // - No hay espacio en memoria y es mayor a la cantidad de pag por pid-> la ubico en un marco asignado y reemplazo un registro de Tabla.
 	}else{
-		if(REEMPLAZAR_MARCO || presencias > losParametros.frameByProc){
+		if(flagReemplazoAsignados==REEMPLAZAR_MARCO || presencias > losParametros.frameByProc){
 			if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK"))
 				retorno = EjecutarClock(nodo, pagina, registro, flagReemplazoAsignados);
 			else if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK_MODIFICADO"))
 				retorno = EjecutarClockModificado(nodo, pagina, registro,flagReemplazoAsignados);
 			else
 				log_error("No hay un algoritmo correctamente cargado");
-			// escribo en memoria secundaria si es necesario
-			if(retorno->bitModificado==1){
-				buf=malloc(losParametros.frameSize);
-				//TODO ver como regresa marco y porque escribo en memoria directamente
-				memcpy(buf, memoriaPrincipal+retorno->marco, losParametros.frameSize);
-				enviarPagina(pid, pagina, buf);
-			}
+
 		}
 	}
 
