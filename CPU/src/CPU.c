@@ -733,18 +733,19 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 			/*Envio los tres datos a la UMC*/
 			send(configuracionInicial.sockUmc,&paginaToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Pagina pedida: ",(char*)paginaToUMC);
+			log_info("CPU To UMC - Pagina pedida: %d",paginaToUMC);
 			send(configuracionInicial.sockUmc,&startToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Offset pedid: ",(char*)startToUMC);
+			log_info("CPU To UMC - Offset pedid: %d",startToUMC);
 			send(configuracionInicial.sockUmc,&sizeToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Size pedido: ",(char*)sizeToUMC);
+			log_info("CPU To UMC - Size pedido: %d",sizeToUMC);
 
 			/*Me quedo esperando que vuelva el contenido*/
 			if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
 				log_error("Error al recibir mensaje de bytes intruccion.");
+				return NULL;
 			}else{
 
-				log_info("Recibi de la UMC la instrucción.",unMensaje.contenido);
+				log_info("Recibi de la UMC la instrucción: %s",unMensaje.contenido);
 
 				if(instruccion==NULL){
 					instruccion = malloc(sizeof(char)*(strlen(unMensaje.contenido) + 1 ));
@@ -789,6 +790,7 @@ int ejecutarInstruccion(void){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
 	}else{
 		printf("Error: fallo la ejecución de instrucción.\n");
+		configuracionInicial.salir = 1;
 		return EXIT_FAILURE;
 	}
 
@@ -1023,8 +1025,8 @@ int main(void) {
 									}
 
 								}
-
-								if (devolverPCBalNucleo() == -1){
+								//Si no hubo error devuelvo PCB al nucleo y evaluo error//
+								if (configuracionInicial.salir == 0 && devolverPCBalNucleo() == -1){
 
 									log_info("Error al devolver PCB de ANSIPROG...");
 									configuracionInicial.salir = 1;
