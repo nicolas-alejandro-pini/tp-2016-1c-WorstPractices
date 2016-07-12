@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "Parametros.h"
 #include "commons/ipctypes.h"
 #include <commons/collections/queue.h>
@@ -18,7 +20,8 @@
 void *memoriaPrincipal;
 void *marcosLibres;
 
-void* inicializarMemoriaDisponible(long tamanio, long cantidad);
+void* inicializarMemoriaPrincipal(long tamanio, long cantidad);
+void destruirMemoriaPrincipal();
 void* leerMemoria(void *posicion, uint16_t size);
 void* escribirMemoria(void *posicion, uint16_t size, void* buffer);
 uint16_t obtenerMarcoLibre();

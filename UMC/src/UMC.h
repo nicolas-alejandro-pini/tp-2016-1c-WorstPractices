@@ -44,6 +44,7 @@ fd_set read_fds;	  		/* Sublista de fds_master.*/
 
 
 void loadInfo (stParametro*, char*);
+void loadInfo_destruir (stParametro* info);
 void cerrarSockets(stParametro* );
 void finalizarSistema(stMensajeIPC*, int, stParametro* );
 int swapHandShake (int socket, char* mensaje, int tipoHeader);

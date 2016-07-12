@@ -39,7 +39,7 @@ void* escribirMemoria(void *posicion, uint16_t size, void* buffer){
 
 	return buffer;
 }
-void* inicializarMemoriaDisponible(long tamanio, long cantidad){
+void* inicializarMemoriaPrincipal(long tamanio, long cantidad){
 	void *r;
 	uint16_t i,*p;
 	if((r=calloc(cantidad, tamanio))==NULL){
@@ -56,6 +56,11 @@ void* inicializarMemoriaDisponible(long tamanio, long cantidad){
 
 	return r;
 }
+void destruirMemoriaPrincipal(){
+	free(memoriaPrincipal);  // Global
+	queue_destroy(marcosLibres); // Global
+}
+
 uint16_t obtenerMarcoLibre(){
 	uint16_t ret, *p;
 

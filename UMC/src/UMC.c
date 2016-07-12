@@ -33,6 +33,7 @@ void loadInfo (stParametro* info, char* file_name){
 	}
 
 	if (config_has_property(miConf,"IP_SWAP")) {
+		// referencia a t_config* miConf !
 		info->ipSwap = config_get_string_value(miConf,"IP_SWAP");
 	} else {
 		log_error("Parametro no cargado en el archivo de configuracion - IP_SWAP");
@@ -71,6 +72,7 @@ void loadInfo (stParametro* info, char* file_name){
 	frameByProc = info->frameByProc;
 
 	if (config_has_property(miConf,"ALGORITMO")) {
+		// referencia a t_config* miConf !
 		info->algoritmo = config_get_string_value(miConf,"ALGORITMO");
 	} else {
 		log_error("Parametro no cargado en el archivo de configuracion - ALGORITMO");
@@ -91,6 +93,14 @@ void loadInfo (stParametro* info, char* file_name){
 		exit(-2);
 	}
 
+	// No puedo liberar aca porque tengo dos referencias // config_destroy(miConf);
+	// agrego la referencia a parametros para poder liberarla despues
+	info->tConfig = miConf;
+}
+
+void loadInfo_destruir (stParametro* info){
+	// Libera ipSwap y algoritmo + todo el tConfig
+	free(info->tConfig);
 }
 
 void cerrarSockets(stParametro *elEstadoActual){
@@ -161,9 +171,9 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unaCabecera = NULL;
 	stHeaderIPC *unaCabecera2 = NULL;
-	int i, unCliente = 0, unSocket;
+	int i=0, unCliente = 0, unSocket = 0;
 	struct sockaddr addressAceptado;
-	int maximoAnterior;
+	int maximoAnterior = 0;
 	char enviolog[TAMDATOS];
 	//char elsocket[10];
 	int agregarSock;
@@ -213,7 +223,7 @@ int main(int argc, char *argv[]) {
 		TablaMarcos = NULL;
 		creatListaDeTablas(TablaMarcos); // TablaMarcos global
 		crearTLB(losParametros.entradasTLB);
-		memoriaPrincipal = inicializarMemoriaDisponible(losParametros.frameSize, losParametros.frames);
+		memoriaPrincipal = inicializarMemoriaPrincipal(losParametros.frameSize, losParametros.frames);
 
 		/* --------------------------Se realiza la Inicializacion para la conexion-------------------------------- */
 
@@ -436,7 +446,7 @@ int main(int argc, char *argv[]) {
 
 
 	        	        		default:
-	        	        			printf("Se recibio una peticion con un codigo desconocido...%ld", unMensaje.header.tipo);
+	        	        			printf("Se recibio una peticion con un codigo desconocido...%d", unMensaje.header.tipo);
 	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;
@@ -457,6 +467,8 @@ int main(int argc, char *argv[]) {
 
 	/* ............................................Finalizacion............................................. */
 		cerrarSockets(&losParametros);
+		loadInfo_destruir(&losParametros); // libera losParametros
+		destruirMemoriaPrincipal();
 		printf("\nSERVER: Fin del programa\n");
 		/*loguear(INFO_LOG,"Fin del programa","SERVER");*/
 		return EXIT_SUCCESS;

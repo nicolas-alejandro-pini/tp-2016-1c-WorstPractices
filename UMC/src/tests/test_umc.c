@@ -5,6 +5,7 @@
  *      Author: Nicolas Pini
  */
 #include "test_umc.h"
+#include "test_umc_swap.h"
 
 #include "../Memoria.h"
 #include "../TLB.h"
@@ -15,6 +16,7 @@ int test_unit_umc() {
 
 	CU_initialize_registry();
 	agregar_tests();
+	agregar_tests_con_swap();
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	CU_cleanup_registry();
@@ -165,7 +167,7 @@ void test_estructuras_memoria(){
 	int cant_paginas = 10;
 
 	// Inicializo Memoria Disponible
-	memoria = inicializarMemoriaDisponible(pagina, cant_paginas);
+	memoria = inicializarMemoriaPrincipal(pagina, cant_paginas);
 
 	// Verifico que pueda escribir en todas las paginas
 	for(i=0; i<cant_paginas; i++)
@@ -184,6 +186,7 @@ void test_estructuras_memoria(){
 	}
 	fflush(stdout);
 
+	void destruirMemoriaPrincipal();
 }
 
 /// AUXILIARES
@@ -196,7 +199,7 @@ void thread_cpu(void *arg){
 		reg.pid = *pid;
 		reg.pagina = i;
 		reg.marco = i+100;
-		//reemplazarValorTLB(reg);
+		reemplazarValorTLB(reg);
 	}
 	printf("Thread ID: [%u] | [%d]\n", (unsigned int)pthread_self(), *pid);
 	//imprimirTLB(TLB);

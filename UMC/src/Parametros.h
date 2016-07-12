@@ -9,6 +9,7 @@
 #define PARAMETROS_H_
 
 #include <commons/log.h>
+#include <commons/config.h>
 
 typedef struct{
 	int miPuerto;		/* Puerto por el que escucho. */
@@ -24,6 +25,7 @@ typedef struct{
 	char* algoritmo;     /*Clock o ClockModificado*/
 	int fdMax;              /* Numero que representa al mayor socket de fds_master. */
 	int salir;              /* Indica si debo o no salir de la aplicacion. */
+	t_config *tConfig;       /* Guardo la referencia para liberarla despues */
 } stParametro;
 
 stParametro losParametros;
