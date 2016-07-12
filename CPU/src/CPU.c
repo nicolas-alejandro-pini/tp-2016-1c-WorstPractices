@@ -18,6 +18,7 @@ fd_set read_fds;		/* Sublista de fds_master. */
 
 int SocketAnterior = 0;
 int tamanioPaginaUMC ;
+int quantum=0;
 t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
@@ -144,7 +145,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	offset = posicionVariable->offset;
 	tamanio = posicionVariable->size;
 
-	unHeader = nuevoHeaderIPC(WRITE_BYTES_PAGE);
+	unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
 	unHeader->largo = sizeof(uint16_t);
 
 	if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
@@ -161,7 +162,17 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 		log_error("No se pudo recibir la variable.");
 	}
 
-	valor_variable = atoi(unMensaje.contenido);
+	if(unMensaje.header.tipo == OK)
+		valor_variable = atoi((char*)unMensaje.contenido);
+	else{
+		imprimirTexto("Error de segmentación al dereferenciar.");
+		log_error ("Error de segmentacion");
+		configuracionInicial.salir = 1;
+		quantum = 0;
+		liberarHeaderIPC(unHeader);
+		return (-1);
+	}
+
 	liberarHeaderIPC(unHeader);
 
 	return valor_variable;
@@ -173,10 +184,7 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	stPosicion *posicionVariable;
 	stHeaderIPC *unHeader;
-	stEscrituraPagina * aEscribirUMC;
 	uint16_t pagina, offset,tamanio;
-
-	aEscribirUMC = (stEscrituraPagina *) malloc(sizeof(stEscrituraPagina));
 
 	posicionVariable = obtenerPosicion(direccion_variable);
 
@@ -203,6 +211,16 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 		log_error("Error al recibir confirmacion de asignar en UMC.");
 	}
 
+	if(unHeader->tipo == OK)
+			log_info("Se asigno correctamente.");
+		else{
+			imprimirTexto("Error de segmentación al asignar.");
+			log_error ("Error de segmentacion al asignar");
+			configuracionInicial.salir = 1;
+			quantum = 0;
+			liberarHeaderIPC(unHeader);
+
+		}
 	liberarHeaderIPC(unHeader);
 
 }
@@ -385,6 +403,8 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 	free_paquete(&paquete);
 
 	liberarHeaderIPC(unHeaderPrimitiva);
+
+	quantum = 0;
 
 }
 
@@ -713,15 +733,19 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 			/*Envio los tres datos a la UMC*/
 			send(configuracionInicial.sockUmc,&paginaToUMC,sizeof(uint16_t),0);
+			log_info("CPU To UMC - Pagina pedida: %d",paginaToUMC);
 			send(configuracionInicial.sockUmc,&startToUMC,sizeof(uint16_t),0);
+			log_info("CPU To UMC - Offset pedid: %d",startToUMC);
 			send(configuracionInicial.sockUmc,&sizeToUMC,sizeof(uint16_t),0);
+			log_info("CPU To UMC - Size pedido: %d",sizeToUMC);
 
 			/*Me quedo esperando que vuelva el contenido*/
 			if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
 				log_error("Error al recibir mensaje de bytes intruccion.");
+				return NULL;
 			}else{
 
-				log_info("Recibi de la UMC la instrucción.",unMensaje.contenido);
+				log_info("Recibi de la UMC la instrucción: %s",unMensaje.contenido);
 
 				if(instruccion==NULL){
 					instruccion = malloc(sizeof(char)*(strlen(unMensaje.contenido) + 1 ));
@@ -739,6 +763,8 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 	}
 	liberarHeaderIPC(unHeader);
+	//Imprimi la instrucción solicitada//
+	log_info(instruccion);
 	return instruccion;
 
 }
@@ -764,6 +790,7 @@ int ejecutarInstruccion(void){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
 	}else{
 		printf("Error: fallo la ejecución de instrucción.\n");
+		configuracionInicial.salir = 1;
 		return EXIT_FAILURE;
 	}
 
@@ -835,7 +862,6 @@ int main(void) {
 	stHeaderIPC *unHeaderIPC;
 	t_UMCConfig *configUMC;
 	int unSocket;
-	int quantum=0;
 	int quantumSleep=0;
 	char* temp_file = "cpu.log";
 
@@ -999,8 +1025,8 @@ int main(void) {
 									}
 
 								}
-
-								if (devolverPCBalNucleo() == -1){
+								//Si no hubo error devuelvo PCB al nucleo y evaluo error//
+								if (configuracionInicial.salir == 0 && devolverPCBalNucleo() == -1){
 
 									log_info("Error al devolver PCB de ANSIPROG...");
 									configuracionInicial.salir = 1;
