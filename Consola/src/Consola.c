@@ -192,12 +192,14 @@ int load_program(t_console* tConsole, char* argv)
 }
 
 int recv_print(t_console* tConsole){
-	stMensaje unMensaje;
+	stMensajeIPC unMensaje;
 	unMensaje.header.tipo = ERROR;
 
 	while(unMensaje.header.tipo != KILLPID){
 
-		recibirMensaje(*(tConsole->pSockfd), &unMensaje);
+		/* Valido cierre de conexion con el nucleo */
+		if(!recibirMensajeIPC(*(tConsole->pSockfd), &unMensaje))
+			return EXIT_FAILURE;
 
 		switch(unMensaje.header.tipo)
 		{
@@ -213,6 +215,7 @@ int recv_print(t_console* tConsole){
 			default:
 				break;
 		}
+		liberarMensajeIPC(&unMensaje);  /* Solo libero si pudo recibir. */
 	}
 
 	return EXIT_SUCCESS;

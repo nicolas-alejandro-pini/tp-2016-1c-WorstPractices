@@ -8,3 +8,5 @@ chmod 444 /usr/local/share/consola.config
 echo "Consola -> /usr/bin/ansisop"
 echo "consola.config -> /usr/local/share/consola.config"
 echo "consola.log -> /usr/local/share/consola.log"
+echo "Archivo de config:"
+more /usr/local/share/consola.config
