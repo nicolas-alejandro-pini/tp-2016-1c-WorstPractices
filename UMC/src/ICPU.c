@@ -16,69 +16,45 @@
  */
 
 
-void *inicializarPrograma(stIni* ini){
-	stHeaderIPC *unHeader;
-	uint16_t longitud_tabla;
+int inicializarPrograma(int unCliente){
+	stPageIni *unPageIni = NULL;
+	stHeaderIPC *unHeader = NULL;
+	t_paquete paquete_stPageIni;
 
-	// Crea tabla con como maximo marcos_x_proceso registros ---> NO, siempre asigno lo que piden, limito la asignacion de marcos
-	//if(ini->sPI->cantidadPaginas > ini->marcos_x_proceso)
-		//longitud_tabla = ini->marcos_x_proceso;
-//	else
-		longitud_tabla = ini->sPI->cantidadPaginas;
+	if (recibir_paquete(unCliente, &paquete_stPageIni)) {
+		log_error("No se pudo recibir paquete de inicio de programa");
+		close(unCliente);
+		return EXIT_FAILURE;
+	}
 
-	crearTabla(ini->sPI->processId, longitud_tabla);
+	unPageIni = (stPageIni*)malloc(sizeof(stPageIni));
+	deserializar_inicializar_programa(unPageIni,&paquete_stPageIni);
 
-#undef TEST_SIN_SWAP
+	/* Crea Tabla de Paginas , Copia los valores, se puede liberar unPageIni */
+	crearTabla(unPageIni->processId, unPageIni->cantidadPaginas);
 
-#ifndef TEST_SIN_SWAP
-
-	if(inicializarSwap(ini->sPI) == EXIT_FAILURE){
+	if(inicializarSwap(unPageIni) == EXIT_FAILURE){
 		log_error("No se pudo enviar el codigo a Swap");
 		unHeader=nuevoHeaderIPC(ERROR);
-		enviarHeaderIPC(ini->socketResp, unHeader);
-		pthread_exit(NULL);
-	}
-#else
-
-	uint16_t marco;
-	void *posicion;
-	stRegistroTP* regTP = NULL;
-	stNodoListaTP* nodoListaTP = NULL;
-	// TODO Simulo pedido del CPU para cargar en memoria el codigo del programa
-
-	nodoListaTP = buscarPID(ini->sPI->processId);
-
-	int largo_programa = (strlen(ini->sPI->programa) / losParametros.frameSize) +1;
-	char *programa_paginado = calloc(1,sizeof(char)*(losParametros.frameSize*(largo_programa)));
-	memcpy(programa_paginado, ini->sPI->programa, losParametros.frameSize);
-	int pagina = 0;
-
-	while(pagina < nodoListaTP->size && pagina < largo_programa){
-		marco = obtenerMarcoLibre();
-		regTP = nodoListaTP->tabla + sizeof(stRegistroTP)*pagina;
-		regTP->marco = marco;
-		regTP->bit2ndChance=0;
-		regTP->bitModificado=0;
-		regTP->bitPresencia=1;
-		posicion = memoriaPrincipal+((marco-1)*losParametros.frameSize);
-		escribirMemoria(posicion, (uint16_t) losParametros.frameSize, (void*) programa_paginado + (losParametros.frameSize*pagina));
-		pagina++;
+		enviarHeaderIPC(unCliente, unHeader);
+		return EXIT_FAILURE;
 	}
 
-#endif
 	/*Se informa al nucleo que el programa se inicializo OK*/
 	unHeader=nuevoHeaderIPC(OK);
-	if (!enviarHeaderIPC(ini->socketResp, unHeader)) {
-		log_error("Hubo un problema al escribir OK de inicalizacion al nucleo - pid %d", ini->sPI->processId);
-		close(ini->socketResp);
+	if (!enviarHeaderIPC(unCliente, unHeader)) {
+		log_error("Hubo un problema al escribir OK de inicalizacion al nucleo - pid %d", unPageIni->processId);
+		close(unCliente);
+		return EXIT_FAILURE;
 	}
+
 	liberarHeaderIPC(unHeader);
+	free(unPageIni->programa);
+	free(unPageIni);
 
-	/* no guardo en memoria */
-
-	/*Cierro este thread porque este es creado por Nucleo y voy a trabajar con el CPU*/
-	return NULL;
+	return EXIT_SUCCESS;
 }
+
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
 	uint16_t resTLB, resTabla, frameBuscado;

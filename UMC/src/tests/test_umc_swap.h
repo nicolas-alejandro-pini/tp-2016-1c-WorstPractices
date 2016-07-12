@@ -13,6 +13,8 @@
 int inicializar_umc_swap();
 int finalizar_umc_swap();
 void agregar_tests_con_swap();
+int calcular_cantidad_paginas(int size_programa,int tamanio_paginas);
+
 
 /* Pruebas */
 void test_base_umc_swap();
