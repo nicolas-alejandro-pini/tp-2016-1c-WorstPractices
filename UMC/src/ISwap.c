@@ -28,9 +28,6 @@ int inicializarSwap(stPageIni *st){
 	}
 
 	liberarHeaderIPC(mensaje);
-	free(st->programa);
-	free(st);
-
 	return ret;
 }
 

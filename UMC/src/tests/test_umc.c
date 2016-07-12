@@ -15,7 +15,7 @@
 int test_unit_umc() {
 
 	CU_initialize_registry();
-	agregar_tests();
+	//agregar_tests();
 	agregar_tests_con_swap();
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();

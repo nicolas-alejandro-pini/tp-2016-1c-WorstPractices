@@ -53,7 +53,7 @@ void loadInfo (stParametro* info, char* file_name){
 		log_error("Parametro no cargado en el archivo de configuracion - MARCOS");
 		exit(-2);
 	}
-	frames = info->frames;
+	gFrames = info->frames;
 
 	if (config_has_property(miConf,"MARCOS_SIZE")) {
 		info->frameSize = config_get_int_value(miConf,"MARCOS_SIZE");
@@ -61,7 +61,7 @@ void loadInfo (stParametro* info, char* file_name){
 		log_error("Parametro no cargado en el archivo de configuracion - MARCOS_SIZE");
 		exit(-2);
 	}
-	frameSize = info->frameSize;
+	gFrameSize = info->frameSize;
 
 	if (config_has_property(miConf,"MARCOS_X_PROC")) {
 		info->frameByProc = config_get_int_value(miConf,"MARCOS_X_PROC");
@@ -69,7 +69,7 @@ void loadInfo (stParametro* info, char* file_name){
 		log_error("Parametro MARCOS_X_PROC no cargado en el archivo de configuracion - MARCOS_X_PROC");
 		exit(-2);
 	}
-	frameByProc = info->frameByProc;
+	gFrameByProc = info->frameByProc;
 
 	if (config_has_property(miConf,"ALGORITMO")) {
 		// referencia a t_config* miConf !
@@ -180,10 +180,7 @@ int main(int argc, char *argv[]) {
 	pthread_attr_t attr;
 	pthread_t tid;
 	char* temp_file = "umc.log";
-	stIni *ini = NULL;
-	stPageIni *unPageIni;
 	stEnd *end = NULL;
-	t_paquete paquete_stPageIni;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -195,6 +192,9 @@ int main(int argc, char *argv[]) {
 	if(argv[2])
 		if(strcmp(argv[2], "--cunit")==0)
 			test_unit_umc();
+
+	// Solo tests
+	//exit(EXIT_SUCCESS);
 
 	printf("-----------------------------------------------------------------------------\n");
 	printf("------------------------------------UMC--------------------------------------\n");
@@ -417,21 +417,7 @@ int main(int argc, char *argv[]) {
 
 	        	        		case INICIALIZAR_PROGRAMA:
 
-
-	        	        			if (recibir_paquete(unCliente, &paquete_stPageIni)) {
-										printf("No se pudo recibir paquete de inicio de programa");
-										close(unCliente);
-										return -1;
-									}
-									unPageIni = (stPageIni*)malloc(sizeof(stPageIni));
-									deserializar_inicializar_programa(unPageIni,&paquete_stPageIni);
-
-	        	        			ini = (stIni*)calloc(1,sizeof(stIni));
-									ini->marcos_x_proceso = frameByProc;
-									ini->socketResp = unCliente;
-	        	        			ini->sPI= unPageIni;
-
-	        	        			inicializarPrograma(ini);
+	        	        			inicializarPrograma(unSocket);
 
 	        	        			break;
 
