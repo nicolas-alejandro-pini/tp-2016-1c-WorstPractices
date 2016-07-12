@@ -12,6 +12,7 @@
 #include "planificador.h"
 #include "semaforos.h"
 #include "shared_vars.h"
+#include "nucleo_config.h"
 
 void *consumidor_cpu(int unCliente);
 

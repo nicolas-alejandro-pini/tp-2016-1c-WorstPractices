@@ -19,6 +19,7 @@ void monitor_configuracion(stEstado* info);
 
 void consola_conectada(stEstado *pEstado, int unSocket, uint32_t pid);
 uint32_t consola_desconectada(stEstado *pEstado, int unSocket);
+uint32_t buscar_consola_activa(int pid);
 void consola_crear_lista(stEstado *pEstado);
 void consola_destruir_lista(stEstado *pEstado);
 

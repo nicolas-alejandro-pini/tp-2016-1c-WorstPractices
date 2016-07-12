@@ -138,6 +138,22 @@ uint32_t consola_desconectada(stEstado *pEstado, int unSocket){
 	return 0;  // No encontrada
 }
 
+uint32_t buscar_consola_activa(int pid){
+	stConsola *consola = NULL;
+	int i=0;
+	t_list *list = obtenerEstadoActual()->consolas_activas;
+	int size = list_size(list);
+
+	for(i=0; i<size; i++){
+		consola = list_get(list, i);
+		if(consola->pid == pid)
+		{
+			return 1;
+		}
+	}
+	return 0;  // No encontrada
+}
+
 void consola_crear_lista(stEstado *pEstado){
 	pEstado->consolas_activas = list_create();
 }

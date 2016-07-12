@@ -8,6 +8,22 @@
 
 pthread_mutex_t mutex_lista_dispositivos = PTHREAD_MUTEX_INITIALIZER;
 
+/*Corroboramos  si el pcb corresponde a una consola activa*/
+int consola_desconectada(stPCB *unPCB) {
+	stHeaderIPC *unHeaderIPC;
+	if (buscar_consola_activa(unPCB->pid) == 0) {
+		unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
+		if (!enviarMensajeIPC(obtenerEstadoActual()->sockUmc, unHeaderIPC, (char*) unPCB->pid)) {
+			log_error("Error al enviar el fin de programa a la UMC");
+			return (-4);
+		}
+		pcb_destroy(unPCB);
+		return 0;
+	}
+
+	return 1;
+}
+
 void *consumidor_cpu(int unCliente) {
 	stHeaderIPC *unHeaderIPC;
 	stMensajeIPC unMensajeIPC;
@@ -17,10 +33,14 @@ void *consumidor_cpu(int unCliente) {
 	stRafaga *unaRafagaIO;
 	stSharedVar *unaSharedVar;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
-	int error = 0, offset = 0, valor_impresion, socket_consola_to_print;
+	int error = 0, offset = 0, valor_impresion, socket_consola_to_print, dispositivo_time;
 
 	while (!error) {
 		unPCB = ready_consumidor();
+
+		if(consola_desconectada(unPCB))
+			continue;
+
 		unPCB->quantum = obtenerEstadoActual().quantum;
 		unPCB->quantumSleep = obtenerEstadoActual().quantumSleep;
 
@@ -59,33 +79,40 @@ void *consumidor_cpu(int unCliente) {
 		} else {
 			switch (unMensajeIPC.header.tipo) {
 			case IOANSISOP:
-				/*Envio confirmacion al CPU*/
-				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
-					log_error("CPU error - No se pudo enviar header");
+				/*Se recibe el nombre del dispositivo y tiempo*/
+				if(recibir_paquete (unCliente, &paquete)){
+					log_error("No se pudo recibir el paquete\n");
 					error = 1;
+					free_paquete(&paquete);
 					continue;
 				}
-				liberarHeaderIPC(unHeaderIPC);
-				/*Recibo el PCB*/
-				if (!recibir_paquete(unCliente, &paquete)) {
-					log_error("CPU error - No se pudo recibir header");
+				deserializar_campo(&paquete, &offset, &dispositivo_name, sizeof(dispositivo_name));
+				deserializar_campo(&paquete, &offset, &dispositivo_time, sizeof(dispositivo_time));
+
+				free_paquete(&paquete);
+				if (recibir_paquete(unCliente, &paquete)) {
+					log_error("No se pudo recibir el paquete\n");
 					error = 1;
+					free_paquete(&paquete);
 					continue;
 				}
 				deserializar_pcb(unPCB, &paquete);
+				free_paquete(&paquete);
+
+				if(consola_desconectada(unPCB))
+					continue;
 
 				/*Busqueda de dispositivo de I/O*/
-				dispositivo_name = strdup(unMensajeIPC.contenido);
 				int _es_el_dispositivo(stDispositivo *d) {
 					return string_equals_ignore_case(d->nombre, dispositivo_name);
 				}
 				pthread_mutex_lock(&mutex_lista_dispositivos);
 				unDispositivo = list_remove_by_condition(obtenerEstadoActual().dispositivos, (void*) _es_el_dispositivo);
+
 				/*Almacenamos la rafaga de ejecucion de entrada salida*/
 				unaRafagaIO = malloc(sizeof(stRafaga));
 				unaRafagaIO->pid = unPCB->pid;
-				unaRafagaIO->unidades = 2;
+				unaRafagaIO->unidades = dispositivo_time;
 
 				pthread_mutex_lock(&unDispositivo->mutex); // Se lockea el acceso a la cola
 				queue_push(unDispositivo->rafagas, unaRafagaIO);
