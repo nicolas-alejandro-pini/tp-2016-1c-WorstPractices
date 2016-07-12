@@ -112,6 +112,11 @@ int recibirMensajeIPC(int unSocket, stMensajeIPC* unNuevoMensaje)
 	}
 }
 
+void liberarMensajeIPC(stMensajeIPC* unNuevoMensaje){
+	if(unNuevoMensaje)
+		free(unNuevoMensaje->contenido);
+}
+
 
 /*----------------------------------------------------------------------------*/
 /*                         Manejo de paquetes                                 */

@@ -111,5 +111,7 @@
 	
 	int recibirMensajeIPC(int unSocket, stMensajeIPC* unNuevoMensaje);
 
+	/* Por cada recibirMensajeIPC debe haber un liberarMensajeIPC, libera el contenido */
+	void liberarMensajeIPC(stMensajeIPC* unNuevoMensaje);
 
 #endif /* SOCKETSIPCIRC_H_ */
