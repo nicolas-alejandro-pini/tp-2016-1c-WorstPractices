@@ -733,8 +733,11 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 			/*Envio los tres datos a la UMC*/
 			send(configuracionInicial.sockUmc,&paginaToUMC,sizeof(uint16_t),0);
+			log_info("CPU To UMC - Pagina pedida: ",(char*)paginaToUMC);
 			send(configuracionInicial.sockUmc,&startToUMC,sizeof(uint16_t),0);
+			log_info("CPU To UMC - Offset pedid: ",(char*)startToUMC);
 			send(configuracionInicial.sockUmc,&sizeToUMC,sizeof(uint16_t),0);
+			log_info("CPU To UMC - Size pedido: ",(char*)sizeToUMC);
 
 			/*Me quedo esperando que vuelva el contenido*/
 			if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
@@ -759,6 +762,8 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 	}
 	liberarHeaderIPC(unHeader);
+	//Imprimi la instrucción solicitada//
+	log_info(instruccion);
 	return instruccion;
 
 }
