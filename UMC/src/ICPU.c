@@ -81,12 +81,12 @@ void *inicializarPrograma(stIni* ini){
 }
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
-	uint16_t resTLB, resTabla, *frameBuscado;
+	uint16_t resTLB, resTabla, frameBuscado;
 	void *leido, *bytesLeidos, *pos;
 	stRegistroTLB stTLB;
 	stRegistroTP regTP;
 	int hayTLB, ret;
-	stHeaderIPC unHeader;
+	stHeaderIPC *unHeader;
 
 	/* si esta disponible cache*/
 	if ((hayTLB = estaActivadaTLB())== OK){
@@ -100,22 +100,20 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 	if(resTLB != 0 || resTabla != 0){
 
 			// acceder a memoria con el resultado encontrado en cache
-			pos = memoriaPrincipal+((*frameBuscado-1)*losParametros.frameSize);
-			leido = leerMemoria(pos, unaLectura->size);
-
-			// con el marco obtenido separo los bytes que se pidieron leer
-			bytesLeidos = calloc(1, unaLectura->size);
-			memcpy(bytesLeidos,leido+unaLectura->offset,unaLectura->size);
+			pos = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize);
+			leido = leerMemoria(pos, losParametros.frameSize);
 
 			//envio la respuesta de la lectura a la CPU
-			if(!enviarMensajeIPC(socketCPU,nuevoHeaderIPC(OK),bytesLeidos)){
+			unHeader = nuevoHeaderIPC(OK);
+			unHeader->largo=unaLectura->size;
+			if(!enviarMensajeIPC(socketCPU,unHeader,leido+unaLectura->offset)){
 				log_error("No se pudo enviar el MensajeIPC");
 				return;
 			}
 
 			//libero memoria
 			free(leido);
-			free(bytesLeidos);
+			liberarHeaderIPC(unHeader);
 
 	}
 	// Page fault Lectura
@@ -132,13 +130,14 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 		}else
 			ret=ERROR;
 		//envio la respuesta de la lectura a la CPU
-		unHeader.tipo = OK;
-		unHeader.largo = unaLectura->size;
-		if(!enviarMensajeIPC(socketCPU,&unHeader,bytesLeidos)){
+		unHeader = nuevoHeaderIPC(OK);
+		unHeader->largo = unaLectura->size;
+		if(!enviarMensajeIPC(socketCPU,unHeader,bytesLeidos)){
 			log_error("No se pudo enviar el MensajeIPC");
 			return;
 		}
 		// libero lo enviado
+		liberarHeaderIPC(unHeader);
 		free(bytesLeidos);
 		// libero pagina obtenida
 		free(leido);
