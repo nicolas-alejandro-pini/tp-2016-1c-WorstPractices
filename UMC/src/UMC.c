@@ -263,6 +263,7 @@ int main(int argc, char *argv[]) {
 		else{
 			log_info("No se pudo conectar con el Swap");
 			log_destroy(logger);
+			exit(EXIT_FAILURE);
 		}
 
 	/* Agrego el stdin a la lista de sockets............................................................................. */

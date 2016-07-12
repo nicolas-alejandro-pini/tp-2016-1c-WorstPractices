@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
-	if(loadInfo(&elEstadoActual, &listaSem, &listaSharedVars)){
+	if(loadInfo(&elEstadoActual, &listaSem, &listaSharedVars, 0)){
 		printf("Error");
 		exit(-2);
 	}

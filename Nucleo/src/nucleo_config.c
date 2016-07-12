@@ -10,13 +10,11 @@
 #include "includes/semaforos.h"
 #include "includes/shared_vars.h"
 
-int inotify = 0;
-
-int loadInfo(stEstado* info, t_list* lista_semaforos, t_list* lista_shared_vars) {
+int loadInfo(stEstado* info, t_list* lista_semaforos, t_list* lista_shared_vars, char inotify) {
 
 	t_config* miConf, *otraConf;
 
-	if (!inotify) {
+	if (inotify==0) {
 		miConf = config_create(info->path_conf); /*Estructura de configuracion*/
 		info->dispositivos = list_create();
 		lista_semaforos = list_create();
@@ -105,7 +103,7 @@ int loadInfo(stEstado* info, t_list* lista_semaforos, t_list* lista_shared_vars)
 			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM");
 			return EXIT_FAILURE;
 		}
-
+		config_destroy(otraConf);
 		printf("Valor del quantum [%d]\n", info->quantum);
 		return EXIT_SUCCESS;
 
@@ -190,6 +188,7 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 
 void monitor_configuracion(stEstado* info) {
 	char buffer[BUF_LEN];
+	int watch_descriptor;
 
 	// Al inicializar inotify este nos devuelve un descriptor de archivo
 	int file_descriptor = inotify_init();
@@ -198,16 +197,20 @@ void monitor_configuracion(stEstado* info) {
 	}
 
 	// Creamos un monitor sobre un path indicando que eventos queremos escuchar
-	int watch_descriptor = inotify_add_watch(file_descriptor, CFGFILE,
-	IN_MODIFY | IN_CREATE | IN_DELETE);
+	while(1){
+		watch_descriptor = inotify_add_watch(file_descriptor, info->path_conf,
+		IN_MODIFY | IN_CREATE | IN_DELETE);
 
-	int length = read(file_descriptor, buffer, BUF_LEN);
-	if (length < 0) {
-		perror("read");
+		log_info("");
+
+		int length = read(file_descriptor, buffer, BUF_LEN);
+		if (length < 0) {
+			perror("read");
+		}
+		loadInfo(info, listaSem, listaSharedVars, -1);
 	}
-	loadInfo(info, listaSem, listaSharedVars);
+
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
-	monitor_configuracion(info);
 	pthread_exit(NULL);
 }
