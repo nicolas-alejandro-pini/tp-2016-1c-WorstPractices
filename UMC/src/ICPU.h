@@ -39,7 +39,7 @@ void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU);
 void escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid, uint16_t socketCPU);
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU);
 void *finalizarProgramaNucleo(stEnd *fin);
-void cambiarContexto(uint16_t pid);
+uint32_t cambiarContexto(stMensajeIPC *unMensaje);
 
 void* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t usarTLB);
 void realizarAccionCPU(uint16_t socket);

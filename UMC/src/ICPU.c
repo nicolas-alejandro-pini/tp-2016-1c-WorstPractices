@@ -57,11 +57,9 @@ int inicializarPrograma(int unCliente){
 
 void leerBytes(stPosicion* unaLectura, uint16_t pid, uint16_t socketCPU){
 
-	uint16_t resTLB, resTabla, frameBuscado;
-	void *leido, *bytesLeidos, *pos;
-	stRegistroTLB stTLB;
-	stRegistroTP regTP;
-	int hayTLB, ret;
+	uint16_t resTLB = 0, resTabla = 0, frameBuscado = 0;
+	void *leido = NULL, *bytesLeidos = NULL, *pos = NULL;
+	int hayTLB = 0, ret = 0;
 	stHeaderIPC *unHeader;
 
 	/* si esta disponible cache*/
@@ -243,77 +241,101 @@ void *finalizarProgramaNucleo(stEnd *fin){
 	finalizarPrograma(fin->pid, fin->socketResp);
 	return NULL;
 }
-void cambiarContexto(uint16_t pid){
 
-	stNodoListaTP *data;
+uint32_t cambiarContexto(stMensajeIPC *unMensaje){
+
+	stNodoListaTP *data = NULL;
+	uint32_t pid = 0;
+
+	/* Valido que lleguen los 4 bytes del int pid */
+	if(unMensaje->header.largo != sizeof(uint32_t))
+	{
+		return pid; // PID 0 (disponible)
+	}
+
+	memcpy(&(pid), unMensaje->contenido, sizeof(uint32_t));
 	data = buscarPID(pid);
+
 	if(data==NULL)
+	{
 		log_error("pid %d no encontrado en el cambio de contexto - programa no inicializado", pid);
+		pid = 0;  // PID 0 (disponible)
+	}
 
 	// No se actuliza tabla de pagina del otro proceso asi qeu no es necesario actualizar swap con paginas que tienen byte modificado
-
 	// TODO es necesario hacer un flush del pid en TLB ??? creo que no
-	log_info("Se realizo el cambio de contexto del pid %d", pid);
-
-	return;
+	return pid;
 }
 
-void realizarAccionCPU(uint16_t socket){
+void realizarAccionCPU(uint16_t unSocket){
 
-	stHeaderIPC unHeader;
 	stMensajeIPC unMensaje;
-	uint16_t pidActivo;
+	uint32_t pidActivo;
 	stPosicion posR;
 	stEscrituraPagina posW;
 
+	/* Inicializo pidActivo */
+	pidActivo = 0;   /* pid == 0 , CPU libre */
+
 	while(1){
 
-		if(!recibirHeaderIPC(socket, &unHeader)){
-			log_error("Thread Error - No se pudo recibir mensaje de respuesta - socket: %d", socket);
+		if(!recibirHeaderIPC(unSocket, &unMensaje.header)){
+			log_error("Thread[ID] No se recibe respuesta del CPU Socket[%d], Ultimo Pid[%d]: %d", unSocket, pidActivo);
 			//liberarHeaderIPC(unMensaje->header);
-			close(socket);
+			close(unSocket);
 			return;//pthread_exit(NULL);
 		}
 
-		switch(unHeader.tipo){
+		switch(unMensaje.header.tipo){
 
 		case READ_BTYES_PAGE:
 
-			recv(socket, &(posR.pagina), sizeof(uint16_t),0);
-			recv(socket, &(posR.offset), sizeof(uint16_t),0);
-			recv(socket, &(posR.size), sizeof(uint16_t),0);
+			recv(unSocket, &(posR.pagina), sizeof(uint16_t),0);
+			recv(unSocket, &(posR.offset), sizeof(uint16_t),0);
+			recv(unSocket, &(posR.size), sizeof(uint16_t),0);
 
-			leerBytes(&posR, pidActivo, socket);
+			leerBytes(&posR, pidActivo, unSocket);
 
 			break;
 
 		case WRITE_BYTES_PAGE:
 
-			recv(socket, &(posW.nroPagina), sizeof(uint16_t),0);
-			recv(socket, &(posW.offset), sizeof(uint16_t),0);
-			recv(socket, &(posW.tamanio), sizeof(uint16_t),0);
-			recv(socket, posW.buffer, posR.size,0);
+			recv(unSocket, &(posW.nroPagina), sizeof(uint16_t),0);
+			recv(unSocket, &(posW.offset), sizeof(uint16_t),0);
+			recv(unSocket, &(posW.tamanio), sizeof(uint16_t),0);
+			recv(unSocket, posW.buffer, posR.size,0);
 			//posW =(stEscrituraPagina*)(unMensaje.contenido);
 
-			escribirBytes(&posW, pidActivo, socket);
+			escribirBytes(&posW, pidActivo, unSocket);
 
 			break;
 
 		case FINPROGRAMA:
 
-			finalizarPrograma(pidActivo, socket);
+			finalizarPrograma(pidActivo, unSocket);
 			break;
 
 		case CAMBIOCONTEXTO:
 
-			unMensaje.contenido = (char *) malloc(unHeader.largo);
+			// ToDO: Del lado del CPU esta definido int (4 bytes), pero se podria poner como
+			//       int32_t para asegurar los 4 bytes
 
-			if (unHeader.largo > 0 )
-				recibirContenido(socket, (char*)unMensaje.contenido, unHeader.largo);
+			/* recibo el contenido */
+			unMensaje.contenido = malloc(unMensaje.header.largo);
+			recibirContenido(unSocket, (char*) unMensaje.contenido, unMensaje.header.largo);
 
-			memcpy(&(pidActivo), unMensaje.contenido, sizeof(uint16_t));
-			cambiarContexto(pidActivo);
+			pidActivo = cambiarContexto(&unMensaje);
 
+			if(0 == pidActivo)
+			{
+				log_error("Thread[ID]: PID erroneo, UMC espera por el nuevo cambio de contexto");
+				// TodO: Responder al CPU , Thread libre.
+				free(unMensaje.contenido);
+				break;
+			}
+			// Todo: Confirmar al CPU con PID.
+			log_info("Thread[ID]: Cambio de PID[%d]", pidActivo);
+			free(unMensaje.contenido);
 			break;
 
 		default:

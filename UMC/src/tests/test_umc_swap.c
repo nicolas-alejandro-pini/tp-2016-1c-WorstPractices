@@ -6,17 +6,22 @@
 #include "../UMC.h"
 
 stParametro losParametros;
+uint32_t gPidActivo; // En el thread de cada CPU
 
 void agregar_tests_con_swap(){
 	CU_pSuite suite_umc_swap = CU_add_suite("Pruebas UMC + SWAP:", inicializar_umc_swap, finalizar_umc_swap); // NULL, NULL);
 	CU_add_test(suite_umc_swap, "test conexion y envio de programa con swap", test_base_umc_swap);
+	CU_add_test(suite_umc_swap, "test_cambio_de_contexto()", test_cambio_de_contexto);
+	CU_add_test(suite_umc_swap, "test_read_bytes_page()", test_read_bytes_page);
+
 }
 
 int inicializar_umc_swap(){
 
 	loadInfo(&losParametros, "umc.conf");
-	losParametros.entradasTLB = 0;  // SIN TLB
 	TablaMarcos = NULL;  // Lista global de tablas
+	losParametros.entradasTLB = 0;  // SIN TLB  o tambien TLB = NULL;
+	crearTLB(losParametros.entradasTLB);
 	creatListaDeTablas(TablaMarcos); // TablaMarcos global
 	// Memoria principal en memoria.h
 	memoriaPrincipal = inicializarMemoriaPrincipal(losParametros.frameSize, losParametros.frames);
@@ -80,7 +85,51 @@ void test_base_umc_swap(){
 		}
 		CU_ASSERT_TRUE(true);
 	}
+}
 
+void test_cambio_de_contexto(){
+
+	stMensajeIPC unMensaje;
+	unMensaje.header.largo = sizeof(uint32_t);
+	unMensaje.contenido = malloc(sizeof(uint32_t));
+	*(unMensaje.contenido) = 1;
+
+	gPidActivo = cambiarContexto(&unMensaje);
+
+}
+
+void test_read_bytes_page(){
+	stPosicion posR;
+
+	//READ_BTYES_PAGE:
+	posR.pagina = 0;
+	posR.offset = 10;
+	posR.size = 7;
+
+	if(1 == gPidActivo)
+		leerBytes(&posR, gPidActivo, losParametros.sockSwap);
+
+}
+
+void test_write_bytes_page(){
+
+	stEscrituraPagina posW;
+
+    //WRITE_BYTES_PAGE:
+
+	posW.nroPagina = 0;
+	posW.offset = 0;
+	posW.tamanio = 0;
+	// (posW.buffer, posW.tamanio)
+	//posW =(stEscrituraPagina*)(unMensaje.contenido);
+	//escribirBytes(&posW, pidActivo, socket);
+
+}
+
+void test_fin_programa(){
+    //FINPROGRAMA:
+
+	//finalizarPrograma(pidActivo, socket);
 }
 
 /** DEL NUCLEO **/
