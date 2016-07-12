@@ -5,17 +5,16 @@
  *      Author: utnso
  */
 
+#include "includes/Nucleo.h"
 #include "includes/nucleo_config.h"
 #include "includes/semaforos.h"
 #include "includes/shared_vars.h"
 
-int inotify = 0;
-
-int loadInfo(stEstado* info, t_list* lista_semaforos, t_list* lista_shared_vars) {
+int loadInfo(stEstado* info, t_list* lista_semaforos, t_list* lista_shared_vars, char inotify) {
 
 	t_config* miConf, *otraConf;
 
-	if (!inotify) {
+	if (inotify==0) {
 		miConf = config_create(info->path_conf); /*Estructura de configuracion*/
 		info->dispositivos = list_create();
 		lista_semaforos = list_create();
@@ -104,12 +103,48 @@ int loadInfo(stEstado* info, t_list* lista_semaforos, t_list* lista_shared_vars)
 			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM");
 			return EXIT_FAILURE;
 		}
-
+		config_destroy(otraConf);
 		printf("Valor del quantum [%d]\n", info->quantum);
 		return EXIT_SUCCESS;
 
 	}
 }
+
+void consola_conectada(stEstado *pEstado, int unSocket, uint32_t pid){
+	stConsola *consola = malloc(sizeof(stConsola));
+	consola->pid = pid;
+	consola->socket = unSocket;
+
+	list_add(pEstado->consolas_activas, consola);
+}
+
+/* Devuelve el pid de la desconectada y la saca de la lista, 0 en caso de no hallarla */
+uint32_t consola_desconectada(stEstado *pEstado, int unSocket){
+	stConsola *consola = NULL;
+	int i=0;
+	t_list *list = pEstado->consolas_activas;
+	int size = list_size(list);
+
+	for(i=0; i<size; i++){
+		consola = list_get(list, i);
+		if(consola->socket == unSocket)
+		{
+			list_remove(list, i);
+			return consola->pid;
+		}
+	}
+	return 0;  // No encontrada
+}
+
+void consola_crear_lista(stEstado *pEstado){
+	pEstado->consolas_activas = list_create();
+}
+
+void consola_destruir_lista(stEstado *pEstado){
+	list_destroy(pEstado->consolas_activas);
+}
+
+
 
 void cargar_dipositivos(stEstado *info, char** ioIds, char** ioSleep) {
 	int iterator = 0;
@@ -153,6 +188,7 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 
 void monitor_configuracion(stEstado* info) {
 	char buffer[BUF_LEN];
+	int watch_descriptor;
 
 	// Al inicializar inotify este nos devuelve un descriptor de archivo
 	int file_descriptor = inotify_init();
@@ -161,16 +197,20 @@ void monitor_configuracion(stEstado* info) {
 	}
 
 	// Creamos un monitor sobre un path indicando que eventos queremos escuchar
-	int watch_descriptor = inotify_add_watch(file_descriptor, CFGFILE,
-	IN_MODIFY | IN_CREATE | IN_DELETE);
+	while(1){
+		watch_descriptor = inotify_add_watch(file_descriptor, info->path_conf,
+		IN_MODIFY | IN_CREATE | IN_DELETE);
 
-	int length = read(file_descriptor, buffer, BUF_LEN);
-	if (length < 0) {
-		perror("read");
+		log_info("");
+
+		int length = read(file_descriptor, buffer, BUF_LEN);
+		if (length < 0) {
+			perror("read");
+		}
+		loadInfo(info, listaSem, listaSharedVars, -1);
 	}
-	loadInfo(info, listaSem, listaSharedVars);
+
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
-	monitor_configuracion(info);
 	pthread_exit(NULL);
 }

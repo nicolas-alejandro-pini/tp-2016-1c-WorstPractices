@@ -128,6 +128,7 @@ int main(int argc, char *argv[]) {
 	pthread_t p_thread, p_threadCpu;
 	char* temp_file = "nucleo.log";
 	elEstadoActual.path_conf = argv[1];
+	uint32_t pid_desconectado = 0;
 	int unCliente = 0,maximoAnterior = 0, unSocket, agregarSock;
 	struct sockaddr addressAceptado;
 
@@ -156,13 +157,16 @@ int main(int argc, char *argv[]) {
 
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");
-	if(loadInfo(&elEstadoActual, &listaSem, &listaSharedVars)){
+	if(loadInfo(&elEstadoActual, &listaSem, &listaSharedVars, 0)){
 		printf("Error");
 		exit(-2);
 	}
 	printf("OK\n");
 
 //	log_info("Configuracion cargada satisfactoriamente...\n");
+
+	// Crea la lista de consolas activas
+	consola_crear_lista(&elEstadoActual);
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
 	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*) &elEstadoActual);
@@ -307,6 +311,10 @@ int main(int argc, char *argv[]) {
 									close(unCliente);
 									break;/*Sale del switch*/
 								}
+
+								/* Inicializada la consola la agrego a consolas activas */
+								consola_conectada(&elEstadoActual, unCliente, unPCB->pid);
+
 								/*Cuando se usa mensajeIPC liberar el contenido*/
 								free(unMensaje.contenido);
 								ready_productor(unPCB);
@@ -345,6 +353,13 @@ int main(int argc, char *argv[]) {
 					/*Conexion existente*/
 					memset(unMensaje.contenido, '\0', LONGITUD_MAX_DE_CONTENIDO);
 					if (!recibirMensajeIPC(unSocket, &unMensaje)) {
+
+						// Desconexion de una consola
+						pid_desconectado = consola_desconectada(&elEstadoActual, unSocket);
+						if (pid_desconectado != 0){
+							printf("Se desconecto la consola PID[%d]", pid_desconectado);
+						}
+
 						if (unSocket == elEstadoActual.sockEscuchador) {
 							printf("Se perdio conexion...\n ");
 						}
@@ -362,6 +377,7 @@ int main(int argc, char *argv[]) {
 
 		}
 	}
+	consola_destruir_lista(&elEstadoActual);
 	cerrarSockets(&elEstadoActual);
 	finalizarSistema(&unMensaje, unSocket, &elEstadoActual);
 	printf("NUCLEO: Fin del programa\n");
