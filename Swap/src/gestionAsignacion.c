@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 
 #include "Swap.h"
 #include "gestionAsignacion.h"
@@ -325,9 +326,11 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 	//Vamos a usar Worst Fit para la asignacion de sectores a los procesos
 	if(cantidadSectoresLibresContiguosMaxima(&info_bloque_libre) < cantidadPaginas){
 		//Debo compactar, luego tengo que poder realizar la asignacion
+		log_info("Compactando la partición SWAP, la operación llevará %ld milisegundos", loaded_config->retardoCompactacion);
 		compactarParticionSwap();
-		usleep(loaded_config->retardoCompactacion);
+		usleep(loaded_config->retardoCompactacion * 1000);
 		cantidadSectoresLibresContiguosMaxima(&info_bloque_libre);
+		log_info("Compactación terminada, ahora se dispone de un espacio contiguo de %ld sectores", info_bloque_libre.largo);
 	}
 
 	if(reservarEspacioProceso(pID, info_bloque_libre.offset, cantidadPaginas) < 0){
