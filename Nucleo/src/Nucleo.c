@@ -11,6 +11,7 @@
 #include "includes/consumidor_cpu.h"
 #include "includes/nucleo_config.h"
 #include "includes/planificador.h"
+#include "tests/test_nucleo.h"
 
 /*
  ============================================================================
@@ -218,6 +219,11 @@ int main(int argc, char *argv[]) {
 		log_error("Falta el parametro de configuracion");
 		exit(-1);
 	}
+
+	// Ejecuto las pruebas
+	if(argv[2])
+		if(strcmp(argv[2], "--cunit")==0)
+			test_unit_nucleo();
 
 	/*Carga del archivo de configuracion*/
 	printf("Obteniendo configuracion...");

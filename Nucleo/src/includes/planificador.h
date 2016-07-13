@@ -15,7 +15,6 @@
 #include	<pthread.h>
 
 t_queue *colaReady; /*Cola de todos los PCB listos para ejecutar*/
-t_queue *colaExit; /*Cola de todos los PCB listos para liberar*/
 
 void *ready_productor(void *arg);
 stPCB *ready_consumidor();
