@@ -4,6 +4,7 @@
 #include "../TLB.h"
 #include "../Parametros.h"
 #include "../UMC.h"
+#include "../TablaMarcos.h"
 
 stParametro losParametros;
 uint32_t gPidActivo; // En el thread de cada CPU
@@ -19,10 +20,9 @@ void agregar_tests_con_swap(){
 int inicializar_umc_swap(){
 
 	loadInfo(&losParametros, "umc.conf");
-	TablaMarcos = NULL;  // Lista global de tablas
 	losParametros.entradasTLB = 0;  // SIN TLB  o tambien TLB = NULL;
 	crearTLB(losParametros.entradasTLB);
-	creatListaDeTablas(TablaMarcos); // TablaMarcos global
+	creatListaDeTablas(); // TablaMarcos global
 	// Memoria principal en memoria.h
 	memoriaPrincipal = inicializarMemoriaPrincipal(losParametros.frameSize, losParametros.frames);
 
@@ -60,7 +60,7 @@ int finalizar_umc_swap(){
 void test_base_umc_swap(){
 	stHeaderIPC *unHeader;
 	int i=0;
-	int cant=5;
+	int cant=1;
 	char *programa[] = {"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
 			"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
 			"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
@@ -72,7 +72,7 @@ void test_base_umc_swap(){
 
 	for(i=0; i< cant; i++){
 		unPageIni.processId = i+1;
-		unPageIni.cantidadPaginas = calcular_cantidad_paginas(strlen(programa[i])+1,losParametros.frameSize);
+		unPageIni.cantidadPaginas = calcular_cantidad_paginas(strlen(programa[i]),losParametros.frameSize);
 		unPageIni.programa = programa[i];
 
 		crearTabla(unPageIni.processId, unPageIni.cantidadPaginas);
@@ -152,6 +152,20 @@ void test_read_bytes_page(){
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
 	}
+
+	// /ansisop
+	posR.pagina = 1;
+	posR.offset = 1;
+	posR.size = 5;
+	if(1 == gPidActivo){
+		reservarPosicion((void*)&buffer, posR.size + 1);
+		leerBytes((void*)&buffer, &posR, gPidActivo);
+		//buffer[posR.size + 1]='\0';
+		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+		log_info("Valor[%s]", (char*) buffer);
+		limpiarPosicion(buffer, &posR);
+	}
+
 
 }
 
