@@ -11,7 +11,7 @@
 /*Corroboramos  si el pcb corresponde a una consola activa*/
 int consola_activa(stPCB *unPCB) {
 	stHeaderIPC *unHeaderIPC;
-	if (buscar_consola_activa(unPCB->pid) == 0) {
+	if (buscar_consola(unPCB->pid) == 0) {
 		unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
 		if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*) unPCB->pid)) {
 			log_error("Error al enviar el fin de programa a la UMC");

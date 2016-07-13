@@ -14,9 +14,9 @@
 #include	<stdio.h>
 #include	<pthread.h>
 
-t_queue *colaReady; /*Cola de todos los PCB listos para ejecutar*/
-
 void *ready_productor(void *arg);
 stPCB *ready_consumidor();
+void eliminar_pcb_ready(int pid);
+void destruir_cola_ready();
 
 #endif /* PLANIFICADOR_H_ */

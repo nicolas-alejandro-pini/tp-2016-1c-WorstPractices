@@ -110,57 +110,6 @@ int loadInfo(stEstado* info, char inotify) {
 	}
 }
 
-void consola_conectada(stEstado *pEstado, int unSocket, uint32_t pid){
-	stConsola *consola = malloc(sizeof(stConsola));
-	consola->pid = pid;
-	consola->socket = unSocket;
-
-	list_add(pEstado->consolas_activas, consola);
-}
-
-/* Devuelve el pid de la desconectada y la saca de la lista, 0 en caso de no hallarla */
-uint32_t consola_desconectada(stEstado *pEstado, int unSocket){
-	stConsola *consola = NULL;
-	int i=0;
-	t_list *list = pEstado->consolas_activas;
-	int size = list_size(list);
-
-	for(i=0; i<size; i++){
-		consola = list_get(list, i);
-		if(consola->socket == unSocket)
-		{
-			list_remove(list, i);
-			return consola->pid;
-		}
-	}
-	return 0;  // No encontrada
-}
-
-uint32_t buscar_consola_activa(int pid){
-	stConsola *consola = NULL;
-	int i=0;
-	t_list *list = obtenerEstadoActual().consolas_activas;
-	int size = list_size(list);
-
-	for(i=0; i<size; i++){
-		consola = list_get(list, i);
-		if(consola->pid == pid)
-		{
-			return 1;
-		}
-	}
-	return 0;  // No encontrada
-}
-
-void consola_crear_lista(stEstado *pEstado){
-	pEstado->consolas_activas = list_create();
-}
-
-void consola_destruir_lista(stEstado *pEstado){
-	list_destroy(pEstado->consolas_activas);
-}
-
-
 
 void cargar_dipositivos(stEstado *info, char** ioIds, char** ioSleep) {
 	int iterator = 0;
@@ -194,6 +143,16 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 	pthread_mutex_init(&(new->mutex), 0);
 	pthread_mutex_init(&(new->empty), 0);
 	return new;
+}
+
+void destruir_dispositivo(stDispositivo *unDispositivo){
+	free(unDispositivo->nombre);
+	pthread_mutex_destroy(&unDispositivo->mutex);
+	pthread_mutex_destroy(&unDispositivo->empty);
+}
+
+void destruir_lista_dispositivos(stEstado *info){
+	list_destroy_and_destroy_elements(info->dispositivos,(void*)destruir_dispositivo);
 }
 
 void monitor_configuracion(stEstado* info) {
