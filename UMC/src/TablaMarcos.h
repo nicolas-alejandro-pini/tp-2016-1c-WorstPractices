@@ -60,4 +60,7 @@ stNodoListaTP* obtenerPrimerPidTabla();
 stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
 stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
 stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada);
+int obtenerPresenciasTabladePaginas(stNodoListaTP* nodo);
+stRegistroTP* obtenerRegistroTabladePaginas(stNodoListaTP* nodo, int pagina);
+int grabarEnSwap(uint16_t pid, uint16_t marco, uint16_t pagina);
 #endif /* TABLAMARCOS_H_ */

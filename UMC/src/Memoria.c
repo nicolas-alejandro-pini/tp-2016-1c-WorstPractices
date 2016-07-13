@@ -14,13 +14,13 @@ pthread_mutex_t freeFrames;
 
 
 
-int leerMemoria(void **buffer, uint16_t frameBuscado, stPosicion* posLogica){
+int leerMemoria(void **buffer, uint16_t frameBuscado, stPosicion posLogica){
 	void *posFisica = NULL;
 
 	if(!(*buffer))
 		return EXIT_FAILURE;
 
-	if((posLogica->offset + posLogica->size) > losParametros.frameSize)
+	if((posLogica.offset + posLogica.size) > losParametros.frameSize)
 		return EXIT_FAILURE;
 
 	// Calculo de la memoria fisica
@@ -28,7 +28,7 @@ int leerMemoria(void **buffer, uint16_t frameBuscado, stPosicion* posLogica){
 
 	pthread_mutex_lock(&memoria);
 	// TODO sleep(losParametros.delay);
-	memcpy(*buffer, posFisica + posLogica->offset, posLogica->size);
+	memcpy(*buffer, posFisica + posLogica.offset, posLogica.size);
 	pthread_mutex_unlock(&memoria);
 
 	return EXIT_SUCCESS;

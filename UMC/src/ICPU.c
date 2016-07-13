@@ -72,7 +72,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 	if(frameBuscado != 0){
 
 		// acceder a memoria con el resultado encontrado en cache
-		if(leerMemoria(buffer, frameBuscado, posLogica))
+		if(leerMemoria(buffer, frameBuscado, *posLogica))
 			return EXIT_FAILURE;
 
 		return EXIT_SUCCESS;
@@ -93,7 +93,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 		if(frameNuevo!=0){
 
 			// con la pagina obtenida separo los bytes que se pidieron leer
-			if(leerMemoria(buffer, frameNuevo, posLogica))
+			if(leerMemoria(buffer, frameNuevo, *posLogica))
 				return EXIT_FAILURE;
 
 			return EXIT_SUCCESS;
@@ -161,12 +161,15 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 
 stRegistroTP* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *frameNuevo){
 	uint16_t marco;
-	void *paginaLeidaSwap;
 	stRegistroTP regTP, *registro;
+	void *paginaLeidaSwap;
 
 	// acceder a swap con las pagina que necesito
 	// TODO Mismo socket , deberia ser mutex?
 	paginaLeidaSwap = recibirPagina(pid, pagina);
+
+	if(paginaLeidaSwap==NULL)
+		return NULL;
 
 	// cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
 	regTP.bit2ndChance=0;
