@@ -60,7 +60,7 @@ int finalizar_umc_swap(){
 void test_base_umc_swap(){
 	stHeaderIPC *unHeader;
 	int i=0;
-	int cant=5;
+	int cant=1;
 	char *programa[] = {"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
 			"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
 			"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
@@ -152,6 +152,30 @@ void test_read_bytes_page(){
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
 	}
+	// /ansisop ==> obtener "begin" con page fault
+		posR.pagina = 1;
+		posR.offset = 1;
+		posR.size = 5;
+		if(1 == gPidActivo){
+			reservarPosicion((void*)&buffer, posR.size + 1);
+			leerBytes((void*)&buffer, &posR, gPidActivo);
+			//buffer[posR.size + 1]='\0';
+			log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+			log_info("Valor[%s]", (char*) buffer);
+			limpiarPosicion(buffer, &posR);
+		}
+		// /ansisop ==> obtener "print" con page fault y reemplazo
+				posR.pagina = 4;
+				posR.offset = 7;
+				posR.size = 5;
+				if(1 == gPidActivo){
+					reservarPosicion((void*)&buffer, posR.size + 1);
+					leerBytes((void*)&buffer, &posR, gPidActivo);
+					//buffer[posR.size + 1]='\0';
+					log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+					log_info("Valor[%s]", (char*) buffer);
+					limpiarPosicion(buffer, &posR);
+				}
 
 }
 
