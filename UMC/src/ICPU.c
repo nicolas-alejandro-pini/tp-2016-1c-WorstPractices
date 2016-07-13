@@ -302,6 +302,7 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, posW.buffer, posW.tamanio,0);
 			//posW =(stEscrituraPagina*)(unMensaje.contenido);
 
+			//log_info("Se pidio leer pagina %d offset %d tamaño %d");
 			escribirBytes(&posW, pidActivo, unSocket);
 
 			break;

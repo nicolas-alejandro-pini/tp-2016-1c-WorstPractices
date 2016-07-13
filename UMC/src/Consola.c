@@ -144,7 +144,7 @@ void consolaUMC(){
 	}else if(!strcmp(comando,"6"))
 	{
 		log_info("se hace el flush de la TLB");
-		flushTLB();
+		flushTLB_all();
 
 		// 7. flush memoria <pid>
 	}else if (!strcmp(comando,"7")){

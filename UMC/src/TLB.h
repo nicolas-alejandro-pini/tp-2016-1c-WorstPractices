@@ -18,9 +18,9 @@
 #define MAX_LAST_RECENTLY_USED 60000  // unsigned short int
 
 typedef struct{
-	int pid;
-	int pagina;
-	int marco;
+	uint16_t pid;
+	uint16_t pagina;
+	uint16_t marco;
 	uint16_t lastUsed;
 }stRegistroTLB;
 
