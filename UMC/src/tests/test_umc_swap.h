@@ -15,6 +15,7 @@ int finalizar_umc_swap();
 void agregar_tests_con_swap();
 int calcular_cantidad_paginas(int size_programa,int tamanio_paginas);
 
+int imprimirMemoriaPrincipal();
 
 /* Pruebas */
 void test_base_umc_swap();
@@ -22,6 +23,7 @@ void test_cambio_de_contexto();
 void test_read_bytes_page();
 void test_write_bytes_page();
 void test_fin_programa();
+
 
 
 #endif /* TESTS_TEST_UMC_SWAP_H_ */
