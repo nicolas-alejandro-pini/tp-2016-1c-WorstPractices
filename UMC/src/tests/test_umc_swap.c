@@ -89,12 +89,15 @@ void test_base_umc_swap(){
 
 void test_cambio_de_contexto(){
 
+	uint32_t pid = 1;
 	stMensajeIPC unMensaje;
 	unMensaje.header.largo = sizeof(uint32_t);
 	unMensaje.contenido = malloc(sizeof(uint32_t));
-	*(unMensaje.contenido) = 1;
+	memcpy(unMensaje.contenido, &pid, sizeof(uint32_t));
 
 	gPidActivo = cambiarContexto(&unMensaje);
+
+	free(unMensaje.contenido);
 
 }
 
