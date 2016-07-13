@@ -111,44 +111,44 @@ int main(void) {
     // ELIMINAR ESTO!!!
     //----------------------
 
-    pID = 1;
-    cantPaginas = 1;
-    bufferPrograma = (char *)malloc(11);
-    strcpy(bufferPrograma, "0123456789");
-	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
-		log_error("Error asignando espacio a proceso");
-	}
-    pID = 2;
-    cantPaginas = 1;
-    strcpy(bufferPrograma, "0123456789");
-	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
-		log_error("Error asignando espacio a proceso");
-	}
-    pID = 3;
-    cantPaginas = 1;
-    strcpy(bufferPrograma, "0123456789");
-	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
-		log_error("Error asignando espacio a proceso");
-	}
-	if(liberarEspacioDeProceso(1) < 0){
-		log_error("Error al liberar el espacio del proceso");
-	}
-	if(liberarEspacioDeProceso(3) < 0){
-		log_error("Error al liberar el espacio del proceso");
-	}
-    pID = 4;
-    cantPaginas = 2;
-    strcpy(bufferPrograma, "0123456789");
-	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
-		log_error("Error asignando espacio a proceso");
-	}
-
-	if(liberarEspacioDeProceso(2) < 0){
-		log_error("Error al liberar el espacio del proceso");
-	}
-	if(liberarEspacioDeProceso(4) < 0){
-		log_error("Error al liberar el espacio del proceso");
-	}
+//    pID = 1;
+//    cantPaginas = 1;
+//    bufferPrograma = (char *)malloc(11);
+//    strcpy(bufferPrograma, "0123456789");
+//	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
+//		log_error("Error asignando espacio a proceso");
+//	}
+//    pID = 2;
+//    cantPaginas = 1;
+//    strcpy(bufferPrograma, "0123456789");
+//	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
+//		log_error("Error asignando espacio a proceso");
+//	}
+//    pID = 3;
+//    cantPaginas = 1;
+//    strcpy(bufferPrograma, "0123456789");
+//	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
+//		log_error("Error asignando espacio a proceso");
+//	}
+//	if(liberarEspacioDeProceso(1) < 0){
+//		log_error("Error al liberar el espacio del proceso");
+//	}
+//	if(liberarEspacioDeProceso(3) < 0){
+//		log_error("Error al liberar el espacio del proceso");
+//	}
+//    pID = 4;
+//    cantPaginas = 2;
+//    strcpy(bufferPrograma, "0123456789");
+//	if(asignarEspacioAProceso((unsigned long int) pID, (unsigned long int) cantPaginas, bufferPrograma) < 0){
+//		log_error("Error asignando espacio a proceso");
+//	}
+//
+//	if(liberarEspacioDeProceso(2) < 0){
+//		log_error("Error al liberar el espacio del proceso");
+//	}
+//	if(liberarEspacioDeProceso(4) < 0){
+//		log_error("Error al liberar el espacio del proceso");
+//	}
 //
 //	//---------------------
 //	//---------------------
