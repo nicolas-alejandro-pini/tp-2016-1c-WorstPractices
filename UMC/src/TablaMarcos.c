@@ -218,7 +218,7 @@ void creatListaDeTablas(){
 int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 
 	stNodoListaTP *nodo = NULL;
-	stRegistroTP *tabla = NULL;
+	void *tabla = NULL;
 	int i;
 	int posicionEnTablaMarcos;
 
