@@ -72,20 +72,17 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	stVars *unaVariable;
 	int tamanioStack;
 
-	tamanioStack=list_size(unPCB->stack) - 1 ;
+	tamanioStack=list_size(unPCB->stack);
 
-	indiceStack = list_get(unPCB->stack, tamanioStack);
+	indiceStack = list_get(unPCB->stack, tamanioStack - 1);
 
 	unaVariable = (stVars*)malloc(sizeof(stVars));
 	unaVariable->id = identificador_variable;
-	unaVariable->posicion_memoria.pagina = 0;
-	unaVariable->posicion_memoria.offset = unPCB->offsetStack;
+
+	unaVariable->posicion_memoria.pagina = unPCB->offsetStack / tamanioPaginaUMC;
+	unaVariable->posicion_memoria.offset = unPCB->offsetStack % tamanioPaginaUMC;
 	unaVariable->posicion_memoria.size = TAMANIOVARIABLES;
 	list_add(indiceStack->variables,unaVariable);
-
-	indiceStack->pos = tamanioStack + 1;
-
-	list_add(unPCB->stack,indiceStack);
 
 	unPCB->offsetStack = unPCB->offsetStack + TAMANIOVARIABLES;
 
@@ -94,28 +91,26 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
-	stVars *unaVariable = NULL;
-	unaVariable = malloc(sizeof(stVars));
-
+	stVars *unaVariable;
 	stIndiceStack *indiceStack;
-	indiceStack = malloc(sizeof(stIndiceStack));
-
+	unsigned long int cantVars, i;
 	int tamanioStack;
 
 	tamanioStack = list_size(unPCB->stack); //considero que en pila del stack el ultimo es el contexto actual.
 
-	indiceStack = list_get(unPCB->stack, tamanioStack);
+	indiceStack = list_get(unPCB->stack, tamanioStack - 1);
+	cantVars = list_size(indiceStack->variables);
+	for(i = 0; i < cantVars; i++){
+		unaVariable = list_get(indiceStack->variables, i);
+		if (unaVariable->id == identificador_variable)
+			break;
+	}
 
-	int _es_la_var(stVars *var) {
-			return var->id == identificador_variable;
-		}
+	if (i==cantVars)
+		return -1;
 
-	unaVariable = list_find(indiceStack->variables, (void*) _es_la_var);
+	return (unaVariable->posicion_memoria.pagina * tamanioPaginaUMC + unaVariable->posicion_memoria.offset);
 
-	if (unaVariable !=NULL)
-		return unaVariable->posicion_memoria.offset;
-	else
-		return (-1);
 }
 
 stPosicion *obtenerPosicion(t_puntero direccion_variable){
@@ -123,11 +118,10 @@ stPosicion *obtenerPosicion(t_puntero direccion_variable){
 	int pagina, offset;
 
 	unaPosicion = (stPosicion*)malloc(sizeof(stPosicion));
-	pagina = (direccion_variable/tamanioPaginaUMC);
-
-	offset = (tamanioPaginaUMC * pagina) - direccion_variable;
+	pagina = (direccion_variable / tamanioPaginaUMC);
+	offset = direccion_variable % tamanioPaginaUMC;
 	unaPosicion->size = TAMANIOVARIABLES;
-	unaPosicion->pagina = pagina + unPCB->paginaInicioStack;
+	unaPosicion->pagina = pagina;
 	unaPosicion->offset= offset;
 	return unaPosicion;
 }
@@ -138,15 +132,16 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader;
 	uint16_t pagina,offset,tamanio,valor_variable;
+	char* str_valor_variable;
 
 	posicionVariable = obtenerPosicion(direccion_variable);
 
-	pagina = posicionVariable->pagina;
+	pagina = posicionVariable->pagina + unPCB->paginaInicioStack; // Le sumo la pagina del inicio del stack en la UMC.
 	offset = posicionVariable->offset;
 	tamanio = posicionVariable->size;
 
 	unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-	unHeader->largo = sizeof(uint16_t);
+	unHeader->largo = sizeof(uint16_t)*3;
 
 	if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
 		log_error("Error al enviar mensaje de leer bytes intruccion.");
@@ -163,20 +158,27 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	}
 
 	if(unMensaje.header.tipo == OK)
-		valor_variable = atoi((char*)unMensaje.contenido);
+	{
+		str_valor_variable = (char*)malloc(unMensaje.header.largo + 1);
+		memcpy(str_valor_variable, unMensaje.contenido,unMensaje.header.largo);
+		str_valor_variable[unMensaje.header.largo] = '\0';
+		valor_variable = atoi(str_valor_variable);
+		free(str_valor_variable);
+	}
 	else{
 		imprimirTexto("Error de segmentación al dereferenciar.");
 		log_error ("Error de segmentacion");
 		configuracionInicial.salir = 1;
 		quantum = 0;
 		liberarHeaderIPC(unHeader);
+		free(unMensaje.contenido);
 		return (-1);
 	}
 
+	free(unMensaje.contenido);
 	liberarHeaderIPC(unHeader);
 
 	return valor_variable;
-
 
 }
 
@@ -188,12 +190,12 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	posicionVariable = obtenerPosicion(direccion_variable);
 
-	pagina = posicionVariable->pagina;
+	pagina = posicionVariable->pagina + unPCB->paginaInicioStack;
 	offset = posicionVariable->offset;
 	tamanio = posicionVariable->size;
 
 	unHeader = nuevoHeaderIPC(WRITE_BYTES_PAGE);
-	unHeader->largo = sizeof(uint16_t);
+	unHeader->largo = sizeof(uint16_t) *4;
 
 	if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
 		log_error("Error al enviar mensaje de leer bytes intruccion.");
@@ -203,11 +205,10 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 	send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
 	send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
 	send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
-	send(configuracionInicial.sockUmc,&valor,sizeof(uint16_t),0);
+	send(configuracionInicial.sockUmc,&valor,tamanio,0);
 
 	unHeader = nuevoHeaderIPC(ERROR);
 	if(!recibirHeaderIPC(configuracionInicial.sockUmc, unHeader)){
-
 		log_error("Error al recibir confirmacion de asignar en UMC.");
 	}
 
@@ -218,8 +219,6 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 			log_error ("Error de segmentacion al asignar");
 			configuracionInicial.salir = 1;
 			quantum = 0;
-			liberarHeaderIPC(unHeader);
-
 		}
 	liberarHeaderIPC(unHeader);
 
@@ -319,16 +318,14 @@ void imprimir(t_valor_variable valor_mostrar){
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIR);
 	unHeaderPrimitiva->largo = sizeof(t_valor_variable);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)valor_mostrar))
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&valor_mostrar))
 		log_error("Error al enviar mensaje de IMPRIMIR.");
 
-	unHeaderPrimitiva = nuevoHeaderIPC(CONSOLA);
-	unHeaderPrimitiva = sizeof(uint32_t);
+	unHeaderPrimitiva->tipo=CONSOLA;
+	unHeaderPrimitiva->largo = sizeof(uint32_t);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)unPCB->socketConsola))
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola))
 			log_error("Error al enviar mensaje de IMPRIMIR.");
-
-	unHeaderPrimitiva = nuevoHeaderIPC(ERROR);
 
 	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
 		log_error("Error al recibir la confirmacion del nucleo.");
@@ -699,6 +696,7 @@ int calcularPaginaInstruccion (int paginaLogica){
 char* getInstruccion (int startRequest, int sizeRequest){
 
 	char* instruccion = NULL;
+	char* instruccionTemp = NULL;
 
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader = NULL;
@@ -723,7 +721,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 
 			paginaToUMC = calcularPaginaInstruccion(pagina);
-
+			startToUMC %= tamanioPaginaUMC;
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
 			unHeader->largo = sizeof(uint16_t);
 
@@ -747,13 +745,19 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 				log_info("Recibi de la UMC la instrucción: %s",unMensaje.contenido);
 
-				if(instruccion==NULL){
-					instruccion = malloc(sizeof(char)*(strlen(unMensaje.contenido) + 1 ));
-					strcpy(instruccion, unMensaje.contenido);
+				instruccionTemp =(char*) malloc(sizeToUMC + 1 );
+				memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
+				*(instruccionTemp + sizeToUMC) = '\0';
 
+				if(instruccion==NULL){
+					instruccion =(char*) malloc(sizeToUMC + 1 );
+					strcpy(instruccion, instruccionTemp);
 				}else{
-					string_append (&instruccion,unMensaje.contenido);
+					string_append (&instruccion,instruccionTemp);
 				}
+
+				free(instruccionTemp);
+
 
 				startToUMC = startToUMC + sizeToUMC;
 				sizeToUMC = sizeRequest - sizeToUMC;
