@@ -274,12 +274,18 @@ int escuchar(unsigned unPort)
 {
 	int yes = 1, unSocket = nuevoSocket();
 	struct sockaddr *unPtrAAddr = nuevoAddress("",unPort);
-	if(setsockopt(unSocket,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1)
+	if(setsockopt(unSocket,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1){
 		error("No se pudo limpiar!");
-	if(bind(unSocket, unPtrAAddr, sizeof(struct sockaddr)) == -1)
+		return -1;
+	}
+	if(bind(unSocket, unPtrAAddr, sizeof(struct sockaddr)) == -1){
 		error("No se pudo enlazar!");
-	if(listen(unSocket,10) == -1)
+		return -1;
+	}
+	if(listen(unSocket,10) == -1){
 		error("No se pudo escuchar!");
+		return -1;
+	}
 	return(unSocket);
 }
 
