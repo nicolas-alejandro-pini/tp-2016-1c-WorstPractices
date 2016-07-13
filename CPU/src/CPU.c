@@ -24,37 +24,6 @@ t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de
 
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 
-/* EML: Lo comento xq no lo uso por ahora
-int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
-
-	stHeaderIPC* unHeader;
-	t_paquete paquetePosicion;
-	int resultado = 0;
-	int offset = 0;
-
-	unHeader = nuevoHeaderIPC(tipoHeader);
-
-	enviarHeaderIPC(configuracionInicial.sockUmc, unHeader);
-
-	crear_paquete(&paquetePosicion, tipoHeader);
-
-	serializar_campo(&paquetePosicion, &offset, posicionVariable, sizeof(stPosicion));
-
-	serializar_header(&paquetePosicion);
-
-	if (enviar_paquete(configuracionInicial.sockUmc, &paquetePosicion)) {
-		log_error("No se pudo enviar al UMC el paquete para operacion [%d]", tipoHeader);
-		resultado = -1;
-	}
-
-	free_paquete(&paquetePosicion);
-
-	liberarHeaderIPC(unHeader);
-
-	return resultado;
-
-}
-*/
 
 /*
  ============================================================================
@@ -356,13 +325,12 @@ void imprimirTexto(char* texto){
 			log_error("No se pudo enviar al Nucleo el texto: ",texto);
 
 
-	unHeaderPrimitiva = nuevoHeaderIPC(CONSOLA);
-		unHeaderPrimitiva = sizeof(uint32_t);
+	unHeaderPrimitiva->tipo = CONSOLA;
+	unHeaderPrimitiva = sizeof(uint32_t);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)unPCB->socketConsola))
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola))
 			log_error("Error al enviar mensaje de IMPRIMIR.");
 
-	unHeaderPrimitiva = nuevoHeaderIPC(ERROR);
 
 	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
 		log_error("Error al recibir la confirmacion del nucleo.");
@@ -398,7 +366,7 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	serializar_header(&paquete);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva IO");
 	}
 
@@ -427,7 +395,7 @@ void wait(t_nombre_semaforo identificador_semaforo){
 
 	serializar_header(&paquete);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva WAIT");
 	}
 
@@ -452,7 +420,7 @@ void signal_cpu(t_nombre_semaforo identificador_semaforo){
 
 	serializar_header(&paquete);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva WAIT");
 	}
 
@@ -1031,6 +999,9 @@ int main(void) {
 										quantum --; 	/* descuento un quantum para proxima ejecución */
 										unPCB->pc ++; 	/* actualizo el program counter a la siguiente posición */
 
+									}else{
+										log_error("Error al ejecutar la instrucción.");
+										quantum = 0;
 									}
 
 								}
