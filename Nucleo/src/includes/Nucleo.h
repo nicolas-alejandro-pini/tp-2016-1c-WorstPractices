@@ -85,7 +85,6 @@ uint32_t borrar_consola(int unSocket);
 uint32_t buscar_consola(int pid) ;
 void consola_crear_lista();
 void consola_destruir_lista();
-void eliminar_pcb_consola_desconectada(int pid);
 
 #endif
 

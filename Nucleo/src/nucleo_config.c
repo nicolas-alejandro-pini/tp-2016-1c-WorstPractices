@@ -145,16 +145,6 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 	return new;
 }
 
-void destruir_dispositivo(stDispositivo *unDispositivo){
-	free(unDispositivo->nombre);
-	pthread_mutex_destroy(&unDispositivo->mutex);
-	pthread_mutex_destroy(&unDispositivo->empty);
-}
-
-void destruir_lista_dispositivos(stEstado *info){
-	list_destroy_and_destroy_elements(info->dispositivos,(void*)destruir_dispositivo);
-}
-
 void monitor_configuracion(stEstado* info) {
 	char buffer[BUF_LEN];
 	int watch_descriptor;
@@ -180,4 +170,20 @@ void monitor_configuracion(stEstado* info) {
 	inotify_rm_watch(file_descriptor, watch_descriptor);
 	close(file_descriptor);
 	pthread_exit(NULL);
+}
+
+void destruir_rafaga_io(stRafaga *unaRafaga){
+	free(unaRafaga);
+}
+
+void destruir_dispositivo(stDispositivo *unDispositivo){
+	pthread_mutex_destroy(&unDispositivo->mutex);
+	pthread_mutex_destroy(&unDispositivo->empty);
+	queue_destroy_and_destroy_elements(unDispositivo->rafagas,(void*)destruir_rafaga_io);
+	free(unDispositivo->nombre);
+	free(unDispositivo);
+}
+
+void destruir_lista_dispositivos(stEstado *info){
+	list_destroy_and_destroy_elements(info->dispositivos,(void*)destruir_dispositivo);
 }

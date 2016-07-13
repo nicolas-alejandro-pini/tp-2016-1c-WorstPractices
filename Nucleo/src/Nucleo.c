@@ -498,7 +498,7 @@ int main(int argc, char *argv[]) {
 
 		}
 	}
-	destruir_cola_ready();
+	destruir_planificador();
 	destruir_lista_dispositivos(&elEstadoActual);
 	consola_destruir_lista(&elEstadoActual);
 	cerrarSockets(&elEstadoActual);

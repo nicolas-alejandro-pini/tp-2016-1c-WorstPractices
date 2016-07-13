@@ -12,6 +12,7 @@
 int consola_activa(stPCB *unPCB) {
 	stHeaderIPC *unHeaderIPC;
 	if (buscar_consola(unPCB->pid) == 0) {
+		printf("PCB [PID - %d] corresponde a un ansisop abortado, se procede a finalizar el pcb...\n", unPCB->pid);
 		unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
 		if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*) unPCB->pid)) {
 			log_error("Error al enviar el fin de programa a la UMC");
@@ -92,6 +93,7 @@ void *consumidor_cpu(int unCliente) {
 				error = 1;
 				continue;
 			}
+			printf("PCB [PID - %d] READY a EXEC\n", unPCB->pid);
 			pcb_destroy(unPCB);
 			free_paquete(&paquete);
 		}
@@ -124,7 +126,9 @@ void *consumidor_cpu(int unCliente) {
 				deserializar_pcb(unPCB, &paquete);
 				free_paquete(&paquete);
 				/*Se comprueba que el PCB corresponda a una consola que este conectada, si esta desconectada libera el pcb que pide I/O y el CPU sigue con otro pcb*/
+				printf("PCB [PID - %d] READY a EXEC\n", unPCB->pid);
 				if(!consola_activa(unPCB)){
+
 					continue;
 				}
 				if(bloquear_pcb(unPCB,dispositivo_name,dispositivo_time)!=EXIT_SUCCESS){
