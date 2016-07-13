@@ -45,7 +45,6 @@ typedef struct {
 	int quantumSleep; 		/* Retardo en milisegundos que el nucleo esperara luego de ejecutar cada sentencia. */
 	int stackSize; 			/* Tamaño en páginas del Stack */
 	t_list *dispositivos; 	/* Lista de stDispositivos*/
-	t_list *consolas_activas;/* Lista de consolas conectadas */
 	int fdMax; 				/* Numero que representa al mayor socket de fds_master. */
 	int fdMax_ant; 			/*Numero que representa al mayor socket de fds_master anterior al proximo. */
 	int tamanio_paginas; 	/*Tamaño de paginas configurado en la UMC*/
@@ -82,6 +81,11 @@ stEstado obtenerEstadoActual();
 void agregar_pcb_listaBlock(stPCB *unPCB);
 stDispositivo *buscar_dispositivo_io(char *dispositivo_name);
 int inicializar_programa(stPCB *unPCB, char* unPrograma, int socket_umc);
+uint32_t borrar_consola(int unSocket);
+uint32_t buscar_consola(int pid) ;
+void consola_crear_lista();
+void consola_destruir_lista();
+void eliminar_pcb_consola_desconectada(int pid);
 
 #endif
 
