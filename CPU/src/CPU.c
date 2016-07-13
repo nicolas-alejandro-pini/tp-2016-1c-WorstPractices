@@ -296,7 +296,7 @@ void retornar(t_valor_variable retorno){
 	asignar(unIndiceStack->retVar.offset,retorno);
 }
 
-int imprimir(t_valor_variable valor_mostrar){
+void imprimir(t_valor_variable valor_mostrar){
 
 	stHeaderIPC* unHeaderPrimitiva;
 
@@ -305,7 +305,7 @@ int imprimir(t_valor_variable valor_mostrar){
 
 	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&valor_mostrar)){
 		log_error("Error al enviar mensaje de IMPRIMIR.");
-		return -1;
+		return;
 	}
 
 	unHeaderPrimitiva->tipo = CONSOLA;
@@ -313,26 +313,26 @@ int imprimir(t_valor_variable valor_mostrar){
 
 	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola)){
 		log_error("Error al enviar mensaje de IMPRIMIR.");
-		return -1;
+		return;
 	}
 
 	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
 		log_error("Error al recibir la confirmacion del nucleo.");
-		return -1;
+		return;
 	}
 
 	if(unHeaderPrimitiva->tipo != OK){
 		log_error("Error de primitiva IMPRIMIR");
-		return -1;
+		return;
 	}
 
 	log_info("Se imprimio correctamente la variable.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
-	return 0;
+	return;
 }
 
-int imprimirTexto(char* texto){
+void imprimirTexto(char* texto){
 
 	stHeaderIPC* unHeaderPrimitiva;
 
@@ -341,7 +341,7 @@ int imprimirTexto(char* texto){
 
 	if(!enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
 		log_error("No se pudo enviar al Nucleo el texto: ", texto);
-		return -1;
+		return;
 	}
 
 	send(configuracionInicial.sockNucleo, &unPCB->socketConsola, sizeof(uint32_t), 0);
@@ -349,22 +349,22 @@ int imprimirTexto(char* texto){
 
 	if(!recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
 		log_error("Error al recibir la confirmacion del nucleo.");
-		return -1;
+		return;
 	}
 
 	if(unHeaderPrimitiva->tipo != OK){
 		log_error("Error de primitiva IMPRIMIR");
-		return -1;
+		return;
 	}
 
 	log_info("Se imprimio correctamente la variable.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 
-	return 0;
+	return;
 }
 
-int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
+void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	stHeaderIPC* unHeaderPrimitiva;
 	t_paquete paquete;
@@ -375,19 +375,20 @@ int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 	dispositivoIO.tiempo = tiempo;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IOANSISOP);
+	unHeaderPrimitiva->largo = strlen(dispositivoIO.nombre) + 1 + sizeof(int);
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
 	crear_paquete(&paquete, IOANSISOP);
 
-	serializar_campo(&paquete, &offset, &dispositivoIO.nombre, strlen(dispositivoIO.nombre) + 1); //Lo envío con el \0
+	serializar_campo(&paquete, &offset, dispositivoIO.nombre, strlen(dispositivoIO.nombre) + 1); //Lo envío con el \0
 	serializar_campo(&paquete, &offset, &dispositivoIO.tiempo, sizeof(int));
 
 	serializar_header(&paquete);
 
 	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva IO");
-		return -1;
+		return;
 	}
 
 	free_paquete(&paquete);
@@ -396,7 +397,7 @@ int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	quantum = 0;
 
-	return 0;
+	return;
 }
 
 void wait(t_nombre_semaforo identificador_semaforo){
@@ -407,12 +408,13 @@ void wait(t_nombre_semaforo identificador_semaforo){
 	int offset = 0;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(WAIT);
+	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
 
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva);
+	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
 	crear_paquete(&paquete, WAIT);
 
-	serializar_campo(&paquete, &offset, &identificador_semaforo, sizeof(identificador_semaforo));
+	serializar_campo(&paquete, &offset, identificador_semaforo, unHeaderPrimitiva->largo);
 
 	serializar_header(&paquete);
 
@@ -432,12 +434,13 @@ void signal_cpu(t_nombre_semaforo identificador_semaforo){
 	int offset = 0;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(SIGNAL);
+	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
 
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva);
+	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
 	crear_paquete(&paquete, SIGNAL);
 
-	serializar_campo(&paquete, &offset, &identificador_semaforo, sizeof(identificador_semaforo));
+	serializar_campo(&paquete, &offset, identificador_semaforo, unHeaderPrimitiva->largo);
 
 	serializar_header(&paquete);
 
