@@ -123,7 +123,7 @@ void test_read_bytes_page(){
 	if(1 == gPidActivo){
 		reservarPosicion((void*)&buffer, posR.size + 1);
 		leerBytes((void*) &buffer, &posR, gPidActivo);
-		//buffer[posR.size + 1]='\0';
+		buffer[posR.size]='\0';
 		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
@@ -137,7 +137,7 @@ void test_read_bytes_page(){
 	if(1 == gPidActivo){
 		reservarPosicion((void*)&buffer, posR.size + 1);
 		leerBytes((void*)&buffer, &posR, gPidActivo);
-		//buffer[posR.size + 1]='\0';
+		buffer[posR.size]='\0';
 		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
@@ -150,35 +150,37 @@ void test_read_bytes_page(){
 	if(1 == gPidActivo){
 		reservarPosicion((void*)&buffer, posR.size + 1);
 		leerBytes((void*)&buffer, &posR, gPidActivo);
-		//buffer[posR.size + 1]='\0';
+		buffer[posR.size]='\0';
 		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
 	}
+
 	// /ansisop ==> obtener "begin" con page fault
-		posR.pagina = 1;
-		posR.offset = 1;
-		posR.size = 5;
-		if(1 == gPidActivo){
-			reservarPosicion((void*)&buffer, posR.size + 1);
-			leerBytes((void*)&buffer, &posR, gPidActivo);
-			//buffer[posR.size + 1]='\0';
-			log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
-			log_info("Valor[%s]", (char*) buffer);
-			limpiarPosicion(buffer, &posR);
-		}
-		// /ansisop ==> obtener "print" con page fault y reemplazo
-				posR.pagina = 4;
-				posR.offset = 7;
-				posR.size = 5;
-				if(1 == gPidActivo){
-					reservarPosicion((void*)&buffer, posR.size + 1);
-					leerBytes((void*)&buffer, &posR, gPidActivo);
-					//buffer[posR.size + 1]='\0';
-					log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
-					log_info("Valor[%s]", (char*) buffer);
-					limpiarPosicion(buffer, &posR);
-				}
+	posR.pagina = 1;
+	posR.offset = 1;
+	posR.size = 5;
+	if(1 == gPidActivo){
+		reservarPosicion((void*)&buffer, posR.size + 1);
+		leerBytes((void*)&buffer, &posR, gPidActivo);
+		buffer[posR.size]='\0';
+		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+		log_info("Valor[%s]", (char*) buffer);
+		limpiarPosicion(buffer, &posR);
+	}
+
+	// /ansisop ==> obtener "print" con page fault y reemplazo
+	posR.pagina = 4;
+	posR.offset = 7;
+	posR.size = 5;
+	if(1 == gPidActivo){
+		reservarPosicion((void*)&buffer, posR.size + 1);
+		leerBytes((void*)&buffer, &posR, gPidActivo);
+		buffer[posR.size]='\0';
+		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+		log_info("Valor[%s]", (char*) buffer);
+		limpiarPosicion(buffer, &posR);
+	}
 
 	// /ansisop
 	posR.pagina = 1;
@@ -187,7 +189,7 @@ void test_read_bytes_page(){
 	if(1 == gPidActivo){
 		reservarPosicion((void*)&buffer, posR.size + 1);
 		leerBytes((void*)&buffer, &posR, gPidActivo);
-		//buffer[posR.size + 1]='\0';
+		buffer[posR.size]='\0';
 		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
