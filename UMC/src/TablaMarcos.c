@@ -148,42 +148,32 @@ stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRe
 	return regTP;
 }
 
-int agregarMarcoATabla(uint16_t pid,
-		uint16_t pagina, stRegistroTP registro, uint8_t flagReemplazoAsignados){
 
-}
-
-
+/* Devuelve null si no existe la tabla de paginas del PID o es un proceso nuevo y no hay marcos libres */
 stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP registro, uint8_t flagReemplazoAsignados){
 
 	stNodoListaTP *nodo;
 	stRegistroTP *retorno;
-	int i, presencias=0;
-	void *buf;
+	int presencias=0;
 
+	/* Obtiene Tabla de Paginas de PID */
 	nodo = buscarPID(pid);
-	// casos nueva pagina desde swap:
-
-
-	for(i=0;i<nodo->size;i++){
-		retorno = nodo->tabla+(sizeof(stRegistroTP)*i);
-		if(retorno->bitPresencia==1)
-			presencias++;
-	}
-// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
-	if(presencias==0 && flagReemplazoAsignados==REEMPLAZAR_MARCO && registro.marco==0)
+	if(nodo==NULL) // valido que exista
 		return NULL;
+
+	/* Obtengo presencias en MP de la tabla de PID */
+	presencias = obtenerPresenciasTabladePaginas(nodo);
+
+// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
+	if(presencias==0 && flagReemplazoAsignados==REEMPLAZAR_MARCO)
+		return NULL;
+
 // - Hay espacio en memoria y es menor a la cantidad de pag por pid-> la ubico en un nuevo marco y nuevo registro de Tabla.
 	if(presencias < losParametros.frameByProc && flagReemplazoAsignados!=REEMPLAZAR_MARCO){
-		retorno = nodo->tabla+(sizeof(stRegistroTP)*pagina);
+		retorno = obtenerRegistroTabladePaginas(nodo, pagina);
+
 		if(retorno->bitModificado==1){
-			buf=malloc(losParametros.frameSize);
-
-			// TODO void leerMemoria(void *buffer, uint16_t frameBuscado, stPosicion* posLogica)
-
-			leerMemoria(buf, memoriaPrincipal+retorno->marco, losParametros.frameSize);
-			enviarPagina(pid, pagina, buf);
-			free(buf);
+			grabarEnSwap(pid, retorno->marco, pagina);
 			retorno->bitModificado=0;
 		}
 
@@ -195,18 +185,20 @@ stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP r
 // - Hay espacio en memoria y es mayor a la cantidad de pag por pid-> la ubico en un nuevo marco y reemplazo un registro de Tabla.
 // - No hay espacio en memoria y es menor a la cantidad de pag por pid-> la ubico en un marco asignado y reemplazo un registro de Tabla.
 // - No hay espacio en memoria y es mayor a la cantidad de pag por pid-> la ubico en un marco asignado y reemplazo un registro de Tabla.
-	}else{
-		if(flagReemplazoAsignados==REEMPLAZAR_MARCO || presencias > losParametros.frameByProc){
-			if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK"))
-				retorno = EjecutarClock(nodo, pagina, registro, flagReemplazoAsignados);
-			else if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK_MODIFICADO"))
-				retorno = EjecutarClockModificado(nodo, pagina, registro,flagReemplazoAsignados);
-			else
-				log_error("No hay un algoritmo correctamente cargado");
-
-		}
 	}
 
+	// El proceso ocupo todos sus frames disponibles , pero hay marcos disponibles
+	if(presencias >= losParametros.frameByProc && flagReemplazoAsignados!=REEMPLAZAR_MARCO){
+		// Primero libero el marco que pedi en pageFault
+		liberarMarco(registro.marco);
+
+		if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK"))
+			retorno = EjecutarClock(nodo, pagina, registro, flagReemplazoAsignados);
+		else if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK_MODIFICADO"))
+			retorno = EjecutarClockModificado(nodo, pagina, registro,flagReemplazoAsignados);
+		else
+			log_error("No hay un algoritmo correctamente cargado");
+	}
 	return retorno;
 }
 
@@ -259,6 +251,60 @@ stNodoListaTP *buscarPID(uint16_t pid){
 	// NULL: si no lo encontro, sino puntero a nodo
 	return nodoListaTP;
 }
+
+int obtenerPresenciasTabladePaginas(stNodoListaTP* nodo){
+	int i=0, presencias=0;
+	stRegistroTP *retorno = NULL;
+
+	if(nodo==NULL)
+		return 0;
+
+	for(i=0;i<nodo->size;i++){
+		retorno = nodo->tabla+(sizeof(stRegistroTP)*i);
+		if(retorno->bitPresencia==1)
+			presencias++;
+	}
+
+	return presencias;
+}
+
+stRegistroTP* obtenerRegistroTabladePaginas(stNodoListaTP* nodo, int pagina){
+	stRegistroTP *registro = NULL;
+
+	if(nodo==NULL)
+		return registro;
+
+	// es mayor igual porque empieza en la pagina 0
+	if(pagina >= nodo->size)
+		return registro;
+
+	registro = nodo->tabla+(sizeof(stRegistroTP)*pagina);
+	return registro;
+}
+
+int grabarEnSwap(uint16_t pid, uint16_t marco, uint16_t pagina){
+	stPosicion posLogica;
+
+	void *buf=NULL;
+	buf=malloc(losParametros.frameSize);
+
+	// Posicion a grabar
+	posLogica.offset=0;
+	posLogica.pagina = pagina;
+	posLogica.size = losParametros.frameSize;
+
+	if(leerMemoria(buf, marco, posLogica))
+		return EXIT_FAILURE;
+
+	if(enviarPagina(pid, pagina, buf))
+		return EXIT_FAILURE;
+
+	free(buf);
+
+	return EXIT_SUCCESS;;
+}
+
+
 void _mostrarContenidoTP(stNodoListaTP *list_nodo){
 	int i;
 	stRegistroTP *nodo;
