@@ -13,7 +13,8 @@ void agregar_tests_con_swap(){
 	CU_pSuite suite_umc_swap = CU_add_suite("Pruebas UMC + SWAP:", inicializar_umc_swap, finalizar_umc_swap); // NULL, NULL);
 	CU_add_test(suite_umc_swap, "test conexion y envio de programa con swap", test_base_umc_swap);
 	CU_add_test(suite_umc_swap, "test_cambio_de_contexto()", test_cambio_de_contexto);
-	CU_add_test(suite_umc_swap, "test_read_bytes_page()", test_read_bytes_page);
+	//CU_add_test(suite_umc_swap, "test_read_bytes_page()", test_read_bytes_page);
+	CU_add_test(suite_umc_swap, "test_write_bytes_page()", test_write_bytes_page);
 
 }
 
@@ -200,16 +201,34 @@ void test_read_bytes_page(){
 
 void test_write_bytes_page(){
 
+	/* Tamaño pagina 20
+	 *
+	 #!/usr/bin/ansisop\
+	 nbegin\n#primero de
+	 claro las variables
+	 \nvariables a, b\na
+ 	 = 20\nprint a\nend
+	*/
+	//WRITE_BYTES_PAGE:
+
 	stEscrituraPagina posW;
-
-    //WRITE_BYTES_PAGE:
-
 	posW.nroPagina = 0;
 	posW.offset = 0;
-	posW.tamanio = 0;
-	// (posW.buffer, posW.tamanio)
-	//posW =(stEscrituraPagina*)(unMensaje.contenido);
-	//escribirBytes(&posW, pidActivo, socket);
+	posW.tamanio = 4;
+
+
+	if(1 == gPidActivo){
+		reservarPosicion((void*)&posW.buffer, posW.tamanio + 1);
+
+		if(escribirBytes(&posW, gPidActivo))
+			log_info("Error al escribir bytes");
+
+		log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
+		limpiarEscrituraPagina(posW.buffer, &posW);
+
+		// imprimo memoria
+		imprimirMemoriaPrincipal();
+	}
 
 }
 
@@ -226,4 +245,20 @@ int calcular_cantidad_paginas(int size_programa,int tamanio_paginas){
 		cant++;
 	return ((int)(size_programa/tamanio_paginas) + cant);
 }
+
+int imprimirMemoriaPrincipal() {
+	uint32_t i=0;
+
+	char pagina[losParametros.frameSize + 1];
+
+	// Imprimo por tamaño pagina
+	for(i=0;i<losParametros.frames;i++){
+		strncpy(pagina, memoriaPrincipal+(losParametros.frameSize*i), losParametros.frameSize);
+		printf("pag[%d][%s]", i, pagina);
+	}
+
+	return EXIT_SUCCESS;
+}
+
+
 
