@@ -41,6 +41,8 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	stVars *unaVariable;
 	int tamanioStack;
 
+	log_info("Se va a definir la variable %s",identificador_variable);
+
 	tamanioStack=list_size(unPCB->stack);
 
 	indiceStack = list_get(unPCB->stack, tamanioStack - 1);
@@ -468,29 +470,29 @@ void cargarConf(t_configCPU* config,char* file_name){
 		if (config_has_property(miConf,"NUCLEO_IP")) {
 			config->ipNucleo = config_get_string_value(miConf,"NUCLEO_IP");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","NUCLEO_IP");
-			exit(-2);
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","NUCLEO_IP");
+			exit(EXIT_FAILURE);
 		}
 
 		if (config_has_property(miConf,"PUERTO_NUCLEO")) {
 			config->puertoNucleo = config_get_int_value(miConf,"PUERTO_NUCLEO");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_NUCLEO");
-			exit(-2);
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_NUCLEO");
+			exit(EXIT_FAILURE);
 		}
 
 		if (config_has_property(miConf,"UMC_IP")) {
 			config->ipUmc= config_get_string_value(miConf,"UMC_IP");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","UMC_IP");
-			exit(-2);
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","UMC_IP");
+			exit(EXIT_FAILURE);
 		}
 
 		if (config_has_property(miConf,"PUERTO_UMC")) {
 			config->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
-			exit(-2);
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
+			exit(EXIT_FAILURE);
 		}
 
 }
@@ -562,7 +564,7 @@ int cpuConectarse(char* IP, int puerto, char* aQuien){
 
 	int socket = 0;
 
-	log_info("Conectando con: ",aQuien);
+	log_info("Conectando con: %s ",aQuien);
 	fflush(stdout);
 	socket = conectar(IP, puerto);
 
@@ -907,7 +909,7 @@ int main(void) {
 
 	tamanioPaginaUMC = configUMC->tamanioPagina; //Guardo el tamaño de la pagina de la umc.
 
-	log_info("Recibí tamaño de pagina.",tamanioPaginaUMC);
+	log_info("Recibí tamaño de pagina: %d",tamanioPaginaUMC);
 
 	//Fin de conexion al UMC//
 
