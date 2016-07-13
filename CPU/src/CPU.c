@@ -296,64 +296,72 @@ void retornar(t_valor_variable retorno){
 	asignar(unIndiceStack->retVar.offset,retorno);
 }
 
-void imprimir(t_valor_variable valor_mostrar){
+int imprimir(t_valor_variable valor_mostrar){
 
 	stHeaderIPC* unHeaderPrimitiva;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIR);
 	unHeaderPrimitiva->largo = sizeof(t_valor_variable);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&valor_mostrar))
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&valor_mostrar)){
 		log_error("Error al enviar mensaje de IMPRIMIR.");
+		return -1;
+	}
 
-	unHeaderPrimitiva->tipo=CONSOLA;
+	unHeaderPrimitiva->tipo = CONSOLA;
 	unHeaderPrimitiva->largo = sizeof(uint32_t);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola))
-			log_error("Error al enviar mensaje de IMPRIMIR.");
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola)){
+		log_error("Error al enviar mensaje de IMPRIMIR.");
+		return -1;
+	}
 
 	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
 		log_error("Error al recibir la confirmacion del nucleo.");
+		return -1;
 	}
 
-	if(unHeaderPrimitiva->tipo != OK)
+	if(unHeaderPrimitiva->tipo != OK){
 		log_error("Error de primitiva IMPRIMIR");
+		return -1;
+	}
 
 	log_info("Se imprimio correctamente la variable.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
-
+	return 0;
 }
 
-void imprimirTexto(char* texto){
+int imprimirTexto(char* texto){
 
 	stHeaderIPC* unHeaderPrimitiva;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIRTEXTO);
-	unHeaderPrimitiva->largo = strlen(texto) + 1;
+	unHeaderPrimitiva->largo = strlen(texto) + 1 + sizeof(uint32_t);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva,texto))
-			log_error("No se pudo enviar al Nucleo el texto: ",texto);
-
-
-	unHeaderPrimitiva->tipo = CONSOLA;
-	unHeaderPrimitiva = sizeof(uint32_t);
-
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola))
-			log_error("Error al enviar mensaje de IMPRIMIR.");
-
-
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
-		log_error("Error al recibir la confirmacion del nucleo.");
+	if(!enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
+		log_error("No se pudo enviar al Nucleo el texto: ", texto);
+		return -1;
 	}
 
-	if(unHeaderPrimitiva->tipo != OK)
+	send(configuracionInicial.sockNucleo, &unPCB->socketConsola, sizeof(uint32_t), 0);
+	send(configuracionInicial.sockNucleo, texto, strlen(texto) + 1, 0);
+
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
+		log_error("Error al recibir la confirmacion del nucleo.");
+		return -1;
+	}
+
+	if(unHeaderPrimitiva->tipo != OK){
 		log_error("Error de primitiva IMPRIMIR");
+		return -1;
+	}
 
 	log_info("Se imprimio correctamente la variable.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 
+	return 0;
 }
 
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
