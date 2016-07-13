@@ -86,6 +86,9 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 
 	unPCB->offsetStack = unPCB->offsetStack + TAMANIOVARIABLES;
 
+	log_info("Se definio la variable %s",identificador_variable);
+	log_info("Posicion dentro del stack: %d",unPCB->offsetStack);
+
 	return unPCB->offsetStack;
 }
 
@@ -108,6 +111,8 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 
 	if (i==cantVars)
 		return -1;
+
+	log_info("Se obtiene la posicion de la variable %s en %d. ",identificador_variable, unaVariable->posicion_memoria.pagina * tamanioPaginaUMC + unaVariable->posicion_memoria.offset);
 
 	return (unaVariable->posicion_memoria.pagina * tamanioPaginaUMC + unaVariable->posicion_memoria.offset);
 
