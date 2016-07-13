@@ -7,7 +7,8 @@
 
 #include "TablaMarcos.h"
 
-
+/* puntero a la tabla de Marcos */
+static t_list_mutex *TablaMarcos;
 
 stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada){
 
@@ -225,9 +226,9 @@ int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 
 	//recorro la tabla para inicializarla
 	for(i=0;i<longitud_tabla;i++){
-		(tabla+(sizeof(stRegistroTP)*i))->bit2ndChance=0;
-		(tabla+(sizeof(stRegistroTP)*i))->bitModificado=0;
-		(tabla+(sizeof(stRegistroTP)*i))->bitPresencia=0;
+		((stRegistroTP *)(tabla+(sizeof(stRegistroTP)*i)))->bit2ndChance=0;
+		((stRegistroTP *)(tabla+(sizeof(stRegistroTP)*i)))->bitModificado=0;
+		((stRegistroTP *)(tabla+(sizeof(stRegistroTP)*i)))->bitPresencia=0;
 	}
 
 	nodo = calloc(1,sizeof(stNodoListaTP));

@@ -24,37 +24,6 @@ t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de
 
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 
-/* EML: Lo comento xq no lo uso por ahora
-int mensajeToUMC(int tipoHeader, stPosicion* posicionVariable){
-
-	stHeaderIPC* unHeader;
-	t_paquete paquetePosicion;
-	int resultado = 0;
-	int offset = 0;
-
-	unHeader = nuevoHeaderIPC(tipoHeader);
-
-	enviarHeaderIPC(configuracionInicial.sockUmc, unHeader);
-
-	crear_paquete(&paquetePosicion, tipoHeader);
-
-	serializar_campo(&paquetePosicion, &offset, posicionVariable, sizeof(stPosicion));
-
-	serializar_header(&paquetePosicion);
-
-	if (enviar_paquete(configuracionInicial.sockUmc, &paquetePosicion)) {
-		log_error("No se pudo enviar al UMC el paquete para operacion [%d]", tipoHeader);
-		resultado = -1;
-	}
-
-	free_paquete(&paquetePosicion);
-
-	liberarHeaderIPC(unHeader);
-
-	return resultado;
-
-}
-*/
 
 /*
  ============================================================================
@@ -71,6 +40,8 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	stIndiceStack *indiceStack;
 	stVars *unaVariable;
 	int tamanioStack;
+
+	log_info("Se va a definir la variable %s",identificador_variable);
 
 	tamanioStack=list_size(unPCB->stack);
 
@@ -356,13 +327,12 @@ void imprimirTexto(char* texto){
 			log_error("No se pudo enviar al Nucleo el texto: ",texto);
 
 
-	unHeaderPrimitiva = nuevoHeaderIPC(CONSOLA);
-		unHeaderPrimitiva = sizeof(uint32_t);
+	unHeaderPrimitiva->tipo = CONSOLA;
+	unHeaderPrimitiva = sizeof(uint32_t);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)unPCB->socketConsola))
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola))
 			log_error("Error al enviar mensaje de IMPRIMIR.");
 
-	unHeaderPrimitiva = nuevoHeaderIPC(ERROR);
 
 	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
 		log_error("Error al recibir la confirmacion del nucleo.");
@@ -398,7 +368,7 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	serializar_header(&paquete);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva IO");
 	}
 
@@ -427,7 +397,7 @@ void wait(t_nombre_semaforo identificador_semaforo){
 
 	serializar_header(&paquete);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva WAIT");
 	}
 
@@ -452,7 +422,7 @@ void signal_cpu(t_nombre_semaforo identificador_semaforo){
 
 	serializar_header(&paquete);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva WAIT");
 	}
 
@@ -500,29 +470,29 @@ void cargarConf(t_configCPU* config,char* file_name){
 		if (config_has_property(miConf,"NUCLEO_IP")) {
 			config->ipNucleo = config_get_string_value(miConf,"NUCLEO_IP");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","NUCLEO_IP");
-			exit(-2);
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","NUCLEO_IP");
+			exit(EXIT_FAILURE);
 		}
 
 		if (config_has_property(miConf,"PUERTO_NUCLEO")) {
 			config->puertoNucleo = config_get_int_value(miConf,"PUERTO_NUCLEO");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_NUCLEO");
-			exit(-2);
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_NUCLEO");
+			exit(EXIT_FAILURE);
 		}
 
 		if (config_has_property(miConf,"UMC_IP")) {
 			config->ipUmc= config_get_string_value(miConf,"UMC_IP");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","UMC_IP");
-			exit(-2);
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","UMC_IP");
+			exit(EXIT_FAILURE);
 		}
 
 		if (config_has_property(miConf,"PUERTO_UMC")) {
 			config->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
 		} else {
-			printf("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
-			exit(-2);
+			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
+			exit(EXIT_FAILURE);
 		}
 
 }
@@ -594,7 +564,7 @@ int cpuConectarse(char* IP, int puerto, char* aQuien){
 
 	int socket = 0;
 
-	log_info("Conectando con: ",aQuien);
+	log_info("Conectando con: %s ",aQuien);
 	fflush(stdout);
 	socket = conectar(IP, puerto);
 
@@ -939,7 +909,7 @@ int main(void) {
 
 	tamanioPaginaUMC = configUMC->tamanioPagina; //Guardo el tamaño de la pagina de la umc.
 
-	log_info("Recibí tamaño de pagina.",tamanioPaginaUMC);
+	log_info("Recibí tamaño de pagina: %d",tamanioPaginaUMC);
 
 	//Fin de conexion al UMC//
 
@@ -1031,6 +1001,9 @@ int main(void) {
 										quantum --; 	/* descuento un quantum para proxima ejecución */
 										unPCB->pc ++; 	/* actualizo el program counter a la siguiente posición */
 
+									}else{
+										log_error("Error al ejecutar la instrucción.");
+										quantum = 0;
 									}
 
 								}

@@ -92,6 +92,7 @@ void *consumidor_cpu(int unCliente) {
 				error = 1;
 				continue;
 			}
+			pcb_destroy(unPCB);
 			free_paquete(&paquete);
 		}
 
