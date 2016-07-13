@@ -62,7 +62,7 @@ void *consumidor_cpu(int unCliente) {
 	while (!error) {
 		unPCB = ready_consumidor();
 
-		if(consola_activa(unPCB))
+		if(!consola_activa(unPCB))
 			continue;
 
 		unPCB->quantum = obtenerEstadoActual().quantum;
@@ -123,7 +123,7 @@ void *consumidor_cpu(int unCliente) {
 				deserializar_pcb(unPCB, &paquete);
 				free_paquete(&paquete);
 				/*Se comprueba que el PCB corresponda a una consola que este conectada, si esta desconectada libera el pcb que pide I/O y el CPU sigue con otro pcb*/
-				if(consola_activa(unPCB)){
+				if(!consola_activa(unPCB)){
 					continue;
 				}
 				if(bloquear_pcb(unPCB,dispositivo_name,dispositivo_time)!=EXIT_SUCCESS){
