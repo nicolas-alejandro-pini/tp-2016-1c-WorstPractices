@@ -299,7 +299,7 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posW.nroPagina), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.tamanio), sizeof(uint16_t),0);
-			recv(unSocket, posW.buffer, posR.size,0);
+			recv(unSocket, posW.buffer, posW.tamanio,0);
 			//posW =(stEscrituraPagina*)(unMensaje.contenido);
 
 			escribirBytes(&posW, pidActivo, unSocket);
