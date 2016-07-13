@@ -364,7 +364,7 @@ int imprimirTexto(char* texto){
 	return 0;
 }
 
-void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
+int entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	stHeaderIPC* unHeaderPrimitiva;
 	t_paquete paquete;
@@ -376,17 +376,18 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IOANSISOP);
 
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva);
+	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
 	crear_paquete(&paquete, IOANSISOP);
 
-	serializar_campo(&paquete, &offset, &dispositivoIO.nombre, sizeof(dispositivoIO.nombre));
-	serializar_campo(&paquete, &offset, &dispositivoIO.tiempo, sizeof(dispositivoIO.tiempo));
+	serializar_campo(&paquete, &offset, &dispositivoIO.nombre, strlen(dispositivoIO.nombre) + 1); //Lo envío con el \0
+	serializar_campo(&paquete, &offset, &dispositivoIO.tiempo, sizeof(int));
 
 	serializar_header(&paquete);
 
 	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
 		log_error("No se pudo enviar el paquete para primitiva IO");
+		return -1;
 	}
 
 	free_paquete(&paquete);
@@ -395,6 +396,7 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	quantum = 0;
 
+	return 0;
 }
 
 void wait(t_nombre_semaforo identificador_semaforo){
