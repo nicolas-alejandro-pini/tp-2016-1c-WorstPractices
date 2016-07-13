@@ -207,55 +207,64 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	t_valor_variable resultado;
 
 	unHeaderIPC = nuevoHeaderIPC(OBTENERVALOR);
-	unHeaderIPC = strlen(variable)+1;
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderIPC,(char)variable)){
-		printf("No se pudo enviar la variable %s",(char)variable);
+	unHeaderIPC->largo = sizeof(t_nombre_compartida);
+
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo, unHeaderIPC, (char *) &variable)){
+		log_error("No se pudo enviar la variable %c", variable);
 	}
 
 	if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensajeIPC)){
-		printf("No se pudo recibir la variable %s",(char*)variable);
+		log_error("No se pudo recibir la variable %c", variable);
 	}
 
-	resultado = atoi(unMensajeIPC.contenido);
+	memcpy(&resultado, unMensajeIPC.contenido, sizeof(t_valor_variable));
+	free(unMensajeIPC.contenido);
+	liberarHeaderIPC(unHeaderIPC);
 
 	return resultado;
 }
 
-t_valor_variable asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
+int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
 
 	stHeaderIPC *unHeaderIPC;
 	t_paquete paquete;
 	stSharedVar sharedVar;
 	t_valor_variable resultado;
-	int offset = 0;
+	long int offset = 0;
 
+	//Hago el envío de la variabe con su valor
 	unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC)){
-		printf("No se pudo enviar el mensaje para grabar el valor");
-	}
-
-	if(unHeaderIPC->tipo== OK){
-
-		sharedVar.nombre = &variable;
-		sharedVar.valor = valor;
-
-		crear_paquete(&paquete, GRABARVALOR);
-		serializar_campo(&paquete, &offset, &sharedVar, sizeof(stSharedVar));
-		serializar_header(&paquete);
-
-		if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-			log_error("No se pudo enviar el SharedVar al Nucleo.");
-		}
-
-		free_paquete(&paquete);
-
-		liberarHeaderIPC(unHeaderIPC);
-	}else{
-		/*TODO: Esto ver de manejarlo, tenemos que hacer validaciones en caso de que no se puedan enviar los mensajes*/
+	if(!enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderIPC)){
+		log_error("No se pudo enviar el mensaje para grabar el valor");
 		return -1;
 	}
 
-	return resultado;
+	sharedVar.nombre = variable;
+	sharedVar.valor = valor;
+
+	crear_paquete(&paquete, GRABARVALOR);
+	serializar_campo(&paquete, &offset, &sharedVar, sizeof(stSharedVar));
+	serializar_header(&paquete);
+
+	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+		log_error("No se pudo enviar el SharedVar al Nucleo.");
+		return -1;
+	}
+
+	free_paquete(&paquete);
+
+	//Recibo el mensaje de respuesta para conocer el resultado de la operación
+	if(recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderIPC) <= 0){
+		log_error("Error al obtener la respuesta desde el Nucleo");
+		return -1;
+	}
+
+	liberarHeaderIPC(unHeaderIPC);
+
+	if(unHeaderIPC->tipo != OK)
+		return -1;
+
+	return 0;
 }
 
 void irAlLabel(t_nombre_etiqueta etiqueta){

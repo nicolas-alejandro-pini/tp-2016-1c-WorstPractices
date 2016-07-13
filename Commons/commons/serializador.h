@@ -10,6 +10,8 @@
 
 #include "socketsIPCIRC.h"
 #include "collections/list.h"
+#include "commons/parser/parser.h"
+
 #include <stdint.h>
 
 typedef struct{
@@ -41,8 +43,8 @@ typedef struct{
 } __attribute__((packed)) t_UMCConfig;
 
 typedef struct {
-	char* nombre; 		/*Nombre de la variable compartida*/
-	int valor; 			/*Valor de la variable compartida*/
+	t_nombre_compartida nombre; 		/*Nombre de la variable compartida*/
+	t_valor_variable valor; 			/*Valor de la variable compartida*/
 } __attribute__((packed)) stSharedVar;
 
 
