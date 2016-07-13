@@ -138,7 +138,7 @@ int reemplazarValorTLB(stRegistroTLB registro){
 	return 0;
 }
 
-void flushTLB(uint32_t pid){
+void flushTLB(uint16_t pid){
 
 	// Elimino paginas asociadas a pid. Sin eliminar el nodo de la lista
 	void _flush_nodo(stRegistroTLB *list_nodo){
