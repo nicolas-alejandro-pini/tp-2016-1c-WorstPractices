@@ -57,8 +57,9 @@ void *consumidor_cpu(int unCliente) {
 	t_paquete paquete;
 	stSharedVar *unaSharedVar;
 	uint32_t socket_consola_to_print;
+	t_valor_variable valor_impresion;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
-	int error = 0, offset = 0, valor_impresion, dispositivo_time;
+	int error = 0, offset = 0, dispositivo_time;
 
 	while (!error) {
 		unPCB = ready_consumidor();
@@ -246,18 +247,12 @@ void *consumidor_cpu(int unCliente) {
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de impresion...\n");
-				valor_impresion = atoi(unMensajeIPC.contenido);
-				if (!recibirMensajeIPC(unCliente, &unMensajeIPC)) {
-					log_error("CPU error - No se pudo recibir header");
-					error = 1;
-					continue;
-				}
-				socket_consola_to_print = atoi(unMensajeIPC.contenido);
+				recv(unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
+				recv(unCliente, &valor_impresion, sizeof(t_valor_variable), 0);
+
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIR);
 				if(!enviarMensajeIPC(socket_consola_to_print,unHeaderIPC,(char*)valor_impresion)){
-					log_error("CPU error - No se pudo enviar el valor la variable");
-					error = 1;
-					continue;
+					log_error("Error al imprimir en consola el valor de la variable");
 				}
 				liberarHeaderIPC(unHeaderIPC);
 				printf("Se imprimio el valor [%d]\n",valor_impresion);
@@ -269,14 +264,12 @@ void *consumidor_cpu(int unCliente) {
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de impresion...\n");
 
-				recv(unCliente, socket_consola_to_print, sizeof(uint32_t), 0);
-				recv(unCliente, texto_imprimir, unHeaderIPC->largo - sizeof(uint32_t), 0);
+				recv(unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
+				recv(unCliente, &texto_imprimir, unHeaderIPC->largo - sizeof(uint32_t), 0);
 
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIRTEXTO);
 				if(!enviarMensajeIPC(socket_consola_to_print,unHeaderIPC,texto_imprimir)){
 					log_error("Error al enviar el texto a imprimir");
-					error = 1;
-					continue;
 				}
 				liberarHeaderIPC(unHeaderIPC);
 				printf("Se imprimio el valor [%d]\n",valor_impresion);
