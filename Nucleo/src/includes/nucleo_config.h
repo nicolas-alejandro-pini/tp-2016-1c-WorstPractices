@@ -18,5 +18,6 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo);
 void monitor_configuracion(stEstado* info);
 void destruir_dispositivo(stDispositivo *unDispositivo);
 void destruir_lista_dispositivos(stEstado *info);
+void destruir_rafaga_io(stRafaga *unaRafaga);
 
 #endif /* NUCLEO_CONFIG_H_ */

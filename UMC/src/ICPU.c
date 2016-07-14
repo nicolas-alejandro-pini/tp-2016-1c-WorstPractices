@@ -132,14 +132,9 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 	// Page fault Escritura
 	if(frameBuscado == 0){
 
-		registro = ejecutarPageFault(pid, unaEscritura->nroPagina, &frameNuevo);
-
-		// No se puede ejecutar pageFaul, falta memoria
-		if(registro == NULL)
-			return EXIT_SUCCESS;
-		else
-		{   // Modifica la tabla de paginas (deberia hacerlo en memoria
-			registro->bitModificado=1;
+		if(ejecutarPageFault(pid, unaEscritura->nroPagina, &frameNuevo)){
+			log_error("Pid [%d] Pagina[%d]: Error al ejecutar page fault.", pid, unaEscritura->nroPagina);
+			return EXIT_FAILURE;
 		}
 
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
@@ -159,46 +154,64 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 	return EXIT_FAILURE;
 }
 
-stRegistroTP* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *frameNuevo){
-	uint16_t marco;
-	stRegistroTP regTP, *registro;
+int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
+	uint16_t frameNuevo = 0;
+	int presencias=0;
+	stNodoListaTP *tablaPaginas;
 	void *paginaLeidaSwap;
 
 	// acceder a swap con las pagina que necesito
-	// TODO Mismo socket , deberia ser mutex?
 	paginaLeidaSwap = recibirPagina(pid, pagina);
 
-	if(paginaLeidaSwap==NULL)
-		return NULL;
-
-	// cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
-	regTP.bit2ndChance=0;
-	regTP.bitModificado=0;
-	regTP.bitPresencia=1;
-
-	marco = obtenerMarcoLibre();
-	if(marco == 0)
-	{
-		registro = reemplazarValorTabla(pid, pagina, regTP, REEMPLAZAR_MARCO);
-		*frameNuevo = registro->marco;
+	if(paginaLeidaSwap==NULL){
+		log_info("Page Fault (Swap envia una pagina vacia)");
+		paginaLeidaSwap = calloc(1,losParametros.frameSize);
+		loguear_buffer(paginaLeidaSwap, losParametros.frameSize);
 	}
-	else
-	{
-		regTP.marco = marco;
-		*frameNuevo = marco;
-		registro = reemplazarValorTabla(pid, pagina, regTP, NULL);
+	else{
+		log_info("Page Fault");
+		loguear_buffer(paginaLeidaSwap, losParametros.frameSize);
 	}
 
-	if (registro==NULL)
-		// Se rechaza por no haber memoria
-		return registro;
+	/* Obtiene Tabla de Paginas de PID */
+	tablaPaginas = buscarPID(pid);
+	if(tablaPaginas==NULL) // valido que exista
+		return EXIT_FAILURE;
+
+	/* Obtengo presencias en MP de la tabla de PID */
+	presencias = obtenerPresenciasTabladePaginas(tablaPaginas);
+
+	// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
+	if(0 == presencias && 0 == hayMarcoLibre())
+		return EXIT_FAILURE;
+
+	// Reemplazo dentro de los marcos
+	if(presencias < losParametros.frameByProc && 0 != hayMarcoLibre()){
+		frameNuevo = obtenerMarcoLibre();
+		agregarFrameATablaMarcos(frameNuevo, tablaPaginas, pagina);
+	}
+	// Nunca va a llegar al limite de marcos por proceso por falta de memoria
+	else if(presencias < losParametros.frameByProc && 0 == hayMarcoLibre()){
+		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
+	}
+	// Me las arreglo con los marcos que tengo (que no puede ser 0 )
+	else if(presencias >= losParametros.frameByProc){
+		if(0 == presencias )  // por las dudas avisarlo... (error de configuracion)
+			return EXIT_FAILURE;
+		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
+	}
+
+	if(0 == frameNuevo)
+		return EXIT_FAILURE;
 
 	// cargo en memoria la pagina obtenida
-	escribirMemoria(paginaLeidaSwap, *frameNuevo, 0, losParametros.frameSize);
-
+	escribirMemoria(paginaLeidaSwap, frameNuevo, 0, losParametros.frameSize);
 	free(paginaLeidaSwap);
 
-	return registro;
+	// Devuelvo la referencia del frame nuevo que necesito
+	*pframeNuevo = frameNuevo;
+
+	return EXIT_SUCCESS;
 }
 
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
@@ -278,19 +291,30 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posR.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.size), sizeof(uint16_t),0);
 
-			if(posR.size > 0)
-			{
-				reservarPosicion((void*)&buffer, posR.size);
-				leerBytes(&buffer, &posR, pidActivo);
-
-				//envio la respuesta de la lectura a la CPU
+			reservarPosicion((void*)&buffer, posR.size);
+			if(leerBytes(&buffer, &posR, pidActivo)){
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				log_info("Error al leer bytes");
+			}
+			else{
 				unHeader = nuevoHeaderIPC(OK);
 				unHeader->largo = posR.size;
-				if(!enviarMensajeIPC(unSocket,unHeader,buffer)){
-					log_error("No se pudo enviar el MensajeIPC");
-					return;
-				}
+				log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 			}
+
+			// Logueo lo que llego para escribir
+			log_info("Leer bytes");
+			loguear_buffer(buffer, posR.size);
+
+			//envio la respuesta de la lectura a la CPU
+			if(!enviarMensajeIPC(unSocket,unHeader,buffer)){
+				log_error("No se pudo enviar el READ_BTYES_PAGE");
+				return;
+			}
+
+
+			imprimirMemoriaPrincipal();
 
 			break;
 
@@ -299,20 +323,32 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posW.nroPagina), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.tamanio), sizeof(uint16_t),0);
+			posW.buffer = malloc(posW.tamanio);
 			recv(unSocket, posW.buffer, posW.tamanio,0);
-			//posW =(stEscrituraPagina*)(unMensaje.contenido);
+
+			// Logueo lo que llego para escribir
+			log_info("Escribir bytes");
+			loguear_buffer(posW.buffer, posW.tamanio);
+
+			if(escribirBytes(&posW, pidActivo)){
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				log_info("Error al escribir bytes");
+			}
+			else{
+				unHeader = nuevoHeaderIPC(OK);
+				unHeader->largo = posW.tamanio;
+				log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
+			}
+			limpiarEscrituraPagina(posW.buffer, &posW);
+
 			//envio la respuesta de la Escritura a la CPU
-//			if(!enviarHeaderIPC(socketCPU,nuevoHeaderIPC(OK))){
-//				log_error("No se pudo enviar el MensajeIPC");
-//				return;
-//			}
-			//envio la respuesta de la lectura a la CPU
-//			if(!enviarHeaderIPC(socketCPU,nuevoHeaderIPC(ERROR))){
-//				log_error("No se pudo enviar el MensajeIPC");
-//				return;
-//			}
-			//log_info("Se pidio leer pagina %d offset %d tamaño %d");
-			//escribirBytes(&posW, pidActivo, unSocket);
+			if(!enviarHeaderIPC(unSocket,unHeader)){
+				log_error("No se pudo enviar el WRITE_BYTES_PAGE");
+				return;
+			}
+
+			imprimirMemoriaPrincipal();
 
 			break;
 
@@ -379,4 +415,12 @@ void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos){
 void reservarPosicion(void **buffer, uint16_t size){
 	*buffer = malloc(size);
 	strcpy(*buffer, "puis");
+}
+
+void loguear_buffer(void *buffer, uint16_t size){
+	char *buffer_log = malloc(size + 1);
+	memcpy(buffer_log, buffer, size);
+	buffer_log[size]='\0';
+	log_info("Buffer[%s]\n", buffer_log);
+	free(buffer_log);
 }

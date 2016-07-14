@@ -15,7 +15,11 @@ void agregar_tests_con_swap(){
 	CU_add_test(suite_umc_swap, "test_cambio_de_contexto()", test_cambio_de_contexto);
 	//CU_add_test(suite_umc_swap, "test_read_bytes_page()", test_read_bytes_page);
 	//CU_add_test(suite_umc_swap, "test_write_bytes_page()", test_write_bytes_page);
-	CU_add_test(suite_umc_swap, "test_write_read_guarda_en_swap()", test_write_read_guarda_en_swap);
+	//CU_add_test(suite_umc_swap, "test_write_read_guarda_en_swap()", test_write_read_guarda_en_swap);
+	//CU_add_test(suite_umc_swap, "test_write_stack()", test_write_stack);
+	//CU_add_test(suite_umc_swap, "test_diapositiva_clock()", test_diapositiva_clock);
+	CU_add_test(suite_umc_swap, "test_programa_base()", test_programa_base);
+
 }
 
 int inicializar_umc_swap(){
@@ -74,6 +78,12 @@ void test_base_umc_swap(){
 	for(i=0; i< cant; i++){
 		unPageIni.processId = i+1;
 		unPageIni.cantidadPaginas = calcular_cantidad_paginas(strlen(programa[i]),losParametros.frameSize);
+
+		// Al ultimo programa le agrega stack
+		if(i==(cant-1)){
+			unPageIni.cantidadPaginas += 2; // Tamanio stack
+		}
+
 		unPageIni.programa = programa[i];
 
 		crearTabla(unPageIni.processId, unPageIni.cantidadPaginas);
@@ -90,7 +100,8 @@ void test_base_umc_swap(){
 
 void test_cambio_de_contexto(){
 
-	uint32_t pid = 1;
+	int pid = 1;
+
 	stMensajeIPC unMensaje;
 	unMensaje.header.largo = sizeof(uint32_t);
 	unMensaje.contenido = malloc(sizeof(uint32_t));
@@ -226,23 +237,20 @@ void test_write_bytes_page(){
 	imprimirMemoriaPrincipal();
 
 	stEscrituraPagina posW;
-	posW.nroPagina = 0;
+	posW.nroPagina = 2;
 	posW.offset = 0;
 	posW.tamanio = 4;
 
+	reservarPosicion((void*)&posW.buffer, posW.tamanio + 1);
+	if(escribirBytes(&posW, gPidActivo))
+		log_info("Error al escribir bytes");
 
-	if(1 == gPidActivo){
-		reservarPosicion((void*)&posW.buffer, posW.tamanio + 1);
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
+	limpiarEscrituraPagina(posW.buffer, &posW);
 
-		if(escribirBytes(&posW, gPidActivo))
-			log_info("Error al escribir bytes");
+	// imprimo memoria
+	imprimirMemoriaPrincipal();
 
-		log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
-		limpiarEscrituraPagina(posW.buffer, &posW);
-
-		// imprimo memoria
-		imprimirMemoriaPrincipal();
-	}
 
 }
 
@@ -271,15 +279,13 @@ void test_write_read_guarda_en_swap(){
 	posW.offset = 0;
 	posW.tamanio = 4;
 
-	if(1 == gPidActivo){
-		reservarPosicion((void*)&posW.buffer, posW.tamanio + 1);
+	reservarPosicion((void*)&posW.buffer, posW.tamanio + 1);
+	if(escribirBytes(&posW, gPidActivo))
+		log_info("Error al escribir bytes");
 
-		if(escribirBytes(&posW, gPidActivo))
-			log_info("Error al escribir bytes");
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
+	limpiarEscrituraPagina(posW.buffer, &posW);
 
-		log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
-		limpiarEscrituraPagina(posW.buffer, &posW);
-	}
 
 	imprimirMemoriaPrincipal();
 
@@ -290,14 +296,13 @@ void test_write_read_guarda_en_swap(){
 	posR.size = 6;
 
 	// /usr
-	if(1 == gPidActivo){
-		reservarPosicion((void*)&buffer, posR.size + 1);
+	reservarPosicion((void*)&buffer, posR.size + 1);
 		leerBytes((void*) &buffer, &posR, gPidActivo);
 		buffer[posR.size]='\0';
 		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
-	}
+
 
 	imprimirMemoriaPrincipal();
 
@@ -307,14 +312,14 @@ void test_write_read_guarda_en_swap(){
 	posR.size = 6;
 
 	// /usr
-	if(1 == gPidActivo){
+
 		reservarPosicion((void*)&buffer, posR.size + 1);
 		leerBytes((void*) &buffer, &posR, gPidActivo);
 		buffer[posR.size]='\0';
 		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
-	}
+
 
 	imprimirMemoriaPrincipal();
 
@@ -324,14 +329,14 @@ void test_write_read_guarda_en_swap(){
 	posR.size = 6;
 
 	// /usr
-	if(1 == gPidActivo){
+
 		reservarPosicion((void*)&buffer, posR.size + 1);
 		leerBytes((void*) &buffer, &posR, gPidActivo);
 		buffer[posR.size]='\0';
 		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
-	}
+
 
 	imprimirMemoriaPrincipal();
 
@@ -340,18 +345,286 @@ void test_write_read_guarda_en_swap(){
 	posR.size = 6;
 
 	// /usr
-	if(1 == gPidActivo){
+
 		reservarPosicion((void*)&buffer, posR.size + 1);
 		leerBytes((void*) &buffer, &posR, gPidActivo);
 		buffer[posR.size]='\0';
 		log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 		log_info("Valor[%s]", (char*) buffer);
 		limpiarPosicion(buffer, &posR);
-	}
+
 
 	imprimirMemoriaPrincipal();
 }
 
+void test_write_stack(){
+
+}
+
+void test_diapositiva_clock(){
+	//PUERTO=50002
+	//IP_SWAP=0
+	//PUERTO_SWAP=6000
+	//MARCOS=5
+	//MARCOS_SIZE=20
+	//MARCOS_X_PROC=3
+	//ENTRADAS_TLB=5
+	//RETARDO=1
+	//ALGORITMO=CLOCK
+
+	stPosicion posR;
+	char *buffer = NULL;
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 0;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 1;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 2;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 3;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 0;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 1;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 4;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 0;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 1;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 2;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 3;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 4;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+}
+
+
+
+//PUERTO=50002
+//IP_SWAP=0
+//PUERTO_SWAP=6000
+//MARCOS=5
+//MARCOS_SIZE=20
+//MARCOS_X_PROC=2
+//ENTRADAS_TLB=5
+//RETARDO=1
+//ALGORITMO=CLOCK
+void test_programa_base(){
+	/* Tamaño pagina 20
+	 *
+	 #!/usr/bin/ansisop\   pag0
+	 nbegin\n#primero de   pag1
+	 claro las variables   pag2
+	 \nvariables a, b\na   pag3
+ 	 = 20\nprint a\nend    pag4
+	*/
+	stPosicion posR;
+	stEscrituraPagina posW;
+	char *buffer = NULL;
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 3;    // page fault
+	posR.offset = 1;
+	posR.size = 8;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 3;    // page fault
+	posR.offset = 9;
+	posR.size = 10;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	// Pide escribir en pagina stack
+	imprimirMemoriaPrincipal();
+
+	//WRITE_BYTES_PAGE:
+	posW.nroPagina = 5;
+	posW.offset = 0;
+	posW.tamanio = 4;
+
+	reservarPosicion((void*)&posW.buffer, posW.tamanio + 1);
+	if(escribirBytes(&posW, gPidActivo))
+		log_info("Error al escribir bytes");
+
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
+	limpiarEscrituraPagina(posW.buffer, &posW);
+
+	imprimirMemoriaPrincipal();
+
+	posW.nroPagina = 5;
+	posW.offset = 4;
+	posW.tamanio = 4;
+
+	reservarPosicion((void*)&posW.buffer, posW.tamanio + 1);
+	if(escribirBytes(&posW, gPidActivo))
+		log_info("Error al escribir bytes");
+
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
+	limpiarEscrituraPagina(posW.buffer, &posW);
+
+	// lee pagina 4 la siguiente instruccion
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 4;    // page fault
+	posR.offset = 1;
+	posR.size = 8;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	//WRITE_BYTES_PAGE:
+	posW.nroPagina = 5;
+	posW.offset = 8;
+	posW.tamanio = 4;
+
+	reservarPosicion((void*)&posW.buffer, posW.tamanio + 1);
+	if(escribirBytes(&posW, gPidActivo))
+		log_info("Error al escribir bytes");
+
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
+	limpiarEscrituraPagina(posW.buffer, &posW);
+}
 
 void test_fin_programa(){
     //FINPROGRAMA:
@@ -366,21 +639,5 @@ int calcular_cantidad_paginas(int size_programa,int tamanio_paginas){
 		cant++;
 	return ((int)(size_programa/tamanio_paginas) + cant);
 }
-
-int imprimirMemoriaPrincipal() {
-	uint32_t i=0;
-
-	char pagina[losParametros.frameSize + 1];
-	printf("MemoriaPrincipal[%d]\n", losParametros.frames);
-	// Imprimo por tamaño pagina
-	for(i=0;i<losParametros.frames;i++){
-		memcpy(pagina, memoriaPrincipal+(losParametros.frameSize*i), losParametros.frameSize);
-		pagina[losParametros.frameSize]='\0';
-		printf("pag[%d][%s]\n", i, pagina);
-	}
-
-	return EXIT_SUCCESS;
-}
-
 
 

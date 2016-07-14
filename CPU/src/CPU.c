@@ -10,7 +10,6 @@
 #include "CPU.h"
 #include "cpuSignals.h"
 
-
 //Variables Globales//
 
 fd_set fds_master;		/* Lista de todos mis sockets. */
@@ -51,8 +50,11 @@ t_puntero definirVariable(t_nombre_variable identificador_variable){
 	unaVariable->id = identificador_variable;
 
 	unaVariable->posicion_memoria.pagina = unPCB->offsetStack / tamanioPaginaUMC;
+	log_info("Se define variable en la UMC, pagina: %d",unPCB->offsetStack / tamanioPaginaUMC);
 	unaVariable->posicion_memoria.offset = unPCB->offsetStack % tamanioPaginaUMC;
+	log_info("Se define variable en la UMC, offset: %d", unPCB->offsetStack % tamanioPaginaUMC);
 	unaVariable->posicion_memoria.size = TAMANIOVARIABLES;
+	log_info("Se define variable en la UMC, size: %d", TAMANIOVARIABLES);
 	list_add(indiceStack->variables,unaVariable);
 
 	unPCB->offsetStack = unPCB->offsetStack + TAMANIOVARIABLES;
@@ -69,6 +71,8 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 	stIndiceStack *indiceStack;
 	unsigned long int cantVars, i;
 	int tamanioStack;
+
+	log_info("Inicio primitiva obtenerPosicionVariable para cariable %c.",identificador_variable);
 
 	tamanioStack = list_size(unPCB->stack); //considero que en pila del stack el ultimo es el contexto actual.
 
@@ -110,6 +114,8 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	uint16_t pagina,offset,tamanio,valor_variable;
 	char* str_valor_variable;
 
+	log_info("Inicio primitiva dereferenciar con direccion_variable = %d",direccion_variable);
+
 	posicionVariable = obtenerPosicion(direccion_variable);
 
 	pagina = posicionVariable->pagina + unPCB->paginaInicioStack; // Le sumo la pagina del inicio del stack en la UMC.
@@ -125,8 +131,11 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 	/*Envio los tres datos a la UMC*/
 	send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+	log_info("Se obtiene de la UMC - Stack, pagina %d",pagina);
 	send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
+	log_info("Se obtiene de la UMC - Stack, offset %d",offset);
 	send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
+	log_info("Se obtiene de la UMC - Stack, size %d",tamanio);
 
 
 	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&unMensaje)){
@@ -139,6 +148,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 		memcpy(str_valor_variable, unMensaje.contenido,unMensaje.header.largo);
 		str_valor_variable[unMensaje.header.largo] = '\0';
 		valor_variable = atoi(str_valor_variable);
+		log_info("Se obtiene de la UMC - Stack, valor de variable %d",valor_variable);
 		free(str_valor_variable);
 	}
 	else{
@@ -164,6 +174,8 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 	stHeaderIPC *unHeader;
 	uint16_t pagina, offset,tamanio;
 
+	log_info("Inicio primitiva Asignar para variable %c y valor %d", direccion_variable, valor);
+
 	posicionVariable = obtenerPosicion(direccion_variable);
 
 	pagina = posicionVariable->pagina + unPCB->paginaInicioStack;
@@ -179,9 +191,13 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	/*Envio los tres datos a la UMC*/
 	send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+	log_info("Se asigna en la UMC - Stack,pagina: %d",pagina);
 	send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
+	log_info("Se asigna en la UMC - Stack,offset: %d",offset);
 	send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
+	log_info("Se asigna en la UMC - Stack, tamanio: %d",tamanio);
 	send(configuracionInicial.sockUmc,&valor,tamanio,0);
+	log_info("Se asigna en la UMC - Stack, valor: %d",valor);
 
 	unHeader = nuevoHeaderIPC(ERROR);
 	if(!recibirHeaderIPC(configuracionInicial.sockUmc, unHeader)){
@@ -301,32 +317,17 @@ void imprimir(t_valor_variable valor_mostrar){
 	stHeaderIPC* unHeaderPrimitiva;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIR);
-	unHeaderPrimitiva->largo = sizeof(t_valor_variable);
+	unHeaderPrimitiva->largo = sizeof(uint32_t) + sizeof(t_valor_variable);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&valor_mostrar)){
+	if(!enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
 		log_error("Error al enviar mensaje de IMPRIMIR.");
 		return;
 	}
 
-	unHeaderPrimitiva->tipo = CONSOLA;
-	unHeaderPrimitiva->largo = sizeof(uint32_t);
+	send(configuracionInicial.sockNucleo, &unPCB->socketConsola, sizeof(uint32_t), 0);
+	send(configuracionInicial.sockNucleo, &valor_mostrar, sizeof(t_valor_variable), 0);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola)){
-		log_error("Error al enviar mensaje de IMPRIMIR.");
-		return;
-	}
-
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
-		log_error("Error al recibir la confirmacion del nucleo.");
-		return;
-	}
-
-	if(unHeaderPrimitiva->tipo != OK){
-		log_error("Error de primitiva IMPRIMIR");
-		return;
-	}
-
-	log_info("Se imprimio correctamente la variable.");
+	log_info("Se envio al nucleo el valor %d para ser impreso.", valor_mostrar);
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 	return;
@@ -347,17 +348,7 @@ void imprimirTexto(char* texto){
 	send(configuracionInicial.sockNucleo, &unPCB->socketConsola, sizeof(uint32_t), 0);
 	send(configuracionInicial.sockNucleo, texto, strlen(texto) + 1, 0);
 
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
-		log_error("Error al recibir la confirmacion del nucleo.");
-		return;
-	}
-
-	if(unHeaderPrimitiva->tipo != OK){
-		log_error("Error de primitiva IMPRIMIR");
-		return;
-	}
-
-	log_info("Se imprimio correctamente la variable.");
+	log_info("Se envio al nucleo la orden de imprimir el texto.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 
@@ -453,6 +444,13 @@ void signal_cpu(t_nombre_semaforo identificador_semaforo){
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
 
+/**
+ * Finaliza un programa AnSISOP
+ *
+ */
+void finalizar(){
+	quantum=0;
+}
 
 AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_definirVariable		= definirVariable,
@@ -467,6 +465,7 @@ AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_llamarConRetorno		= llamarFuncionConRetorno,
 		.AnSISOP_retornar				= retornar,
 		.AnSISOP_entradaSalida			= entradaSalida,
+		.AnSISOP_finalizar				= finalizar
 };
 
 AnSISOP_kernel kernel_functions = {
@@ -706,7 +705,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
 
-	for (pagina=1;pagina<=cantidadPaginas;pagina++)
+	for (pagina=0;pagina<=cantidadPaginas;pagina++)
 	{
 
 		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
@@ -740,11 +739,11 @@ char* getInstruccion (int startRequest, int sizeRequest){
 				return NULL;
 			}else{
 
-				log_info("Recibi de la UMC la instrucción: %s",unMensaje.contenido);
-
 				instruccionTemp =(char*) malloc(sizeToUMC + 1 );
 				memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
 				*(instruccionTemp + sizeToUMC) = '\0';
+
+				log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
 
 				if(instruccion==NULL){
 					instruccion =(char*) malloc(sizeToUMC + 1 );
@@ -815,22 +814,28 @@ int devolverPCBalNucleo(void){
 	t_paquete paquete;
 	int resultado=  0;
 
-	if (unPCB->metadata_program->instrucciones_size < unPCB->pc) //Si la cantidad total de instrucciones menor al pc significa que termino el programa.
+	if (unPCB->metadata_program->instrucciones_size <= unPCB->pc) //Si la cantidad total de instrucciones menor al pc significa que termino el programa.
+	{
 		unHeaderIPC = nuevoHeaderIPC(FINANSISOP);
+		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+		send(configuracionInicial.sockNucleo,&unPCB->pid,sizeof(uint32_t),0);
+	}
 	else
+	{
 		unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
 
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
-	crear_paquete(&paquete, EXECANSISOP);
-	serializar_pcb(&paquete, unPCB);
+		crear_paquete(&paquete, EXECANSISOP);
+		serializar_pcb(&paquete, unPCB);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el PCB al Nucleo[%d]", unPCB->pid);
-		resultado = -1;
+		if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+			log_error("No se pudo enviar el PCB al Nucleo[%d]", unPCB->pid);
+			resultado = -1;
+		}
+
+		free_paquete(&paquete);
 	}
-
-	free_paquete(&paquete);
 
 	liberarHeaderIPC(unHeaderIPC);
 
@@ -1019,7 +1024,7 @@ int main(void) {
 								while (quantum > 0 && unPCB->pc <= unPCB->metadata_program->instrucciones_size){
 									if(ejecutarInstruccion() == OK)
 									{
-										sleep(quantumSleep);
+										usleep(quantumSleep*1000);
 										quantum --; 	/* descuento un quantum para proxima ejecución */
 										unPCB->pc ++; 	/* actualizo el program counter a la siguiente posición */
 

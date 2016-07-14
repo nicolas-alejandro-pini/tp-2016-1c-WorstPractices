@@ -40,8 +40,7 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid);
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU);
 void *finalizarProgramaNucleo(stEnd *fin);
 uint32_t cambiarContexto(stMensajeIPC *unMensaje);
-
-stRegistroTP* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *frameNuevo);
+int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo);
 void realizarAccionCPU(uint16_t socket);
 
 int guardarEnTabla(uint16_t cantidadPaginas);
@@ -51,5 +50,5 @@ int guardarEnTabla(uint16_t cantidadPaginas);
 void limpiarPosicion(void *buffer, stPosicion *pPos);
 void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos);
 void reservarPosicion(void **buffer, uint16_t size);
-
+void loguear_buffer(void *buffer, uint16_t size);
 #endif /* ICPU_H_ */

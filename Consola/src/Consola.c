@@ -204,17 +204,18 @@ int recv_print(t_console* tConsole){
 		switch(unMensaje.header.tipo)
 		{
 			case IMPRIMIR:
-					printf("IMPRIMIR [%d]", (int) unMensaje.contenido);
+				log_info("IMPRIMIR [%d]", (int) unMensaje.contenido);
 				break;
 			case IMPRIMIRTEXTO:
-					printf("IMPRIMIR [%s]", unMensaje.contenido);
+				log_info("IMPRIMIR [%s]", unMensaje.contenido);
 				break;
 			case KILLPID:
-					printf("Finalizando consola...\n");
+				log_info("Finalizando consola...\n");
 				break;
 			default:
 				break;
 		}
+		fflush(stdout);
 		liberarMensajeIPC(&unMensaje);  /* Solo libero si pudo recibir. */
 	}
 

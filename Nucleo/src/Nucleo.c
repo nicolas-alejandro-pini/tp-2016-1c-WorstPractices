@@ -259,6 +259,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr addressAceptado;
 
 	/*Inicializacion de las colas del planificador*/
+	inicializar_pidCounter();
 	inicializar_cola_ready();
 	listaBlock = list_create();
 	consola_crear_lista();
@@ -498,7 +499,7 @@ int main(int argc, char *argv[]) {
 
 		}
 	}
-	destruir_cola_ready();
+	destruir_planificador();
 	destruir_lista_dispositivos(&elEstadoActual);
 	consola_destruir_lista(&elEstadoActual);
 	cerrarSockets(&elEstadoActual);

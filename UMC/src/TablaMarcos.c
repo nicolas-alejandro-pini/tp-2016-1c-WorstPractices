@@ -37,20 +37,27 @@ int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame){
 	return 0;
 }
 
-// voy a elegir uno de los registros de la tabla y lo reemplazo con el parametro registro
-stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag){
-	stRegistroTP *regTP;
-	int i;
-
-	/*
+/*
 	 * Clock o second chance
 	 * Si el frame tiene el bit de acceso en 1, lo actualiza a 0 y avanza el puntero.
 	 * Cuando encuentra un frame en 0, reemplaza la pagiina que contiene por la que produjo el fallo de pagina.
 	 */
 
-	// recorro tabla
-	for(i=0;i<nodo->size;i++){
-		regTP = nodo->tabla+(sizeof(stRegistroTP)*i);
+stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
+	stRegistroTP *victima = NULL;
+	stRegistroTP *regTP = NULL;
+	uint16_t i = tablaPaginas->punteroClock;
+	uint16_t puntero_siguiente = 0;
+
+	// Me posiciono donde apunta el puntero
+	while(!victima){
+
+		if(i < (tablaPaginas->size - 1))
+			i++;
+		else
+			i=0;  // todas las paginas empiezan en 0
+
+		regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
 
 		// Si es valido el registro
 		if(regTP->bitPresencia==1){
@@ -58,148 +65,149 @@ stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP r
 			if(regTP->bit2ndChance==1){
 				regTP->bit2ndChance=0;
 			// Si bit2ndChance es 0, reemplazo
-			}else if(regTP->bit2ndChance==0){
-				regTP->bit2ndChance=registro.bit2ndChance;
-				regTP->bitModificado=registro.bitModificado;
-				regTP->bitPresencia=registro.bitPresencia;
-				// Si no tengo que reusar la memoria, asigno el nuevo marco a la pagina
-				if (flag!=REEMPLAZAR_MARCO)
-					regTP->marco=registro.marco;
-				// termino de recorrer
-				break;
+			}else{
+				victima=regTP;
 			}
 		}
-		// avanzo
 	}
+	// Posiciono el puntero en la pagina siguiente con presencia
+	// con el ultimo i del while anterior
+	while(0 == puntero_siguiente){
 
+		if(i < (tablaPaginas->size - 1))
+			i++;
+		else
+			i=0;  // todas las paginas empiezan en 0
+
+		if(regTP->bitPresencia==1)
+			puntero_siguiente=i;
+	}
+	tablaPaginas->punteroClock=puntero_siguiente;
+
+	return victima;
+}
+
+stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t pagina){
+//stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag){
+	stRegistroTP *regTP = NULL;
+//	int i, estado;
+//
+//	/*
+//	 * Clock Modificado o Enhanced second chance
+//	 * Si el frame tiene el bit de acceso en 1, lo actualiza a 0 y avanza el puntero.
+//	 * Cuando encuentra un frame en 0, reemplaza la pagina que contiene por la que produjo el fallo de pagina.
+//	 *
+//	 * Las pagina modificadas no pueden reemplazarse hasta que se escriban en memoria secundaria (Disco).
+//	 * El clock mejorado genera 4 clases de frames:
+//	 * 		1) No accedida, No Modificada (bit2ndChance=0;bitModificado=0)
+//	 * 		2) Accedida, No modificada (bit2ndChance=1;bitModificado=0)
+//	 * 		3) No accedida, Modificada (bit2ndChance=0;bitModificado=1)
+//	 * 		4) Accedida, Modificada (bit2ndChance=1;bitModificado=1)
+//	 * 	Paso 1: Recorro la lista de frames buscando uno con los bits bit2ndChance=0; bitModificado=0 (No cambiar los bits de uso)
+//	 * 	Paso 2: Si en el paso anterior no encuentro ningun frame, recorro la lista de frames buscando los bits bit2ndChance=0; bitModificado=1.
+//	 * 	En el recorrido pongo el bit bit2ndChance en 0 a medida que voy pasando.
+//	 *	Paso 3: Si el paso anterior no encontro ningun frame, habre regresado a la posicion de comienzo y todos los frames tienen el bit2ndChance=0.
+//	 *	Proseguir con el paso 1 y de ser necesario el paso 2.
+//	 */
+//
+//	do{
+//		// recorro tabla Paso 1
+//		for(i=0;i<nodo->size;i++){
+//			regTP = nodo->tabla+(sizeof(stRegistroTP)*i);
+//
+//			// Si es valido el registro
+//			if(regTP->bitPresencia==1){
+//				// Si bit2ndChance=0; bitModificado=0 o avanzo.
+//				if(regTP->bit2ndChance==0 && regTP->bitModificado==0){
+//					regTP->bit2ndChance=registro.bit2ndChance;
+//					regTP->bitModificado=registro.bitModificado;
+//					regTP->bitPresencia=registro.bitPresencia;
+//					// Si no tengo que reusar la memoria, asigno el nuevo marco a la pagina
+//					if (flag!=REEMPLAZAR_MARCO)
+//						regTP->marco=registro.marco;
+//					// termino de recorrer
+//					estado=ENCONTRADO;
+//					return regTP;
+//				}
+//			}
+//			// avanzo
+//		}
+//		// recorro tabla Paso 2
+//		for(i=0;i<nodo->size && estado==NO_ENCONTRADO;i++){
+//			regTP = nodo->tabla+(sizeof(stRegistroTP)*i);
+//
+//			// Si es valido el registro
+//			if(regTP->bitPresencia==1){
+//				// Si bit2ndChance=0; bitModificado=1 o avanzo.
+//				if(regTP->bit2ndChance==0 && regTP->bitModificado==1){
+//					regTP->bit2ndChance=registro.bit2ndChance;
+//					regTP->bitModificado=registro.bitModificado;
+//					regTP->bitPresencia=registro.bitPresencia;
+//					// Si no tengo que reusar la memoria, asigno el nuevo marco a la pagina
+//					if (flag!=REEMPLAZAR_MARCO)
+//						regTP->marco=registro.marco;
+//					// termino de recorrer
+//					estado=ENCONTRADO;
+//					break;
+//				}else if(regTP->bit2ndChance==1){
+//					// Si bit2ndChance es 1 lo pongo en 0 y avanzo.
+//					regTP->bit2ndChance=0;
+//				}
+//			}
+//			// avanzo
+//
+//		}
+//	}while(estado==ENCONTRADO);
+//
 	return regTP;
 }
-stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag){
-	stRegistroTP *regTP;
-	int i, estado;
 
-	/*
-	 * Clock Modificado o Enhanced second chance
-	 * Si el frame tiene el bit de acceso en 1, lo actualiza a 0 y avanza el puntero.
-	 * Cuando encuentra un frame en 0, reemplaza la pagina que contiene por la que produjo el fallo de pagina.
-	 *
-	 * Las pagina modificadas no pueden reemplazarse hasta que se escriban en memoria secundaria (Disco).
-	 * El clock mejorado genera 4 clases de frames:
-	 * 		1) No accedida, No Modificada (bit2ndChance=0;bitModificado=0)
-	 * 		2) Accedida, No modificada (bit2ndChance=1;bitModificado=0)
-	 * 		3) No accedida, Modificada (bit2ndChance=0;bitModificado=1)
-	 * 		4) Accedida, Modificada (bit2ndChance=1;bitModificado=1)
-	 * 	Paso 1: Recorro la lista de frames buscando uno con los bits bit2ndChance=0; bitModificado=0 (No cambiar los bits de uso)
-	 * 	Paso 2: Si en el paso anterior no encuentro ningun frame, recorro la lista de frames buscando los bits bit2ndChance=0; bitModificado=1.
-	 * 	En el recorrido pongo el bit bit2ndChance en 0 a medida que voy pasando.
-	 *	Paso 3: Si el paso anterior no encontro ningun frame, habre regresado a la posicion de comienzo y todos los frames tienen el bit2ndChance=0.
-	 *	Proseguir con el paso 1 y de ser necesario el paso 2.
-	 */
 
-	do{
-		// recorro tabla Paso 1
-		for(i=0;i<nodo->size;i++){
-			regTP = nodo->tabla+(sizeof(stRegistroTP)*i);
+int agregarFrameATablaMarcos(uint16_t frameNuevo, stNodoListaTP *tablaPaginas, uint16_t pagina){
 
-			// Si es valido el registro
-			if(regTP->bitPresencia==1){
-				// Si bit2ndChance=0; bitModificado=0 o avanzo.
-				if(regTP->bit2ndChance==0 && regTP->bitModificado==0){
-					regTP->bit2ndChance=registro.bit2ndChance;
-					regTP->bitModificado=registro.bitModificado;
-					regTP->bitPresencia=registro.bitPresencia;
-					// Si no tengo que reusar la memoria, asigno el nuevo marco a la pagina
-					if (flag!=REEMPLAZAR_MARCO)
-						regTP->marco=registro.marco;
-					// termino de recorrer
-					estado=ENCONTRADO;
-					return regTP;
-				}
-			}
-			// avanzo
-		}
-		// recorro tabla Paso 2
-		for(i=0;i<nodo->size && estado==NO_ENCONTRADO;i++){
-			regTP = nodo->tabla+(sizeof(stRegistroTP)*i);
+	stRegistroTP *registro = NULL;
+	registro = obtenerRegistroTabladePaginas(tablaPaginas, pagina);
 
-			// Si es valido el registro
-			if(regTP->bitPresencia==1){
-				// Si bit2ndChance=0; bitModificado=1 o avanzo.
-				if(regTP->bit2ndChance==0 && regTP->bitModificado==1){
-					regTP->bit2ndChance=registro.bit2ndChance;
-					regTP->bitModificado=registro.bitModificado;
-					regTP->bitPresencia=registro.bitPresencia;
-					// Si no tengo que reusar la memoria, asigno el nuevo marco a la pagina
-					if (flag!=REEMPLAZAR_MARCO)
-						regTP->marco=registro.marco;
-					// termino de recorrer
-					estado=ENCONTRADO;
-					break;
-				}else if(regTP->bit2ndChance==1){
-					// Si bit2ndChance es 1 lo pongo en 0 y avanzo.
-					regTP->bit2ndChance=0;
-				}
-			}
-			// avanzo
+	if(registro==NULL)
+		return EXIT_FAILURE;
 
-		}
-	}while(estado==ENCONTRADO);
+	registro->marco = frameNuevo;
+	registro->bitPresencia = 1;
+	registro->bitModificado = 0;
+	registro->bit2ndChance = 1;   // Empieza inicializado en 1 (ver ppt)
 
-	return regTP;
+	// Muevo el puntero de marcos de esta tabladePaginas
+	tablaPaginas->punteroClock = pagina;
+
+	return EXIT_SUCCESS;
 }
+
 
 
 /* Devuelve null si no existe la tabla de paginas del PID o es un proceso nuevo y no hay marcos libres */
-stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t pagina, stRegistroTP registro, uint8_t flagReemplazoAsignados){
+int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint16_t pagina){
 
-	stNodoListaTP *nodo;
-	stRegistroTP *retorno;
-	int presencias=0;
+	stRegistroTP *victima = NULL;
+	victima = obtenerRegistroTabladePaginas(tablaPaginas, pagina);
 
-	/* Obtiene Tabla de Paginas de PID */
-	nodo = buscarPID(pid);
-	if(nodo==NULL) // valido que exista
-		return NULL;
+	// El registro de la pagina solicitada se va a guardar en frameNuevo
+	// Busco victima en la tabla de paginas del proceso.
+	if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK_MODIFICADO"))
+		victima = EjecutarClockModificado(tablaPaginas, pagina);
+	else
+		victima = EjecutarClock(tablaPaginas, pagina);
 
-	/* Obtengo presencias en MP de la tabla de PID */
-	presencias = obtenerPresenciasTabladePaginas(nodo);
+	if(victima==NULL)
+		return EXIT_FAILURE;
 
-// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
-	if(presencias==0 && flagReemplazoAsignados==REEMPLAZAR_MARCO)
-		return NULL;
-
-// - Hay espacio en memoria y es menor a la cantidad de pag por pid-> la ubico en un nuevo marco y nuevo registro de Tabla.
-	if(presencias < losParametros.frameByProc && flagReemplazoAsignados!=REEMPLAZAR_MARCO){
-		retorno = obtenerRegistroTabladePaginas(nodo, pagina);
-
-		if(retorno->bitModificado==1){
-			grabarEnSwap(pid, retorno->marco, pagina);
-			retorno->bitModificado=0;
-		}
-
-		retorno->bit2ndChance=registro.bit2ndChance;
-		retorno->bitModificado=registro.bitModificado;
-		retorno->bitPresencia=registro.bitPresencia;
-		retorno->marco=registro.marco;
-
-// - Hay espacio en memoria y es mayor a la cantidad de pag por pid-> la ubico en un nuevo marco y reemplazo un registro de Tabla.
-// - No hay espacio en memoria y es menor a la cantidad de pag por pid-> la ubico en un marco asignado y reemplazo un registro de Tabla.
-// - No hay espacio en memoria y es mayor a la cantidad de pag por pid-> la ubico en un marco asignado y reemplazo un registro de Tabla.
+	if(victima->bitModificado==1){
+		grabarEnSwap(tablaPaginas->pid, victima->marco, pagina);
 	}
 
-	// El proceso ocupo todos sus frames disponibles , pero hay marcos disponibles
-	if(presencias >= losParametros.frameByProc && flagReemplazoAsignados!=REEMPLAZAR_MARCO){
-		// Primero libero el marco que pedi en pageFault
-		liberarMarco(registro.marco);
+	// Devuelvo el marco de la victima
+	*frameNuevo = victima->marco;
 
-		if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK"))
-			retorno = EjecutarClock(nodo, pagina, registro, flagReemplazoAsignados);
-		else if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK_MODIFICADO"))
-			retorno = EjecutarClockModificado(nodo, pagina, registro,flagReemplazoAsignados);
-		else
-			log_error("No hay un algoritmo correctamente cargado");
-	}
-	return retorno;
+	return EXIT_SUCCESS;
 }
 
 void creatListaDeTablas(){
@@ -226,8 +234,9 @@ int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 	nodo = calloc(1,sizeof(stNodoListaTP));
 
 	nodo->pid=processId;
-	nodo->size=longitud_tabla;  // Como maximo marcos_x_proceso --> NO
+	nodo->size=longitud_tabla;
 	nodo->tabla=tabla;
+	nodo->punteroClock = 0; // Apunta al ultimo elemento de la tabla
 
 	// agrego retardo
 	// TODO Sacar // sleep(losParametros.delay);
@@ -322,29 +331,30 @@ void _mostrarContenidoTP(stNodoListaTP *list_nodo){
 }
 void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 	stRegistroTP *nodo;
+	stPosicion posicion;
 	int i;
-	uint16_t  offset;
-	void *posicion;
-	char* buffer, *bufferTemp;
-/*
+	uint16_t marco;
+	void* buffer;
+
 	printf("\npid: %d\n", nodoPid->pid);
 	nodo= ((stRegistroTP*)nodoPid->tabla);
 	for(i=0;i<nodoPid->size;i++){
 		if(((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->bitPresencia==1){
 			printf("Pagina %d:\n", i);
-			offset = ((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->marco*losParametros.frameSize;
-			posicion=memoriaPrincipal+offset;
+			posicion.offset=0;
+			posicion.pagina=i;
+			posicion.size=losParametros.frameSize;
 
-
-			bufferTemp = (char*)leerMemoria(buffer,posicion, losParametros.frameSize);
+			marco = ((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->marco;
 			buffer = calloc(1, losParametros.frameSize+1);
-			memcpy(buffer, bufferTemp, losParametros.frameSize);
-			free(bufferTemp);
-			printf("%s", buffer);
+			if(leerMemoria(&buffer, marco, posicion)!=0){
+				log_error("no se pudo leer memoria - marco: %d", marco);
+			}
+			printf("%s", (char*)buffer);
 			free(buffer);
 		}
 	}
-*/
+
 }
 void marcarMemoriaModificada(uint16_t pid){
 	int i;
