@@ -387,10 +387,10 @@ int main(int argc, char *argv[]) {
 					else {
 
 						/* Valido si esta definido unMensaje */
-						unMensaje.contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
-						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
+//						unMensaje.contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
+//						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
-						if (!recibirMensajeIPC(unSocket,&unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
+						if (recibirHeaderIPC(unSocket,&unMensaje.header)<=0){ /* Si se cerro una conexion, veo que el socket siga abierto*/
 
 							if(unSocket==losParametros.sockSwap){
 								log_error("Se perdio conexion con el swap.. Finalizando UMC.");
@@ -425,9 +425,8 @@ int main(int argc, char *argv[]) {
 
 	        	        			end = calloc(1,sizeof(stEnd));
 	        	        			end->socketResp = unCliente;
-	        	        			// TODO ver si sigue funcionando mal
-	        	        			end->pid = *(unMensaje.contenido);
-
+//	        	        			end->pid = *(unMensaje.contenido);
+	        	        			recv(unSocket, &end->pid, sizeof(uint16_t), 0);
 
 	        	        			finalizarProgramaNucleo(end);
 	        	        			break;
