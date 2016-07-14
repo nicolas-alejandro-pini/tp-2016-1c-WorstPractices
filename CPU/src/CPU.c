@@ -305,34 +305,17 @@ void imprimir(t_valor_variable valor_mostrar){
 	stHeaderIPC* unHeaderPrimitiva;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIR);
-	unHeaderPrimitiva->largo = sizeof(t_valor_variable);
+	unHeaderPrimitiva->largo = sizeof(uint32_t) + sizeof(t_valor_variable);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&valor_mostrar)){
+	if(!enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
 		log_error("Error al enviar mensaje de IMPRIMIR.");
 		return;
 	}
 
-	log_info ("Se manda a imprimir a la consola %d el valor %d",unPCB->socketConsola,valor_mostrar);
+	send(configuracionInicial.sockNucleo, &unPCB->socketConsola, sizeof(uint32_t), 0);
+	send(configuracionInicial.sockNucleo, &valor_mostrar, sizeof(t_valor_variable), 0);
 
-	unHeaderPrimitiva->tipo = CONSOLA;
-	unHeaderPrimitiva->largo = sizeof(uint32_t);
-
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola)){
-		log_error("Error al enviar mensaje de IMPRIMIR.");
-		return;
-	}
-
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
-		log_error("Error al recibir la confirmacion del nucleo.");
-		return;
-	}
-
-	if(unHeaderPrimitiva->tipo != OK){
-		log_error("Error de primitiva IMPRIMIR");
-		return;
-	}
-
-	log_info("Se imprimio correctamente la variable.");
+	log_info("Se envio al nucleo el valor de la variable para ser impresa.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 	return;
@@ -353,17 +336,7 @@ void imprimirTexto(char* texto){
 	send(configuracionInicial.sockNucleo, &unPCB->socketConsola, sizeof(uint32_t), 0);
 	send(configuracionInicial.sockNucleo, texto, strlen(texto) + 1, 0);
 
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
-		log_error("Error al recibir la confirmacion del nucleo.");
-		return;
-	}
-
-	if(unHeaderPrimitiva->tipo != OK){
-		log_error("Error de primitiva IMPRIMIR");
-		return;
-	}
-
-	log_info("Se imprimio correctamente la variable.");
+	log_info("Se envio al nucleo la orden de imprimir el texto.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 
