@@ -196,9 +196,9 @@ int main(int argc, char *argv[]) {
 	// Solo tests
 	//exit(EXIT_SUCCESS);
 
-	printf("-----------------------------------------------------------------------------\n");
-	printf("------------------------------------UMC--------------------------------------\n");
-	printf("------------------------------------v1.0-------------------------------------\n\n");
+	log_info("-----------------------------------------------------------------------------");
+	log_info("------------------------------------UMC--------------------------------------");
+	log_info("------------------------------------v1.0-------------------------------------\n");
 
 
 
@@ -283,8 +283,8 @@ int main(int argc, char *argv[]) {
 
 	/* ........................................Ciclo Principal SERVER........................................ */
 
-		printf(".............................................................................\n");
-		printf("..............................Esperando Conexion.............................\n");
+		log_info(".............................................................................");
+		log_info("..............................Esperando Conexion.............................");
 		fflush(stdout);
 
 
@@ -311,11 +311,11 @@ int main(int argc, char *argv[]) {
 
 		        		unCliente = aceptar(losParametros.sockEscuchador,&addressAceptado);
 
-		        		printf("Nuevo pedido de conexion...\n");
+		        		log_info("Nuevo pedido de conexion...\n");
 
 		        		unaCabecera = nuevoHeaderIPC(QUIENSOS);
 		        		if(!enviarHeaderIPC(unCliente,unaCabecera)){
-		        			printf("HandShake Error - No se pudo enviar mensaje QUIENSOS\n");
+		        			log_info("HandShake Error - No se pudo enviar mensaje QUIENSOS\n");
 		        			liberarHeaderIPC(unaCabecera);
 		        			close(unCliente);
 		        			continue;
@@ -425,14 +425,16 @@ int main(int argc, char *argv[]) {
 
 	        	        			end = calloc(1,sizeof(stEnd));
 	        	        			end->socketResp = unCliente;
-	        	        			end->pid = atoi(unMensaje.contenido);
+	        	        			// TODO ver si sigue funcionando mal
+	        	        			end->pid = *(unMensaje.contenido);
+
 
 	        	        			finalizarProgramaNucleo(end);
 	        	        			break;
 
 
 	        	        		default:
-	        	        			printf("Se recibio una peticion con un codigo desconocido...%d", unMensaje.header.tipo);
+	        	        			log_info("Se recibio una peticion con un codigo desconocido...%d", unMensaje.header.tipo);
 	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;
@@ -455,7 +457,7 @@ int main(int argc, char *argv[]) {
 		cerrarSockets(&losParametros);
 		loadInfo_destruir(&losParametros); // libera losParametros
 		destruirMemoriaPrincipal();
-		printf("\nSERVER: Fin del programa\n");
+		log_info("\nSERVER: Fin del programa\n");
 		/*loguear(INFO_LOG,"Fin del programa","SERVER");*/
 		return EXIT_SUCCESS;
 

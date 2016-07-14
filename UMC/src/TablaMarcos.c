@@ -322,29 +322,30 @@ void _mostrarContenidoTP(stNodoListaTP *list_nodo){
 }
 void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 	stRegistroTP *nodo;
+	stPosicion posicion;
 	int i;
-	uint16_t  offset;
-	void *posicion;
-	char* buffer, *bufferTemp;
-/*
+	uint16_t marco;
+	void* buffer;
+
 	printf("\npid: %d\n", nodoPid->pid);
 	nodo= ((stRegistroTP*)nodoPid->tabla);
 	for(i=0;i<nodoPid->size;i++){
 		if(((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->bitPresencia==1){
 			printf("Pagina %d:\n", i);
-			offset = ((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->marco*losParametros.frameSize;
-			posicion=memoriaPrincipal+offset;
+			posicion.offset=0;
+			posicion.pagina=i;
+			posicion.size=losParametros.frameSize;
 
-
-			bufferTemp = (char*)leerMemoria(buffer,posicion, losParametros.frameSize);
+			marco = ((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->marco;
 			buffer = calloc(1, losParametros.frameSize+1);
-			memcpy(buffer, bufferTemp, losParametros.frameSize);
-			free(bufferTemp);
-			printf("%s", buffer);
+			if(leerMemoria(&buffer, marco, posicion)!=0){
+				log_error("no se pudo leer memoria - marco: %d", marco);
+			}
+			printf("%s", (char*)buffer);
 			free(buffer);
 		}
 	}
-*/
+
 }
 void marcarMemoriaModificada(uint16_t pid){
 	int i;

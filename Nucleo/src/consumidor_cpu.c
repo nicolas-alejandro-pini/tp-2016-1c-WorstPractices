@@ -20,7 +20,6 @@ int consola_activa(stPCB *unPCB) {
 		}
 		return 0;
 	}
-
 	return 1;
 }
 
@@ -56,12 +55,13 @@ void *consumidor_cpu(int unCliente) {
 	stPCB *unPCB;
 	t_paquete paquete;
 	stSharedVar *unaSharedVar;
-	uint32_t socket_consola_to_print;
+	uint32_t socket_consola_to_print,pid_fin;
 	t_valor_variable valor_impresion;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
-	int error = 0, offset = 0, dispositivo_time;
+	int error = 0, offset = 0, dispositivo_time,fin_ejecucion;
 
 	while (!error) {
+		fin_ejecucion = 0;
 		unPCB = ready_consumidor();
 
 		if(!consola_activa(unPCB))
@@ -97,8 +97,8 @@ void *consumidor_cpu(int unCliente) {
 			printf("PCB [PID - %d] READY a EXEC\n", unPCB->pid);
 			free_paquete(&paquete);
 		}
-
-		if (!recibirMensajeIPC(unCliente, &unMensajeIPC)) {
+		while(fin_ejecucion==0&&error!=1){
+		if (!recibirHeaderIPC(unCliente, &unMensajeIPC.header)) {
 			log_error("Error al recibir respuesta del CPU");
 			error = 1;
 			close(unCliente);
@@ -128,7 +128,6 @@ void *consumidor_cpu(int unCliente) {
 				/*Se comprueba que el PCB corresponda a una consola que este conectada, si esta desconectada libera el pcb que pide I/O y el CPU sigue con otro pcb*/
 				printf("PCB [PID - %d] READY a EXEC\n", unPCB->pid);
 				if(!consola_activa(unPCB)){
-
 					continue;
 				}
 				if(bloquear_pcb(unPCB,dispositivo_name,dispositivo_time)!=EXIT_SUCCESS){
@@ -138,9 +137,21 @@ void *consumidor_cpu(int unCliente) {
 
 				break;
 			case FINANSISOP:
-				/*Termina de ejecutar el PCB, en este caso deberia moverlo a la cola de EXIT para que luego sea liberada la memoria*/
+				fin_ejecucion = 1;
+				printf("\n--------------------------------------\n");
+				recv(unCliente, &pid_fin, sizeof(uint32_t), 0);
+				printf("PCB [PID - %d] Fin de ejecucion\n",pid_fin);
+
+				unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
+				unHeaderIPC->largo = sizeof(uint32_t);
+				if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*)&pid_fin)) {
+					log_error("Error al enviar el fin de programa a la UMC");
+				}
+				liberarHeaderIPC(unHeaderIPC);
+				printf("\n--------------------------------------\n");
 				break;
 			case QUANTUMFIN:
+				fin_ejecucion = 1;
 				if(recibir_paquete (unCliente, &paquete)){
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
@@ -251,7 +262,8 @@ void *consumidor_cpu(int unCliente) {
 				recv(unCliente, &valor_impresion, sizeof(t_valor_variable), 0);
 
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIR);
-				if(!enviarMensajeIPC(socket_consola_to_print,unHeaderIPC,(char*)valor_impresion)){
+				unHeaderIPC->largo = sizeof(t_valor_variable);
+				if(!enviarMensajeIPC(socket_consola_to_print,unHeaderIPC,(char*)&valor_impresion)){
 					log_error("Error al imprimir en consola el valor de la variable");
 				}
 				liberarHeaderIPC(unHeaderIPC);
@@ -276,6 +288,7 @@ void *consumidor_cpu(int unCliente) {
 				printf("\n--------------------------------------\n");
 				break;
 			}
+		}
 		}
 	}
 	if (error) {
