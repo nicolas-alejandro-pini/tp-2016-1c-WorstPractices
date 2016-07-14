@@ -59,7 +59,7 @@ void* inicializarMemoriaPrincipal(long tamanio, long cantidad){
 	void *r;
 	uint16_t i,*p;
 	if((r=calloc(cantidad, tamanio))==NULL){
-		printf("No hay memoria disponible...");
+		log_info("No hay memoria disponible...");
 		exit(-1);
 	}
 	// inicializo la lista de marcos libres
