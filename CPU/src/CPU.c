@@ -1018,7 +1018,7 @@ int main(void) {
 								while (quantum > 0 && unPCB->pc <= unPCB->metadata_program->instrucciones_size){
 									if(ejecutarInstruccion() == OK)
 									{
-										sleep(quantumSleep);
+										usleep(quantumSleep*1000);
 										quantum --; 	/* descuento un quantum para proxima ejecución */
 										unPCB->pc ++; 	/* actualizo el program counter a la siguiente posición */
 
