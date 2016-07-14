@@ -30,7 +30,7 @@ stPCB *crear_pcb(int socket_consola, int cantidad_pag_codigo, int stack_size, st
 	unPCB->pc = 0;
 	unPCB->socketConsola = socket_consola;
 	unPCB->socketCPU = 0;
-	unPCB->paginaInicioStack = cantidad_pag_codigo + 1;
+	unPCB->paginaInicioStack = cantidad_pag_codigo;
 	unPCB->cantidadPaginas = cantidad_pag_codigo + stack_size;
 
 	if(unMensajeIPC->contenido==NULL){

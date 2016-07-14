@@ -56,8 +56,9 @@ void *consumidor_cpu(int unCliente) {
 	stPCB *unPCB;
 	t_paquete paquete;
 	stSharedVar *unaSharedVar;
+	uint32_t socket_consola_to_print;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
-	int error = 0, offset = 0, valor_impresion, socket_consola_to_print, dispositivo_time;
+	int error = 0, offset = 0, valor_impresion, dispositivo_time;
 
 	while (!error) {
 		unPCB = ready_consumidor();
@@ -93,7 +94,6 @@ void *consumidor_cpu(int unCliente) {
 				continue;
 			}
 			printf("PCB [PID - %d] READY a EXEC\n", unPCB->pid);
-			pcb_destroy(unPCB);
 			free_paquete(&paquete);
 		}
 
@@ -268,13 +268,10 @@ void *consumidor_cpu(int unCliente) {
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de impresion...\n");
-				texto_imprimir = unMensajeIPC.contenido;
-				if (!recibirMensajeIPC(unCliente, &unMensajeIPC)) {
-					log_error("Error al recibir el mensaje de impresion");
-					error = 1;
-					continue;
-				}
-				socket_consola_to_print = atoi(unMensajeIPC.contenido);
+
+				recv(unCliente, socket_consola_to_print, sizeof(uint32_t), 0);
+				recv(unCliente, texto_imprimir, unHeaderIPC->largo - sizeof(uint32_t), 0);
+
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIRTEXTO);
 				if(!enviarMensajeIPC(socket_consola_to_print,unHeaderIPC,texto_imprimir)){
 					log_error("Error al enviar el texto a imprimir");
@@ -284,7 +281,6 @@ void *consumidor_cpu(int unCliente) {
 				liberarHeaderIPC(unHeaderIPC);
 				printf("Se imprimio el valor [%d]\n",valor_impresion);
 				printf("\n--------------------------------------\n");
-
 				break;
 			}
 		}
