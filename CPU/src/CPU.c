@@ -179,9 +179,13 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	/*Envio los tres datos a la UMC*/
 	send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+	log_info("Se asigna en la pagina: %d",pagina);
 	send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
+	log_info("Se asigna en el offset: %d",offset);
 	send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
+	log_info("Se asigna en el tamanio: %d",tamanio);
 	send(configuracionInicial.sockUmc,&valor,tamanio,0);
+	log_info("Se asigna el valor: %d",valor);
 
 	unHeader = nuevoHeaderIPC(ERROR);
 	if(!recibirHeaderIPC(configuracionInicial.sockUmc, unHeader)){
@@ -307,6 +311,8 @@ void imprimir(t_valor_variable valor_mostrar){
 		log_error("Error al enviar mensaje de IMPRIMIR.");
 		return;
 	}
+
+	log_info ("Se manda a imprimir a la consola %d el valor %d",unPCB->socketConsola,valor_mostrar);
 
 	unHeaderPrimitiva->tipo = CONSOLA;
 	unHeaderPrimitiva->largo = sizeof(uint32_t);
@@ -670,16 +676,16 @@ int cargarPCB(void){
  Description : Funcion para obtener
  =========================================================================================
  */
-int calcularPaginaInstruccion (int paginaLogica){
-
-	int paginaFisica = 0; //Definimos que el codigo arranca en la pagina 0.
-	int i;
-
-	for (i=1; paginaLogica > i;i++)
-		paginaFisica++;
-
-	return paginaFisica;
-}
+//int calcularPaginaInstruccion (int paginaLogica){
+//
+//	int paginaFisica = 0; //Definimos que el codigo arranca en la pagina 0.
+//	int i;
+//
+//	for (i=1; paginaLogica > i;i++)
+//		paginaFisica++;
+//
+//	return paginaFisica;
+//}
 
 /*
  =========================================================================================
@@ -706,7 +712,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
 
-	for (pagina=1;pagina<=cantidadPaginas;pagina++)
+	for (pagina=0;pagina<cantidadPaginas;pagina++)
 	{
 
 		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
@@ -717,7 +723,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 				sizeToUMC = pagina*tamanioPaginaUMC - startToUMC;
 
 
-			paginaToUMC = calcularPaginaInstruccion(pagina);
+			paginaToUMC = pagina; //calcularPaginaInstruccion(pagina);
 			startToUMC %= tamanioPaginaUMC;
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
 			unHeader->largo = sizeof(uint16_t);
