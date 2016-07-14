@@ -649,16 +649,16 @@ int cargarPCB(void){
  Description : Funcion para obtener
  =========================================================================================
  */
-//int calcularPaginaInstruccion (int paginaLogica){
-//
-//	int paginaFisica = 0; //Definimos que el codigo arranca en la pagina 0.
-//	int i;
-//
-//	for (i=1; paginaLogica > i;i++)
-//		paginaFisica++;
-//
-//	return paginaFisica;
-//}
+int calcularPaginaInstruccion (int paginaLogica){
+
+	int paginaFisica = 0; //Definimos que el codigo arranca en la pagina 0.
+	int i;
+
+	for (i=1; paginaLogica > i;i++)
+		paginaFisica++;
+
+	return paginaFisica;
+}
 
 /*
  =========================================================================================
@@ -685,7 +685,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
 
-	for (pagina=0;pagina<cantidadPaginas;pagina++)
+	for (pagina=0;pagina<=cantidadPaginas;pagina++)
 	{
 
 		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
@@ -696,7 +696,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 				sizeToUMC = pagina*tamanioPaginaUMC - startToUMC;
 
 
-			paginaToUMC = pagina; //calcularPaginaInstruccion(pagina);
+			paginaToUMC = calcularPaginaInstruccion(pagina);
 			startToUMC %= tamanioPaginaUMC;
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
 			unHeader->largo = sizeof(uint16_t);
@@ -719,11 +719,11 @@ char* getInstruccion (int startRequest, int sizeRequest){
 				return NULL;
 			}else{
 
-				log_info("Recibi de la UMC la instrucción: %s",unMensaje.contenido);
-
 				instruccionTemp =(char*) malloc(sizeToUMC + 1 );
 				memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
 				*(instruccionTemp + sizeToUMC) = '\0';
+
+				log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
 
 				if(instruccion==NULL){
 					instruccion =(char*) malloc(sizeToUMC + 1 );
@@ -795,21 +795,26 @@ int devolverPCBalNucleo(void){
 	int resultado=  0;
 
 	if (unPCB->metadata_program->instrucciones_size < unPCB->pc) //Si la cantidad total de instrucciones menor al pc significa que termino el programa.
+	{
 		unHeaderIPC = nuevoHeaderIPC(FINANSISOP);
+		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+	}
 	else
+	{
 		unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
 
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
-	crear_paquete(&paquete, EXECANSISOP);
-	serializar_pcb(&paquete, unPCB);
+		crear_paquete(&paquete, EXECANSISOP);
+		serializar_pcb(&paquete, unPCB);
 
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el PCB al Nucleo[%d]", unPCB->pid);
-		resultado = -1;
+		if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
+			log_error("No se pudo enviar el PCB al Nucleo[%d]", unPCB->pid);
+			resultado = -1;
+		}
+
+		free_paquete(&paquete);
 	}
-
-	free_paquete(&paquete);
 
 	liberarHeaderIPC(unHeaderIPC);
 
