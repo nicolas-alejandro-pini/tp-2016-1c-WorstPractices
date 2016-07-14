@@ -7,6 +7,11 @@
 #include "pcb.h"
 
 pthread_mutex_t mutex_pid = PTHREAD_MUTEX_INITIALIZER;
+int pidCounter; /*Ultimo PID asignado*/
+
+void inicializar_pidCounter(){
+	pidCounter = 0;
+}
 
 int pid_incrementer() {
 

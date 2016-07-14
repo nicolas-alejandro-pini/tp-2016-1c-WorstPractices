@@ -18,7 +18,6 @@ int consola_activa(stPCB *unPCB) {
 			log_error("Error al enviar el fin de programa a la UMC");
 			return (-4);
 		}
-		pcb_destroy(unPCB);
 		return 0;
 	}
 
