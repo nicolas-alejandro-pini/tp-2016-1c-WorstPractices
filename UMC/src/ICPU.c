@@ -170,6 +170,10 @@ stRegistroTP* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *frameNu
 
 	if(paginaLeidaSwap==NULL)
 		return NULL;
+	else{
+		log_info("Page Fault");
+		loguear_buffer(paginaLeidaSwap, losParametros.frameSize);
+	}
 
 	// cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
 	regTP.bit2ndChance=0;
@@ -278,19 +282,30 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posR.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.size), sizeof(uint16_t),0);
 
-			if(posR.size > 0)
-			{
-				reservarPosicion((void*)&buffer, posR.size);
-				leerBytes(&buffer, &posR, pidActivo);
-
-				//envio la respuesta de la lectura a la CPU
+			reservarPosicion((void*)&buffer, posR.size);
+			if(leerBytes(&buffer, &posR, pidActivo)){
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				log_info("Error al leer bytes");
+			}
+			else{
 				unHeader = nuevoHeaderIPC(OK);
 				unHeader->largo = posR.size;
-				if(!enviarMensajeIPC(unSocket,unHeader,buffer)){
-					log_error("No se pudo enviar el MensajeIPC");
-					return;
-				}
+				log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 			}
+
+			// Logueo lo que llego para escribir
+			log_info("Leer bytes");
+			loguear_buffer(buffer, posR.size);
+
+			//envio la respuesta de la lectura a la CPU
+			if(!enviarMensajeIPC(unSocket,unHeader,buffer)){
+				log_error("No se pudo enviar el READ_BTYES_PAGE");
+				return;
+			}
+
+
+			imprimirMemoriaPrincipal();
 
 			break;
 
@@ -300,19 +315,31 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posW.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.tamanio), sizeof(uint16_t),0);
 			recv(unSocket, posW.buffer, posW.tamanio,0);
-			//posW =(stEscrituraPagina*)(unMensaje.contenido);
+
+			// Logueo lo que llego para escribir
+			log_info("Escribir bytes");
+			loguear_buffer(posW.buffer, posW.tamanio);
+
+			reservarPosicion((void*)&posW.buffer, posW.tamanio);
+			if(escribirBytes(&posW, pidActivo)){
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				log_info("Error al escribir bytes");
+			}
+			else{
+				unHeader = nuevoHeaderIPC(OK);
+				unHeader->largo = posW.tamanio;
+				log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
+			}
+			limpiarEscrituraPagina(posW.buffer, &posW);
+
 			//envio la respuesta de la Escritura a la CPU
-//			if(!enviarHeaderIPC(socketCPU,nuevoHeaderIPC(OK))){
-//				log_error("No se pudo enviar el MensajeIPC");
-//				return;
-//			}
-			//envio la respuesta de la lectura a la CPU
-//			if(!enviarHeaderIPC(socketCPU,nuevoHeaderIPC(ERROR))){
-//				log_error("No se pudo enviar el MensajeIPC");
-//				return;
-//			}
-			//log_info("Se pidio leer pagina %d offset %d tamaño %d");
-			//escribirBytes(&posW, pidActivo, unSocket);
+			if(!enviarHeaderIPC(unSocket,unHeader)){
+				log_error("No se pudo enviar el WRITE_BYTES_PAGE");
+				return;
+			}
+
+			imprimirMemoriaPrincipal();
 
 			break;
 
@@ -379,4 +406,12 @@ void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos){
 void reservarPosicion(void **buffer, uint16_t size){
 	*buffer = malloc(size);
 	strcpy(*buffer, "puis");
+}
+
+void loguear_buffer(void *buffer, uint16_t size){
+	char *buffer_log = malloc(size + 1);
+	memcpy(buffer_log, buffer, size);
+	buffer_log[size]='\0';
+	log_info("Buffer[%s]\n", buffer_log);
+	free(buffer_log);
 }

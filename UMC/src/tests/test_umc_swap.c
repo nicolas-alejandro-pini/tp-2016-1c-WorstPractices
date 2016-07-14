@@ -367,20 +367,4 @@ int calcular_cantidad_paginas(int size_programa,int tamanio_paginas){
 	return ((int)(size_programa/tamanio_paginas) + cant);
 }
 
-int imprimirMemoriaPrincipal() {
-	uint32_t i=0;
-
-	char pagina[losParametros.frameSize + 1];
-	printf("MemoriaPrincipal[%d]\n", losParametros.frames);
-	// Imprimo por tamaño pagina
-	for(i=0;i<losParametros.frames;i++){
-		memcpy(pagina, memoriaPrincipal+(losParametros.frameSize*i), losParametros.frameSize);
-		pagina[losParametros.frameSize]='\0';
-		printf("pag[%d][%s]\n", i, pagina);
-	}
-
-	return EXIT_SUCCESS;
-}
-
-
 

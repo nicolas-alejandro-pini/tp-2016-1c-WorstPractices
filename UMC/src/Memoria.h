@@ -26,8 +26,8 @@ void destruirMemoriaPrincipal();
 int leerMemoria(void **buffer, uint16_t frameBuscado, stPosicion posLogica);
 int escribirMemoria(void* buffer, uint16_t frameBuscado, uint16_t offset, uint16_t size);
 
-
 uint16_t obtenerMarcoLibre();
 uint16_t liberarMarco(uint16_t marco);
+int imprimirMemoriaPrincipal();
 
 #endif /* MEMORIA_H_ */
