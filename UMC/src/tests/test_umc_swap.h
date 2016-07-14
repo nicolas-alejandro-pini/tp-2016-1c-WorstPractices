@@ -22,6 +22,6 @@ void test_read_bytes_page();
 void test_write_bytes_page();
 void test_fin_programa();
 void test_write_read_guarda_en_swap();
-
+void test_write_stack();
 
 #endif /* TESTS_TEST_UMC_SWAP_H_ */

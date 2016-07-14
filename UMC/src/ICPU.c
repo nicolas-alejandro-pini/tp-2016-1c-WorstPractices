@@ -159,50 +159,60 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 	return EXIT_FAILURE;
 }
 
-stRegistroTP* ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *frameNuevo){
-	uint16_t marco;
-	stRegistroTP regTP, *registro;
+int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
+	uint16_t frameNuevo = 0;
+	int presencias=0;
+	stNodoListaTP *tablaPaginas;
 	void *paginaLeidaSwap;
 
 	// acceder a swap con las pagina que necesito
-	// TODO Mismo socket , deberia ser mutex?
 	paginaLeidaSwap = recibirPagina(pid, pagina);
 
 	if(paginaLeidaSwap==NULL)
-		return NULL;
+		return EXIT_FAILURE;
 	else{
 		log_info("Page Fault");
 		loguear_buffer(paginaLeidaSwap, losParametros.frameSize);
 	}
 
-	// cargo en Tabla la pagina obtenida aplicando algoritmo de reemplazo de ser necesario
-	regTP.bit2ndChance=0;
-	regTP.bitModificado=0;
-	regTP.bitPresencia=1;
+	/* Obtiene Tabla de Paginas de PID */
+	tablaPaginas = buscarPID(pid);
+	if(tablaPaginas==NULL) // valido que exista
+		return EXIT_FAILURE;
 
-	marco = obtenerMarcoLibre();
-	if(marco == 0)
-	{
-		registro = reemplazarValorTabla(pid, pagina, regTP, REEMPLAZAR_MARCO);
-		*frameNuevo = registro->marco;
-	}
-	else
-	{
-		regTP.marco = marco;
-		*frameNuevo = marco;
-		registro = reemplazarValorTabla(pid, pagina, regTP, NULL);
+	/* Obtengo presencias en MP de la tabla de PID */
+	presencias = obtenerPresenciasTabladePaginas(tablaPaginas);
+
+	// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
+	if(0 == presencias && 0 == hayMarcoLibre())
+		return EXIT_FAILURE;
+
+	// Reemplazo dentro de los marcos
+	if(presencias < losParametros.frameByProc && 0 != hayMarcoLibre()){
+		frameNuevo = obtenerMarcoLibre();
+		agregarFrameATablaMarcos(frameNuevo, tablaPaginas, pagina);
 	}
 
-	if (registro==NULL)
-		// Se rechaza por no haber memoria
-		return registro;
+	// Nunca va a llegar al limite de marcos por proceso por falta de memoria
+	if(presencias < losParametros.frameByProc && 0 == hayMarcoLibre()){
+		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
+	}
+
+	// Me las arreglo con los marcos que tengo (que no puede ser 0 )
+	if(presencias >= losParametros.frameByProc){
+		if(0 == presencias )  // por las dudas avisarlo... (error de configuracion)
+			return EXIT_FAILURE;
+		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
+	}
+
+	if(0 == frameNuevo)
+		return EXIT_FAILURE;
 
 	// cargo en memoria la pagina obtenida
-	escribirMemoria(paginaLeidaSwap, *frameNuevo, 0, losParametros.frameSize);
-
+	escribirMemoria(paginaLeidaSwap, frameNuevo, 0, losParametros.frameSize);
 	free(paginaLeidaSwap);
 
-	return registro;
+	return EXIT_SUCCESS;
 }
 
 void finalizarPrograma(uint16_t pid, uint16_t socketCPU){

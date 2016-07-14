@@ -106,6 +106,16 @@ uint16_t liberarMarco(uint16_t marco){
 	return OK;
 }
 
+uint16_t hayMarcoLibre(){
+	int libres=0;
+
+	pthread_mutex_lock(&freeFrames);
+	libres = queue_size(marcosLibres);
+	pthread_mutex_unlock(&freeFrames);
+
+	return libres;
+}
+
 int imprimirMemoriaPrincipal() {
 	uint32_t i=0;
 

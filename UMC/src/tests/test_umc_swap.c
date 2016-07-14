@@ -16,6 +16,8 @@ void agregar_tests_con_swap(){
 	//CU_add_test(suite_umc_swap, "test_read_bytes_page()", test_read_bytes_page);
 	//CU_add_test(suite_umc_swap, "test_write_bytes_page()", test_write_bytes_page);
 	CU_add_test(suite_umc_swap, "test_write_read_guarda_en_swap()", test_write_read_guarda_en_swap);
+	CU_add_test(suite_umc_swap, "test_write_stack()", test_write_stack);
+
 }
 
 int inicializar_umc_swap(){
@@ -74,6 +76,7 @@ void test_base_umc_swap(){
 	for(i=0; i< cant; i++){
 		unPageIni.processId = i+1;
 		unPageIni.cantidadPaginas = calcular_cantidad_paginas(strlen(programa[i]),losParametros.frameSize);
+		unPageIni.cantidadPaginas += 2; // Tamanio stack
 		unPageIni.programa = programa[i];
 
 		crearTabla(unPageIni.processId, unPageIni.cantidadPaginas);
@@ -350,6 +353,10 @@ void test_write_read_guarda_en_swap(){
 	}
 
 	imprimirMemoriaPrincipal();
+}
+
+void test_write_stack(){
+
 }
 
 
