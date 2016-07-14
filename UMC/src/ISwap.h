@@ -10,6 +10,7 @@
 
 #include <commons/serializador.h>
 #include <commons/sockets.h>
+#include <pthread.h>
 #include "Parametros.h"
 
 
