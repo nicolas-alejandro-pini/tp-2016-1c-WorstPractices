@@ -323,13 +323,13 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posW.nroPagina), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.tamanio), sizeof(uint16_t),0);
+			posW.buffer = malloc(posW.tamanio);
 			recv(unSocket, posW.buffer, posW.tamanio,0);
 
 			// Logueo lo que llego para escribir
 			log_info("Escribir bytes");
 			loguear_buffer(posW.buffer, posW.tamanio);
 
-			reservarPosicion((void*)&posW.buffer, posW.tamanio);
 			if(escribirBytes(&posW, pidActivo)){
 				unHeader = nuevoHeaderIPC(ERROR);
 				unHeader->largo = 0;
