@@ -7,6 +7,11 @@
 #include "pcb.h"
 
 pthread_mutex_t mutex_pid = PTHREAD_MUTEX_INITIALIZER;
+int pidCounter; /*Ultimo PID asignado*/
+
+void inicializar_pidCounter(){
+	pidCounter = 0;
+}
 
 int pid_incrementer() {
 
@@ -155,9 +160,7 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 }
 
 void pcb_destroy(stPCB *self) {
-	free(self->metadata_program->etiquetas);
-	free(self->metadata_program->instrucciones_serializado);
-	free(self->metadata_program);
+	metadata_destruir(self->metadata_program);
 	list_destroy_and_destroy_elements(self->stack, (void*)stack_destroy);
     free(self);
 }

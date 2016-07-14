@@ -18,9 +18,9 @@
 #define MAX_LAST_RECENTLY_USED 60000  // unsigned short int
 
 typedef struct{
-	int pid;
-	int pagina;
-	int marco;
+	uint16_t pid;
+	uint16_t pagina;
+	uint16_t marco;
 	uint16_t lastUsed;
 }stRegistroTLB;
 
@@ -42,7 +42,8 @@ typedef struct tTLB {
 
 
 uint16_t buscarEnTLB(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame);
-void flushTLB();
+void flushTLB(uint16_t pid);
+void flushTLB_all();
 int reemplazarValorTLB(stRegistroTLB registro);
 int crearTLB(uint16_t cantidadRegistros);
 void destruirTLB();

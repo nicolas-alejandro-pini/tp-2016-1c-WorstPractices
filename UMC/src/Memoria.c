@@ -14,26 +14,46 @@ pthread_mutex_t freeFrames;
 
 
 
-void leerMemoria(void **buffer, uint16_t frameBuscado, stPosicion* posLogica){
+int leerMemoria(void **buffer, uint16_t frameBuscado, stPosicion posLogica){
 	void *posFisica = NULL;
+
+	if(!(*buffer))
+		return EXIT_FAILURE;
+
+	if((posLogica.offset + posLogica.size) > losParametros.frameSize)
+		return EXIT_FAILURE;
 
 	// Calculo de la memoria fisica
 	posFisica = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize);
 
 	pthread_mutex_lock(&memoria);
-	// sleep(losParametros.delay);
-	memcpy(*buffer, posFisica + posLogica->offset, posLogica->size);
+	// TODO sleep(losParametros.delay);
+	memcpy(*buffer, posFisica + posLogica.offset, posLogica.size);
 	pthread_mutex_unlock(&memoria);
 
+	return EXIT_SUCCESS;
 }
-void* escribirMemoria(void *posicion, uint16_t size, void* buffer){
+
+int escribirMemoria(void* buffer, uint16_t frameBuscado, uint16_t offset, uint16_t size){
+	void *posFisica = NULL;
+
+	if(offset + size > losParametros.frameSize)
+		return EXIT_FAILURE;
+
+	if(!buffer)
+		return EXIT_FAILURE;
+
+	if(frameBuscado == 0)
+		return EXIT_FAILURE;
+
+	posFisica = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize) + offset;
 
 	pthread_mutex_lock(&memoria);
-	sleep(losParametros.delay);
-	memcpy(posicion, buffer, size);
+	// TODO sleep(losParametros.delay);
+	memcpy(posFisica, buffer, size);
 	pthread_mutex_unlock(&memoria);
 
-	return buffer;
+	return EXIT_SUCCESS;
 }
 void* inicializarMemoriaPrincipal(long tamanio, long cantidad){
 	void *r;
@@ -85,3 +105,19 @@ uint16_t liberarMarco(uint16_t marco){
 
 	return OK;
 }
+
+int imprimirMemoriaPrincipal() {
+	uint32_t i=0;
+
+	char pagina[losParametros.frameSize + 1];
+	printf("MemoriaPrincipal[%d]\n", losParametros.frames);
+	// Imprimo por tamaño pagina
+	for(i=0;i<losParametros.frames;i++){
+		memcpy(pagina, memoriaPrincipal+(losParametros.frameSize*i), losParametros.frameSize);
+		pagina[losParametros.frameSize]='\0';
+		printf("Marco [%d][%s]\n", i, pagina);
+	}
+
+	return EXIT_SUCCESS;
+}
+
