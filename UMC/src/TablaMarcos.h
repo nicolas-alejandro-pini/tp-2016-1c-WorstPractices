@@ -33,6 +33,7 @@ typedef struct{
 typedef struct{
 	int pid;
 	int size;
+	int punteroClock;
 	void *tabla;
 }stNodoListaTP;
 
@@ -46,7 +47,7 @@ typedef struct{
 
 
 int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame);
-stRegistroTP *reemplazarValorTabla(uint16_t pid, uint16_t Pagina, stRegistroTP registro, uint8_t flag);
+int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint16_t pagina);
 void creatListaDeTablas();
 int crearTabla(uint16_t processId, uint16_t longitud_tabla);
 stNodoListaTP *buscarPID(uint16_t pid);
@@ -57,10 +58,11 @@ void mostrarTablaPid(uint16_t pid);
 void liberarTablaPid(uint16_t pid);
 void marcarMemoriaModificada(uint16_t pid);
 stNodoListaTP* obtenerPrimerPidTabla();
-stRegistroTP *EjecutarClock(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
-stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag);
+stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina);
+stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t pagina);
 stRegistroTP *buscarRegistroEnTabla(uint16_t pid, uint16_t paginaBuscada);
 int obtenerPresenciasTabladePaginas(stNodoListaTP* nodo);
 stRegistroTP* obtenerRegistroTabladePaginas(stNodoListaTP* nodo, int pagina);
 int grabarEnSwap(uint16_t pid, uint16_t marco, uint16_t pagina);
+int agregarFrameATablaMarcos(uint16_t frameNuevo, stNodoListaTP *tablaPaginas, uint16_t pagina);
 #endif /* TABLAMARCOS_H_ */

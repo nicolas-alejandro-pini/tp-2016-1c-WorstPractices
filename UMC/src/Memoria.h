@@ -28,6 +28,7 @@ int escribirMemoria(void* buffer, uint16_t frameBuscado, uint16_t offset, uint16
 
 uint16_t obtenerMarcoLibre();
 uint16_t liberarMarco(uint16_t marco);
+uint16_t hayMarcoLibre();
 int imprimirMemoriaPrincipal();
 
 #endif /* MEMORIA_H_ */
