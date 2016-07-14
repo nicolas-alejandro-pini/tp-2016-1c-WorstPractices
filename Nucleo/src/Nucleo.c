@@ -367,7 +367,7 @@ int main(int argc, char *argv[]) {
 	while (elEstadoActual.salir == 0) {
 		read_fds = fds_master;
 
-		if (seleccionar(elEstadoActual.fdMax, &read_fds, 1) == -1) {
+		if (seleccionar(elEstadoActual.fdMax, &read_fds, 0) == -1) {
 			log_error("Error Preparando el Select");
 			break;
 		}
