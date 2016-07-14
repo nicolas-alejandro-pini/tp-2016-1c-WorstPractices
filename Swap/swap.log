@@ -24,6 +24,1981 @@
 [INFO] 17:22:58:292 SWAP/(3500:3500): Retardo de compactacion: 60000
 [ERROR] 17:22:58:294 SWAP/(3500:3500): Error inicializando el archivo de disco...
 [ERROR] 17:22:58:294 SWAP/(3500:3500): Error al crear la particion SWAP
+<<<<<<< HEAD
+[INFO] 17:01:10:157 SWAP/(9933:9933): Arancando el proceso SWAP...
+[INFO] 17:01:10:206 SWAP/(9933:9933): Configuracion cargada satisfactoriamente...
+[INFO] 17:01:10:206 SWAP/(9933:9933): Puerto de escucha: 6000
+[INFO] 17:01:10:206 SWAP/(9933:9933): Nombre del archivo Swap: swap_data
+[INFO] 17:01:10:206 SWAP/(9933:9933): Cantidad de paginas: 512
+[INFO] 17:01:10:206 SWAP/(9933:9933): Tamanio de pagina: 1024
+[INFO] 17:01:10:206 SWAP/(9933:9933): Retardo de compactacion: 60000
+[INFO] 17:01:10:253 SWAP/(9933:9933): Partición SWAP creada satisfactoriamente
+[INFO] 17:01:10:253 SWAP/(9933:9933): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 17:01:10:253 SWAP/(9933:9933): Esperando conexiones...
+[INFO] 17:33:44:576 SWAP/(12251:12251): Arancando el proceso SWAP...
+[INFO] 17:33:44:577 SWAP/(12251:12251): Configuracion cargada satisfactoriamente...
+[INFO] 17:33:44:578 SWAP/(12251:12251): Puerto de escucha: 6000
+[INFO] 17:33:44:578 SWAP/(12251:12251): Nombre del archivo Swap: swap_data
+[INFO] 17:33:44:579 SWAP/(12251:12251): Cantidad de paginas: 512
+[INFO] 17:33:44:580 SWAP/(12251:12251): Tamanio de pagina: 1024
+[INFO] 17:33:44:580 SWAP/(12251:12251): Retardo de compactacion: 60000
+[INFO] 17:33:44:631 SWAP/(12251:12251): Partición SWAP creada satisfactoriamente
+[INFO] 17:33:44:632 SWAP/(12251:12251): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 17:33:44:632 SWAP/(12251:12251): Esperando conexiones...
+[INFO] 17:34:53:603 SWAP/(12251:12251): Nuevo cliente conectado
+[ERROR] 17:34:53:608 SWAP/(12251:12251): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 17:36:10:655 SWAP/(12336:12336): Arancando el proceso SWAP...
+[INFO] 17:36:10:656 SWAP/(12336:12336): Configuracion cargada satisfactoriamente...
+[INFO] 17:36:10:656 SWAP/(12336:12336): Puerto de escucha: 6000
+[INFO] 17:36:10:656 SWAP/(12336:12336): Nombre del archivo Swap: swap_data
+[INFO] 17:36:10:656 SWAP/(12336:12336): Cantidad de paginas: 512
+[INFO] 17:36:10:656 SWAP/(12336:12336): Tamanio de pagina: 1024
+[INFO] 17:36:10:656 SWAP/(12336:12336): Retardo de compactacion: 60000
+[INFO] 17:36:10:704 SWAP/(12336:12336): Partición SWAP creada satisfactoriamente
+[INFO] 17:36:10:704 SWAP/(12336:12336): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 17:36:10:705 SWAP/(12336:12336): Esperando conexiones...
+[INFO] 17:36:21:945 SWAP/(12336:12336): Nuevo cliente conectado
+[ERROR] 17:36:21:952 SWAP/(12336:12336): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 17:37:25:241 SWAP/(12383:12383): Arancando el proceso SWAP...
+[INFO] 17:37:25:241 SWAP/(12383:12383): Configuracion cargada satisfactoriamente...
+[INFO] 17:37:25:241 SWAP/(12383:12383): Puerto de escucha: 6000
+[INFO] 17:37:25:241 SWAP/(12383:12383): Nombre del archivo Swap: swap_data
+[INFO] 17:37:25:241 SWAP/(12383:12383): Cantidad de paginas: 512
+[INFO] 17:37:25:242 SWAP/(12383:12383): Tamanio de pagina: 1024
+[INFO] 17:37:25:242 SWAP/(12383:12383): Retardo de compactacion: 60000
+[INFO] 17:37:25:288 SWAP/(12383:12383): Partición SWAP creada satisfactoriamente
+[INFO] 17:37:25:293 SWAP/(12383:12383): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 17:37:25:293 SWAP/(12383:12383): Esperando conexiones...
+[INFO] 17:37:35:603 SWAP/(12383:12383): Nuevo cliente conectado
+[ERROR] 17:38:37:844 SWAP/(12383:12383): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 17:39:38:315 SWAP/(12483:12483): Arancando el proceso SWAP...
+[INFO] 17:39:38:316 SWAP/(12483:12483): Configuracion cargada satisfactoriamente...
+[INFO] 17:39:38:316 SWAP/(12483:12483): Puerto de escucha: 6000
+[INFO] 17:39:38:316 SWAP/(12483:12483): Nombre del archivo Swap: swap_data
+[INFO] 17:39:38:316 SWAP/(12483:12483): Cantidad de paginas: 512
+[INFO] 17:39:38:316 SWAP/(12483:12483): Tamanio de pagina: 1024
+[INFO] 17:39:38:316 SWAP/(12483:12483): Retardo de compactacion: 60000
+[INFO] 17:39:38:370 SWAP/(12483:12483): Partición SWAP creada satisfactoriamente
+[INFO] 17:39:38:370 SWAP/(12483:12483): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 17:39:38:371 SWAP/(12483:12483): Esperando conexiones...
+[INFO] 17:39:47:81 SWAP/(12483:12483): Nuevo cliente conectado
+[INFO] 17:50:55:720 SWAP/(13801:13801): Arancando el proceso SWAP...
+[INFO] 17:50:55:723 SWAP/(13801:13801): Configuracion cargada satisfactoriamente...
+[INFO] 17:50:55:723 SWAP/(13801:13801): Puerto de escucha: 6000
+[INFO] 17:50:55:723 SWAP/(13801:13801): Nombre del archivo Swap: swap_data
+[INFO] 17:50:55:723 SWAP/(13801:13801): Cantidad de paginas: 512
+[INFO] 17:50:55:723 SWAP/(13801:13801): Tamanio de pagina: 1024
+[INFO] 17:50:55:723 SWAP/(13801:13801): Retardo de compactacion: 60000
+[INFO] 17:50:55:779 SWAP/(13801:13801): Partición SWAP creada satisfactoriamente
+[INFO] 17:50:55:780 SWAP/(13801:13801): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 17:50:55:780 SWAP/(13801:13801): Esperando conexiones...
+[INFO] 17:51:01:832 SWAP/(13801:13801): Nuevo cliente conectado
+[INFO] 17:54:34:265 SWAP/(13801:13801): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 17:54:43:141 SWAP/(13801:13801): PID: 1
+[INFO] 17:54:43:673 SWAP/(13801:13801): Cantidad de paginas solicitadas: 3
+[INFO] 17:54:44:311 SWAP/(13801:13801): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 17:54:47:529 SWAP/(13801:13801): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[ERROR] 18:00:15:450 SWAP/(13801:13801): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 18:06:16:466 SWAP/(14185:14185): Arancando el proceso SWAP...
+[INFO] 18:06:16:467 SWAP/(14185:14185): Configuracion cargada satisfactoriamente...
+[INFO] 18:06:16:467 SWAP/(14185:14185): Puerto de escucha: 6000
+[INFO] 18:06:16:467 SWAP/(14185:14185): Nombre del archivo Swap: swap_data
+[INFO] 18:06:16:467 SWAP/(14185:14185): Cantidad de paginas: 512
+[INFO] 18:06:16:467 SWAP/(14185:14185): Tamanio de pagina: 1024
+[INFO] 18:06:16:467 SWAP/(14185:14185): Retardo de compactacion: 60000
+[INFO] 18:06:16:522 SWAP/(14185:14185): Partición SWAP creada satisfactoriamente
+[INFO] 18:06:16:530 SWAP/(14185:14185): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 18:06:16:531 SWAP/(14185:14185): Esperando conexiones...
+[INFO] 18:07:58:664 SWAP/(14185:14185): Nuevo cliente conectado
+[INFO] 18:09:16:327 SWAP/(14185:14185): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 18:09:16:382 SWAP/(14185:14185): PID: 1
+[INFO] 18:09:16:382 SWAP/(14185:14185): Cantidad de paginas solicitadas: 3
+[INFO] 18:09:16:383 SWAP/(14185:14185): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 18:09:16:383 SWAP/(14185:14185): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[ERROR] 18:19:35:40 SWAP/(14185:14185): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 18:20:07:324 SWAP/(14281:14281): Arancando el proceso SWAP...
+[INFO] 18:20:07:325 SWAP/(14281:14281): Configuracion cargada satisfactoriamente...
+[INFO] 18:20:07:326 SWAP/(14281:14281): Puerto de escucha: 6000
+[INFO] 18:20:07:326 SWAP/(14281:14281): Nombre del archivo Swap: swap_data
+[INFO] 18:20:07:326 SWAP/(14281:14281): Cantidad de paginas: 512
+[INFO] 18:20:07:327 SWAP/(14281:14281): Tamanio de pagina: 1024
+[INFO] 18:20:07:327 SWAP/(14281:14281): Retardo de compactacion: 60000
+[INFO] 18:20:07:395 SWAP/(14281:14281): Partición SWAP creada satisfactoriamente
+[INFO] 18:20:07:395 SWAP/(14281:14281): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 18:20:07:396 SWAP/(14281:14281): Esperando conexiones...
+[INFO] 18:20:42:960 SWAP/(14281:14281): Nuevo cliente conectado
+[INFO] 18:22:47:434 SWAP/(14281:14281): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 18:22:47:488 SWAP/(14281:14281): PID: 1
+[INFO] 18:22:47:489 SWAP/(14281:14281): Cantidad de paginas solicitadas: 3
+[INFO] 18:22:47:489 SWAP/(14281:14281): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 18:22:47:489 SWAP/(14281:14281): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 18:27:38:657 SWAP/(14281:14281): Nuevo comando recibido: LEER PAGINA...
+[ERROR] 18:35:49:422 SWAP/(14281:14281): Error al recibir el PID del proceso
+[ERROR] 18:35:49:422 SWAP/(14281:14281): Error al recibir el numero de paginas
+[INFO] 18:35:49:423 SWAP/(14281:14281): PID: 1
+[INFO] 18:35:49:423 SWAP/(14281:14281): Numero de pagina solicitada: 0
+[INFO] 18:35:49:423 SWAP/(14281:14281): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 18:35:49:423 SWAP/(14281:14281): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 18:36:18:243 SWAP/(14582:14582): Arancando el proceso SWAP...
+[INFO] 18:36:18:244 SWAP/(14582:14582): Configuracion cargada satisfactoriamente...
+[INFO] 18:36:18:244 SWAP/(14582:14582): Puerto de escucha: 6000
+[INFO] 18:36:18:244 SWAP/(14582:14582): Nombre del archivo Swap: swap_data
+[INFO] 18:36:18:244 SWAP/(14582:14582): Cantidad de paginas: 512
+[INFO] 18:36:18:244 SWAP/(14582:14582): Tamanio de pagina: 1024
+[INFO] 18:36:18:244 SWAP/(14582:14582): Retardo de compactacion: 60000
+[INFO] 18:36:18:291 SWAP/(14582:14582): Partición SWAP creada satisfactoriamente
+[INFO] 18:36:18:291 SWAP/(14582:14582): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 18:36:18:291 SWAP/(14582:14582): Esperando conexiones...
+[INFO] 18:36:37:952 SWAP/(14582:14582): Nuevo cliente conectado
+[INFO] 18:39:10:662 SWAP/(14582:14582): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 18:39:10:713 SWAP/(14582:14582): PID: 1
+[INFO] 18:39:10:714 SWAP/(14582:14582): Cantidad de paginas solicitadas: 3
+[INFO] 18:39:10:714 SWAP/(14582:14582): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 18:39:10:714 SWAP/(14582:14582): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 18:41:03:443 SWAP/(14582:14582): Nuevo comando recibido: LEER PAGINA...
+[INFO] 18:41:03:443 SWAP/(14582:14582): PID: 1
+[INFO] 18:41:03:443 SWAP/(14582:14582): Numero de pagina solicitada: 0
+[INFO] 18:41:03:444 SWAP/(14582:14582): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 18:46:28:396 SWAP/(14582:14582): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 18:47:31:600 SWAP/(14664:14664): Arancando el proceso SWAP...
+[INFO] 18:47:31:600 SWAP/(14664:14664): Configuracion cargada satisfactoriamente...
+[INFO] 18:47:31:601 SWAP/(14664:14664): Puerto de escucha: 6000
+[INFO] 18:47:31:601 SWAP/(14664:14664): Nombre del archivo Swap: swap_data
+[INFO] 18:47:31:601 SWAP/(14664:14664): Cantidad de paginas: 512
+[INFO] 18:47:31:601 SWAP/(14664:14664): Tamanio de pagina: 1024
+[INFO] 18:47:31:601 SWAP/(14664:14664): Retardo de compactacion: 60000
+[INFO] 18:47:31:670 SWAP/(14664:14664): Partición SWAP creada satisfactoriamente
+[INFO] 18:47:31:671 SWAP/(14664:14664): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 18:47:31:671 SWAP/(14664:14664): Esperando conexiones...
+[INFO] 19:20:15:714 SWAP/(16492:16492): Arancando el proceso SWAP...
+[INFO] 19:20:15:716 SWAP/(16492:16492): Configuracion cargada satisfactoriamente...
+[INFO] 19:20:15:716 SWAP/(16492:16492): Puerto de escucha: 6000
+[INFO] 19:20:15:716 SWAP/(16492:16492): Nombre del archivo Swap: swap_data
+[INFO] 19:20:15:716 SWAP/(16492:16492): Cantidad de paginas: 512
+[INFO] 19:20:15:716 SWAP/(16492:16492): Tamanio de pagina: 1024
+[INFO] 19:20:15:716 SWAP/(16492:16492): Retardo de compactacion: 60000
+[INFO] 19:20:15:790 SWAP/(16492:16492): Partición SWAP creada satisfactoriamente
+[INFO] 19:20:15:790 SWAP/(16492:16492): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 19:20:15:790 SWAP/(16492:16492): Esperando conexiones...
+[INFO] 19:20:18:495 SWAP/(16492:16492): Nuevo cliente conectado
+[INFO] 19:21:06:751 SWAP/(16492:16492): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 19:21:06:881 SWAP/(16492:16492): PID: 1
+[INFO] 19:21:06:881 SWAP/(16492:16492): Cantidad de paginas solicitadas: 3
+[INFO] 19:21:06:881 SWAP/(16492:16492): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 19:21:06:881 SWAP/(16492:16492): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[ERROR] 19:22:17:923 SWAP/(16492:16492): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 19:26:33:34 SWAP/(16538:16538): Arancando el proceso SWAP...
+[INFO] 19:26:33:35 SWAP/(16538:16538): Configuracion cargada satisfactoriamente...
+[INFO] 19:26:33:38 SWAP/(16538:16538): Puerto de escucha: 6000
+[INFO] 19:26:33:38 SWAP/(16538:16538): Nombre del archivo Swap: swap_data
+[INFO] 19:26:33:38 SWAP/(16538:16538): Cantidad de paginas: 512
+[INFO] 19:26:33:38 SWAP/(16538:16538): Tamanio de pagina: 1024
+[INFO] 19:26:33:38 SWAP/(16538:16538): Retardo de compactacion: 60000
+[INFO] 19:26:33:86 SWAP/(16538:16538): Partición SWAP creada satisfactoriamente
+[INFO] 19:26:33:87 SWAP/(16538:16538): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 19:26:33:87 SWAP/(16538:16538): Esperando conexiones...
+[INFO] 19:32:35:152 SWAP/(16538:16538): Nuevo cliente conectado
+[INFO] 19:34:46:808 SWAP/(16538:16538): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 19:34:46:865 SWAP/(16538:16538): PID: 1
+[INFO] 19:34:46:865 SWAP/(16538:16538): Cantidad de paginas solicitadas: 3
+[INFO] 19:34:46:865 SWAP/(16538:16538): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 19:34:46:865 SWAP/(16538:16538): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 19:37:15:744 SWAP/(16679:16679): Arancando el proceso SWAP...
+[INFO] 19:37:15:745 SWAP/(16679:16679): Configuracion cargada satisfactoriamente...
+[INFO] 19:37:15:745 SWAP/(16679:16679): Puerto de escucha: 6000
+[INFO] 19:37:15:745 SWAP/(16679:16679): Nombre del archivo Swap: swap_data
+[INFO] 19:37:15:746 SWAP/(16679:16679): Cantidad de paginas: 512
+[INFO] 19:37:15:746 SWAP/(16679:16679): Tamanio de pagina: 1024
+[INFO] 19:37:15:746 SWAP/(16679:16679): Retardo de compactacion: 60000
+[INFO] 19:37:15:799 SWAP/(16679:16679): Partición SWAP creada satisfactoriamente
+[INFO] 19:37:15:799 SWAP/(16679:16679): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 19:37:15:800 SWAP/(16679:16679): Esperando conexiones...
+[INFO] 19:38:10:964 SWAP/(16679:16679): Nuevo cliente conectado
+[ERROR] 19:38:35:37 SWAP/(16679:16679): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 19:40:43:226 SWAP/(16729:16729): Arancando el proceso SWAP...
+[INFO] 19:40:43:230 SWAP/(16729:16729): Configuracion cargada satisfactoriamente...
+[INFO] 19:40:43:230 SWAP/(16729:16729): Puerto de escucha: 6000
+[INFO] 19:40:43:231 SWAP/(16729:16729): Nombre del archivo Swap: swap_data
+[INFO] 19:40:43:231 SWAP/(16729:16729): Cantidad de paginas: 512
+[INFO] 19:40:43:231 SWAP/(16729:16729): Tamanio de pagina: 1024
+[INFO] 19:40:43:231 SWAP/(16729:16729): Retardo de compactacion: 60000
+[INFO] 19:40:43:288 SWAP/(16729:16729): Partición SWAP creada satisfactoriamente
+[INFO] 19:40:43:289 SWAP/(16729:16729): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 19:40:43:289 SWAP/(16729:16729): Esperando conexiones...
+[INFO] 19:40:58:446 SWAP/(16729:16729): Nuevo cliente conectado
+[INFO] 19:42:01:175 SWAP/(16729:16729): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 19:42:01:419 SWAP/(16729:16729): PID: 1
+[INFO] 19:42:01:420 SWAP/(16729:16729): Cantidad de paginas solicitadas: 3
+[INFO] 19:42:01:420 SWAP/(16729:16729): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 19:42:01:420 SWAP/(16729:16729): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[ERROR] 19:44:07:630 SWAP/(16729:16729): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 19:47:10:745 SWAP/(17213:17213): Arancando el proceso SWAP...
+[INFO] 19:47:10:746 SWAP/(17213:17213): Configuracion cargada satisfactoriamente...
+[INFO] 19:47:10:746 SWAP/(17213:17213): Puerto de escucha: 6000
+[INFO] 19:47:10:746 SWAP/(17213:17213): Nombre del archivo Swap: swap_data
+[INFO] 19:47:10:746 SWAP/(17213:17213): Cantidad de paginas: 512
+[INFO] 19:47:10:746 SWAP/(17213:17213): Tamanio de pagina: 1024
+[INFO] 19:47:10:746 SWAP/(17213:17213): Retardo de compactacion: 60000
+[INFO] 19:47:10:794 SWAP/(17213:17213): Partición SWAP creada satisfactoriamente
+[INFO] 19:47:10:795 SWAP/(17213:17213): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 19:47:10:796 SWAP/(17213:17213): Esperando conexiones...
+[INFO] 19:50:06:739 SWAP/(17213:17213): Nuevo cliente conectado
+[INFO] 19:51:08:830 SWAP/(17213:17213): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 19:51:08:876 SWAP/(17213:17213): PID: 1
+[INFO] 19:51:08:876 SWAP/(17213:17213): Cantidad de paginas solicitadas: 3
+[INFO] 19:51:08:876 SWAP/(17213:17213): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 19:51:08:877 SWAP/(17213:17213): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[ERROR] 19:56:17:585 SWAP/(17213:17213): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 19:57:35:427 SWAP/(17328:17328): Arancando el proceso SWAP...
+[INFO] 19:57:35:428 SWAP/(17328:17328): Configuracion cargada satisfactoriamente...
+[INFO] 19:57:35:428 SWAP/(17328:17328): Puerto de escucha: 6000
+[INFO] 19:57:35:428 SWAP/(17328:17328): Nombre del archivo Swap: swap_data
+[INFO] 19:57:35:428 SWAP/(17328:17328): Cantidad de paginas: 512
+[INFO] 19:57:35:428 SWAP/(17328:17328): Tamanio de pagina: 1024
+[INFO] 19:57:35:428 SWAP/(17328:17328): Retardo de compactacion: 60000
+[INFO] 19:57:35:486 SWAP/(17328:17328): Partición SWAP creada satisfactoriamente
+[INFO] 19:57:35:486 SWAP/(17328:17328): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 19:57:35:486 SWAP/(17328:17328): Esperando conexiones...
+[INFO] 19:58:08:346 SWAP/(17328:17328): Nuevo cliente conectado
+[INFO] 19:58:42:995 SWAP/(17328:17328): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 19:58:43:149 SWAP/(17328:17328): PID: 1
+[INFO] 19:58:43:149 SWAP/(17328:17328): Cantidad de paginas solicitadas: 3
+[INFO] 19:58:43:149 SWAP/(17328:17328): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 19:58:43:149 SWAP/(17328:17328): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 19:59:50:45 SWAP/(17328:17328): Nuevo comando recibido: LEER PAGINA...
+[INFO] 19:59:50:46 SWAP/(17328:17328): PID: 1
+[INFO] 19:59:50:46 SWAP/(17328:17328): Numero de pagina solicitada: 0
+[INFO] 19:59:50:46 SWAP/(17328:17328): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 20:01:32:490 SWAP/(17328:17328): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 20:02:36:496 SWAP/(17376:17376): Arancando el proceso SWAP...
+[INFO] 20:02:36:496 SWAP/(17376:17376): Configuracion cargada satisfactoriamente...
+[INFO] 20:02:36:496 SWAP/(17376:17376): Puerto de escucha: 6000
+[INFO] 20:02:36:496 SWAP/(17376:17376): Nombre del archivo Swap: swap_data
+[INFO] 20:02:36:496 SWAP/(17376:17376): Cantidad de paginas: 512
+[INFO] 20:02:36:496 SWAP/(17376:17376): Tamanio de pagina: 1024
+[INFO] 20:02:36:496 SWAP/(17376:17376): Retardo de compactacion: 60000
+[INFO] 20:02:36:550 SWAP/(17376:17376): Partición SWAP creada satisfactoriamente
+[INFO] 20:02:36:551 SWAP/(17376:17376): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 20:02:36:551 SWAP/(17376:17376): Esperando conexiones...
+[INFO] 20:02:39:456 SWAP/(17376:17376): Nuevo cliente conectado
+[INFO] 20:03:28:642 SWAP/(17376:17376): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 20:03:28:691 SWAP/(17376:17376): PID: 1
+[INFO] 20:03:28:691 SWAP/(17376:17376): Cantidad de paginas solicitadas: 3
+[INFO] 20:03:28:691 SWAP/(17376:17376): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 20:03:28:691 SWAP/(17376:17376): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 20:08:06:882 SWAP/(17413:17413): Arancando el proceso SWAP...
+[INFO] 20:08:06:882 SWAP/(17413:17413): Configuracion cargada satisfactoriamente...
+[INFO] 20:08:06:882 SWAP/(17413:17413): Puerto de escucha: 6000
+[INFO] 20:08:06:882 SWAP/(17413:17413): Nombre del archivo Swap: swap_data
+[INFO] 20:08:06:883 SWAP/(17413:17413): Cantidad de paginas: 512
+[INFO] 20:08:06:883 SWAP/(17413:17413): Tamanio de pagina: 1024
+[INFO] 20:08:06:883 SWAP/(17413:17413): Retardo de compactacion: 60000
+[INFO] 20:08:06:930 SWAP/(17413:17413): Partición SWAP creada satisfactoriamente
+[INFO] 20:08:06:930 SWAP/(17413:17413): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 20:08:06:931 SWAP/(17413:17413): Esperando conexiones...
+[INFO] 20:08:18:74 SWAP/(17413:17413): Nuevo cliente conectado
+[INFO] 20:08:43:703 SWAP/(17413:17413): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 20:08:43:758 SWAP/(17413:17413): PID: 1
+[INFO] 20:08:43:758 SWAP/(17413:17413): Cantidad de paginas solicitadas: 3
+[INFO] 20:08:43:759 SWAP/(17413:17413): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 20:08:43:759 SWAP/(17413:17413): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 20:11:18:280 SWAP/(17413:17413): Nuevo comando recibido: LEER PAGINA...
+[INFO] 20:11:18:334 SWAP/(17413:17413): PID: 1
+[INFO] 20:11:18:335 SWAP/(17413:17413): Numero de pagina solicitada: 0
+[INFO] 20:11:18:335 SWAP/(17413:17413): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 20:12:06:83 SWAP/(17435:17435): Arancando el proceso SWAP...
+[INFO] 20:12:06:89 SWAP/(17435:17435): Configuracion cargada satisfactoriamente...
+[INFO] 20:12:06:89 SWAP/(17435:17435): Puerto de escucha: 6000
+[INFO] 20:12:06:89 SWAP/(17435:17435): Nombre del archivo Swap: swap_data
+[INFO] 20:12:06:89 SWAP/(17435:17435): Cantidad de paginas: 512
+[INFO] 20:12:06:89 SWAP/(17435:17435): Tamanio de pagina: 1024
+[INFO] 20:12:06:89 SWAP/(17435:17435): Retardo de compactacion: 60000
+[INFO] 20:12:06:134 SWAP/(17435:17435): Partición SWAP creada satisfactoriamente
+[INFO] 20:12:06:134 SWAP/(17435:17435): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 20:12:06:135 SWAP/(17435:17435): Esperando conexiones...
+[INFO] 20:12:17:535 SWAP/(17435:17435): Nuevo cliente conectado
+[INFO] 20:12:48:493 SWAP/(17435:17435): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 20:12:48:566 SWAP/(17435:17435): PID: 1
+[INFO] 20:12:48:567 SWAP/(17435:17435): Cantidad de paginas solicitadas: 3
+[INFO] 20:12:48:567 SWAP/(17435:17435): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 20:12:48:567 SWAP/(17435:17435): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 20:16:30:706 SWAP/(17435:17435): Nuevo comando recibido: LEER PAGINA...
+[INFO] 20:16:30:773 SWAP/(17435:17435): PID: 1
+[INFO] 20:16:30:774 SWAP/(17435:17435): Numero de pagina solicitada: 0
+[INFO] 20:16:30:774 SWAP/(17435:17435): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 20:22:20:317 SWAP/(17435:17435): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 20:23:43:969 SWAP/(17845:17845): Arancando el proceso SWAP...
+[INFO] 20:23:43:969 SWAP/(17845:17845): Configuracion cargada satisfactoriamente...
+[INFO] 20:23:43:969 SWAP/(17845:17845): Puerto de escucha: 6000
+[INFO] 20:23:43:970 SWAP/(17845:17845): Nombre del archivo Swap: swap_data
+[INFO] 20:23:43:970 SWAP/(17845:17845): Cantidad de paginas: 512
+[INFO] 20:23:43:970 SWAP/(17845:17845): Tamanio de pagina: 1024
+[INFO] 20:23:43:970 SWAP/(17845:17845): Retardo de compactacion: 60000
+[INFO] 20:23:44:17 SWAP/(17845:17845): Partición SWAP creada satisfactoriamente
+[INFO] 20:23:44:18 SWAP/(17845:17845): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 20:23:44:18 SWAP/(17845:17845): Esperando conexiones...
+[INFO] 20:24:34:606 SWAP/(17845:17845): Nuevo cliente conectado
+[INFO] 20:24:58:845 SWAP/(17845:17845): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 20:24:58:902 SWAP/(17845:17845): PID: 1
+[INFO] 20:24:58:903 SWAP/(17845:17845): Cantidad de paginas solicitadas: 3
+[INFO] 20:24:58:903 SWAP/(17845:17845): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 20:24:58:904 SWAP/(17845:17845): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 20:25:26:353 SWAP/(17845:17845): Nuevo comando recibido: LEER PAGINA...
+[INFO] 20:25:26:410 SWAP/(17845:17845): PID: 1
+[INFO] 20:25:26:410 SWAP/(17845:17845): Numero de pagina solicitada: 0
+[INFO] 20:25:26:410 SWAP/(17845:17845): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 20:38:06:624 SWAP/(17845:17845): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 20:43:19:199 SWAP/(18442:18442): Arancando el proceso SWAP...
+[INFO] 20:43:19:200 SWAP/(18442:18442): Configuracion cargada satisfactoriamente...
+[INFO] 20:43:19:200 SWAP/(18442:18442): Puerto de escucha: 6000
+[INFO] 20:43:19:200 SWAP/(18442:18442): Nombre del archivo Swap: swap_data
+[INFO] 20:43:19:200 SWAP/(18442:18442): Cantidad de paginas: 512
+[INFO] 20:43:19:200 SWAP/(18442:18442): Tamanio de pagina: 1024
+[INFO] 20:43:19:200 SWAP/(18442:18442): Retardo de compactacion: 60000
+[INFO] 20:43:19:266 SWAP/(18442:18442): Partición SWAP creada satisfactoriamente
+[INFO] 20:43:19:267 SWAP/(18442:18442): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 20:43:19:267 SWAP/(18442:18442): Esperando conexiones...
+[INFO] 20:43:27:42 SWAP/(18442:18442): Nuevo cliente conectado
+[INFO] 20:45:34:334 SWAP/(18442:18442): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 20:45:34:386 SWAP/(18442:18442): PID: 1
+[INFO] 20:45:34:386 SWAP/(18442:18442): Cantidad de paginas solicitadas: 3
+[INFO] 20:45:34:386 SWAP/(18442:18442): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 20:45:34:387 SWAP/(18442:18442): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 20:48:22:159 SWAP/(18442:18442): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 20:48:22:217 SWAP/(18442:18442): PID: 2
+[INFO] 20:48:22:217 SWAP/(18442:18442): Cantidad de paginas solicitadas: 3
+[INFO] 20:48:22:218 SWAP/(18442:18442): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 20:48:22:219 SWAP/(18442:18442): Asignacion de paginas satisfactoria al proceso(PID 2): 3->5
+[INFO] 20:50:20:317 SWAP/(18483:18483): Arancando el proceso SWAP...
+[INFO] 20:50:20:320 SWAP/(18483:18483): Configuracion cargada satisfactoriamente...
+[INFO] 20:50:20:322 SWAP/(18483:18483): Puerto de escucha: 6000
+[INFO] 20:50:20:322 SWAP/(18483:18483): Nombre del archivo Swap: swap_data
+[INFO] 20:50:20:322 SWAP/(18483:18483): Cantidad de paginas: 512
+[INFO] 20:50:20:322 SWAP/(18483:18483): Tamanio de pagina: 1024
+[INFO] 20:50:20:322 SWAP/(18483:18483): Retardo de compactacion: 60000
+[INFO] 20:50:20:368 SWAP/(18483:18483): Partición SWAP creada satisfactoriamente
+[INFO] 20:50:20:368 SWAP/(18483:18483): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 20:50:20:368 SWAP/(18483:18483): Esperando conexiones...
+[INFO] 20:50:36:692 SWAP/(18483:18483): Nuevo cliente conectado
+[INFO] 20:52:14:230 SWAP/(18483:18483): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 20:52:14:287 SWAP/(18483:18483): PID: 1
+[INFO] 20:52:14:287 SWAP/(18483:18483): Cantidad de paginas solicitadas: 3
+[INFO] 20:52:14:288 SWAP/(18483:18483): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 20:52:14:288 SWAP/(18483:18483): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 20:53:32:733 SWAP/(18483:18483): Nuevo comando recibido: LEER PAGINA...
+[INFO] 20:53:32:803 SWAP/(18483:18483): PID: 1
+[INFO] 20:53:32:803 SWAP/(18483:18483): Numero de pagina solicitada: 0
+[INFO] 20:53:32:803 SWAP/(18483:18483): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 20:59:21:116 SWAP/(18483:18483): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 21:01:08:390 SWAP/(18535:18535): Arancando el proceso SWAP...
+[INFO] 21:01:08:391 SWAP/(18535:18535): Configuracion cargada satisfactoriamente...
+[INFO] 21:01:08:391 SWAP/(18535:18535): Puerto de escucha: 6000
+[INFO] 21:01:08:391 SWAP/(18535:18535): Nombre del archivo Swap: swap_data
+[INFO] 21:01:08:391 SWAP/(18535:18535): Cantidad de paginas: 512
+[INFO] 21:01:08:391 SWAP/(18535:18535): Tamanio de pagina: 1024
+[INFO] 21:01:08:391 SWAP/(18535:18535): Retardo de compactacion: 60000
+[INFO] 21:01:08:437 SWAP/(18535:18535): Partición SWAP creada satisfactoriamente
+[INFO] 21:01:08:437 SWAP/(18535:18535): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 21:01:08:438 SWAP/(18535:18535): Esperando conexiones...
+[INFO] 21:03:43:732 SWAP/(18535:18535): Nuevo cliente conectado
+[INFO] 21:04:28:257 SWAP/(18535:18535): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 21:04:28:310 SWAP/(18535:18535): PID: 1
+[INFO] 21:04:28:310 SWAP/(18535:18535): Cantidad de paginas solicitadas: 3
+[INFO] 21:04:28:311 SWAP/(18535:18535): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 21:04:28:311 SWAP/(18535:18535): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 21:05:04:528 SWAP/(18535:18535): Nuevo comando recibido: LEER PAGINA...
+[INFO] 21:05:04:586 SWAP/(18535:18535): PID: 1
+[INFO] 21:05:04:587 SWAP/(18535:18535): Numero de pagina solicitada: 0
+[INFO] 21:05:04:588 SWAP/(18535:18535): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 21:19:06:626 SWAP/(23132:23132): Arancando el proceso SWAP...
+[INFO] 21:19:06:627 SWAP/(23132:23132): Configuracion cargada satisfactoriamente...
+[INFO] 21:19:06:627 SWAP/(23132:23132): Puerto de escucha: 6000
+[INFO] 21:19:06:627 SWAP/(23132:23132): Nombre del archivo Swap: swap_data
+[INFO] 21:19:06:628 SWAP/(23132:23132): Cantidad de paginas: 512
+[INFO] 21:19:06:628 SWAP/(23132:23132): Tamanio de pagina: 1024
+[INFO] 21:19:06:628 SWAP/(23132:23132): Retardo de compactacion: 60000
+[INFO] 21:19:06:688 SWAP/(23132:23132): Partición SWAP creada satisfactoriamente
+[INFO] 21:19:06:688 SWAP/(23132:23132): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 21:19:06:689 SWAP/(23132:23132): Esperando conexiones...
+[INFO] 21:19:18:117 SWAP/(23132:23132): Nuevo cliente conectado
+[INFO] 21:20:05:701 SWAP/(23132:23132): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 21:20:05:756 SWAP/(23132:23132): PID: 1
+[INFO] 21:20:05:757 SWAP/(23132:23132): Cantidad de paginas solicitadas: 3
+[INFO] 21:20:05:757 SWAP/(23132:23132): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 21:20:05:757 SWAP/(23132:23132): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 21:20:29:739 SWAP/(23132:23132): Nuevo comando recibido: LEER PAGINA...
+[INFO] 21:20:29:797 SWAP/(23132:23132): PID: 1
+[INFO] 21:20:29:798 SWAP/(23132:23132): Numero de pagina solicitada: 0
+[INFO] 21:20:29:798 SWAP/(23132:23132): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 21:26:49:986 SWAP/(23132:23132): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:11:28:993 SWAP/(23749:23749): Arancando el proceso SWAP...
+[INFO] 23:11:28:993 SWAP/(23749:23749): Configuracion cargada satisfactoriamente...
+[INFO] 23:11:28:993 SWAP/(23749:23749): Puerto de escucha: 6000
+[INFO] 23:11:28:993 SWAP/(23749:23749): Nombre del archivo Swap: swap_data
+[INFO] 23:11:28:993 SWAP/(23749:23749): Cantidad de paginas: 512
+[INFO] 23:11:28:993 SWAP/(23749:23749): Tamanio de pagina: 1024
+[INFO] 23:11:28:993 SWAP/(23749:23749): Retardo de compactacion: 60000
+[INFO] 23:11:29:87 SWAP/(23749:23749): Partición SWAP creada satisfactoriamente
+[INFO] 23:11:29:87 SWAP/(23749:23749): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:11:29:87 SWAP/(23749:23749): Esperando conexiones...
+[INFO] 23:11:52:82 SWAP/(23749:23749): Nuevo cliente conectado
+[INFO] 23:12:48:116 SWAP/(23749:23749): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:12:48:174 SWAP/(23749:23749): PID: 1
+[INFO] 23:12:48:174 SWAP/(23749:23749): Cantidad de paginas solicitadas: 3
+[INFO] 23:12:48:176 SWAP/(23749:23749): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:12:48:176 SWAP/(23749:23749): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:13:20:598 SWAP/(23749:23749): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:13:20:658 SWAP/(23749:23749): PID: 1
+[INFO] 23:13:20:659 SWAP/(23749:23749): Numero de pagina solicitada: 0
+[INFO] 23:13:20:659 SWAP/(23749:23749): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:15:07:196 SWAP/(23794:23794): Arancando el proceso SWAP...
+[INFO] 23:15:07:199 SWAP/(23794:23794): Configuracion cargada satisfactoriamente...
+[INFO] 23:15:07:199 SWAP/(23794:23794): Puerto de escucha: 6000
+[INFO] 23:15:07:199 SWAP/(23794:23794): Nombre del archivo Swap: swap_data
+[INFO] 23:15:07:200 SWAP/(23794:23794): Cantidad de paginas: 512
+[INFO] 23:15:07:200 SWAP/(23794:23794): Tamanio de pagina: 1024
+[INFO] 23:15:07:200 SWAP/(23794:23794): Retardo de compactacion: 60000
+[INFO] 23:15:07:245 SWAP/(23794:23794): Partición SWAP creada satisfactoriamente
+[INFO] 23:15:07:246 SWAP/(23794:23794): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:15:07:246 SWAP/(23794:23794): Esperando conexiones...
+[INFO] 23:15:33:70 SWAP/(23794:23794): Nuevo cliente conectado
+[INFO] 23:16:23:227 SWAP/(23794:23794): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:16:23:273 SWAP/(23794:23794): PID: 1
+[INFO] 23:16:23:273 SWAP/(23794:23794): Cantidad de paginas solicitadas: 3
+[INFO] 23:16:23:273 SWAP/(23794:23794): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:16:23:274 SWAP/(23794:23794): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:16:46:914 SWAP/(23794:23794): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:16:46:971 SWAP/(23794:23794): PID: 1
+[INFO] 23:16:46:972 SWAP/(23794:23794): Numero de pagina solicitada: 0
+[INFO] 23:16:46:972 SWAP/(23794:23794): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 23:18:52:557 SWAP/(23794:23794): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:19:57:736 SWAP/(23817:23817): Arancando el proceso SWAP...
+[INFO] 23:19:57:736 SWAP/(23817:23817): Configuracion cargada satisfactoriamente...
+[INFO] 23:19:57:736 SWAP/(23817:23817): Puerto de escucha: 6000
+[INFO] 23:19:57:737 SWAP/(23817:23817): Nombre del archivo Swap: swap_data
+[INFO] 23:19:57:737 SWAP/(23817:23817): Cantidad de paginas: 512
+[INFO] 23:19:57:737 SWAP/(23817:23817): Tamanio de pagina: 1024
+[INFO] 23:19:57:737 SWAP/(23817:23817): Retardo de compactacion: 60000
+[INFO] 23:19:57:782 SWAP/(23817:23817): Partición SWAP creada satisfactoriamente
+[INFO] 23:19:57:782 SWAP/(23817:23817): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:19:57:783 SWAP/(23817:23817): Esperando conexiones...
+[INFO] 23:20:06:884 SWAP/(23817:23817): Nuevo cliente conectado
+[INFO] 23:22:04:770 SWAP/(23817:23817): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:22:04:835 SWAP/(23817:23817): PID: 1
+[INFO] 23:22:04:836 SWAP/(23817:23817): Cantidad de paginas solicitadas: 3
+[INFO] 23:22:04:836 SWAP/(23817:23817): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:22:04:836 SWAP/(23817:23817): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:34:50:523 SWAP/(23817:23817): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:34:50:570 SWAP/(23817:23817): PID: 1
+[INFO] 23:34:50:570 SWAP/(23817:23817): Numero de pagina solicitada: 0
+[INFO] 23:34:50:570 SWAP/(23817:23817): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 23:43:13:441 SWAP/(23817:23817): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:43:25:849 SWAP/(23958:23958): Arancando el proceso SWAP...
+[INFO] 23:43:25:850 SWAP/(23958:23958): Configuracion cargada satisfactoriamente...
+[INFO] 23:43:25:850 SWAP/(23958:23958): Puerto de escucha: 6000
+[INFO] 23:43:25:850 SWAP/(23958:23958): Nombre del archivo Swap: swap_data
+[INFO] 23:43:25:851 SWAP/(23958:23958): Cantidad de paginas: 512
+[INFO] 23:43:25:851 SWAP/(23958:23958): Tamanio de pagina: 1024
+[INFO] 23:43:25:851 SWAP/(23958:23958): Retardo de compactacion: 60000
+[INFO] 23:43:25:900 SWAP/(23958:23958): Partición SWAP creada satisfactoriamente
+[INFO] 23:43:25:900 SWAP/(23958:23958): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:43:25:900 SWAP/(23958:23958): Esperando conexiones...
+[INFO] 23:43:45:769 SWAP/(23958:23958): Nuevo cliente conectado
+[INFO] 23:44:35:54 SWAP/(23958:23958): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:44:35:111 SWAP/(23958:23958): PID: 1
+[INFO] 23:44:35:111 SWAP/(23958:23958): Cantidad de paginas solicitadas: 3
+[INFO] 23:44:35:111 SWAP/(23958:23958): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:44:35:111 SWAP/(23958:23958): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:45:44:433 SWAP/(23958:23958): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:45:44:508 SWAP/(23958:23958): PID: 1
+[INFO] 23:45:44:508 SWAP/(23958:23958): Numero de pagina solicitada: 0
+[INFO] 23:45:44:509 SWAP/(23958:23958): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 23:48:31:939 SWAP/(23958:23958): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 00:08:55:967 SWAP/(24763:24763): Arancando el proceso SWAP...
+[INFO] 00:08:55:967 SWAP/(24763:24763): Configuracion cargada satisfactoriamente...
+[INFO] 00:08:55:968 SWAP/(24763:24763): Puerto de escucha: 6000
+[INFO] 00:08:55:968 SWAP/(24763:24763): Nombre del archivo Swap: swap_data
+[INFO] 00:08:55:968 SWAP/(24763:24763): Cantidad de paginas: 512
+[INFO] 00:08:55:968 SWAP/(24763:24763): Tamanio de pagina: 1024
+[INFO] 00:08:55:968 SWAP/(24763:24763): Retardo de compactacion: 60000
+[INFO] 00:08:56:16 SWAP/(24763:24763): Partición SWAP creada satisfactoriamente
+[INFO] 00:08:56:18 SWAP/(24763:24763): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 00:08:56:18 SWAP/(24763:24763): Esperando conexiones...
+[INFO] 00:10:44:447 SWAP/(24763:24763): Nuevo cliente conectado
+[INFO] 00:11:50:801 SWAP/(24763:24763): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 00:11:50:859 SWAP/(24763:24763): PID: 1
+[INFO] 00:11:50:859 SWAP/(24763:24763): Cantidad de paginas solicitadas: 3
+[INFO] 00:11:50:860 SWAP/(24763:24763): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 00:11:50:860 SWAP/(24763:24763): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 00:15:28:582 SWAP/(24763:24763): Nuevo comando recibido: LEER PAGINA...
+[INFO] 00:15:28:639 SWAP/(24763:24763): PID: 1
+[INFO] 00:15:28:640 SWAP/(24763:24763): Numero de pagina solicitada: 0
+[INFO] 00:15:28:640 SWAP/(24763:24763): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 00:21:51:437 SWAP/(24763:24763): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 00:23:53:826 SWAP/(25108:25108): Arancando el proceso SWAP...
+[INFO] 00:23:53:827 SWAP/(25108:25108): Configuracion cargada satisfactoriamente...
+[INFO] 00:23:53:827 SWAP/(25108:25108): Puerto de escucha: 6000
+[INFO] 00:23:53:827 SWAP/(25108:25108): Nombre del archivo Swap: swap_data
+[INFO] 00:23:53:827 SWAP/(25108:25108): Cantidad de paginas: 512
+[INFO] 00:23:53:827 SWAP/(25108:25108): Tamanio de pagina: 1024
+[INFO] 00:23:53:827 SWAP/(25108:25108): Retardo de compactacion: 60000
+[INFO] 00:23:53:874 SWAP/(25108:25108): Partición SWAP creada satisfactoriamente
+[INFO] 00:23:53:877 SWAP/(25108:25108): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 00:23:53:877 SWAP/(25108:25108): Esperando conexiones...
+[INFO] 00:24:04:142 SWAP/(25108:25108): Nuevo cliente conectado
+[INFO] 00:24:48:648 SWAP/(25108:25108): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 00:24:48:693 SWAP/(25108:25108): PID: 1
+[INFO] 00:24:48:693 SWAP/(25108:25108): Cantidad de paginas solicitadas: 3
+[INFO] 00:24:48:693 SWAP/(25108:25108): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 00:24:48:693 SWAP/(25108:25108): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 00:26:25:35 SWAP/(25108:25108): Nuevo comando recibido: LEER PAGINA...
+[INFO] 00:26:25:103 SWAP/(25108:25108): PID: 1
+[INFO] 00:26:25:103 SWAP/(25108:25108): Numero de pagina solicitada: 0
+[INFO] 00:26:25:103 SWAP/(25108:25108): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 21:15:06:876 SWAP/(27696:27696): Arancando el proceso SWAP...
+[INFO] 21:15:06:886 SWAP/(27696:27696): Configuracion cargada satisfactoriamente...
+[INFO] 21:15:06:886 SWAP/(27696:27696): Puerto de escucha: 6000
+[INFO] 21:15:06:886 SWAP/(27696:27696): Nombre del archivo Swap: swap_data
+[INFO] 21:15:06:886 SWAP/(27696:27696): Cantidad de paginas: 512
+[INFO] 21:15:06:886 SWAP/(27696:27696): Tamanio de pagina: 1024
+[INFO] 21:15:06:886 SWAP/(27696:27696): Retardo de compactacion: 60000
+[INFO] 21:15:07:55 SWAP/(27696:27696): Partición SWAP creada satisfactoriamente
+[INFO] 21:15:07:55 SWAP/(27696:27696): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 21:15:07:55 SWAP/(27696:27696): Esperando conexiones...
+[INFO] 21:16:24:762 SWAP/(27696:27696): Nuevo cliente conectado
+[INFO] 22:17:47:920 SWAP/(28152:28152): Arancando el proceso SWAP...
+[INFO] 22:17:47:927 SWAP/(28152:28152): Configuracion cargada satisfactoriamente...
+[INFO] 22:17:47:928 SWAP/(28152:28152): Puerto de escucha: 6000
+[INFO] 22:17:47:928 SWAP/(28152:28152): Nombre del archivo Swap: swap_data
+[INFO] 22:17:47:928 SWAP/(28152:28152): Cantidad de paginas: 512
+[INFO] 22:17:47:928 SWAP/(28152:28152): Tamanio de pagina: 1024
+[INFO] 22:17:47:928 SWAP/(28152:28152): Retardo de compactacion: 60000
+[INFO] 22:17:47:992 SWAP/(28152:28152): Partición SWAP creada satisfactoriamente
+[INFO] 22:17:47:992 SWAP/(28152:28152): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:17:47:992 SWAP/(28152:28152): Esperando conexiones...
+[INFO] 22:45:17:723 SWAP/(2079:2079): Arancando el proceso SWAP...
+[INFO] 22:45:17:784 SWAP/(2079:2079): Configuracion cargada satisfactoriamente...
+[INFO] 22:45:17:786 SWAP/(2079:2079): Puerto de escucha: 6000
+[INFO] 22:45:17:786 SWAP/(2079:2079): Nombre del archivo Swap: swap_data
+[INFO] 22:45:17:787 SWAP/(2079:2079): Cantidad de paginas: 512
+[INFO] 22:45:17:787 SWAP/(2079:2079): Tamanio de pagina: 1024
+[INFO] 22:45:17:787 SWAP/(2079:2079): Retardo de compactacion: 60000
+[INFO] 22:45:17:852 SWAP/(2079:2079): Partición SWAP creada satisfactoriamente
+[INFO] 22:45:17:852 SWAP/(2079:2079): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:45:17:852 SWAP/(2079:2079): Esperando conexiones...
+[INFO] 22:49:59:951 SWAP/(2079:2079): Nuevo cliente conectado
+[INFO] 22:51:42:233 SWAP/(2079:2079): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 22:51:42:289 SWAP/(2079:2079): PID: 1
+[INFO] 22:51:42:290 SWAP/(2079:2079): Cantidad de paginas solicitadas: 3
+[INFO] 22:51:42:291 SWAP/(2079:2079): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 22:51:42:291 SWAP/(2079:2079): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 22:52:12:282 SWAP/(2197:2197): Arancando el proceso SWAP...
+[INFO] 22:52:12:283 SWAP/(2197:2197): Configuracion cargada satisfactoriamente...
+[INFO] 22:52:12:283 SWAP/(2197:2197): Puerto de escucha: 6000
+[INFO] 22:52:12:283 SWAP/(2197:2197): Nombre del archivo Swap: swap_data
+[INFO] 22:52:12:283 SWAP/(2197:2197): Cantidad de paginas: 512
+[INFO] 22:52:12:284 SWAP/(2197:2197): Tamanio de pagina: 1024
+[INFO] 22:52:12:284 SWAP/(2197:2197): Retardo de compactacion: 60000
+[INFO] 22:52:12:335 SWAP/(2197:2197): Partición SWAP creada satisfactoriamente
+[INFO] 22:52:12:336 SWAP/(2197:2197): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:52:12:336 SWAP/(2197:2197): Esperando conexiones...
+[INFO] 22:54:33:119 SWAP/(2197:2197): Nuevo cliente conectado
+[INFO] 22:56:04:852 SWAP/(2197:2197): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 22:56:04:907 SWAP/(2197:2197): PID: 1
+[INFO] 22:56:04:907 SWAP/(2197:2197): Cantidad de paginas solicitadas: 3
+[INFO] 22:56:04:907 SWAP/(2197:2197): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 22:56:04:908 SWAP/(2197:2197): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 22:57:02:590 SWAP/(2197:2197): Nuevo comando recibido: LEER PAGINA...
+[INFO] 22:57:02:645 SWAP/(2197:2197): PID: 1
+[INFO] 22:57:02:647 SWAP/(2197:2197): Numero de pagina solicitada: 0
+[INFO] 22:57:02:647 SWAP/(2197:2197): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 23:03:54:819 SWAP/(2197:2197): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:04:16:619 SWAP/(2332:2332): Arancando el proceso SWAP...
+[INFO] 23:04:16:620 SWAP/(2332:2332): Configuracion cargada satisfactoriamente...
+[INFO] 23:04:16:620 SWAP/(2332:2332): Puerto de escucha: 6000
+[INFO] 23:04:16:620 SWAP/(2332:2332): Nombre del archivo Swap: swap_data
+[INFO] 23:04:16:620 SWAP/(2332:2332): Cantidad de paginas: 512
+[INFO] 23:04:16:620 SWAP/(2332:2332): Tamanio de pagina: 1024
+[INFO] 23:04:16:620 SWAP/(2332:2332): Retardo de compactacion: 60000
+[INFO] 23:04:16:748 SWAP/(2332:2332): Partición SWAP creada satisfactoriamente
+[INFO] 23:04:16:748 SWAP/(2332:2332): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:04:16:749 SWAP/(2332:2332): Esperando conexiones...
+[INFO] 23:09:35:279 SWAP/(2332:2332): Nuevo cliente conectado
+[INFO] 23:10:07:255 SWAP/(2332:2332): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:10:07:317 SWAP/(2332:2332): PID: 1
+[INFO] 23:10:07:317 SWAP/(2332:2332): Cantidad de paginas solicitadas: 3
+[INFO] 23:10:07:318 SWAP/(2332:2332): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:10:07:318 SWAP/(2332:2332): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:11:15:401 SWAP/(2332:2332): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:11:15:456 SWAP/(2332:2332): PID: 1
+[INFO] 23:11:15:457 SWAP/(2332:2332): Numero de pagina solicitada: 0
+[INFO] 23:11:15:457 SWAP/(2332:2332): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 23:22:35:919 SWAP/(2332:2332): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:23:31:695 SWAP/(2926:2926): Arancando el proceso SWAP...
+[INFO] 23:23:31:706 SWAP/(2926:2926): Configuracion cargada satisfactoriamente...
+[INFO] 23:23:31:706 SWAP/(2926:2926): Puerto de escucha: 6000
+[INFO] 23:23:31:706 SWAP/(2926:2926): Nombre del archivo Swap: swap_data
+[INFO] 23:23:31:706 SWAP/(2926:2926): Cantidad de paginas: 512
+[INFO] 23:23:31:707 SWAP/(2926:2926): Tamanio de pagina: 1024
+[INFO] 23:23:31:707 SWAP/(2926:2926): Retardo de compactacion: 60000
+[INFO] 23:23:31:780 SWAP/(2926:2926): Partición SWAP creada satisfactoriamente
+[INFO] 23:23:31:780 SWAP/(2926:2926): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:23:31:781 SWAP/(2926:2926): Esperando conexiones...
+[INFO] 23:23:51:888 SWAP/(2926:2926): Nuevo cliente conectado
+[INFO] 23:24:25:38 SWAP/(2926:2926): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:24:25:89 SWAP/(2926:2926): PID: 1
+[INFO] 23:24:25:90 SWAP/(2926:2926): Cantidad de paginas solicitadas: 3
+[INFO] 23:24:25:90 SWAP/(2926:2926): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:24:25:90 SWAP/(2926:2926): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:24:39:674 SWAP/(2926:2926): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:24:39:730 SWAP/(2926:2926): PID: 1
+[INFO] 23:24:39:730 SWAP/(2926:2926): Numero de pagina solicitada: 0
+[INFO] 23:24:39:730 SWAP/(2926:2926): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 23:29:11:32 SWAP/(2926:2926): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:29:25:28 SWAP/(3081:3081): Arancando el proceso SWAP...
+[INFO] 23:29:25:28 SWAP/(3081:3081): Configuracion cargada satisfactoriamente...
+[INFO] 23:29:25:28 SWAP/(3081:3081): Puerto de escucha: 6000
+[INFO] 23:29:25:28 SWAP/(3081:3081): Nombre del archivo Swap: swap_data
+[INFO] 23:29:25:28 SWAP/(3081:3081): Cantidad de paginas: 512
+[INFO] 23:29:25:29 SWAP/(3081:3081): Tamanio de pagina: 1024
+[INFO] 23:29:25:29 SWAP/(3081:3081): Retardo de compactacion: 60000
+[INFO] 23:29:25:96 SWAP/(3081:3081): Partición SWAP creada satisfactoriamente
+[INFO] 23:29:25:96 SWAP/(3081:3081): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:29:25:96 SWAP/(3081:3081): Esperando conexiones...
+[INFO] 23:29:34:336 SWAP/(3081:3081): Nuevo cliente conectado
+[INFO] 23:30:05:870 SWAP/(3081:3081): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:30:05:912 SWAP/(3081:3081): PID: 1
+[INFO] 23:30:05:912 SWAP/(3081:3081): Cantidad de paginas solicitadas: 3
+[INFO] 23:30:05:912 SWAP/(3081:3081): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:30:05:912 SWAP/(3081:3081): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:30:21:897 SWAP/(3081:3081): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:30:21:956 SWAP/(3081:3081): PID: 1
+[INFO] 23:30:21:956 SWAP/(3081:3081): Numero de pagina solicitada: 0
+[INFO] 23:30:21:956 SWAP/(3081:3081): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 23:48:58:252 SWAP/(3081:3081): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:49:12:34 SWAP/(3287:3287): Arancando el proceso SWAP...
+[INFO] 23:49:12:43 SWAP/(3287:3287): Configuracion cargada satisfactoriamente...
+[INFO] 23:49:12:43 SWAP/(3287:3287): Puerto de escucha: 6000
+[INFO] 23:49:12:43 SWAP/(3287:3287): Nombre del archivo Swap: swap_data
+[INFO] 23:49:12:46 SWAP/(3287:3287): Cantidad de paginas: 512
+[INFO] 23:49:12:47 SWAP/(3287:3287): Tamanio de pagina: 1024
+[INFO] 23:49:12:47 SWAP/(3287:3287): Retardo de compactacion: 60000
+[INFO] 23:49:12:109 SWAP/(3287:3287): Partición SWAP creada satisfactoriamente
+[INFO] 23:49:12:109 SWAP/(3287:3287): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:49:12:109 SWAP/(3287:3287): Esperando conexiones...
+[INFO] 23:51:44:218 SWAP/(3287:3287): Nuevo cliente conectado
+[INFO] 23:54:08:825 SWAP/(3287:3287): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:54:08:868 SWAP/(3287:3287): PID: 1
+[INFO] 23:54:08:868 SWAP/(3287:3287): Cantidad de paginas solicitadas: 3
+[INFO] 23:54:08:868 SWAP/(3287:3287): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:54:08:868 SWAP/(3287:3287): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:54:29:886 SWAP/(3287:3287): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:54:29:929 SWAP/(3287:3287): PID: 1
+[INFO] 23:54:29:929 SWAP/(3287:3287): Numero de pagina solicitada: 0
+[INFO] 23:54:29:930 SWAP/(3287:3287): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 00:28:10:385 SWAP/(3287:3287): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 00:45:41:303 SWAP/(4019:4019): Arancando el proceso SWAP...
+[INFO] 00:45:41:304 SWAP/(4019:4019): Configuracion cargada satisfactoriamente...
+[INFO] 00:45:41:304 SWAP/(4019:4019): Puerto de escucha: 6000
+[INFO] 00:45:41:304 SWAP/(4019:4019): Nombre del archivo Swap: swap_data
+[INFO] 00:45:41:304 SWAP/(4019:4019): Cantidad de paginas: 512
+[INFO] 00:45:41:304 SWAP/(4019:4019): Tamanio de pagina: 1024
+[INFO] 00:45:41:304 SWAP/(4019:4019): Retardo de compactacion: 60000
+[INFO] 00:45:41:392 SWAP/(4019:4019): Partición SWAP creada satisfactoriamente
+[INFO] 00:45:41:393 SWAP/(4019:4019): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 00:45:41:399 SWAP/(4019:4019): Esperando conexiones...
+[INFO] 00:58:07:754 SWAP/(4019:4019): Nuevo cliente conectado
+[INFO] 00:59:42:113 SWAP/(4019:4019): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 00:59:42:165 SWAP/(4019:4019): PID: 1
+[INFO] 00:59:42:165 SWAP/(4019:4019): Cantidad de paginas solicitadas: 3
+[INFO] 00:59:42:165 SWAP/(4019:4019): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 00:59:42:166 SWAP/(4019:4019): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 00:59:59:105 SWAP/(4019:4019): Nuevo comando recibido: LEER PAGINA...
+[INFO] 00:59:59:163 SWAP/(4019:4019): PID: 1
+[INFO] 00:59:59:163 SWAP/(4019:4019): Numero de pagina solicitada: 0
+[INFO] 00:59:59:163 SWAP/(4019:4019): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 01:06:18:308 SWAP/(4019:4019): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:06:27:911 SWAP/(4525:4525): Arancando el proceso SWAP...
+[INFO] 01:06:27:912 SWAP/(4525:4525): Configuracion cargada satisfactoriamente...
+[INFO] 01:06:27:912 SWAP/(4525:4525): Puerto de escucha: 6000
+[INFO] 01:06:27:912 SWAP/(4525:4525): Nombre del archivo Swap: swap_data
+[INFO] 01:06:27:912 SWAP/(4525:4525): Cantidad de paginas: 512
+[INFO] 01:06:27:912 SWAP/(4525:4525): Tamanio de pagina: 1024
+[INFO] 01:06:27:912 SWAP/(4525:4525): Retardo de compactacion: 60000
+[INFO] 01:06:27:982 SWAP/(4525:4525): Partición SWAP creada satisfactoriamente
+[INFO] 01:06:27:982 SWAP/(4525:4525): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:06:27:983 SWAP/(4525:4525): Esperando conexiones...
+[INFO] 01:07:48:880 SWAP/(4525:4525): Nuevo cliente conectado
+[INFO] 01:08:18:901 SWAP/(4525:4525): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 01:08:18:954 SWAP/(4525:4525): PID: 1
+[INFO] 01:08:18:955 SWAP/(4525:4525): Cantidad de paginas solicitadas: 3
+[INFO] 01:08:18:955 SWAP/(4525:4525): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 01:08:18:955 SWAP/(4525:4525): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 01:08:36:568 SWAP/(4525:4525): Nuevo comando recibido: LEER PAGINA...
+[INFO] 01:08:36:618 SWAP/(4525:4525): PID: 1
+[INFO] 01:08:36:618 SWAP/(4525:4525): Numero de pagina solicitada: 0
+[INFO] 01:08:36:618 SWAP/(4525:4525): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 01:12:30:881 SWAP/(4525:4525): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:12:49:215 SWAP/(4563:4563): Arancando el proceso SWAP...
+[INFO] 01:12:49:215 SWAP/(4563:4563): Configuracion cargada satisfactoriamente...
+[INFO] 01:12:49:215 SWAP/(4563:4563): Puerto de escucha: 6000
+[INFO] 01:12:49:215 SWAP/(4563:4563): Nombre del archivo Swap: swap_data
+[INFO] 01:12:49:215 SWAP/(4563:4563): Cantidad de paginas: 512
+[INFO] 01:12:49:215 SWAP/(4563:4563): Tamanio de pagina: 1024
+[INFO] 01:12:49:216 SWAP/(4563:4563): Retardo de compactacion: 60000
+[INFO] 01:12:49:270 SWAP/(4563:4563): Partición SWAP creada satisfactoriamente
+[INFO] 01:12:49:271 SWAP/(4563:4563): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:12:49:273 SWAP/(4563:4563): Esperando conexiones...
+[INFO] 01:13:04:823 SWAP/(4563:4563): Nuevo cliente conectado
+[INFO] 01:15:22:284 SWAP/(4563:4563): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 01:15:22:339 SWAP/(4563:4563): PID: 1
+[INFO] 01:15:22:339 SWAP/(4563:4563): Cantidad de paginas solicitadas: 3
+[INFO] 01:15:22:339 SWAP/(4563:4563): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 01:15:22:339 SWAP/(4563:4563): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 01:15:38:465 SWAP/(4563:4563): Nuevo comando recibido: LEER PAGINA...
+[INFO] 01:15:38:519 SWAP/(4563:4563): PID: 1
+[INFO] 01:15:38:520 SWAP/(4563:4563): Numero de pagina solicitada: 0
+[INFO] 01:15:38:520 SWAP/(4563:4563): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 01:24:40:850 SWAP/(4563:4563): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:25:56:496 SWAP/(4641:4641): Arancando el proceso SWAP...
+[INFO] 01:25:56:503 SWAP/(4641:4641): Configuracion cargada satisfactoriamente...
+[INFO] 01:25:56:503 SWAP/(4641:4641): Puerto de escucha: 6000
+[INFO] 01:25:56:503 SWAP/(4641:4641): Nombre del archivo Swap: swap_data
+[INFO] 01:25:56:503 SWAP/(4641:4641): Cantidad de paginas: 512
+[INFO] 01:25:56:503 SWAP/(4641:4641): Tamanio de pagina: 1024
+[INFO] 01:25:56:503 SWAP/(4641:4641): Retardo de compactacion: 60000
+[INFO] 01:25:56:584 SWAP/(4641:4641): Partición SWAP creada satisfactoriamente
+[INFO] 01:25:56:588 SWAP/(4641:4641): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:25:56:588 SWAP/(4641:4641): Esperando conexiones...
+[INFO] 01:26:55:493 SWAP/(4641:4641): Nuevo cliente conectado
+[INFO] 01:27:46:457 SWAP/(4656:4656): Arancando el proceso SWAP...
+[INFO] 01:27:46:458 SWAP/(4656:4656): Configuracion cargada satisfactoriamente...
+[INFO] 01:27:46:458 SWAP/(4656:4656): Puerto de escucha: 6000
+[INFO] 01:27:46:458 SWAP/(4656:4656): Nombre del archivo Swap: swap_data
+[INFO] 01:27:46:458 SWAP/(4656:4656): Cantidad de paginas: 512
+[INFO] 01:27:46:458 SWAP/(4656:4656): Tamanio de pagina: 1024
+[INFO] 01:27:46:458 SWAP/(4656:4656): Retardo de compactacion: 60000
+[INFO] 01:27:46:507 SWAP/(4656:4656): Partición SWAP creada satisfactoriamente
+[INFO] 01:27:46:508 SWAP/(4656:4656): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:27:46:508 SWAP/(4656:4656): Esperando conexiones...
+[INFO] 01:27:47:974 SWAP/(4656:4656): Nuevo cliente conectado
+[ERROR] 01:27:53:873 SWAP/(4656:4656): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:28:16:554 SWAP/(4668:4668): Arancando el proceso SWAP...
+[INFO] 01:28:16:555 SWAP/(4668:4668): Configuracion cargada satisfactoriamente...
+[INFO] 01:28:16:555 SWAP/(4668:4668): Puerto de escucha: 6000
+[INFO] 01:28:16:555 SWAP/(4668:4668): Nombre del archivo Swap: swap_data
+[INFO] 01:28:16:555 SWAP/(4668:4668): Cantidad de paginas: 512
+[INFO] 01:28:16:555 SWAP/(4668:4668): Tamanio de pagina: 1024
+[INFO] 01:28:16:556 SWAP/(4668:4668): Retardo de compactacion: 60000
+[INFO] 01:28:16:604 SWAP/(4668:4668): Partición SWAP creada satisfactoriamente
+[INFO] 01:28:16:604 SWAP/(4668:4668): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:28:16:604 SWAP/(4668:4668): Esperando conexiones...
+[INFO] 01:28:23:690 SWAP/(4668:4668): Nuevo cliente conectado
+[INFO] 01:29:05:908 SWAP/(4668:4668): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 01:29:05:954 SWAP/(4668:4668): PID: 1
+[INFO] 01:29:05:954 SWAP/(4668:4668): Cantidad de paginas solicitadas: 3
+[INFO] 01:29:05:954 SWAP/(4668:4668): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 01:29:05:955 SWAP/(4668:4668): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 01:29:22:469 SWAP/(4668:4668): Nuevo comando recibido: LEER PAGINA...
+[INFO] 01:29:22:514 SWAP/(4668:4668): PID: 1
+[INFO] 01:29:22:515 SWAP/(4668:4668): Numero de pagina solicitada: 0
+[INFO] 01:29:22:515 SWAP/(4668:4668): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 01:29:45:168 SWAP/(4668:4668): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:31:09:326 SWAP/(4689:4689): Arancando el proceso SWAP...
+[INFO] 01:31:09:332 SWAP/(4689:4689): Configuracion cargada satisfactoriamente...
+[INFO] 01:31:09:332 SWAP/(4689:4689): Puerto de escucha: 6000
+[INFO] 01:31:09:333 SWAP/(4689:4689): Nombre del archivo Swap: swap_data
+[INFO] 01:31:09:333 SWAP/(4689:4689): Cantidad de paginas: 512
+[INFO] 01:31:09:333 SWAP/(4689:4689): Tamanio de pagina: 1024
+[INFO] 01:31:09:333 SWAP/(4689:4689): Retardo de compactacion: 60000
+[INFO] 01:31:09:383 SWAP/(4689:4689): Partición SWAP creada satisfactoriamente
+[INFO] 01:31:09:383 SWAP/(4689:4689): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:31:09:383 SWAP/(4689:4689): Esperando conexiones...
+[INFO] 01:35:07:285 SWAP/(4689:4689): Nuevo cliente conectado
+[INFO] 01:36:06:566 SWAP/(4689:4689): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 01:36:06:621 SWAP/(4689:4689): PID: 1
+[INFO] 01:36:06:621 SWAP/(4689:4689): Cantidad de paginas solicitadas: 3
+[INFO] 01:36:06:621 SWAP/(4689:4689): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 01:36:06:621 SWAP/(4689:4689): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 01:36:26:165 SWAP/(4689:4689): Nuevo comando recibido: LEER PAGINA...
+[INFO] 01:36:26:222 SWAP/(4689:4689): PID: 1
+[INFO] 01:36:26:222 SWAP/(4689:4689): Numero de pagina solicitada: 0
+[INFO] 01:36:26:222 SWAP/(4689:4689): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 01:42:43:968 SWAP/(4689:4689): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:43:01:283 SWAP/(5106:5106): Arancando el proceso SWAP...
+[INFO] 01:43:01:285 SWAP/(5106:5106): Configuracion cargada satisfactoriamente...
+[INFO] 01:43:01:285 SWAP/(5106:5106): Puerto de escucha: 6000
+[INFO] 01:43:01:285 SWAP/(5106:5106): Nombre del archivo Swap: swap_data
+[INFO] 01:43:01:285 SWAP/(5106:5106): Cantidad de paginas: 512
+[INFO] 01:43:01:285 SWAP/(5106:5106): Tamanio de pagina: 1024
+[INFO] 01:43:01:285 SWAP/(5106:5106): Retardo de compactacion: 60000
+[INFO] 01:43:01:343 SWAP/(5106:5106): Partición SWAP creada satisfactoriamente
+[INFO] 01:43:01:345 SWAP/(5106:5106): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:43:01:346 SWAP/(5106:5106): Esperando conexiones...
+[INFO] 01:43:07:682 SWAP/(5106:5106): Nuevo cliente conectado
+[INFO] 01:43:52:935 SWAP/(5106:5106): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 01:43:52:983 SWAP/(5106:5106): PID: 1
+[INFO] 01:43:52:984 SWAP/(5106:5106): Cantidad de paginas solicitadas: 3
+[INFO] 01:43:52:984 SWAP/(5106:5106): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 01:43:52:984 SWAP/(5106:5106): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 01:44:13:275 SWAP/(5106:5106): Nuevo comando recibido: LEER PAGINA...
+[INFO] 01:44:13:323 SWAP/(5106:5106): PID: 1
+[INFO] 01:44:13:324 SWAP/(5106:5106): Numero de pagina solicitada: 0
+[INFO] 01:44:13:324 SWAP/(5106:5106): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 21:40:30:313 SWAP/(6400:6400): Arancando el proceso SWAP...
+[INFO] 21:40:30:313 SWAP/(6400:6400): Configuracion cargada satisfactoriamente...
+[INFO] 21:40:30:313 SWAP/(6400:6400): Puerto de escucha: 6000
+[INFO] 21:40:30:313 SWAP/(6400:6400): Nombre del archivo Swap: swap_data
+[INFO] 21:40:30:315 SWAP/(6400:6400): Cantidad de paginas: 1024
+[INFO] 21:40:30:315 SWAP/(6400:6400): Tamanio de pagina: 8
+[INFO] 21:40:30:315 SWAP/(6400:6400): Retardo de compactacion: 60000
+[INFO] 21:40:30:317 SWAP/(6400:6400): Partición SWAP creada satisfactoriamente
+[INFO] 21:40:30:319 SWAP/(6400:6400): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 21:40:30:322 SWAP/(6400:6400): Esperando conexiones...
+[INFO] 21:41:09:50 SWAP/(6449:6449): Arancando el proceso SWAP...
+[INFO] 21:41:09:50 SWAP/(6449:6449): Configuracion cargada satisfactoriamente...
+[INFO] 21:41:09:50 SWAP/(6449:6449): Puerto de escucha: 6000
+[INFO] 21:41:09:50 SWAP/(6449:6449): Nombre del archivo Swap: swap_data
+[INFO] 21:41:09:50 SWAP/(6449:6449): Cantidad de paginas: 1024
+[INFO] 21:41:09:50 SWAP/(6449:6449): Tamanio de pagina: 8
+[INFO] 21:41:09:51 SWAP/(6449:6449): Retardo de compactacion: 60000
+[INFO] 21:41:09:52 SWAP/(6449:6449): Partición SWAP creada satisfactoriamente
+[INFO] 21:41:09:52 SWAP/(6449:6449): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 21:41:09:52 SWAP/(6449:6449): Esperando conexiones...
+[INFO] 21:42:22:980 SWAP/(6477:6477): Arancando el proceso SWAP...
+[INFO] 21:42:22:983 SWAP/(6477:6477): Configuracion cargada satisfactoriamente...
+[INFO] 21:42:22:983 SWAP/(6477:6477): Puerto de escucha: 6000
+[INFO] 21:42:22:984 SWAP/(6477:6477): Nombre del archivo Swap: swap_data
+[INFO] 21:42:22:984 SWAP/(6477:6477): Cantidad de paginas: 1024
+[INFO] 21:42:22:984 SWAP/(6477:6477): Tamanio de pagina: 8
+[INFO] 21:42:22:984 SWAP/(6477:6477): Retardo de compactacion: 60000
+[INFO] 21:42:22:985 SWAP/(6477:6477): Partición SWAP creada satisfactoriamente
+[INFO] 21:42:22:987 SWAP/(6477:6477): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 21:42:22:987 SWAP/(6477:6477): Esperando conexiones...
+[INFO] 21:45:12:748 SWAP/(6687:6687): Arancando el proceso SWAP...
+[INFO] 21:45:12:748 SWAP/(6687:6687): Configuracion cargada satisfactoriamente...
+[INFO] 21:45:12:748 SWAP/(6687:6687): Puerto de escucha: 6000
+[INFO] 21:45:12:748 SWAP/(6687:6687): Nombre del archivo Swap: swap_data
+[INFO] 21:45:12:748 SWAP/(6687:6687): Cantidad de paginas: 1024
+[INFO] 21:45:12:749 SWAP/(6687:6687): Tamanio de pagina: 8
+[INFO] 21:45:12:749 SWAP/(6687:6687): Retardo de compactacion: 60000
+[INFO] 21:45:12:749 SWAP/(6687:6687): Partición SWAP creada satisfactoriamente
+[INFO] 21:45:12:750 SWAP/(6687:6687): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 21:45:12:750 SWAP/(6687:6687): Esperando conexiones...
+[INFO] 21:46:06:361 SWAP/(6687:6687): Nuevo cliente conectado
+[INFO] 21:48:28:376 SWAP/(6687:6687): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 21:48:28:432 SWAP/(6687:6687): PID: 1
+[INFO] 21:48:28:432 SWAP/(6687:6687): Cantidad de paginas solicitadas: 14
+[INFO] 21:48:28:433 SWAP/(6687:6687): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 21:48:28:433 SWAP/(6687:6687): Asignacion de paginas satisfactoria al proceso(PID 1): 0->13
+[INFO] 21:48:30:438 SWAP/(6687:6687): Nuevo comando recibido: LEER PAGINA...
+[INFO] 21:48:30:491 SWAP/(6687:6687): PID: 1
+[INFO] 21:48:30:491 SWAP/(6687:6687): Numero de pagina solicitada: 7
+[INFO] 21:48:30:492 SWAP/(6687:6687): Pagina leida: 
+variabl��[�
+[INFO] 22:30:06:175 SWAP/(6941:6941): Arancando el proceso SWAP...
+[INFO] 22:30:06:178 SWAP/(6941:6941): Configuracion cargada satisfactoriamente...
+[INFO] 22:30:06:179 SWAP/(6941:6941): Puerto de escucha: 6000
+[INFO] 22:30:06:181 SWAP/(6941:6941): Nombre del archivo Swap: swap_data
+[INFO] 22:30:06:182 SWAP/(6941:6941): Cantidad de paginas: 512
+[INFO] 22:30:06:183 SWAP/(6941:6941): Tamanio de pagina: 1024
+[INFO] 22:30:06:183 SWAP/(6941:6941): Retardo de compactacion: 60000
+[INFO] 22:30:06:269 SWAP/(6941:6941): Partición SWAP creada satisfactoriamente
+[INFO] 22:30:06:269 SWAP/(6941:6941): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:30:06:270 SWAP/(6941:6941): Esperando conexiones...
+[INFO] 22:38:22:485 SWAP/(6941:6941): Nuevo cliente conectado
+[ERROR] 22:40:09:594 SWAP/(6941:6941): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 22:40:23:106 SWAP/(6996:6996): Arancando el proceso SWAP...
+[INFO] 22:40:23:107 SWAP/(6996:6996): Configuracion cargada satisfactoriamente...
+[INFO] 22:40:23:107 SWAP/(6996:6996): Puerto de escucha: 6000
+[INFO] 22:40:23:107 SWAP/(6996:6996): Nombre del archivo Swap: swap_data
+[INFO] 22:40:23:107 SWAP/(6996:6996): Cantidad de paginas: 512
+[INFO] 22:40:23:107 SWAP/(6996:6996): Tamanio de pagina: 1024
+[INFO] 22:40:23:107 SWAP/(6996:6996): Retardo de compactacion: 60000
+[INFO] 22:40:23:218 SWAP/(6996:6996): Partición SWAP creada satisfactoriamente
+[INFO] 22:40:23:218 SWAP/(6996:6996): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:40:23:218 SWAP/(6996:6996): Esperando conexiones...
+[INFO] 22:40:31:200 SWAP/(6996:6996): Nuevo cliente conectado
+[INFO] 22:41:21:491 SWAP/(6996:6996): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 22:41:21:547 SWAP/(6996:6996): PID: 1
+[INFO] 22:41:21:548 SWAP/(6996:6996): Cantidad de paginas solicitadas: 14
+[INFO] 22:41:21:548 SWAP/(6996:6996): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 22:41:21:548 SWAP/(6996:6996): Asignacion de paginas satisfactoria al proceso(PID 1): 0->13
+[INFO] 22:42:08:719 SWAP/(7014:7014): Arancando el proceso SWAP...
+[INFO] 22:42:08:727 SWAP/(7014:7014): Configuracion cargada satisfactoriamente...
+[INFO] 22:42:08:727 SWAP/(7014:7014): Puerto de escucha: 6000
+[INFO] 22:42:08:727 SWAP/(7014:7014): Nombre del archivo Swap: swap_data
+[INFO] 22:42:08:727 SWAP/(7014:7014): Cantidad de paginas: 512
+[INFO] 22:42:08:728 SWAP/(7014:7014): Tamanio de pagina: 1024
+[INFO] 22:42:08:728 SWAP/(7014:7014): Retardo de compactacion: 60000
+[INFO] 22:42:08:845 SWAP/(7014:7014): Partición SWAP creada satisfactoriamente
+[INFO] 22:42:08:846 SWAP/(7014:7014): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:42:08:846 SWAP/(7014:7014): Esperando conexiones...
+[INFO] 22:43:47:356 SWAP/(7014:7014): Nuevo cliente conectado
+[INFO] 22:46:06:151 SWAP/(7014:7014): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 22:46:06:207 SWAP/(7014:7014): PID: 1
+[INFO] 22:46:06:207 SWAP/(7014:7014): Cantidad de paginas solicitadas: 3
+[INFO] 22:46:06:208 SWAP/(7014:7014): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 22:46:06:208 SWAP/(7014:7014): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 22:46:31:219 SWAP/(7014:7014): Nuevo comando recibido: LEER PAGINA...
+[INFO] 22:46:31:272 SWAP/(7014:7014): PID: 1
+[INFO] 22:46:31:272 SWAP/(7014:7014): Numero de pagina solicitada: 0
+[INFO] 22:46:31:273 SWAP/(7014:7014): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 23:08:48:881 SWAP/(7014:7014): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:09:29:720 SWAP/(7116:7116): Arancando el proceso SWAP...
+[INFO] 23:09:29:720 SWAP/(7116:7116): Configuracion cargada satisfactoriamente...
+[INFO] 23:09:29:720 SWAP/(7116:7116): Puerto de escucha: 6000
+[INFO] 23:09:29:720 SWAP/(7116:7116): Nombre del archivo Swap: swap_data
+[INFO] 23:09:29:720 SWAP/(7116:7116): Cantidad de paginas: 512
+[INFO] 23:09:29:721 SWAP/(7116:7116): Tamanio de pagina: 1024
+[INFO] 23:09:29:721 SWAP/(7116:7116): Retardo de compactacion: 60000
+[INFO] 23:09:29:805 SWAP/(7116:7116): Partición SWAP creada satisfactoriamente
+[INFO] 23:09:29:807 SWAP/(7116:7116): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:09:29:807 SWAP/(7116:7116): Esperando conexiones...
+[INFO] 23:09:37:128 SWAP/(7116:7116): Nuevo cliente conectado
+[INFO] 23:09:37:140 SWAP/(7116:7116): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:09:37:196 SWAP/(7116:7116): PID: 1
+[INFO] 23:09:37:196 SWAP/(7116:7116): Cantidad de paginas solicitadas: 1
+[INFO] 23:09:37:196 SWAP/(7116:7116): Programa: #!/usr/bin/ansisop
+begin
+#primero declaro las variables
+variables a, b
+a = 20
+print a
+end
+[INFO] 23:09:37:196 SWAP/(7116:7116): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[ERROR] 23:10:19:88 SWAP/(7116:7116): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 23:11:15:383 SWAP/(7141:7141): Arancando el proceso SWAP...
+[INFO] 23:11:15:383 SWAP/(7141:7141): Configuracion cargada satisfactoriamente...
+[INFO] 23:11:15:384 SWAP/(7141:7141): Puerto de escucha: 6000
+[INFO] 23:11:15:384 SWAP/(7141:7141): Nombre del archivo Swap: swap_data
+[INFO] 23:11:15:384 SWAP/(7141:7141): Cantidad de paginas: 512
+[INFO] 23:11:15:384 SWAP/(7141:7141): Tamanio de pagina: 1024
+[INFO] 23:11:15:384 SWAP/(7141:7141): Retardo de compactacion: 60000
+[INFO] 23:11:15:474 SWAP/(7141:7141): Partición SWAP creada satisfactoriamente
+[INFO] 23:11:15:474 SWAP/(7141:7141): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:11:15:474 SWAP/(7141:7141): Esperando conexiones...
+[INFO] 23:12:29:311 SWAP/(7141:7141): Nuevo cliente conectado
+[INFO] 23:13:15:636 SWAP/(7141:7141): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:13:15:691 SWAP/(7141:7141): PID: 1
+[INFO] 23:13:15:692 SWAP/(7141:7141): Cantidad de paginas solicitadas: 3
+[INFO] 23:13:15:692 SWAP/(7141:7141): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:13:15:692 SWAP/(7141:7141): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:13:51:781 SWAP/(7141:7141): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:13:51:844 SWAP/(7141:7141): PID: 1
+[INFO] 23:13:51:844 SWAP/(7141:7141): Numero de pagina solicitada: 0
+[INFO] 23:13:51:844 SWAP/(7141:7141): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:18:56:380 SWAP/(7210:7210): Arancando el proceso SWAP...
+[INFO] 23:18:56:381 SWAP/(7210:7210): Configuracion cargada satisfactoriamente...
+[INFO] 23:18:56:381 SWAP/(7210:7210): Puerto de escucha: 6000
+[INFO] 23:18:56:381 SWAP/(7210:7210): Nombre del archivo Swap: swap_data
+[INFO] 23:18:56:381 SWAP/(7210:7210): Cantidad de paginas: 512
+[INFO] 23:18:56:381 SWAP/(7210:7210): Tamanio de pagina: 1024
+[INFO] 23:18:56:381 SWAP/(7210:7210): Retardo de compactacion: 60000
+[INFO] 23:18:56:434 SWAP/(7210:7210): Partición SWAP creada satisfactoriamente
+[INFO] 23:18:56:436 SWAP/(7210:7210): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:18:56:437 SWAP/(7210:7210): Esperando conexiones...
+[INFO] 23:19:39:752 SWAP/(7210:7210): Nuevo cliente conectado
+[INFO] 23:20:40:90 SWAP/(7228:7228): Arancando el proceso SWAP...
+[INFO] 23:20:40:95 SWAP/(7228:7228): Configuracion cargada satisfactoriamente...
+[INFO] 23:20:40:95 SWAP/(7228:7228): Puerto de escucha: 6000
+[INFO] 23:20:40:95 SWAP/(7228:7228): Nombre del archivo Swap: swap_data
+[INFO] 23:20:40:95 SWAP/(7228:7228): Cantidad de paginas: 512
+[INFO] 23:20:40:96 SWAP/(7228:7228): Tamanio de pagina: 1024
+[INFO] 23:20:40:96 SWAP/(7228:7228): Retardo de compactacion: 60000
+[INFO] 23:20:40:154 SWAP/(7228:7228): Partición SWAP creada satisfactoriamente
+[INFO] 23:20:40:157 SWAP/(7228:7228): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:20:40:157 SWAP/(7228:7228): Esperando conexiones...
+[INFO] 23:21:08:637 SWAP/(7228:7228): Nuevo cliente conectado
+[INFO] 23:21:34:390 SWAP/(7228:7228): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:21:34:437 SWAP/(7228:7228): PID: 1
+[INFO] 23:21:34:437 SWAP/(7228:7228): Cantidad de paginas solicitadas: 3
+[INFO] 23:21:34:437 SWAP/(7228:7228): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:21:34:438 SWAP/(7228:7228): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:22:07:409 SWAP/(7228:7228): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:22:07:465 SWAP/(7228:7228): PID: 1
+[INFO] 23:22:07:465 SWAP/(7228:7228): Numero de pagina solicitada: 0
+[INFO] 23:22:07:466 SWAP/(7228:7228): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:25:35:951 SWAP/(7258:7258): Arancando el proceso SWAP...
+[INFO] 23:25:35:951 SWAP/(7258:7258): Configuracion cargada satisfactoriamente...
+[INFO] 23:25:35:952 SWAP/(7258:7258): Puerto de escucha: 6000
+[INFO] 23:25:35:952 SWAP/(7258:7258): Nombre del archivo Swap: swap_data
+[INFO] 23:25:35:953 SWAP/(7258:7258): Cantidad de paginas: 512
+[INFO] 23:25:35:953 SWAP/(7258:7258): Tamanio de pagina: 1024
+[INFO] 23:25:35:953 SWAP/(7258:7258): Retardo de compactacion: 60000
+[INFO] 23:25:35:997 SWAP/(7258:7258): Partición SWAP creada satisfactoriamente
+[INFO] 23:25:35:998 SWAP/(7258:7258): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 23:25:35:998 SWAP/(7258:7258): Esperando conexiones...
+[INFO] 23:25:39:453 SWAP/(7258:7258): Nuevo cliente conectado
+[INFO] 23:27:11:638 SWAP/(7258:7258): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 23:27:11:714 SWAP/(7258:7258): PID: 1
+[INFO] 23:27:11:714 SWAP/(7258:7258): Cantidad de paginas solicitadas: 3
+[INFO] 23:27:11:714 SWAP/(7258:7258): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 23:27:11:714 SWAP/(7258:7258): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 23:27:31:149 SWAP/(7258:7258): Nuevo comando recibido: LEER PAGINA...
+[INFO] 23:27:31:217 SWAP/(7258:7258): PID: 1
+[INFO] 23:27:31:217 SWAP/(7258:7258): Numero de pagina solicitada: 0
+[INFO] 23:27:31:217 SWAP/(7258:7258): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 00:07:38:722 SWAP/(7258:7258): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:31:44:184 SWAP/(8533:8533): Arancando el proceso SWAP...
+[INFO] 01:31:44:185 SWAP/(8533:8533): Configuracion cargada satisfactoriamente...
+[INFO] 01:31:44:187 SWAP/(8533:8533): Puerto de escucha: 6000
+[INFO] 01:31:44:187 SWAP/(8533:8533): Nombre del archivo Swap: swap_data
+[INFO] 01:31:44:187 SWAP/(8533:8533): Cantidad de paginas: 512
+[INFO] 01:31:44:187 SWAP/(8533:8533): Tamanio de pagina: 20
+[INFO] 01:31:44:187 SWAP/(8533:8533): Retardo de compactacion: 60000
+[INFO] 01:31:44:189 SWAP/(8533:8533): Partición SWAP creada satisfactoriamente
+[INFO] 01:31:44:191 SWAP/(8533:8533): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:31:44:191 SWAP/(8533:8533): Esperando conexiones...
+[INFO] 01:31:44:580 SWAP/(8533:8533): Nuevo cliente conectado
+[INFO] 01:33:28:826 SWAP/(8533:8533): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 01:33:28:881 SWAP/(8533:8533): PID: 1
+[INFO] 01:33:28:881 SWAP/(8533:8533): Cantidad de paginas solicitadas: 7
+[INFO] 01:33:28:881 SWAP/(8533:8533): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 01:33:28:881 SWAP/(8533:8533): Asignacion de paginas satisfactoria al proceso(PID 1): 0->6
+[INFO] 01:34:19:498 SWAP/(8533:8533): Nuevo comando recibido: LEER PAGINA...
+[INFO] 01:34:19:553 SWAP/(8533:8533): PID: 1
+[INFO] 01:34:19:553 SWAP/(8533:8533): Numero de pagina solicitada: 2
+[INFO] 01:34:19:553 SWAP/(8533:8533): Pagina leida: ro las variables
+var
+[ERROR] 01:34:34:57 SWAP/(8533:8533): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:37:50:577 SWAP/(8577:8577): Arancando el proceso SWAP...
+[INFO] 01:37:50:588 SWAP/(8577:8577): Configuracion cargada satisfactoriamente...
+[INFO] 01:37:50:588 SWAP/(8577:8577): Puerto de escucha: 6000
+[INFO] 01:37:50:588 SWAP/(8577:8577): Nombre del archivo Swap: swap_data
+[INFO] 01:37:50:588 SWAP/(8577:8577): Cantidad de paginas: 512
+[INFO] 01:37:50:588 SWAP/(8577:8577): Tamanio de pagina: 1024
+[INFO] 01:37:50:588 SWAP/(8577:8577): Retardo de compactacion: 60000
+[INFO] 01:37:50:637 SWAP/(8577:8577): Partición SWAP creada satisfactoriamente
+[INFO] 01:37:50:638 SWAP/(8577:8577): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:37:50:638 SWAP/(8577:8577): Esperando conexiones...
+[INFO] 01:38:09:371 SWAP/(8577:8577): Nuevo cliente conectado
+[ERROR] 01:40:07:323 SWAP/(8577:8577): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 01:40:48:364 SWAP/(8592:8592): Arancando el proceso SWAP...
+[INFO] 01:40:48:364 SWAP/(8592:8592): Configuracion cargada satisfactoriamente...
+[INFO] 01:40:48:365 SWAP/(8592:8592): Puerto de escucha: 6000
+[INFO] 01:40:48:365 SWAP/(8592:8592): Nombre del archivo Swap: swap_data
+[INFO] 01:40:48:365 SWAP/(8592:8592): Cantidad de paginas: 512
+[INFO] 01:40:48:365 SWAP/(8592:8592): Tamanio de pagina: 1024
+[INFO] 01:40:48:365 SWAP/(8592:8592): Retardo de compactacion: 60000
+[INFO] 01:40:48:449 SWAP/(8592:8592): Partición SWAP creada satisfactoriamente
+[INFO] 01:40:48:455 SWAP/(8592:8592): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 01:40:48:455 SWAP/(8592:8592): Esperando conexiones...
+[INFO] 01:40:52:702 SWAP/(8592:8592): Nuevo cliente conectado
+[INFO] 01:41:17:709 SWAP/(8592:8592): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 01:41:17:765 SWAP/(8592:8592): PID: 1
+[INFO] 01:41:17:765 SWAP/(8592:8592): Cantidad de paginas solicitadas: 3
+[INFO] 01:41:17:765 SWAP/(8592:8592): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 01:41:17:765 SWAP/(8592:8592): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 01:41:21:192 SWAP/(8592:8592): Nuevo comando recibido: LEER PAGINA...
+[INFO] 01:41:21:249 SWAP/(8592:8592): PID: 1
+[INFO] 01:41:21:249 SWAP/(8592:8592): Numero de pagina solicitada: 0
+[INFO] 01:41:21:249 SWAP/(8592:8592): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[ERROR] 01:53:46:832 SWAP/(8592:8592): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 21:43:28:517 SWAP/(2592:2592): Arancando el proceso SWAP...
+[INFO] 21:43:28:527 SWAP/(2592:2592): Configuracion cargada satisfactoriamente...
+[INFO] 21:43:28:527 SWAP/(2592:2592): Puerto de escucha: 6000
+[INFO] 21:43:28:527 SWAP/(2592:2592): Nombre del archivo Swap: swap_data
+[INFO] 21:43:28:527 SWAP/(2592:2592): Cantidad de paginas: 512
+[INFO] 21:43:28:527 SWAP/(2592:2592): Tamanio de pagina: 1024
+[INFO] 21:43:28:527 SWAP/(2592:2592): Retardo de compactacion: 60000
+[INFO] 21:43:28:609 SWAP/(2592:2592): Partición SWAP creada satisfactoriamente
+[INFO] 21:43:28:609 SWAP/(2592:2592): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 21:43:28:609 SWAP/(2592:2592): Esperando conexiones...
+[INFO] 21:48:57:526 SWAP/(2592:2592): Nuevo cliente conectado
+[INFO] 21:56:49:8 SWAP/(2592:2592): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 21:56:49:94 SWAP/(2592:2592): PID: 1
+[INFO] 21:56:49:94 SWAP/(2592:2592): Cantidad de paginas solicitadas: 3
+[INFO] 21:56:49:94 SWAP/(2592:2592): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 21:56:49:94 SWAP/(2592:2592): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 21:57:09:626 SWAP/(2592:2592): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 21:57:09:682 SWAP/(2592:2592): PID: 2
+[INFO] 21:57:09:682 SWAP/(2592:2592): Cantidad de paginas solicitadas: 3
+[INFO] 21:57:09:682 SWAP/(2592:2592): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 21:57:09:683 SWAP/(2592:2592): Asignacion de paginas satisfactoria al proceso(PID 2): 3->5
+[INFO] 22:00:22:213 SWAP/(2592:2592): Nuevo comando recibido: LEER PAGINA...
+[INFO] 22:00:22:296 SWAP/(2592:2592): PID: 2
+[INFO] 22:00:22:296 SWAP/(2592:2592): Numero de pagina solicitada: 1
+[INFO] 22:00:22:297 SWAP/(2592:2592): Pagina leida: 
+[ERROR] 22:03:34:675 SWAP/(2592:2592): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 22:03:50:295 SWAP/(2944:2944): Arancando el proceso SWAP...
+[INFO] 22:03:50:295 SWAP/(2944:2944): Configuracion cargada satisfactoriamente...
+[INFO] 22:03:50:295 SWAP/(2944:2944): Puerto de escucha: 6000
+[INFO] 22:03:50:295 SWAP/(2944:2944): Nombre del archivo Swap: swap_data
+[INFO] 22:03:50:295 SWAP/(2944:2944): Cantidad de paginas: 512
+[INFO] 22:03:50:295 SWAP/(2944:2944): Tamanio de pagina: 1024
+[INFO] 22:03:50:295 SWAP/(2944:2944): Retardo de compactacion: 60000
+[INFO] 22:03:50:350 SWAP/(2944:2944): Partición SWAP creada satisfactoriamente
+[INFO] 22:03:50:351 SWAP/(2944:2944): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:03:50:351 SWAP/(2944:2944): Esperando conexiones...
+[INFO] 22:04:03:319 SWAP/(2944:2944): Nuevo cliente conectado
+[INFO] 22:05:17:441 SWAP/(2944:2944): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 22:05:17:487 SWAP/(2944:2944): PID: 1
+[INFO] 22:05:17:487 SWAP/(2944:2944): Cantidad de paginas solicitadas: 3
+[INFO] 22:05:17:487 SWAP/(2944:2944): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 22:05:17:487 SWAP/(2944:2944): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[ERROR] 22:06:59:803 SWAP/(2944:2944): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 22:08:09:186 SWAP/(3110:3110): Arancando el proceso SWAP...
+[INFO] 22:08:09:187 SWAP/(3110:3110): Configuracion cargada satisfactoriamente...
+[INFO] 22:08:09:187 SWAP/(3110:3110): Puerto de escucha: 6000
+[INFO] 22:08:09:187 SWAP/(3110:3110): Nombre del archivo Swap: swap_data
+[INFO] 22:08:09:187 SWAP/(3110:3110): Cantidad de paginas: 512
+[INFO] 22:08:09:187 SWAP/(3110:3110): Tamanio de pagina: 1024
+[INFO] 22:08:09:187 SWAP/(3110:3110): Retardo de compactacion: 60000
+[INFO] 22:08:09:307 SWAP/(3110:3110): Partición SWAP creada satisfactoriamente
+[INFO] 22:08:09:309 SWAP/(3110:3110): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:08:09:310 SWAP/(3110:3110): Esperando conexiones...
+[INFO] 22:08:23:640 SWAP/(3110:3110): Nuevo cliente conectado
+[INFO] 22:08:35:942 SWAP/(3110:3110): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 22:08:35:997 SWAP/(3110:3110): PID: 1
+[INFO] 22:08:35:997 SWAP/(3110:3110): Cantidad de paginas solicitadas: 3
+[INFO] 22:08:35:997 SWAP/(3110:3110): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 22:08:35:997 SWAP/(3110:3110): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 22:09:09:614 SWAP/(3110:3110): Nuevo comando recibido: LEER PAGINA...
+[INFO] 22:09:09:668 SWAP/(3110:3110): PID: 1
+[INFO] 22:09:09:668 SWAP/(3110:3110): Numero de pagina solicitada: 0
+[INFO] 22:09:09:669 SWAP/(3110:3110): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 22:09:46:776 SWAP/(3110:3110): Nuevo comando recibido: LEER PAGINA...
+[INFO] 22:09:46:833 SWAP/(3110:3110): PID: 1
+[INFO] 22:09:46:834 SWAP/(3110:3110): Numero de pagina solicitada: 2
+[INFO] 22:09:46:834 SWAP/(3110:3110): Pagina leida: 
+[INFO] 22:22:27:421 SWAP/(3174:3174): Arancando el proceso SWAP...
+[INFO] 22:22:27:422 SWAP/(3174:3174): Configuracion cargada satisfactoriamente...
+[INFO] 22:22:27:422 SWAP/(3174:3174): Puerto de escucha: 6000
+[INFO] 22:22:27:422 SWAP/(3174:3174): Nombre del archivo Swap: swap_data
+[INFO] 22:22:27:422 SWAP/(3174:3174): Cantidad de paginas: 512
+[INFO] 22:22:27:422 SWAP/(3174:3174): Tamanio de pagina: 1024
+[INFO] 22:22:27:422 SWAP/(3174:3174): Retardo de compactacion: 60000
+[INFO] 22:22:27:471 SWAP/(3174:3174): Partición SWAP creada satisfactoriamente
+[INFO] 22:22:27:471 SWAP/(3174:3174): Gestión de asignación del SWAP inicializada satisfactoriamente
+[ERROR] 22:22:27:472 SWAP/(3174:3174): Error creando el socket de escucha...
+[ERROR] 22:22:38:405 SWAP/(3110:3110): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 22:23:45:869 SWAP/(3203:3203): Arancando el proceso SWAP...
+[INFO] 22:23:45:870 SWAP/(3203:3203): Configuracion cargada satisfactoriamente...
+[INFO] 22:23:45:870 SWAP/(3203:3203): Puerto de escucha: 6000
+[INFO] 22:23:45:870 SWAP/(3203:3203): Nombre del archivo Swap: swap_data
+[INFO] 22:23:45:870 SWAP/(3203:3203): Cantidad de paginas: 512
+[INFO] 22:23:45:870 SWAP/(3203:3203): Tamanio de pagina: 1024
+[INFO] 22:23:45:870 SWAP/(3203:3203): Retardo de compactacion: 60000
+[INFO] 22:23:45:959 SWAP/(3203:3203): Partición SWAP creada satisfactoriamente
+[INFO] 22:23:45:959 SWAP/(3203:3203): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 22:23:45:959 SWAP/(3203:3203): Esperando conexiones...
+[INFO] 00:08:34:66 SWAP/(3203:3203): Nuevo cliente conectado
+[INFO] 00:09:09:421 SWAP/(3203:3203): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 00:09:09:477 SWAP/(3203:3203): PID: 1
+[INFO] 00:09:09:478 SWAP/(3203:3203): Cantidad de paginas solicitadas: 3
+[INFO] 00:09:09:479 SWAP/(3203:3203): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 00:09:09:479 SWAP/(3203:3203): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 00:10:09:359 SWAP/(3953:3953): Arancando el proceso SWAP...
+[INFO] 00:10:09:359 SWAP/(3953:3953): Configuracion cargada satisfactoriamente...
+[INFO] 00:10:09:360 SWAP/(3953:3953): Puerto de escucha: 6000
+[INFO] 00:10:09:360 SWAP/(3953:3953): Nombre del archivo Swap: swap_data
+[INFO] 00:10:09:360 SWAP/(3953:3953): Cantidad de paginas: 512
+[INFO] 00:10:09:360 SWAP/(3953:3953): Tamanio de pagina: 1024
+[INFO] 00:10:09:360 SWAP/(3953:3953): Retardo de compactacion: 60000
+[INFO] 00:10:09:410 SWAP/(3953:3953): Partición SWAP creada satisfactoriamente
+[INFO] 00:10:09:413 SWAP/(3953:3953): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 00:10:09:413 SWAP/(3953:3953): Esperando conexiones...
+[INFO] 00:10:18:370 SWAP/(3953:3953): Nuevo cliente conectado
+[INFO] 00:10:24:359 SWAP/(3953:3953): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 00:10:24:413 SWAP/(3953:3953): PID: 1
+[INFO] 00:10:24:414 SWAP/(3953:3953): Cantidad de paginas solicitadas: 3
+[INFO] 00:10:24:414 SWAP/(3953:3953): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 00:10:24:415 SWAP/(3953:3953): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[ERROR] 00:12:00:338 SWAP/(3953:3953): La UMC se desconecto u ocurrio un error de comunicacion
+[INFO] 00:12:10:720 SWAP/(3974:3974): Arancando el proceso SWAP...
+[INFO] 00:12:10:720 SWAP/(3974:3974): Configuracion cargada satisfactoriamente...
+[INFO] 00:12:10:720 SWAP/(3974:3974): Puerto de escucha: 6000
+[INFO] 00:12:10:720 SWAP/(3974:3974): Nombre del archivo Swap: swap_data
+[INFO] 00:12:10:720 SWAP/(3974:3974): Cantidad de paginas: 512
+[INFO] 00:12:10:720 SWAP/(3974:3974): Tamanio de pagina: 1024
+[INFO] 00:12:10:720 SWAP/(3974:3974): Retardo de compactacion: 60000
+[INFO] 00:12:10:778 SWAP/(3974:3974): Partición SWAP creada satisfactoriamente
+[INFO] 00:12:10:778 SWAP/(3974:3974): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 00:12:10:778 SWAP/(3974:3974): Esperando conexiones...
+[INFO] 00:12:10:825 SWAP/(3974:3974): Nuevo cliente conectado
+[INFO] 00:12:19:335 SWAP/(3974:3974): Nuevo comando recibido: INICIALIZAR PROGRAMA...
+[INFO] 00:12:19:391 SWAP/(3974:3974): PID: 1
+[INFO] 00:12:19:392 SWAP/(3974:3974): Cantidad de paginas solicitadas: 3
+[INFO] 00:12:19:392 SWAP/(3974:3974): Programa: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 00:12:19:392 SWAP/(3974:3974): Asignacion de paginas satisfactoria al proceso(PID 1): 0->2
+[INFO] 00:13:47:109 SWAP/(3974:3974): Nuevo comando recibido: LEER PAGINA...
+[INFO] 00:13:47:165 SWAP/(3974:3974): PID: 1
+[INFO] 00:13:47:165 SWAP/(3974:3974): Numero de pagina solicitada: 0
+[INFO] 00:13:47:165 SWAP/(3974:3974): Pagina leida: #!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+
+print a
+
+end
+
+[INFO] 00:14:13:454 SWAP/(3974:3974): Nuevo comando recibido: LEER PAGINA...
+[INFO] 00:14:13:512 SWAP/(3974:3974): PID: 1
+[INFO] 00:14:13:512 SWAP/(3974:3974): Numero de pagina solicitada: 1
+[INFO] 00:14:13:512 SWAP/(3974:3974): Pagina leida: 
+[INFO] 00:23:12:454 SWAP/(4117:4117): Arancando el proceso SWAP...
+[INFO] 00:23:12:466 SWAP/(4117:4117): Configuracion cargada satisfactoriamente...
+[INFO] 00:23:12:469 SWAP/(4117:4117): Puerto de escucha: 6000
+[INFO] 00:23:12:470 SWAP/(4117:4117): Nombre del archivo Swap: swap_data
+[INFO] 00:23:12:471 SWAP/(4117:4117): Cantidad de paginas: 512
+[INFO] 00:23:12:471 SWAP/(4117:4117): Tamanio de pagina: 1024
+[INFO] 00:23:12:471 SWAP/(4117:4117): Retardo de compactacion: 60000
+[INFO] 00:23:12:575 SWAP/(4117:4117): Partición SWAP creada satisfactoriamente
+[INFO] 00:23:12:575 SWAP/(4117:4117): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 00:23:12:575 SWAP/(4117:4117): Esperando conexiones...
+[INFO] 00:23:30:765 SWAP/(4117:4117): Nuevo cliente conectado
+[ERROR] 00:25:32:427 SWAP/(4117:4117): La UMC se desconecto u ocurrio un error de comunicacion
+=======
 [INFO] 15:32:34:396 SWAP/(10326:10326): Arancando el proceso SWAP...
 [INFO] 15:32:34:400 SWAP/(10326:10326): Configuracion cargada satisfactoriamente...
 [INFO] 15:32:34:403 SWAP/(10326:10326): Puerto de escucha: 6000
@@ -227,3 +2202,4 @@ print a end
 [INFO] 20:52:31:526 SWAP/(5255:5255): Esperando conexiones...
 [INFO] 20:52:43:146 SWAP/(5255:5255): Nuevo cliente conectado
 [ERROR] 20:56:45:171 SWAP/(5255:5255): La UMC se desconecto u ocurrio un error de comunicacion
+>>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2016-1c-WorstPractices.git

@@ -432,6 +432,13 @@ void signal_cpu(t_nombre_semaforo identificador_semaforo){
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
 
+/**
+ * Finaliza un programa AnSISOP
+ *
+ */
+void finalizar(){
+
+}
 
 AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_definirVariable		= definirVariable,
@@ -446,6 +453,7 @@ AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_llamarConRetorno		= llamarFuncionConRetorno,
 		.AnSISOP_retornar				= retornar,
 		.AnSISOP_entradaSalida			= entradaSalida,
+		.AnSISOP_finalizar				= finalizar
 };
 
 AnSISOP_kernel kernel_functions = {
