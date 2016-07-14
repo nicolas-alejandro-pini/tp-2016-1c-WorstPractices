@@ -132,14 +132,9 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 	// Page fault Escritura
 	if(frameBuscado == 0){
 
-		registro = ejecutarPageFault(pid, unaEscritura->nroPagina, &frameNuevo);
-
-		// No se puede ejecutar pageFaul, falta memoria
-		if(registro == NULL)
-			return EXIT_SUCCESS;
-		else
-		{   // Modifica la tabla de paginas (deberia hacerlo en memoria
-			registro->bitModificado=1;
+		if(ejecutarPageFault(pid, unaEscritura->nroPagina, &frameNuevo)){
+			log_error("Pid [%d] Pagina[%d]: Error al ejecutar page fault.", pid, unaEscritura->nroPagina);
+			return EXIT_FAILURE;
 		}
 
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
@@ -168,8 +163,11 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	// acceder a swap con las pagina que necesito
 	paginaLeidaSwap = recibirPagina(pid, pagina);
 
-	if(paginaLeidaSwap==NULL)
-		return EXIT_FAILURE;
+	if(paginaLeidaSwap==NULL){
+		log_info("Page Fault (Swap envia una pagina vacia)");
+		paginaLeidaSwap = calloc(1,losParametros.frameSize);
+		loguear_buffer(paginaLeidaSwap, losParametros.frameSize);
+	}
 	else{
 		log_info("Page Fault");
 		loguear_buffer(paginaLeidaSwap, losParametros.frameSize);
@@ -192,14 +190,12 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 		frameNuevo = obtenerMarcoLibre();
 		agregarFrameATablaMarcos(frameNuevo, tablaPaginas, pagina);
 	}
-
 	// Nunca va a llegar al limite de marcos por proceso por falta de memoria
-	if(presencias < losParametros.frameByProc && 0 == hayMarcoLibre()){
+	else if(presencias < losParametros.frameByProc && 0 == hayMarcoLibre()){
 		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
 	}
-
 	// Me las arreglo con los marcos que tengo (que no puede ser 0 )
-	if(presencias >= losParametros.frameByProc){
+	else if(presencias >= losParametros.frameByProc){
 		if(0 == presencias )  // por las dudas avisarlo... (error de configuracion)
 			return EXIT_FAILURE;
 		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
@@ -211,6 +207,9 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	// cargo en memoria la pagina obtenida
 	escribirMemoria(paginaLeidaSwap, frameNuevo, 0, losParametros.frameSize);
 	free(paginaLeidaSwap);
+
+	// Devuelvo la referencia del frame nuevo que necesito
+	*pframeNuevo = frameNuevo;
 
 	return EXIT_SUCCESS;
 }

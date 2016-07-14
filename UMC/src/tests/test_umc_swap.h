@@ -24,5 +24,6 @@ void test_fin_programa();
 void test_write_read_guarda_en_swap();
 void test_write_stack();
 void test_diapositiva_clock();
+void test_programa_base();
 
 #endif /* TESTS_TEST_UMC_SWAP_H_ */
