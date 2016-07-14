@@ -347,6 +347,7 @@ int main(int argc, char *argv[]) {
 				exit(-2);
 			}
 			printf("----------------------------\n");
+			agregar_master(elEstadoActual.sockUmc,maximoAnterior);
 			printf("Paginas por proceso:[%d]\n", UMCConfig.paginasXProceso);
 			printf("Tamanio de pagina:[%d]\n", UMCConfig.tamanioPagina);
 			printf("----------------------------\n");
@@ -482,17 +483,19 @@ int main(int argc, char *argv[]) {
 							printf("Se desconecto la consola asignada al PCB [PID - %d]\n", pid_desconectado);
 							eliminar_pcb_ready(pid_desconectado);
 						}
+						if (unSocket == elEstadoActual.sockUmc) {
+							printf("Se perdio conexion con la UMC...\n ");
+							elEstadoActual.salir = 1;
+							cerrarSockets(&elEstadoActual);
+
+						}
 						if (unSocket == elEstadoActual.sockEscuchador) {
 							printf("Se perdio conexion...\n ");
 						}
 						/*Saco el socket de la lista Master*/
 						quitar_master(unSocket, maximoAnterior);
 						fflush(stdout);
-					} else {
-						/*Recibo con mensaje de conexion existente*/
-
 					}
-
 				}
 
 			}
