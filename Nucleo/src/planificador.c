@@ -23,7 +23,6 @@ void *ready_productor(void* arg) {
 	numInQ++;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
 	pthread_mutex_unlock(&empty);	// Comienzo de espera de consumidor
-	pcb_destroy(pcb_to_produce);
 	fflush(stdout);
 	return NULL;
 }

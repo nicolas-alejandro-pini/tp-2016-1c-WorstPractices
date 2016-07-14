@@ -43,7 +43,6 @@ typedef struct {
 	t_list *stack;	/*Lista de stIndiceStack*/
 }__attribute__((packed)) stPCB;
 
-int pidCounter; /*Ultimo PID asignado*/
 
 stPCB *crear_pcb(int socket_consola, int cantidad_pag_codigo,int stack_size, stMensajeIPC *unMensajeIPC);
 int serializar_pcb(t_paquete *paquete, stPCB *self);
@@ -52,5 +51,6 @@ void variables_destroy(stVars *self);
 void argumentos_destroy(stPosicion *self);
 void pcb_destroy(stPCB *self);
 void stack_destroy(stIndiceStack *self);
+void inicializar_pidCounter();
 
 #endif /* COMMONS_PCB_H_ */

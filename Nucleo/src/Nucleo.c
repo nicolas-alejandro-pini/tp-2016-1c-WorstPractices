@@ -259,6 +259,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr addressAceptado;
 
 	/*Inicializacion de las colas del planificador*/
+	inicializar_pidCounter();
 	inicializar_cola_ready();
 	listaBlock = list_create();
 	consola_crear_lista();

@@ -179,9 +179,13 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	/*Envio los tres datos a la UMC*/
 	send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+	log_info("Se asigna en la pagina: %d",pagina);
 	send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
+	log_info("Se asigna en el offset: %d",offset);
 	send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
+	log_info("Se asigna en el tamanio: %d",tamanio);
 	send(configuracionInicial.sockUmc,&valor,tamanio,0);
+	log_info("Se asigna el valor: %d",valor);
 
 	unHeader = nuevoHeaderIPC(ERROR);
 	if(!recibirHeaderIPC(configuracionInicial.sockUmc, unHeader)){
@@ -301,32 +305,17 @@ void imprimir(t_valor_variable valor_mostrar){
 	stHeaderIPC* unHeaderPrimitiva;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIR);
-	unHeaderPrimitiva->largo = sizeof(t_valor_variable);
+	unHeaderPrimitiva->largo = sizeof(uint32_t) + sizeof(t_valor_variable);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&valor_mostrar)){
+	if(!enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
 		log_error("Error al enviar mensaje de IMPRIMIR.");
 		return;
 	}
 
-	unHeaderPrimitiva->tipo = CONSOLA;
-	unHeaderPrimitiva->largo = sizeof(uint32_t);
+	send(configuracionInicial.sockNucleo, &unPCB->socketConsola, sizeof(uint32_t), 0);
+	send(configuracionInicial.sockNucleo, &valor_mostrar, sizeof(t_valor_variable), 0);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva, (char*)&unPCB->socketConsola)){
-		log_error("Error al enviar mensaje de IMPRIMIR.");
-		return;
-	}
-
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
-		log_error("Error al recibir la confirmacion del nucleo.");
-		return;
-	}
-
-	if(unHeaderPrimitiva->tipo != OK){
-		log_error("Error de primitiva IMPRIMIR");
-		return;
-	}
-
-	log_info("Se imprimio correctamente la variable.");
+	log_info("Se envio al nucleo el valor de la variable para ser impresa.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 	return;
@@ -347,17 +336,7 @@ void imprimirTexto(char* texto){
 	send(configuracionInicial.sockNucleo, &unPCB->socketConsola, sizeof(uint32_t), 0);
 	send(configuracionInicial.sockNucleo, texto, strlen(texto) + 1, 0);
 
-	if(!recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva)){
-		log_error("Error al recibir la confirmacion del nucleo.");
-		return;
-	}
-
-	if(unHeaderPrimitiva->tipo != OK){
-		log_error("Error de primitiva IMPRIMIR");
-		return;
-	}
-
-	log_info("Se imprimio correctamente la variable.");
+	log_info("Se envio al nucleo la orden de imprimir el texto.");
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 
@@ -453,6 +432,13 @@ void signal_cpu(t_nombre_semaforo identificador_semaforo){
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
 
+/**
+ * Finaliza un programa AnSISOP
+ *
+ */
+void finalizar(){
+
+}
 
 AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_definirVariable		= definirVariable,
@@ -467,6 +453,7 @@ AnSISOP_funciones AnSISOP_functions = {
 		.AnSISOP_llamarConRetorno		= llamarFuncionConRetorno,
 		.AnSISOP_retornar				= retornar,
 		.AnSISOP_entradaSalida			= entradaSalida,
+		.AnSISOP_finalizar				= finalizar
 };
 
 AnSISOP_kernel kernel_functions = {
@@ -670,16 +657,16 @@ int cargarPCB(void){
  Description : Funcion para obtener
  =========================================================================================
  */
-int calcularPaginaInstruccion (int paginaLogica){
-
-	int paginaFisica = 0; //Definimos que el codigo arranca en la pagina 0.
-	int i;
-
-	for (i=1; paginaLogica > i;i++)
-		paginaFisica++;
-
-	return paginaFisica;
-}
+//int calcularPaginaInstruccion (int paginaLogica){
+//
+//	int paginaFisica = 0; //Definimos que el codigo arranca en la pagina 0.
+//	int i;
+//
+//	for (i=1; paginaLogica > i;i++)
+//		paginaFisica++;
+//
+//	return paginaFisica;
+//}
 
 /*
  =========================================================================================
@@ -706,7 +693,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
 
-	for (pagina=1;pagina<=cantidadPaginas;pagina++)
+	for (pagina=0;pagina<cantidadPaginas;pagina++)
 	{
 
 		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
@@ -717,7 +704,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 				sizeToUMC = pagina*tamanioPaginaUMC - startToUMC;
 
 
-			paginaToUMC = calcularPaginaInstruccion(pagina);
+			paginaToUMC = pagina; //calcularPaginaInstruccion(pagina);
 			startToUMC %= tamanioPaginaUMC;
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
 			unHeader->largo = sizeof(uint16_t);
@@ -1019,7 +1006,7 @@ int main(void) {
 								while (quantum > 0 && unPCB->pc <= unPCB->metadata_program->instrucciones_size){
 									if(ejecutarInstruccion() == OK)
 									{
-										sleep(quantumSleep);
+										usleep(quantumSleep*1000);
 										quantum --; 	/* descuento un quantum para proxima ejecución */
 										unPCB->pc ++; 	/* actualizo el program counter a la siguiente posición */
 
