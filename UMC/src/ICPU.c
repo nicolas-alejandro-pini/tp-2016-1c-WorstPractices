@@ -221,10 +221,14 @@ void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
 	liberarTablaPid(pid);
 
 	// liberar TLB
-	flushTLB(pid);
+	if (estaActivadaTLB()== OK){
+		flushTLB(pid);
+	}
 
 	// liberar de swap del pid
-    destruirPrograma(pid);
+    if(destruirPrograma(pid)){
+    	log_error("Finalizar programa: fallo la respuesta de confirmacion del Swap");
+    }
 
     unHeader = nuevoHeaderIPC(OK);
     enviarHeaderIPC(socketCPU, unHeader);

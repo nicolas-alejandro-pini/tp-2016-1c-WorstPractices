@@ -397,33 +397,20 @@ void mostrarTablaPid(uint16_t pid){
 }
 
 void liberarTablaPid(uint16_t pid){
-	stNodoListaTP *nodo = NULL;
-	stRegistroTP *registro = NULL;
-	int i;
+	stNodoListaTP *nodoListaTP = NULL;
+	int i=0;
 	int index = 0;
 
-
-	nodo = buscarPID(pid);
-	if(nodo){
-
-		for(i=0;i<nodo->size;i++){
-			registro = nodo->tabla+(sizeof(stRegistroTP)*i);
-			liberarMarco(registro->marco);
+	void _comparo_con_pid_y_borro_tabla(stNodoListaTP *list_nodo){
+		if(list_nodo->pid == pid){
+			nodoListaTP = list_nodo;
+			free(nodoListaTP->tabla);
+			index = i;
 		}
-		free(registro);
-
-		// Busco indice de TablaMarcos ( se elimina por index :( )
-		nodo = NULL;
-		i = 0;
-		void _index(stNodoListaTP *list_nodo){
-			if(list_nodo->pid == pid){
-				nodo = list_nodo;
-				index = i;
-			}
-			i++;
-		}
-		if(nodo)
-			sleep(losParametros.delay);
-			list_mutex_remove(TablaMarcos,index);
+		i++;
 	}
+	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid_y_borro_tabla);
+	// TODO Sacar //sleep(losParametros.delay);
+	list_mutex_remove(TablaMarcos,index);
 }
+

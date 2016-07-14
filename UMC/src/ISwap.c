@@ -128,25 +128,21 @@ int destruirPrograma(uint16_t pid){
 	stHeaderIPC* mensaje;
 	int ret=EXIT_SUCCESS;
 
+	pthread_mutex_lock(&swap);
+
 	mensaje = nuevoHeaderIPC(DESTRUIR_PROGRAMA);
 	mensaje->largo = sizeof(uint16_t);
-
-	pthread_mutex_lock(&swap);
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
-
 	send(losParametros.sockSwap, &pid, sizeof(uint16_t), 0);
-	pthread_mutex_unlock(&swap);
 
-	pthread_mutex_lock(&swap);
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
-	pthread_mutex_unlock(&swap);
 
 	if(mensaje->tipo != OK){
 		log_error("Error al desruir programa %d en swap", pid);
 		ret=EXIT_FAILURE;
 	}
 
+	pthread_mutex_unlock(&swap);
 	liberarHeaderIPC(mensaje);
-
 	return ret;
 }
