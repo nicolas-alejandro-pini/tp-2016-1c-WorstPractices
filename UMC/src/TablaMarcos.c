@@ -52,7 +52,7 @@ stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
 	// Me posiciono donde apunta el puntero
 	while(!victima){
 
-		if(i < tablaPaginas->size)
+		if(i < (tablaPaginas->size - 1))
 			i++;
 		else
 			i=0;  // todas las paginas empiezan en 0
@@ -74,7 +74,7 @@ stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
 	// con el ultimo i del while anterior
 	while(0 == puntero_siguiente){
 
-		if(i < tablaPaginas->size)
+		if(i < (tablaPaginas->size - 1))
 			i++;
 		else
 			i=0;  // todas las paginas empiezan en 0
@@ -203,6 +203,9 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 	if(victima->bitModificado==1){
 		grabarEnSwap(tablaPaginas->pid, victima->marco, pagina);
 	}
+
+	// Devuelvo el marco de la victima
+	*frameNuevo = victima->marco;
 
 	return EXIT_SUCCESS;
 }

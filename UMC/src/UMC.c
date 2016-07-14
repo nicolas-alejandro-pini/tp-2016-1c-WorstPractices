@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
 			test_unit_umc();
 
 	// Solo tests
-	//exit(EXIT_SUCCESS);
+	exit(EXIT_SUCCESS);
 
 	log_info("-----------------------------------------------------------------------------");
 	log_info("------------------------------------UMC--------------------------------------");

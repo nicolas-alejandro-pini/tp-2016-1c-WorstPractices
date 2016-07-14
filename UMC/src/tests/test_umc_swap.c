@@ -15,8 +15,9 @@ void agregar_tests_con_swap(){
 	CU_add_test(suite_umc_swap, "test_cambio_de_contexto()", test_cambio_de_contexto);
 	//CU_add_test(suite_umc_swap, "test_read_bytes_page()", test_read_bytes_page);
 	//CU_add_test(suite_umc_swap, "test_write_bytes_page()", test_write_bytes_page);
-	CU_add_test(suite_umc_swap, "test_write_read_guarda_en_swap()", test_write_read_guarda_en_swap);
-	CU_add_test(suite_umc_swap, "test_write_stack()", test_write_stack);
+	//CU_add_test(suite_umc_swap, "test_write_read_guarda_en_swap()", test_write_read_guarda_en_swap);
+	//CU_add_test(suite_umc_swap, "test_write_stack()", test_write_stack);
+	CU_add_test(suite_umc_swap, "test_diapositiva_clock()", test_diapositiva_clock);
 
 }
 
@@ -63,7 +64,7 @@ int finalizar_umc_swap(){
 void test_base_umc_swap(){
 	stHeaderIPC *unHeader;
 	int i=0;
-	int cant=1;
+	int cant=5;
 	char *programa[] = {"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
 			"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
 			"#!/usr/bin/ansisop\nbegin\n#primero declaro las variables\nvariables a, b\na = 20\nprint a\nend",
@@ -76,7 +77,12 @@ void test_base_umc_swap(){
 	for(i=0; i< cant; i++){
 		unPageIni.processId = i+1;
 		unPageIni.cantidadPaginas = calcular_cantidad_paginas(strlen(programa[i]),losParametros.frameSize);
-		unPageIni.cantidadPaginas += 2; // Tamanio stack
+
+		// Al ultimo programa le agrega stack
+		if(i==(cant-1)){
+			unPageIni.cantidadPaginas += 2; // Tamanio stack
+		}
+
 		unPageIni.programa = programa[i];
 
 		crearTabla(unPageIni.processId, unPageIni.cantidadPaginas);
@@ -93,7 +99,8 @@ void test_base_umc_swap(){
 
 void test_cambio_de_contexto(){
 
-	uint32_t pid = 1;
+	int pid = 1;
+
 	stMensajeIPC unMensaje;
 	unMensaje.header.largo = sizeof(uint32_t);
 	unMensaje.contenido = malloc(sizeof(uint32_t));
@@ -357,6 +364,167 @@ void test_write_read_guarda_en_swap(){
 
 void test_write_stack(){
 
+}
+
+void test_diapositiva_clock(){
+	//PUERTO=50002
+	//IP_SWAP=0
+	//PUERTO_SWAP=6000
+	//MARCOS=5
+	//MARCOS_SIZE=20
+	//MARCOS_X_PROC=3
+	//ENTRADAS_TLB=5
+	//RETARDO=1
+	//ALGORITMO=CLOCK
+
+	stPosicion posR;
+	char *buffer = NULL;
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 0;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 1;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 2;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 3;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 0;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 1;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 4;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 0;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 1;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 2;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 3;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
+
+	posR.pagina = 4;    // page fault
+	posR.offset = 0;
+	posR.size = 4;
+	reservarPosicion((void*)&buffer, posR.size + 1);
+	leerBytes((void*) &buffer, &posR, gPidActivo);
+	buffer[posR.size]='\0';
+	log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
+	log_info("Valor[%s]", (char*) buffer);
+	limpiarPosicion(buffer, &posR);
+
+	imprimirMemoriaPrincipal();
 }
 
 
