@@ -264,7 +264,7 @@ int main(int argc, char *argv[]) {
 			}
 			else
 			{
-				FD_SET(losParametros.sockSwap, &(fds_master));
+				//FD_SET(losParametros.sockSwap, &(fds_master));
 				log_info("OK - Swap conectado.");
 				fflush(stdout);
 
