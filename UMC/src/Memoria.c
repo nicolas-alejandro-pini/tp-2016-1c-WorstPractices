@@ -105,3 +105,19 @@ uint16_t liberarMarco(uint16_t marco){
 
 	return OK;
 }
+
+int imprimirMemoriaPrincipal() {
+	uint32_t i=0;
+
+	char pagina[losParametros.frameSize + 1];
+	printf("MemoriaPrincipal[%d]\n", losParametros.frames);
+	// Imprimo por tamaño pagina
+	for(i=0;i<losParametros.frames;i++){
+		memcpy(pagina, memoriaPrincipal+(losParametros.frameSize*i), losParametros.frameSize);
+		pagina[losParametros.frameSize]='\0';
+		printf("Marco [%d][%s]\n", i, pagina);
+	}
+
+	return EXIT_SUCCESS;
+}
+
