@@ -1,3 +1,5 @@
+#ifndef CPU_H_
+#define CPU_H_
 
 #include <dirent.h>
 #include <signal.h>
@@ -54,4 +56,6 @@ typedef struct{
 	int tiempo;		/*Tiempo de espera*/
 } stIO;
 
-#define TAMANIOVARIABLES 4;
+#define TAMANIOVARIABLES 4
+
+#endif
