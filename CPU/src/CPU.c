@@ -112,7 +112,6 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	stHeaderIPC *unHeader;
 	uint16_t pagina,offset,tamanio;
 	t_valor_variable valor_variable;
-	char* str_valor_variable;
 
 	log_info("Inicio primitiva dereferenciar con direccion_variable = %d",direccion_variable);
 
@@ -236,7 +235,6 @@ int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
 	stHeaderIPC *unHeaderIPC;
 	t_paquete paquete;
 	stSharedVar sharedVar;
-	t_valor_variable resultado;
 	long int offset = 0;
 
 	//Hago el envío de la variabe con su valor
@@ -624,9 +622,6 @@ int cargarPCB(void){
 
 	t_paquete paquete;
 	int type;
-	stVars *unaVar;
-	stIndiceStack *stack;
-	stPosicion *argumento;
 
 	recibir_paquete (configuracionInicial.sockNucleo, &paquete);
 
@@ -770,9 +765,10 @@ char* getInstruccion (int startRequest, int sizeRequest){
  =========================================================================================
  */
 int ejecutarInstruccion(void){
-
 	int programCounter = unPCB->pc;
 	char* instruccion = NULL;
+
+	log_info("Ejecutar instruccion Pid[%d]", unPCB->pid);
 
 	instruccion = getInstruccion(unPCB->metadata_program->instrucciones_serializado[programCounter].start,
 								 unPCB->metadata_program->instrucciones_serializado[programCounter].offset);
@@ -884,7 +880,9 @@ int main(void) {
 
 	cargarConf(&configuracionInicial, CFGFILE);
 
-	log_info("Configuración OK.");
+	log_info("Nucleo IP[%s] Puerto[%d]", configuracionInicial.ipNucleo, configuracionInicial.puertoNucleo);
+	log_info("UMC IP[%s] Puerto[%d]", configuracionInicial.ipUmc, configuracionInicial.puertoUmc);
+	log_info("Quantum[%d]", configuracionInicial.quantum);
 
 	/***** Lanzo conexión con el Nucleo ********/
 
@@ -1046,25 +1044,17 @@ int main(void) {
 							printf("AnSISOP fin de Ejecucion por Quantum");
 							break;
 
+						default:
+							log_info("Otra fruta");
+							break;
 
-/*						case SIGUSR1:
+						}  // Switch
+				} // else
 
-							log_info("Respondiendo solicitud SIGUSR1...");
+			} // if FD_isset
 
-							unHeaderIPC = nuevoHeaderIPC(SIGUSR1CPU);
-							 Notifico al nucleo mi desconexion
-							enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
-
-							configuracionInicial.salir = 1;
-							break;*/
-
-					}
-				}
-
-			}
-
-		}
-	}
+		} // for socket max
+	} // while salir
 
 	//Informo al Nucleo que estoy terminando
 	unHeaderIPC = nuevoHeaderIPC(SIGUSR1CPU);
