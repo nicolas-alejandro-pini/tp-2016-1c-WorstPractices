@@ -188,7 +188,7 @@ int agregarFrameATablaMarcos(uint16_t frameNuevo, stNodoListaTP *tablaPaginas, u
 int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint16_t pagina){
 
 	stRegistroTP *victima = NULL;
-	victima = obtenerRegistroTabladePaginas(tablaPaginas, pagina);
+	stRegistroTP *registroPresencia = NULL;
 
 	// El registro de la pagina solicitada se va a guardar en frameNuevo
 	// Busco victima en la tabla de paginas del proceso.
@@ -201,11 +201,30 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 		return EXIT_FAILURE;
 
 	if(victima->bitModificado==1){
-		grabarEnSwap(tablaPaginas->pid, victima->marco, pagina);
+		log_info("Pid[%d]: graba pagina[%d] en Swap. Libero marco[%d]", tablaPaginas->pid, pagina, victima->marco);
+		if(grabarEnSwap(tablaPaginas->pid, victima->marco, pagina)){
+			log_error("Error al guardar pagina [%d] del Pid[%d] en swap", pagina, tablaPaginas->pid);
+			return EXIT_FAILURE;
+		}
+		else
+			log_info("grabada OK.");
 	}
 
+	// Seteo los bits de la pagina del pageFault como entrante
+	registroPresencia = obtenerRegistroTabladePaginas(tablaPaginas, pagina);
+	registroPresencia->bit2ndChance = 1;
+	registroPresencia->bitModificado = 0;
+	registroPresencia->bitPresencia = 1;
+	registroPresencia->marco = victima->marco;  // guardo la direccion del marco a usar
+
+	// Seteo bits de la victima en 0
+	victima->bit2ndChance = 0;
+	victima->bitModificado = 0;
+	victima->bitPresencia = 0;
+	victima->marco = 0;  // ya lo guarde, ahora no tiene marco asignado
+
 	// Devuelvo el marco de la victima
-	*frameNuevo = victima->marco;
+	*frameNuevo = registroPresencia->marco;
 
 	return EXIT_SUCCESS;
 }
@@ -310,8 +329,29 @@ int grabarEnSwap(uint16_t pid, uint16_t marco, uint16_t pagina){
 
 	free(buf);
 
-	return EXIT_SUCCESS;;
+	return EXIT_SUCCESS;
 }
+
+int setBitModificado(uint16_t pid, uint16_t pagina){
+	stNodoListaTP* nodoListaTP = NULL;
+	stRegistroTP* registro = NULL;
+
+	nodoListaTP = buscarPID(pid);
+
+	if(!nodoListaTP)
+		return EXIT_FAILURE;
+
+	registro = obtenerRegistroTabladePaginas(nodoListaTP, pagina);
+
+	if(registro->bitPresencia == 1){
+		registro->bitModificado = 1;
+	}
+	else
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
+}
+
 
 
 void _mostrarContenidoTP(stNodoListaTP *list_nodo){

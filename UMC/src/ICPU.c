@@ -80,7 +80,10 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 
 	if(frameBuscado == 0){
 
-		ejecutarPageFault(pid, posLogica->pagina, &frameNuevo);
+		if(ejecutarPageFault(pid, posLogica->pagina, &frameNuevo)){
+			log_error("Pid [%d] Pagina[%d]: Error al ejecutar page fault.", pid, posLogica->pagina);
+			return EXIT_FAILURE;
+		}
 
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
 		if(estaActivadaTLB()== OK){
@@ -105,7 +108,6 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 }
 
 int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
-	stRegistroTP *registro;  // Si pagefault
 	uint16_t frameBuscado = 0;
 	uint16_t frameNuevo = 0;
 	stRegistroTLB stTLB;
@@ -149,6 +151,10 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 		if(escribirMemoria(unaEscritura->buffer, frameNuevo, unaEscritura->offset, unaEscritura->tamanio))
 			return EXIT_FAILURE;
 
+		// Seteo el bit de modificado
+		if(setBitModificado(pid, unaEscritura->nroPagina))
+			return EXIT_FAILURE;
+
 		return EXIT_SUCCESS;
 	}
 	return EXIT_FAILURE;
@@ -160,17 +166,14 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	stNodoListaTP *tablaPaginas;
 	void *paginaLeidaSwap;
 
+	log_info("Page Fault Pagina[%d]", pagina);
+
 	// acceder a swap con las pagina que necesito
 	paginaLeidaSwap = recibirPagina(pid, pagina);
 
 	if(paginaLeidaSwap==NULL){
-		log_info("Page Fault (Swap envia una pagina vacia)");
-		paginaLeidaSwap = calloc(1,losParametros.frameSize);
-		loguear_buffer(paginaLeidaSwap, losParametros.frameSize);
-	}
-	else{
-		log_info("Page Fault");
-		loguear_buffer(paginaLeidaSwap, losParametros.frameSize);
+		log_info("Fallo Page Fault");
+		return EXIT_FAILURE;
 	}
 
 	/* Obtiene Tabla de Paginas de PID */
@@ -187,17 +190,20 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 
 	// Reemplazo dentro de los marcos
 	if(presencias < losParametros.frameByProc && 0 != hayMarcoLibre()){
+		log_info("Pid[%d] Marcos[%d/%d] Disponibles MP[%d] asigno...", pid, presencias, losParametros.frameByProc, hayMarcoLibre());
 		frameNuevo = obtenerMarcoLibre();
 		agregarFrameATablaMarcos(frameNuevo, tablaPaginas, pagina);
 	}
 	// Nunca va a llegar al limite de marcos por proceso por falta de memoria
 	else if(presencias < losParametros.frameByProc && 0 == hayMarcoLibre()){
+		log_info("Pid[%d] Marcos[%d/%d] Memoria llena, reemplazo...", pid, presencias, losParametros.frameByProc);
 		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
 	}
 	// Me las arreglo con los marcos que tengo (que no puede ser 0 )
 	else if(presencias >= losParametros.frameByProc){
 		if(0 == presencias )  // por las dudas avisarlo... (error de configuracion)
 			return EXIT_FAILURE;
+		log_info("Pid[%d] Marcos[%d/%d] reemplazo...", pid, presencias, losParametros.frameByProc);
 		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
 	}
 
@@ -205,11 +211,16 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 		return EXIT_FAILURE;
 
 	// cargo en memoria la pagina obtenida
-	escribirMemoria(paginaLeidaSwap, frameNuevo, 0, losParametros.frameSize);
+	if(escribirMemoria(paginaLeidaSwap, frameNuevo, 0, losParametros.frameSize)){
+		free(paginaLeidaSwap);
+		return EXIT_FAILURE;
+	}
 	free(paginaLeidaSwap);
 
 	// Devuelvo la referencia del frame nuevo que necesito
 	*pframeNuevo = frameNuevo;
+
+	log_info("Page Fault OK Pagina[%d]--> Marco[%d]", pagina, frameNuevo);
 
 	return EXIT_SUCCESS;
 }
@@ -273,7 +284,7 @@ void realizarAccionCPU(uint16_t unSocket){
 	while(1){
 
 		if(!recibirHeaderIPC(unSocket, &unMensaje.header)){
-			log_error("Thread[ID] No se recibe respuesta del CPU Socket[%d], Ultimo Pid[%d]: %d", unSocket, pidActivo);
+			log_error("Thread socket[%d] No se recibe respuesta del CPU, Ultimo Pid[%d]:", unSocket, pidActivo);
 			close(unSocket);
 			return;//pthread_exit(NULL);
 		}
@@ -282,75 +293,95 @@ void realizarAccionCPU(uint16_t unSocket){
 
 		case READ_BTYES_PAGE:
 
+			log_info("Thread socket[%d] Pedido de lectura:", unSocket);
+
 			recv(unSocket, &(posR.pagina), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.size), sizeof(uint16_t),0);
+
+			log_info("Thread socket[%d] Pagina[%d] Offset[%d] Size[%d]", unSocket, posR.pagina, posR.offset, posR.size);
+
+			// Valido pedidos nulos
+			if(posR.size == 0){
+				log_error("Thread socket[%d] Error de longitud al leer bytes", unSocket);
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				enviarHeaderIPC(unSocket,unHeader);
+				liberarHeaderIPC(unHeader);
+				break;
+			}
 
 			buffer = malloc(posR.size);
 			if(leerBytes(&buffer, &posR, pidActivo)){
 				unHeader = nuevoHeaderIPC(ERROR);
 				unHeader->largo = 0;
-				log_info("Error al leer bytes");
+				log_error("Thread socket[%d] Error al leer bytes", unSocket);
 			}
 			else{
 				unHeader = nuevoHeaderIPC(OK);
 				unHeader->largo = posR.size;
-				log_info("Pagina[%d] Offset[%d] Size[%d]", posR.pagina, posR.offset, posR.size);
 			}
-
-			// Logueo lo que llego para escribir
-			log_info("Leer bytes");
-			loguear_buffer(buffer, posR.size);
 
 			//envio la respuesta de la lectura a la CPU
 			if(!enviarMensajeIPC(unSocket,unHeader,buffer)){
-				log_error("No se pudo enviar el READ_BTYES_PAGE");
-				return;
+				log_error("Thread socket[%d] No se pudo enviar el READ_BTYES_PAGE", unSocket);
 			}
 
-
-			imprimirMemoriaPrincipal();
+			// Logueo lo leido de memoria
+			loguear_buffer(buffer, posR.size, unSocket);
 
 			break;
 
 		case WRITE_BYTES_PAGE:
 
+			log_info("Thread socket[%d] Pedido de escritura:", unSocket);
+
 			recv(unSocket, &(posW.nroPagina), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.tamanio), sizeof(uint16_t),0);
+
+			log_info("Thread socket[%d] Pagina[%d] Offset[%d] Size[%d]", unSocket, posW.nroPagina, posW.offset, posW.tamanio);
+
+			// Valido pedidos nulos
+			if(posW.tamanio == 0){
+				log_error("Error de longitud al escribir bytes");
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				enviarHeaderIPC(unSocket,unHeader);
+				liberarHeaderIPC(unHeader);
+				break;
+			}
+
+			//Reservo memoria buffer y recibo el buffer a escribir
 			posW.buffer = malloc(posW.tamanio);
 			recv(unSocket, posW.buffer, posW.tamanio,0);
 
 			// Logueo lo que llego para escribir
-			log_info("Escribir bytes");
-			loguear_buffer(posW.buffer, posW.tamanio);
+			loguear_buffer(posW.buffer, posW.tamanio, unSocket);
 
 			if(escribirBytes(&posW, pidActivo)){
 				unHeader = nuevoHeaderIPC(ERROR);
 				unHeader->largo = 0;
-				log_info("Error al escribir bytes");
+				log_error("Thread socket[%d] Error al escribir bytes", unSocket);
 			}
 			else{
 				unHeader = nuevoHeaderIPC(OK);
 				unHeader->largo = posW.tamanio;
-				log_info("Pagina[%d] Offset[%d] Size[%d]", posW.nroPagina, posW.offset, posW.tamanio);
 			}
 			limpiarEscrituraPagina(posW.buffer, &posW);
 
 			//envio la respuesta de la Escritura a la CPU
 			if(!enviarHeaderIPC(unSocket,unHeader)){
-				log_error("No se pudo enviar el WRITE_BYTES_PAGE");
-				return;
+				log_error("Thread socket[%d] No se pudo enviar el WRITE_BYTES_PAGE", unSocket);
 			}
 
-			imprimirMemoriaPrincipal();
+			log_info("Thread socket[%d], fin escribir.", unSocket);
 
 			break;
 
 		case CAMBIOCONTEXTO:
 
-			// ToDO: Del lado del CPU esta definido int (4 bytes), pero se podria poner como
-			//       int32_t para asegurar los 4 bytes
+			log_info("Thread socket[%d] Cambio de contexto:", unSocket);
 
 			/* recibo el contenido */
 			unMensaje.contenido = malloc(unMensaje.header.largo);
@@ -360,18 +391,17 @@ void realizarAccionCPU(uint16_t unSocket){
 
 			if(0 == pidActivo)
 			{
-				log_error("Thread[ID]: PID erroneo, UMC espera por el nuevo cambio de contexto");
-				// TodO: Responder al CPU , Thread libre.
+				log_error("Thread socket[%d]: PID erroneo", unSocket);
 				free(unMensaje.contenido);
 				break;
 			}
-			// Todo: Confirmar al CPU con PID.
-			log_info("Thread[ID]: Cambio de PID[%d]", pidActivo);
+
+			log_info("Thread socket[%d] atiende Pid[%d]:", unSocket, pidActivo);
 			free(unMensaje.contenido);
 			break;
 
 		default:
-			log_info("Se recibio una peticion con un codigo desconocido...%i\n", unMensaje.header.tipo);
+			log_info("Se recibio una peticion con un codigo desconocido...%i", unMensaje.header.tipo);
 			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 			break;
@@ -402,10 +432,15 @@ void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos){
 	buffer = NULL;
 }
 
-void loguear_buffer(void *buffer, uint16_t size){
+void loguear_buffer(void *buffer, uint16_t size, int unSocket){
 	char *buffer_log = malloc(size + 1);
 	memcpy(buffer_log, buffer, size);
 	buffer_log[size]='\0';
-	log_info("Buffer[%s]\n", buffer_log);
+
+	log_info("Thread socket[%d] Buffer[%s]\n", unSocket, buffer_log);
+
+	if(size == sizeof(uint32_t)){
+		log_info("Thread socket[%d] Buffer entero[%ld]\n", unSocket, *(int*)buffer);
+	}
 	free(buffer_log);
 }
