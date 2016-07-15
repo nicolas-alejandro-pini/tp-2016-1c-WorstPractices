@@ -224,8 +224,6 @@ int recv_print(t_console* tConsole){
 				log_info("Me mandaron FRUTA");
 				break;
 		}
-		fflush(stdout);
-		liberarMensajeIPC(&unMensaje);  /* Solo libero si pudo recibir. */
 	}
 
 	return EXIT_SUCCESS;
