@@ -146,15 +146,15 @@ void *consumidor_cpu(int unCliente) {
 
 				unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
 				unHeaderIPC->largo = sizeof(uint32_t);
-				log_info("Le mando el fin de programa a la UMC (PID: %d)", pid_fin);
+				log_info("Le mando el fin de programa a la UMC (Sock: %d)(PID: %d)", obtenerEstadoActual().sockUmc, pid_fin);
 				if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*)&pid_fin)) {
 					log_error("Error al enviar el fin de programa a la UMC");
 				}
 				log_info("Fin de programa enviado satisfactoriamente a la UMC");
 
 				// Le debo enviar el fin de programa a la consola
-				log_info("Le mando el fin de programa a la consola");
 				consola = obtenerSocketConsolaPorPID(pid_fin);
+				log_info("Le mando el fin de programa a la consola (Sock: %d)", consola->socket);
 				if (!enviarHeaderIPC(consola->socket, unHeaderIPC)) {
 					log_error("Error al enviar el fin de programa a la UMC");
 				}
