@@ -212,7 +212,7 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 		/*Ponemos en la cola de Ready para que lo vuelva a ejecutar un CPU*/
 		ready_productor(unPCB);
 		free(unaRafaga);
-		printf("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
+		log_info("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
 
 	}
 }
@@ -241,7 +241,7 @@ int inicializar_programa(stPCB *unPCB, char* unPrograma, int socket_umc) {
 	serializar_inicializar_programa(&paquete, unInicioUMC);
 
 	if (enviar_paquete(socket_umc, &paquete)) {
-		printf("No se pudo enviar paquete de inicio de programa para PID [%d]", unPCB->pid);
+		log_info("No se pudo enviar paquete de inicio de programa para PID [%d]", unPCB->pid);
 		close(socket_umc);
 		return EXIT_FAILURE;
 	}
@@ -286,9 +286,9 @@ int main(int argc, char *argv[]) {
 	listaBlock = list_create();
 	consola_crear_lista();
 
-	printf("----------------------------------Elestac------------------------------------\n");
-	printf("-----------------------------------Nucleo------------------------------------\n");
-	printf("------------------------------------v0.1-------------------------------------\n\n");
+	log_info("----------------------------------Elestac------------------------------------\n");
+	log_info("-----------------------------------Nucleo------------------------------------\n");
+	log_info("------------------------------------v0.1-------------------------------------\n\n");
 	fflush(stdout);
 
 	/*Logger*/
@@ -305,12 +305,12 @@ int main(int argc, char *argv[]) {
 			test_unit_nucleo();
 
 	/*Carga del archivo de configuracion*/
-	printf("Obteniendo configuracion...");
+	log_info("Obteniendo configuracion...");
 	if (loadInfo(&elEstadoActual, 0)) {
-		printf("Error");
+		log_info("Error");
 		exit(-2);
 	}
-	printf("OK\n");
+	log_info("OK\n");
 
 //	log_info("Configuracion cargada satisfactoriamente...\n");
 
@@ -330,13 +330,13 @@ int main(int argc, char *argv[]) {
 	/*Iniciando escucha en el socket escuchador de Consola*/
 	elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
 	FD_SET(elEstadoActual.sockEscuchador, &(fds_master));
-	printf("Se establecio conexion con el socket de escucha...\n");
+	log_info("Se establecio conexion con el socket de escucha...\n");
 
 	/*Seteamos el maximo socket*/
 	elEstadoActual.fdMax = elEstadoActual.sockEscuchador;
 
 	/*Conexion con el proceso UMC*/
-	printf("Estableciendo conexion con la UMC...\n");
+	log_info("Estableciendo conexion con la UMC...\n");
 	elEstadoActual.sockUmc = conectar(elEstadoActual.ipUmc, elEstadoActual.puertoUmc);
 
 	if (elEstadoActual.sockUmc != -1) {
@@ -368,11 +368,11 @@ int main(int argc, char *argv[]) {
 				close(unCliente);
 				exit(-2);
 			}
-			printf("----------------------------\n");
+			log_info("----------------------------\n");
 			agregar_master(elEstadoActual.sockUmc,maximoAnterior);
-			printf("Paginas por proceso:[%d]\n", UMCConfig.paginasXProceso);
-			printf("Tamanio de pagina:[%d]\n", UMCConfig.tamanioPagina);
-			printf("----------------------------\n");
+			log_info("Paginas por proceso:[%d]\n", UMCConfig.paginasXProceso);
+			log_info("Tamanio de pagina:[%d]\n", UMCConfig.tamanioPagina);
+			log_info("----------------------------\n");
 
 			elEstadoActual.tamanio_paginas = UMCConfig.tamanioPagina;
 		}
@@ -383,8 +383,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	/*Ciclo Principal del Nucleo*/
-	printf(".............................................................................\n");
-	printf("..............................Esperando Conexion.............................\n\n");
+	log_info(".............................................................................\n");
+	log_info("..............................Esperando Conexion.............................\n\n");
 	fflush(stdout);
 
 	while (elEstadoActual.salir == 0) {
@@ -428,7 +428,7 @@ int main(int argc, char *argv[]) {
 							break;/*Sale del switch*/
 						}
 						liberarHeaderIPC(stHeaderSwitch);
-						printf("Nueva consola conectada\n");
+						log_info("Nueva consola conectada\n");
 						agregarSock = 1;
 						/*Agrego el socket conectado a la lista Master*/
 						if (agregarSock == 1) {
@@ -446,13 +446,13 @@ int main(int argc, char *argv[]) {
 								/***Creacion del PCB***/
 								unPCB = crear_pcb(unCliente, cantidadDePaginasCodigo, elEstadoActual.stackSize, &unMensaje);
 								if (unPCB == NULL) {
-									printf("Error al crear el PCB... se cierra la consola\n");
+									log_info("Error al crear el PCB... se cierra la consola\n");
 									quitar_master(unCliente, maximoAnterior);
 									close(unCliente);
 									break;/*Sale del switch*/
 								}
 								if (inicializar_programa(unPCB, unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
-									printf("No se pudo inicializar el programa\n");
+									log_error("No se pudo inicializar el programa");
 									/*TODO: Liberar toda la memoria del pcb!*/
 									quitar_master(unCliente, maximoAnterior);
 									close(unCliente);
@@ -465,7 +465,7 @@ int main(int argc, char *argv[]) {
 								/*Cuando se usa mensajeIPC liberar el contenido*/
 								free(unMensaje.contenido);
 								ready_productor(unPCB);
-								printf("PCB [PID - %d] NEW a READY\n", unPCB->pid);
+								log_info("PCB [PID - %d] NEW a READY\n", unPCB->pid);
 								fflush(stdout);
 							}
 
@@ -481,13 +481,13 @@ int main(int argc, char *argv[]) {
 							break;/*Sale del switch*/
 						}
 						liberarHeaderIPC(stHeaderSwitch);
-						printf("Nuevo CPU conectado, lanzamiento de hilo...");
+						log_info("Nuevo CPU conectado, lanzamiento de hilo...");
 						if (pthread_create(&p_threadCpu, NULL, (void*) consumidor_cpu, (void*) unCliente) != 0) {
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							close(unCliente);
 							break;/*Sale del switch*/
 						}
-						printf("OK\n");
+						log_info("OK\n");
 						fflush(stdout);
 						break;
 					default:
@@ -502,17 +502,17 @@ int main(int argc, char *argv[]) {
 						// Desconexion de una consola
    						pid_desconectado = borrar_consola(unSocket);
 						if (pid_desconectado != 0) {
-							printf("Se desconecto la consola asignada al PCB [PID - %d]\n", pid_desconectado);
+							log_info("Se desconecto la consola asignada al PCB [PID - %d]\n", pid_desconectado);
 							eliminar_pcb_ready(pid_desconectado);
 						}
 						if (unSocket == elEstadoActual.sockUmc) {
-							printf("Se perdio conexion con la UMC...\n ");
+							log_info("Se perdio conexion con la UMC...\n ");
 							elEstadoActual.salir = 1;
 							cerrarSockets(&elEstadoActual);
 
 						}
 						if (unSocket == elEstadoActual.sockEscuchador) {
-							printf("Se perdio conexion...\n ");
+							log_info("Se perdio conexion...\n ");
 						}
 						/*Saco el socket de la lista Master*/
 						quitar_master(unSocket, maximoAnterior);
@@ -529,6 +529,6 @@ int main(int argc, char *argv[]) {
 	consola_destruir_lista(&elEstadoActual);
 	cerrarSockets(&elEstadoActual);
 	finalizarSistema(&unMensaje, unSocket, &elEstadoActual);
-	printf("NUCLEO: Fin del programa\n");
+	log_info("NUCLEO: Fin del programa\n");
 	return 0;
 }
