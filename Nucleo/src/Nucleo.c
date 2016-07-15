@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
 
 	log_info("Arrancando el Nucleo");
 
-	if (!elEstadoActual.path_conf) {
+	if (elEstadoActual.path_conf == NULL) {
 		log_error("Falta el parametro de configuracion");
 		exit(-1);
 	}
@@ -313,7 +313,7 @@ int main(int argc, char *argv[]) {
 //	log_info("Configuracion cargada satisfactoriamente...\n");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
-	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*) &elEstadoActual);
+	pthread_create(&p_thread, NULL, &monitor_configuracion, (void*) &elEstadoActual);
 
 	inicializarThreadsDispositivos(&elEstadoActual);
 
