@@ -217,8 +217,6 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 
 void *finalizarProgramaNucleo(stEnd *fin){
 
-	stHeaderIPC *unHeader;
-
 	// liberar tabla de paginas para el pid
 	liberarTablaPid(fin->pid);
 
@@ -233,7 +231,7 @@ void *finalizarProgramaNucleo(stEnd *fin){
     }
 
 	return NULL;
-}
+}//No se recibe respuesta
 
 uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 
