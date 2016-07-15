@@ -37,7 +37,6 @@ int gFrameByProc;
 int inicializarPrograma(int unCliente);
 int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid);
 int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid);
-void finalizarPrograma(uint16_t pid, uint16_t socketCPU);
 void *finalizarProgramaNucleo(stEnd *fin);
 uint32_t cambiarContexto(stMensajeIPC *unMensaje);
 int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo);
@@ -49,6 +48,5 @@ int guardarEnTabla(uint16_t cantidadPaginas);
 /* Auxiliares */
 void limpiarPosicion(void *buffer, stPosicion *pPos);
 void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos);
-void reservarPosicion(void **buffer, uint16_t size);
 void loguear_buffer(void *buffer, uint16_t size);
 #endif /* ICPU_H_ */

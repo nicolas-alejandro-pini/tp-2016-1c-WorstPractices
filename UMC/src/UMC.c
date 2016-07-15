@@ -428,6 +428,7 @@ int main(int argc, char *argv[]) {
 //	        	        			end->pid = *(unMensaje.contenido);
 	        	        			recv(unSocket, &end->pid, sizeof(uint16_t), 0);
 
+	        	        			log_info("se recibe un pedido de fin de programa para el pid %d desde el socket %d", end->pid, unCliente);
 	        	        			finalizarProgramaNucleo(end);
 	        	        			break;
 
