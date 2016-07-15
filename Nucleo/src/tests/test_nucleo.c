@@ -9,6 +9,7 @@
 #include "../includes/nucleo_config.h"
 #include <commons/collections/list.h>
 #include <commons/pcb.h>
+#include <CUnit/CUnit.h>
 
 stEstado elEstadoActual;
 t_list *listaBlock;
