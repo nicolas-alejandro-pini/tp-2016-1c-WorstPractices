@@ -13,6 +13,8 @@
 #include "includes/planificador.h"
 #include "tests/test_nucleo.h"
 
+#include "commons/sockets.h"
+
 /*
  ============================================================================
  Estructuras y definiciones
@@ -286,8 +288,7 @@ int main(int argc, char *argv[]) {
 	listaBlock = list_create();
 	consola_crear_lista();
 
-	/*Logger*/
-	t_log* logger = log_create(temp_file, "NUCLEO", -1, LOG_LEVEL_INFO);
+	log_create(temp_file, "NUCLEO", -1, LOG_LEVEL_INFO);
 
 	log_info("Arrancando el Nucleo");
 
@@ -448,7 +449,7 @@ int main(int argc, char *argv[]) {
 									close(unCliente);
 									break;/*Sale del switch*/
 								}
-								if (inicializar_programa(unPCB, unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
+								if (inicializar_programa(unPCB, (char *)unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
 									log_error("No se pudo inicializar el programa");
 									/*TODO: Liberar toda la memoria del pcb!*/
 									quitar_master(unCliente, maximoAnterior);
@@ -479,12 +480,12 @@ int main(int argc, char *argv[]) {
 						}
 						liberarHeaderIPC(stHeaderSwitch);
 						log_info("Nuevo CPU conectado, lanzamiento de hilo...");
-						if (pthread_create(&p_threadCpu, NULL, (void*) consumidor_cpu, (void*) unCliente) != 0) {
+						if (pthread_create(&p_threadCpu, NULL, (void*) consumidor_cpu, (void*) &unCliente) != 0) {
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							close(unCliente);
 							break;/*Sale del switch*/
 						}
-						log_info("OK\n");
+						log_info("OK");
 						fflush(stdout);
 						break;
 					default:
