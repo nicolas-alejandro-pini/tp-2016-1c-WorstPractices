@@ -805,14 +805,18 @@ int devolverPCBalNucleo(void){
 	t_paquete paquete;
 	int resultado=  0;
 
+	log_info("PCB PID[%d] Devolviendo PCB.. Stack Inicio[%ld] Stack offset[%ld]", unPCB->pid,  unPCB->paginaInicioStack, unPCB->offsetStack);
+
 	if (unPCB->metadata_program->instrucciones_size <= unPCB->pc) //Si la cantidad total de instrucciones menor al pc significa que termino el programa.
 	{
+		log_info("PCB PID[%d] con fin de programa pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
 		unHeaderIPC = nuevoHeaderIPC(FINANSISOP);
 		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 		send(configuracionInicial.sockNucleo,&unPCB->pid,sizeof(uint32_t),0);
 	}
 	else
 	{
+		log_info("PCB PID[%d] Quantum finalizado. pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
 		unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
 
 		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
@@ -833,7 +837,9 @@ int devolverPCBalNucleo(void){
 	return resultado;
 }
 
-int cambiarContextoUMC(int pid){
+int cambiarContextoUMC(uint32_t pid){
+
+	log_info("PID[%d] Cambio de contexto.", pid);
 
 	stMensajeIPC unMensajeIPC;
 	unMensajeIPC.header.tipo = CAMBIOCONTEXTO;
