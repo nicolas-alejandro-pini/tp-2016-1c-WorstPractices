@@ -14,7 +14,8 @@ int consola_activa(stPCB *unPCB) {
 	if (buscar_consola(unPCB->pid) == 0) {
 		printf("PCB [PID - %d] corresponde a un ansisop abortado, se procede a finalizar el pcb...\n", unPCB->pid);
 		unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
-		if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*) unPCB->pid)) {
+		unHeaderIPC->largo = sizeof(uint32_t);
+		if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*) &unPCB->pid)) {
 			log_error("Error al enviar el fin de programa a la UMC");
 			return (-4);
 		}
