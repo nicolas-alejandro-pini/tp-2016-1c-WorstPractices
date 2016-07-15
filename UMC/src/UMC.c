@@ -175,6 +175,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr addressAceptado;
 	int maximoAnterior = 0;
 	char enviolog[TAMDATOS];
+	int pid;
 	//char elsocket[10];
 	int agregarSock;
 	pthread_attr_t attr;
@@ -347,7 +348,7 @@ int main(int argc, char *argv[]) {
 								// enviar tamaño de pagina a CPU
 								enviarConfigUMC(unCliente, losParametros.frameSize, losParametros.frameByProc);
 
-								pthread_create(&tid, &attr, (void*)realizarAccionCPU, unCliente);
+								pthread_create(&tid, &attr, (void*)realizarAccionCPU, &unCliente);
 
 								FD_CLR(unCliente,&fds_master);
 								if(unCliente>losParametros.fdMax){
@@ -423,14 +424,14 @@ int main(int argc, char *argv[]) {
 
 	        	        		case FINPROGRAMA:
 
-	        	        			end = calloc(1,sizeof(stEnd));
-	        	        			end->socketResp = unCliente;
-//	        	        			end->pid = *(unMensaje.contenido);
+	        	        			//end = calloc(1,sizeof(stEnd));
+	        	        			//end->socketResp = unCliente;
+	        	        			//end->pid = *(unMensaje.contenido);
 	        	        			log_info("Se pidio recibir un pedido de fin de programa desde el socket %d", unCliente);
-	        	        			recv(unSocket, &end->pid, sizeof(uint16_t), 0);
+	        	        			recv(unSocket, &pid, sizeof(uint32_t), 0);
 
 	        	        			log_info("Se recibe un pedido de fin de programa para el pid %d desde el socket %d", end->pid, unCliente);
-	        	        			finalizarProgramaNucleo(end);
+	        	        			finalizarProgramaNucleo(pid);
 	        	        			break;
 
 
