@@ -79,6 +79,28 @@ uint32_t buscar_consola(int pid) {
 	return 0;  // No encontrada
 }
 
+/**
+ * Busco el socket de la consola que me cargo el pid pasado como parametro
+ *
+ */
+stConsola * obtenerSocketConsolaPorPID(uint32_t pid) {
+	stConsola *consola = NULL;
+	int i = 0;
+	pthread_mutex_lock(&mutex_lista_consolas);
+	int size = list_size(lista_consolas);
+
+	for (i = 0; i < size; i++) {
+		consola = list_get(lista_consolas, i);
+		if (consola->pid == pid) {
+			list_remove(lista_consolas, i); //Elimino el elemento de la lista de consolas
+			pthread_mutex_unlock(&mutex_lista_consolas);
+			return consola;
+		}
+	}
+	pthread_mutex_unlock(&mutex_lista_consolas);
+	return NULL;  // No encontrada
+}
+
 void consola_crear_lista() {
 	lista_consolas = list_create();
 }

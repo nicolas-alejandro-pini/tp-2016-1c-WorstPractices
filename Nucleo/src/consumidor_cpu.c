@@ -58,6 +58,7 @@ void *consumidor_cpu(int unCliente) {
 	stSharedVar *unaSharedVar;
 	uint32_t socket_consola_to_print,pid_fin;
 	t_valor_variable valor_impresion;
+	stConsola * consola;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
 	int error = 0, offset = 0, dispositivo_time,fin_ejecucion;
 
@@ -149,6 +150,14 @@ void *consumidor_cpu(int unCliente) {
 				if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*)&pid_fin)) {
 					log_error("Error al enviar el fin de programa a la UMC");
 				}
+
+				// Le debo enviar el fin de programa a la consola
+				consola = obtenerSocketConsolaPorPID(pid_fin);
+				if (!enviarMensajeIPC(socket_consola_to_print, unHeaderIPC, (char*)&pid_fin)) {
+					log_error("Error al enviar el fin de programa a la UMC");
+				}
+
+				free(consola);
 				liberarHeaderIPC(unHeaderIPC);
 				printf("\n--------------------------------------\n");
 				break;
