@@ -72,7 +72,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 	if(frameBuscado != 0){
 
 		// acceder a memoria con el resultado encontrado en cache
-		if(leerMemoria(buffer, frameBuscado, *posLogica))
+		if(leerMemoria(*buffer, frameBuscado, *posLogica))
 			return EXIT_FAILURE;
 
 		return EXIT_SUCCESS;
@@ -93,7 +93,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 		if(frameNuevo!=0){
 
 			// con la pagina obtenida separo los bytes que se pidieron leer
-			if(leerMemoria(buffer, frameNuevo, *posLogica))
+			if(leerMemoria(*buffer, frameNuevo, *posLogica))
 				return EXIT_FAILURE;
 
 			return EXIT_SUCCESS;
@@ -214,31 +214,22 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	return EXIT_SUCCESS;
 }
 
-void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
-	stHeaderIPC *unHeader;
+
+void *finalizarProgramaNucleo(stEnd *fin){
 
 	// liberar tabla de paginas para el pid
-	liberarTablaPid(pid);
+	liberarTablaPid(fin->pid);
 
 	// liberar TLB
 	if (estaActivadaTLB()== OK){
-		flushTLB(pid);
+		flushTLB(fin->pid);
 	}
 
 	// liberar de swap del pid
-    if(destruirPrograma(pid)){
+    if(destruirPrograma(fin->pid)){
     	log_error("Finalizar programa: fallo la respuesta de confirmacion del Swap");
     }
 
-    unHeader = nuevoHeaderIPC(OK);
-    enviarHeaderIPC(socketCPU, unHeader);
-    liberarHeaderIPC(unHeader);
-
-    return;
-}
-void *finalizarProgramaNucleo(stEnd *fin){
-
-	finalizarPrograma(fin->pid, fin->socketResp);
 	return NULL;
 }
 
@@ -354,11 +345,6 @@ void realizarAccionCPU(uint16_t unSocket){
 
 			imprimirMemoriaPrincipal();
 
-			break;
-
-		case FINPROGRAMA:
-
-			finalizarPrograma(pidActivo, unSocket);
 			break;
 
 		case CAMBIOCONTEXTO:

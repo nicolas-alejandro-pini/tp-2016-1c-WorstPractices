@@ -239,7 +239,7 @@ int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 	nodo->punteroClock = 0; // Apunta al ultimo elemento de la tabla
 
 	// agrego retardo
-	// TODO Sacar // sleep(losParametros.delay);
+	sleep(losParametros.delay);
 	//enlazo en la lista
 	posicionEnTablaMarcos = list_mutex_add(TablaMarcos, nodo);
 
@@ -347,7 +347,7 @@ void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 
 			marco = ((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->marco;
 			buffer = calloc(1, losParametros.frameSize+1);
-			if(leerMemoria(&buffer, marco, posicion)!=0){
+			if(leerMemoria(buffer, marco, posicion)!=0){
 				log_error("no se pudo leer memoria - marco: %d", marco);
 			}
 			printf("%s", (char*)buffer);
@@ -410,7 +410,7 @@ void liberarTablaPid(uint16_t pid){
 		i++;
 	}
 	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid_y_borro_tabla);
-	// TODO Sacar //sleep(losParametros.delay);
+	sleep(losParametros.delay);
 	list_mutex_remove(TablaMarcos,index);
 }
 

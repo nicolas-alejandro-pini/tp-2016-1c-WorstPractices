@@ -37,7 +37,6 @@ int gFrameByProc;
 int inicializarPrograma(int unCliente);
 int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid);
 int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid);
-void finalizarPrograma(uint16_t pid, uint16_t socketCPU);
 void *finalizarProgramaNucleo(stEnd *fin);
 uint32_t cambiarContexto(stMensajeIPC *unMensaje);
 int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo);
