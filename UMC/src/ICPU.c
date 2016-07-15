@@ -72,7 +72,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 	if(frameBuscado != 0){
 
 		// acceder a memoria con el resultado encontrado en cache
-		if(leerMemoria(buffer, frameBuscado, *posLogica))
+		if(leerMemoria(*buffer, frameBuscado, *posLogica))
 			return EXIT_FAILURE;
 
 		return EXIT_SUCCESS;
@@ -93,7 +93,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 		if(frameNuevo!=0){
 
 			// con la pagina obtenida separo los bytes que se pidieron leer
-			if(leerMemoria(buffer, frameNuevo, *posLogica))
+			if(leerMemoria(*buffer, frameNuevo, *posLogica))
 				return EXIT_FAILURE;
 
 			return EXIT_SUCCESS;
@@ -214,31 +214,24 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	return EXIT_SUCCESS;
 }
 
-void finalizarPrograma(uint16_t pid, uint16_t socketCPU){
+
+void *finalizarProgramaNucleo(stEnd *fin){
+
 	stHeaderIPC *unHeader;
 
 	// liberar tabla de paginas para el pid
-	liberarTablaPid(pid);
+	liberarTablaPid(fin->pid);
 
 	// liberar TLB
 	if (estaActivadaTLB()== OK){
-		flushTLB(pid);
+		flushTLB(fin->pid);
 	}
 
 	// liberar de swap del pid
-    if(destruirPrograma(pid)){
+    if(destruirPrograma(fin->pid)){
     	log_error("Finalizar programa: fallo la respuesta de confirmacion del Swap");
     }
 
-    unHeader = nuevoHeaderIPC(OK);
-    enviarHeaderIPC(socketCPU, unHeader);
-    liberarHeaderIPC(unHeader);
-
-    return;
-}
-void *finalizarProgramaNucleo(stEnd *fin){
-
-	finalizarPrograma(fin->pid, fin->socketResp);
 	return NULL;
 }
 
@@ -356,11 +349,6 @@ void realizarAccionCPU(uint16_t unSocket){
 
 			break;
 
-		case FINPROGRAMA:
-
-			finalizarPrograma(pidActivo, unSocket);
-			break;
-
 		case CAMBIOCONTEXTO:
 
 			// ToDO: Del lado del CPU esta definido int (4 bytes), pero se podria poner como
@@ -418,13 +406,17 @@ void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos){
 
 void reservarPosicion(void **buffer, uint16_t size){
 	*buffer = malloc(size);
-	strcpy(*buffer, "puis");
 }
 
 void loguear_buffer(void *buffer, uint16_t size){
 	char *buffer_log = malloc(size + 1);
+	int a;
 	memcpy(buffer_log, buffer, size);
 	buffer_log[size]='\0';
 	log_info("Buffer[%s]\n", buffer_log);
+	if(size==4){
+		a=*(int*)buffer;
+		log_info("Buffer[%d]\n", a);
+	}
 	free(buffer_log);
 }

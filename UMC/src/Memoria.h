@@ -23,7 +23,7 @@ void *marcosLibres;
 
 void* inicializarMemoriaPrincipal(long tamanio, long cantidad);
 void destruirMemoriaPrincipal();
-int leerMemoria(void **buffer, uint16_t frameBuscado, stPosicion posLogica);
+int leerMemoria(void *buffer, uint16_t frameBuscado, stPosicion posLogica);
 int escribirMemoria(void* buffer, uint16_t frameBuscado, uint16_t offset, uint16_t size);
 
 uint16_t obtenerMarcoLibre();
