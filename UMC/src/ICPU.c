@@ -295,7 +295,7 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posR.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.size), sizeof(uint16_t),0);
 
-			reservarPosicion((void*)&buffer, posR.size);
+			buffer = malloc(posR.size);
 			if(leerBytes(&buffer, &posR, pidActivo)){
 				unHeader = nuevoHeaderIPC(ERROR);
 				unHeader->largo = 0;
@@ -414,11 +414,6 @@ void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos){
 	// liberado antes con liberar buffer
 	free(buffer);
 	buffer = NULL;
-}
-
-void reservarPosicion(void **buffer, uint16_t size){
-	*buffer = malloc(size);
-	strcpy(*buffer, "puis");
 }
 
 void loguear_buffer(void *buffer, uint16_t size){
