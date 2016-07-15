@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unaCabecera = NULL;
 	stHeaderIPC *unaCabecera2 = NULL;
-	int i=0, unCliente = 0, unSocket = 0;
+	int unCliente = 0, unSocket = 0;
 	struct sockaddr addressAceptado;
 	int maximoAnterior = 0;
 	char enviolog[TAMDATOS];
@@ -426,9 +426,10 @@ int main(int argc, char *argv[]) {
 	        	        			end = calloc(1,sizeof(stEnd));
 	        	        			end->socketResp = unCliente;
 //	        	        			end->pid = *(unMensaje.contenido);
+	        	        			log_info("Se pidio recibir un pedido de fin de programa desde el socket %d", unCliente);
 	        	        			recv(unSocket, &end->pid, sizeof(uint16_t), 0);
 
-	        	        			log_info("se recibe un pedido de fin de programa para el pid %d desde el socket %d", end->pid, unCliente);
+	        	        			log_info("Se recibe un pedido de fin de programa para el pid %d desde el socket %d", end->pid, unCliente);
 	        	        			finalizarProgramaNucleo(end);
 	        	        			break;
 
