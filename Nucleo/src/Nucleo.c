@@ -286,13 +286,10 @@ int main(int argc, char *argv[]) {
 	listaBlock = list_create();
 	consola_crear_lista();
 
-	log_info("----------------------------------Elestac------------------------------------\n");
-	log_info("-----------------------------------Nucleo------------------------------------\n");
-	log_info("------------------------------------v0.1-------------------------------------\n\n");
-	fflush(stdout);
-
 	/*Logger*/
 	t_log* logger = log_create(temp_file, "NUCLEO", -1, LOG_LEVEL_INFO);
+
+	log_info("Arrancando el Nucleo");
 
 	if (!elEstadoActual.path_conf) {
 		log_error("Falta el parametro de configuracion");
@@ -498,19 +495,24 @@ int main(int argc, char *argv[]) {
 					}
 				} else {
 					/*Conexion existente*/
+					log_info("Recibi otro evento de un cliente ya conectado");
 					if (!recibirMensajeIPC(unSocket, &unMensaje)) {
+						log_info("Desconexion detectada");
+
 						// Desconexion de una consola
    						pid_desconectado = borrar_consola(unSocket);
 						if (pid_desconectado != 0) {
 							log_info("Se desconecto la consola asignada al PCB [PID - %d]\n", pid_desconectado);
 							eliminar_pcb_ready(pid_desconectado);
 						}
+
+						// Desconexion de la UMC
 						if (unSocket == elEstadoActual.sockUmc) {
 							log_info("Se perdio conexion con la UMC...\n ");
 							elEstadoActual.salir = 1;
 							cerrarSockets(&elEstadoActual);
-
 						}
+
 						if (unSocket == elEstadoActual.sockEscuchador) {
 							log_info("Se perdio conexion...\n ");
 						}
