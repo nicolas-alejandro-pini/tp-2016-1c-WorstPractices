@@ -201,7 +201,7 @@ int recv_print(t_console* tConsole){
 	while(unMensaje.tipo != FINPROGRAMA){
 
 		/* Valido cierre de conexion con el nucleo */
-		if(!recibirHeaderIPC(*(tConsole->pSockfd), &unMensaje))
+		if(recibirHeaderIPC(*(tConsole->pSockfd), &unMensaje)<=0)
 			return EXIT_FAILURE;
 
 		switch(unMensaje.tipo)
