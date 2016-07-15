@@ -71,6 +71,7 @@ void *consumidor_cpu(int unCliente) {
 		unPCB->quantumSleep = obtenerEstadoActual().quantumSleep;
 
 		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
+		unHeaderIPC->largo = sizeof(uint32_t);
 		if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 			log_error("CPU error - No se pudo enviar el PCB[PID - %d]", unPCB->pid);
 			liberarHeaderIPC(unHeaderIPC);
@@ -169,9 +170,6 @@ void *consumidor_cpu(int unCliente) {
 				/*Se produjo una excepcion por acceso a una posicion de memoria invalida (segmentation fault), imprimir error
 				 * y bajar la consola tambien close (cliente)*/
 				break;
-			case SIGUSR1CPU:
-				/*Se cayo el CPU, se debe replanificar, (continue) */
-				break;
 			case OBTENERVALOR:
 				printf("\n--------------------------------------\n");
 				printf("Nuevo pedido de variable compartida...\n");
@@ -263,11 +261,11 @@ void *consumidor_cpu(int unCliente) {
 
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIR);
 				unHeaderIPC->largo = sizeof(t_valor_variable);
+				printf("Se envia al socket [%d] de la consola, el valor [%d] para imprimir\n",socket_consola_to_print,valor_impresion);
 				if(!enviarMensajeIPC(socket_consola_to_print,unHeaderIPC,(char*)&valor_impresion)){
 					log_error("Error al imprimir en consola el valor de la variable");
 				}
 				liberarHeaderIPC(unHeaderIPC);
-				printf("Se imprimio el valor [%d]\n",valor_impresion);
 				printf("\n--------------------------------------\n");
 
 				break;
@@ -280,6 +278,7 @@ void *consumidor_cpu(int unCliente) {
 				recv(unCliente, &texto_imprimir, unHeaderIPC->largo - sizeof(uint32_t), 0);
 
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIRTEXTO);
+				unHeaderIPC->largo = strlen(texto_imprimir)+1;
 				if(!enviarMensajeIPC(socket_consola_to_print,unHeaderIPC,texto_imprimir)){
 					log_error("Error al enviar el texto a imprimir");
 				}
