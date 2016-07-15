@@ -25,6 +25,317 @@
 [ERROR] 17:22:58:294 SWAP/(3500:3500): Error inicializando el archivo de disco...
 [ERROR] 17:22:58:294 SWAP/(3500:3500): Error al crear la particion SWAP
 <<<<<<< HEAD
+[INFO] 12:23:05:727 SWAP/(8602:8602): Arancando el proceso SWAP...
+[INFO] 12:23:21:662 SWAP/(8602:8602): Configuracion cargada satisfactoriamente...
+[INFO] 12:24:56:494 SWAP/(8602:8602): Puerto de escucha: 6000
+[INFO] 12:24:56:789 SWAP/(8602:8602): Nombre del archivo Swap: swap_data
+[INFO] 12:25:00:845 SWAP/(8602:8602): Cantidad de paginas: 512
+[INFO] 12:25:01:260 SWAP/(8602:8602): Tamanio de pagina: 1024
+[INFO] 12:25:01:709 SWAP/(8602:8602): Retardo de compactacion: 60000
+[ERROR] 12:30:13:900 SWAP/(8602:8602): Error inicializando el archivo de disco...
+[ERROR] 12:30:21:967 SWAP/(8602:8602): Error al crear la particion SWAP
+[INFO] 12:46:24:38 SWAP/(9374:9374): Arancando el proceso SWAP...
+[INFO] 12:46:24:38 SWAP/(9374:9374): Configuracion cargada satisfactoriamente...
+[INFO] 12:46:24:38 SWAP/(9374:9374): Puerto de escucha: 6000
+[INFO] 12:46:24:38 SWAP/(9374:9374): Nombre del archivo Swap: swap_data
+[INFO] 12:46:24:38 SWAP/(9374:9374): Cantidad de paginas: 512
+[INFO] 12:46:24:38 SWAP/(9374:9374): Tamanio de pagina: 1024
+[INFO] 12:46:24:38 SWAP/(9374:9374): Retardo de compactacion: 60000
+[ERROR] 12:47:00:922 SWAP/(9374:9374): Error inicializando el archivo de disco...
+[ERROR] 12:47:02:909 SWAP/(9374:9374): Error al crear la particion SWAP
+[INFO] 12:49:52:706 SWAP/(9583:9583): Arancando el proceso SWAP...
+[INFO] 12:49:52:706 SWAP/(9583:9583): Configuracion cargada satisfactoriamente...
+[INFO] 12:49:52:706 SWAP/(9583:9583): Puerto de escucha: 6000
+[INFO] 12:49:52:707 SWAP/(9583:9583): Nombre del archivo Swap: swap_data
+[INFO] 12:49:52:707 SWAP/(9583:9583): Cantidad de paginas: 512
+[INFO] 12:49:52:707 SWAP/(9583:9583): Tamanio de pagina: 1024
+[INFO] 12:49:52:707 SWAP/(9583:9583): Retardo de compactacion: 60000
+[ERROR] 12:50:20:366 SWAP/(9583:9583): Error inicializando el archivo de disco...
+[ERROR] 12:50:21:225 SWAP/(9583:9583): Error al crear la particion SWAP
+[INFO] 10:34:09:327 SWAP/(7390:7390): Arancando el proceso SWAP...
+[INFO] 10:34:09:364 SWAP/(7390:7390): Configuracion cargada satisfactoriamente...
+[INFO] 10:34:09:364 SWAP/(7390:7390): Puerto de escucha: 6000
+[INFO] 10:34:09:364 SWAP/(7390:7390): Nombre del archivo Swap: swap_data
+[INFO] 10:34:09:364 SWAP/(7390:7390): Cantidad de paginas: 512
+[INFO] 10:34:09:364 SWAP/(7390:7390): Tamanio de pagina: 1024
+[INFO] 10:34:09:364 SWAP/(7390:7390): Retardo de compactacion: 60000
+[INFO] 10:36:18:457 SWAP/(7432:7432): Arancando el proceso SWAP...
+[INFO] 10:36:18:457 SWAP/(7432:7432): Configuracion cargada satisfactoriamente...
+[INFO] 10:36:18:457 SWAP/(7432:7432): Puerto de escucha: 6000
+[INFO] 10:36:18:457 SWAP/(7432:7432): Nombre del archivo Swap: swap_data
+[INFO] 10:36:18:457 SWAP/(7432:7432): Cantidad de paginas: 512
+[INFO] 10:36:18:457 SWAP/(7432:7432): Tamanio de pagina: 1024
+[INFO] 10:36:18:457 SWAP/(7432:7432): Retardo de compactacion: 60000
+[INFO] 10:36:18:531 SWAP/(7432:7432): Esperando conexiones...
+[INFO] 11:28:39:791 SWAP/(6800:6800): Arancando el proceso SWAP...
+[INFO] 11:28:39:854 SWAP/(6800:6800): Configuracion cargada satisfactoriamente...
+[INFO] 11:28:39:854 SWAP/(6800:6800): Puerto de escucha: 6000
+[INFO] 11:28:39:854 SWAP/(6800:6800): Nombre del archivo Swap: swap_data
+[INFO] 11:28:39:854 SWAP/(6800:6800): Cantidad de paginas: 512
+[INFO] 11:28:39:854 SWAP/(6800:6800): Tamanio de pagina: 1024
+[INFO] 11:28:39:854 SWAP/(6800:6800): Retardo de compactacion: 60000
+[INFO] 11:28:39:864 SWAP/(6800:6800): Partición SWAP creada satisfactoriamente
+[INFO] 11:28:39:864 SWAP/(6800:6800): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 11:28:39:865 SWAP/(6800:6800): Esperando conexiones...
+[INFO] 11:52:28:464 SWAP/(7231:7231): Arancando el proceso SWAP...
+[INFO] 11:52:28:464 SWAP/(7231:7231): Configuracion cargada satisfactoriamente...
+[INFO] 11:52:28:464 SWAP/(7231:7231): Puerto de escucha: 6000
+[INFO] 11:52:28:464 SWAP/(7231:7231): Nombre del archivo Swap: swap_data
+[INFO] 11:52:28:464 SWAP/(7231:7231): Cantidad de paginas: 3
+[INFO] 11:52:28:464 SWAP/(7231:7231): Tamanio de pagina: 1024
+[INFO] 11:52:28:464 SWAP/(7231:7231): Retardo de compactacion: 60000
+[INFO] 11:52:28:464 SWAP/(7231:7231): Partición SWAP creada satisfactoriamente
+[INFO] 11:52:28:464 SWAP/(7231:7231): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 11:52:28:464 SWAP/(7231:7231): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 11:52:28:464 SWAP/(7231:7231): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 11:52:28:464 SWAP/(7231:7231): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 11:52:28:524 SWAP/(7231:7231): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 11:52:28:524 SWAP/(7231:7231): Esperando conexiones...
+[INFO] 11:53:42:888 SWAP/(7269:7269): Arancando el proceso SWAP...
+[INFO] 11:53:42:888 SWAP/(7269:7269): Configuracion cargada satisfactoriamente...
+[INFO] 11:53:42:888 SWAP/(7269:7269): Puerto de escucha: 6000
+[INFO] 11:53:42:888 SWAP/(7269:7269): Nombre del archivo Swap: swap_data
+[INFO] 11:53:42:888 SWAP/(7269:7269): Cantidad de paginas: 3
+[INFO] 11:53:42:888 SWAP/(7269:7269): Tamanio de pagina: 1024
+[INFO] 11:53:42:888 SWAP/(7269:7269): Retardo de compactacion: 60000
+[INFO] 11:53:42:888 SWAP/(7269:7269): Partición SWAP creada satisfactoriamente
+[INFO] 11:53:42:888 SWAP/(7269:7269): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 11:53:42:888 SWAP/(7269:7269): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 11:53:42:888 SWAP/(7269:7269): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 11:53:42:888 SWAP/(7269:7269): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 11:53:42:949 SWAP/(7269:7269): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 11:53:42:949 SWAP/(7269:7269): Esperando conexiones...
+[INFO] 11:53:55:432 SWAP/(7302:7302): Arancando el proceso SWAP...
+[INFO] 11:53:55:432 SWAP/(7302:7302): Configuracion cargada satisfactoriamente...
+[INFO] 11:53:55:432 SWAP/(7302:7302): Puerto de escucha: 6000
+[INFO] 11:53:55:432 SWAP/(7302:7302): Nombre del archivo Swap: swap_data
+[INFO] 11:53:55:432 SWAP/(7302:7302): Cantidad de paginas: 3
+[INFO] 11:53:55:433 SWAP/(7302:7302): Tamanio de pagina: 1024
+[INFO] 11:53:55:433 SWAP/(7302:7302): Retardo de compactacion: 60000
+[INFO] 11:53:55:433 SWAP/(7302:7302): Partición SWAP creada satisfactoriamente
+[INFO] 11:53:55:433 SWAP/(7302:7302): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 11:53:55:433 SWAP/(7302:7302): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 11:53:55:433 SWAP/(7302:7302): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 11:53:55:433 SWAP/(7302:7302): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 11:58:32:986 SWAP/(7302:7302): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 11:58:32:986 SWAP/(7302:7302): Esperando conexiones...
+[INFO] 12:08:05:100 SWAP/(7709:7709): Arancando el proceso SWAP...
+[INFO] 12:08:05:100 SWAP/(7709:7709): Configuracion cargada satisfactoriamente...
+[INFO] 12:08:05:100 SWAP/(7709:7709): Puerto de escucha: 6000
+[INFO] 12:08:05:100 SWAP/(7709:7709): Nombre del archivo Swap: swap_data
+[INFO] 12:08:05:100 SWAP/(7709:7709): Cantidad de paginas: 3
+[INFO] 12:08:05:100 SWAP/(7709:7709): Tamanio de pagina: 1024
+[INFO] 12:08:05:100 SWAP/(7709:7709): Retardo de compactacion: 60000
+[INFO] 12:08:05:100 SWAP/(7709:7709): Partición SWAP creada satisfactoriamente
+[INFO] 12:08:05:100 SWAP/(7709:7709): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:08:05:101 SWAP/(7709:7709): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:08:05:101 SWAP/(7709:7709): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:08:05:101 SWAP/(7709:7709): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:08:06:161 SWAP/(7709:7709): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 12:08:06:161 SWAP/(7709:7709): Esperando conexiones...
+[INFO] 12:08:33:644 SWAP/(7728:7728): Arancando el proceso SWAP...
+[INFO] 12:08:33:645 SWAP/(7728:7728): Configuracion cargada satisfactoriamente...
+[INFO] 12:08:33:645 SWAP/(7728:7728): Puerto de escucha: 6000
+[INFO] 12:08:33:645 SWAP/(7728:7728): Nombre del archivo Swap: swap_data
+[INFO] 12:08:33:645 SWAP/(7728:7728): Cantidad de paginas: 3
+[INFO] 12:08:33:645 SWAP/(7728:7728): Tamanio de pagina: 1024
+[INFO] 12:08:33:645 SWAP/(7728:7728): Retardo de compactacion: 60000
+[INFO] 12:08:33:645 SWAP/(7728:7728): Partición SWAP creada satisfactoriamente
+[INFO] 12:08:33:645 SWAP/(7728:7728): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:08:33:645 SWAP/(7728:7728): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:08:33:645 SWAP/(7728:7728): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:08:33:645 SWAP/(7728:7728): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:08:34:705 SWAP/(7728:7728): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 12:08:34:705 SWAP/(7728:7728): Esperando conexiones...
+[INFO] 12:08:45:879 SWAP/(7763:7763): Arancando el proceso SWAP...
+[INFO] 12:08:45:879 SWAP/(7763:7763): Configuracion cargada satisfactoriamente...
+[INFO] 12:08:45:881 SWAP/(7763:7763): Puerto de escucha: 6000
+[INFO] 12:08:45:881 SWAP/(7763:7763): Nombre del archivo Swap: swap_data
+[INFO] 12:08:45:881 SWAP/(7763:7763): Cantidad de paginas: 3
+[INFO] 12:08:45:881 SWAP/(7763:7763): Tamanio de pagina: 1024
+[INFO] 12:08:45:881 SWAP/(7763:7763): Retardo de compactacion: 60000
+[INFO] 12:08:45:881 SWAP/(7763:7763): Partición SWAP creada satisfactoriamente
+[INFO] 12:08:45:881 SWAP/(7763:7763): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:08:45:881 SWAP/(7763:7763): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:08:45:881 SWAP/(7763:7763): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:08:45:881 SWAP/(7763:7763): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:09:17:615 SWAP/(7763:7763): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 12:09:17:615 SWAP/(7763:7763): Esperando conexiones...
+[INFO] 12:11:08:421 SWAP/(7912:7912): Arancando el proceso SWAP...
+[INFO] 12:11:08:421 SWAP/(7912:7912): Configuracion cargada satisfactoriamente...
+[INFO] 12:11:08:421 SWAP/(7912:7912): Puerto de escucha: 6000
+[INFO] 12:11:08:421 SWAP/(7912:7912): Nombre del archivo Swap: swap_data
+[INFO] 12:11:08:421 SWAP/(7912:7912): Cantidad de paginas: 3
+[INFO] 12:11:08:421 SWAP/(7912:7912): Tamanio de pagina: 1024
+[INFO] 12:11:08:421 SWAP/(7912:7912): Retardo de compactacion: 60000
+[INFO] 12:11:08:421 SWAP/(7912:7912): Partición SWAP creada satisfactoriamente
+[INFO] 12:11:08:421 SWAP/(7912:7912): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:11:08:421 SWAP/(7912:7912): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:11:08:421 SWAP/(7912:7912): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:11:08:421 SWAP/(7912:7912): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:12:52:490 SWAP/(7965:7965): Arancando el proceso SWAP...
+[INFO] 12:12:52:490 SWAP/(7965:7965): Configuracion cargada satisfactoriamente...
+[INFO] 12:12:52:490 SWAP/(7965:7965): Puerto de escucha: 6000
+[INFO] 12:12:52:490 SWAP/(7965:7965): Nombre del archivo Swap: swap_data
+[INFO] 12:12:52:491 SWAP/(7965:7965): Cantidad de paginas: 3
+[INFO] 12:12:52:491 SWAP/(7965:7965): Tamanio de pagina: 1024
+[INFO] 12:12:52:491 SWAP/(7965:7965): Retardo de compactacion: 60000
+[INFO] 12:12:52:491 SWAP/(7965:7965): Partición SWAP creada satisfactoriamente
+[INFO] 12:12:52:491 SWAP/(7965:7965): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:13:01:899 SWAP/(7965:7965): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:13:01:899 SWAP/(7965:7965): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:13:01:899 SWAP/(7965:7965): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:13:45:466 SWAP/(8033:8033): Arancando el proceso SWAP...
+[INFO] 12:13:45:466 SWAP/(8033:8033): Configuracion cargada satisfactoriamente...
+[INFO] 12:13:45:466 SWAP/(8033:8033): Puerto de escucha: 6000
+[INFO] 12:13:45:466 SWAP/(8033:8033): Nombre del archivo Swap: swap_data
+[INFO] 12:13:45:466 SWAP/(8033:8033): Cantidad de paginas: 3
+[INFO] 12:13:45:466 SWAP/(8033:8033): Tamanio de pagina: 1024
+[INFO] 12:13:45:466 SWAP/(8033:8033): Retardo de compactacion: 60000
+[INFO] 12:13:45:466 SWAP/(8033:8033): Partición SWAP creada satisfactoriamente
+[INFO] 12:13:45:466 SWAP/(8033:8033): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:13:45:466 SWAP/(8033:8033): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:13:45:466 SWAP/(8033:8033): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:13:45:466 SWAP/(8033:8033): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:17:04:527 SWAP/(8124:8124): Arancando el proceso SWAP...
+[INFO] 12:17:04:527 SWAP/(8124:8124): Configuracion cargada satisfactoriamente...
+[INFO] 12:17:04:527 SWAP/(8124:8124): Puerto de escucha: 6000
+[INFO] 12:17:04:527 SWAP/(8124:8124): Nombre del archivo Swap: swap_data
+[INFO] 12:17:04:527 SWAP/(8124:8124): Cantidad de paginas: 3
+[INFO] 12:17:04:527 SWAP/(8124:8124): Tamanio de pagina: 1024
+[INFO] 12:17:04:527 SWAP/(8124:8124): Retardo de compactacion: 60000
+[INFO] 12:17:04:527 SWAP/(8124:8124): Partición SWAP creada satisfactoriamente
+[INFO] 12:17:04:527 SWAP/(8124:8124): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:17:04:527 SWAP/(8124:8124): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:17:04:527 SWAP/(8124:8124): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:17:04:527 SWAP/(8124:8124): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:18:59:36 SWAP/(8243:8243): Arancando el proceso SWAP...
+[INFO] 12:18:59:36 SWAP/(8243:8243): Configuracion cargada satisfactoriamente...
+[INFO] 12:18:59:36 SWAP/(8243:8243): Puerto de escucha: 6000
+[INFO] 12:18:59:36 SWAP/(8243:8243): Nombre del archivo Swap: swap_data
+[INFO] 12:18:59:36 SWAP/(8243:8243): Cantidad de paginas: 3
+[INFO] 12:18:59:36 SWAP/(8243:8243): Tamanio de pagina: 1024
+[INFO] 12:18:59:37 SWAP/(8243:8243): Retardo de compactacion: 5000
+[INFO] 12:18:59:37 SWAP/(8243:8243): Partición SWAP creada satisfactoriamente
+[INFO] 12:18:59:37 SWAP/(8243:8243): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:18:59:37 SWAP/(8243:8243): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:18:59:37 SWAP/(8243:8243): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:18:59:37 SWAP/(8243:8243): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:19:10:164 SWAP/(8243:8243): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 12:19:10:164 SWAP/(8243:8243): Esperando conexiones...
+[INFO] 12:21:03:978 SWAP/(8345:8345): Arancando el proceso SWAP...
+[INFO] 12:21:03:978 SWAP/(8345:8345): Configuracion cargada satisfactoriamente...
+[INFO] 12:21:03:978 SWAP/(8345:8345): Puerto de escucha: 6000
+[INFO] 12:21:03:978 SWAP/(8345:8345): Nombre del archivo Swap: swap_data
+[INFO] 12:21:03:978 SWAP/(8345:8345): Cantidad de paginas: 3
+[INFO] 12:21:03:979 SWAP/(8345:8345): Tamanio de pagina: 1024
+[INFO] 12:21:03:979 SWAP/(8345:8345): Retardo de compactacion: 5000
+[INFO] 12:21:03:979 SWAP/(8345:8345): Partición SWAP creada satisfactoriamente
+[INFO] 12:21:03:979 SWAP/(8345:8345): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:21:03:979 SWAP/(8345:8345): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:21:03:979 SWAP/(8345:8345): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:21:03:979 SWAP/(8345:8345): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:21:08:979 SWAP/(8345:8345): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 12:21:08:979 SWAP/(8345:8345): Esperando conexiones...
+[INFO] 12:26:06:635 SWAP/(8448:8448): Arancando el proceso SWAP...
+[INFO] 12:26:06:635 SWAP/(8448:8448): Configuracion cargada satisfactoriamente...
+[INFO] 12:26:06:635 SWAP/(8448:8448): Puerto de escucha: 6000
+[INFO] 12:26:06:635 SWAP/(8448:8448): Nombre del archivo Swap: swap_data
+[INFO] 12:26:06:635 SWAP/(8448:8448): Cantidad de paginas: 3
+[INFO] 12:26:06:635 SWAP/(8448:8448): Tamanio de pagina: 1024
+[INFO] 12:26:06:635 SWAP/(8448:8448): Retardo de compactacion: 10000
+[INFO] 12:26:06:635 SWAP/(8448:8448): Partición SWAP creada satisfactoriamente
+[INFO] 12:26:06:635 SWAP/(8448:8448): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:26:06:635 SWAP/(8448:8448): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:26:06:635 SWAP/(8448:8448): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:26:06:635 SWAP/(8448:8448): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:26:06:635 SWAP/(8448:8448): Compactando la partición SWAP, la operación llevará % milisegundos
+[INFO] 12:26:16:635 SWAP/(8448:8448): Com
+[INFO] 12:26:16:636 SWAP/(8448:8448): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 12:26:16:636 SWAP/(8448:8448): Esperando conexiones...
+[INFO] 12:33:01:51 SWAP/(8635:8635): Arancando el proceso SWAP...
+[INFO] 12:33:01:51 SWAP/(8635:8635): Configuracion cargada satisfactoriamente...
+[INFO] 12:33:01:51 SWAP/(8635:8635): Puerto de escucha: 6000
+[INFO] 12:33:01:51 SWAP/(8635:8635): Nombre del archivo Swap: swap_data
+[INFO] 12:33:01:51 SWAP/(8635:8635): Cantidad de paginas: 3
+[INFO] 12:33:01:51 SWAP/(8635:8635): Tamanio de pagina: 1024
+[INFO] 12:33:01:51 SWAP/(8635:8635): Retardo de compactacion: 10000
+[INFO] 12:33:01:51 SWAP/(8635:8635): Partición SWAP creada satisfactoriamente
+[INFO] 12:33:01:51 SWAP/(8635:8635): Gestión de asignación del SWAP inicializada satisfactoriamente
+[ERROR] 12:33:01:51 SWAP/(8635:8635): Error creando el socket de escucha...
+[INFO] 12:33:58:289 SWAP/(8685:8685): Arancando el proceso SWAP...
+[INFO] 12:33:58:289 SWAP/(8685:8685): Configuracion cargada satisfactoriamente...
+[INFO] 12:33:58:289 SWAP/(8685:8685): Puerto de escucha: 6000
+[INFO] 12:33:58:289 SWAP/(8685:8685): Nombre del archivo Swap: swap_data
+[INFO] 12:33:58:289 SWAP/(8685:8685): Cantidad de paginas: 3
+[INFO] 12:33:58:289 SWAP/(8685:8685): Tamanio de pagina: 1024
+[INFO] 12:33:58:289 SWAP/(8685:8685): Retardo de compactacion: 10000
+[INFO] 12:33:58:289 SWAP/(8685:8685): Partición SWAP creada satisfactoriamente
+[INFO] 12:33:58:290 SWAP/(8685:8685): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:33:58:290 SWAP/(8685:8685): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:33:58:290 SWAP/(8685:8685): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:33:58:290 SWAP/(8685:8685): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:33:58:290 SWAP/(8685:8685): Compactando la partición SWAP, la operación llevará % milisegundos
+[INFO] 12:34:08:290 SWAP/(8685:8685): Compactación terminada, ahora se dispone de un espacio contiguo de % sectores
+[INFO] 12:34:08:290 SWAP/(8685:8685): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 12:34:08:290 SWAP/(8685:8685): Esperando conexiones...
+[INFO] 12:36:39:335 SWAP/(8730:8730): Arancando el proceso SWAP...
+[INFO] 12:36:39:335 SWAP/(8730:8730): Configuracion cargada satisfactoriamente...
+[INFO] 12:36:39:335 SWAP/(8730:8730): Puerto de escucha: 6000
+[INFO] 12:36:39:335 SWAP/(8730:8730): Nombre del archivo Swap: swap_data
+[INFO] 12:36:39:335 SWAP/(8730:8730): Cantidad de paginas: 3
+[INFO] 12:36:39:335 SWAP/(8730:8730): Tamanio de pagina: 1024
+[INFO] 12:36:39:335 SWAP/(8730:8730): Retardo de compactacion: 10000
+[INFO] 12:36:39:335 SWAP/(8730:8730): Partición SWAP creada satisfactoriamente
+[INFO] 12:36:39:335 SWAP/(8730:8730): Gestión de asignación del SWAP inicializada satisfactoriamente
+[ERROR] 12:36:39:335 SWAP/(8730:8730): Error creando el socket de escucha...
+[INFO] 12:37:55:234 SWAP/(8750:8750): Arancando el proceso SWAP...
+[INFO] 12:37:55:234 SWAP/(8750:8750): Configuracion cargada satisfactoriamente...
+[INFO] 12:37:55:234 SWAP/(8750:8750): Puerto de escucha: 6000
+[INFO] 12:37:55:234 SWAP/(8750:8750): Nombre del archivo Swap: swap_data
+[INFO] 12:37:55:234 SWAP/(8750:8750): Cantidad de paginas: 3
+[INFO] 12:37:55:234 SWAP/(8750:8750): Tamanio de pagina: 1024
+[INFO] 12:37:55:234 SWAP/(8750:8750): Retardo de compactacion: 10000
+[INFO] 12:37:55:234 SWAP/(8750:8750): Partición SWAP creada satisfactoriamente
+[INFO] 12:37:55:234 SWAP/(8750:8750): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 12:37:55:234 SWAP/(8750:8750): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 12:37:55:234 SWAP/(8750:8750): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 12:37:55:234 SWAP/(8750:8750): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 12:37:55:234 SWAP/(8750:8750): Compactando la partición SWAP, la operación llevará 10000 milisegundos
+[INFO] 12:38:05:235 SWAP/(8750:8750): Compactación terminada, ahora se dispone de un espacio contiguo de 2 sectores
+[INFO] 12:38:05:235 SWAP/(8750:8750): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 12:38:05:235 SWAP/(8750:8750): Esperando conexiones...
+[INFO] 15:00:25:32 SWAP/(9520:9520): Arancando el proceso SWAP...
+[INFO] 15:00:25:33 SWAP/(9520:9520): Configuracion cargada satisfactoriamente...
+[INFO] 15:00:25:33 SWAP/(9520:9520): Puerto de escucha: 6000
+[INFO] 15:00:25:33 SWAP/(9520:9520): Nombre del archivo Swap: swap_data
+[INFO] 15:00:25:33 SWAP/(9520:9520): Cantidad de paginas: 3
+[INFO] 15:00:25:33 SWAP/(9520:9520): Tamanio de pagina: 1024
+[INFO] 15:00:25:33 SWAP/(9520:9520): Retardo de compactacion: 15000
+[INFO] 15:00:25:33 SWAP/(9520:9520): Partición SWAP creada satisfactoriamente
+[INFO] 15:00:25:33 SWAP/(9520:9520): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 15:00:25:33 SWAP/(9520:9520): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 15:00:25:33 SWAP/(9520:9520): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 15:00:25:33 SWAP/(9520:9520): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 15:00:25:33 SWAP/(9520:9520): Compactando la partición SWAP, la operación llevará 15000 milisegundos
+[INFO] 16:23:47:942 SWAP/(14649:14649): Arancando el proceso SWAP...
+[INFO] 16:23:47:945 SWAP/(14649:14649): Configuracion cargada satisfactoriamente...
+[INFO] 16:23:47:946 SWAP/(14649:14649): Puerto de escucha: 6000
+[INFO] 16:23:47:946 SWAP/(14649:14649): Nombre del archivo Swap: swap_data
+[INFO] 16:23:47:947 SWAP/(14649:14649): Cantidad de paginas: 3
+[INFO] 16:23:47:947 SWAP/(14649:14649): Tamanio de pagina: 1024
+[INFO] 16:23:47:947 SWAP/(14649:14649): Retardo de compactacion: 15000
+[INFO] 16:23:47:947 SWAP/(14649:14649): Partición SWAP creada satisfactoriamente
+[INFO] 16:23:47:947 SWAP/(14649:14649): Gestión de asignación del SWAP inicializada satisfactoriamente
+[INFO] 16:23:47:947 SWAP/(14649:14649): Asignacion de paginas satisfactoria al proceso(PID 1): 0->0
+[INFO] 16:23:47:947 SWAP/(14649:14649): Asignacion de paginas satisfactoria al proceso(PID 2): 1->1
+[INFO] 16:23:47:947 SWAP/(14649:14649): Asignacion de paginas satisfactoria al proceso(PID 3): 2->2
+[INFO] 16:23:47:947 SWAP/(14649:14649): Compactando la partición SWAP, la operación llevará 15000 milisegundos
+[INFO] 16:24:02:947 SWAP/(14649:14649): Compactación terminada, ahora se dispone de un espacio contiguo de 2 sectores
+[INFO] 16:24:02:947 SWAP/(14649:14649): Asignacion de paginas satisfactoria al proceso(PID 4): 1->2
+[INFO] 16:24:02:947 SWAP/(14649:14649): Esperando conexiones...
+=======
+<<<<<<< HEAD
 [INFO] 17:01:10:157 SWAP/(9933:9933): Arancando el proceso SWAP...
 [INFO] 17:01:10:206 SWAP/(9933:9933): Configuracion cargada satisfactoriamente...
 [INFO] 17:01:10:206 SWAP/(9933:9933): Puerto de escucha: 6000
@@ -2202,4 +2513,5 @@ print a end
 [INFO] 20:52:31:526 SWAP/(5255:5255): Esperando conexiones...
 [INFO] 20:52:43:146 SWAP/(5255:5255): Nuevo cliente conectado
 [ERROR] 20:56:45:171 SWAP/(5255:5255): La UMC se desconecto u ocurrio un error de comunicacion
+>>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2016-1c-WorstPractices.git
 >>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2016-1c-WorstPractices.git

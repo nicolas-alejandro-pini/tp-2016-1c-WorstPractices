@@ -59,7 +59,7 @@ void* inicializarMemoriaPrincipal(long tamanio, long cantidad){
 	void *r;
 	uint16_t i,*p;
 	if((r=calloc(cantidad, tamanio))==NULL){
-		printf("No hay memoria disponible...");
+		log_info("No hay memoria disponible...");
 		exit(-1);
 	}
 	// inicializo la lista de marcos libres
@@ -104,6 +104,16 @@ uint16_t liberarMarco(uint16_t marco){
 	pthread_mutex_unlock(&freeFrames);
 
 	return OK;
+}
+
+uint16_t hayMarcoLibre(){
+	int libres=0;
+
+	pthread_mutex_lock(&freeFrames);
+	libres = queue_size(marcosLibres);
+	pthread_mutex_unlock(&freeFrames);
+
+	return libres;
 }
 
 int imprimirMemoriaPrincipal() {

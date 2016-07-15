@@ -7,6 +7,8 @@
 
 #include "ISwap.h"
 
+pthread_mutex_t swap;
+
 int inicializarSwap(stPageIni *st){
 	stHeaderIPC* mensaje;
 	int ret=EXIT_SUCCESS;
@@ -14,13 +16,17 @@ int inicializarSwap(stPageIni *st){
 	mensaje = nuevoHeaderIPC(INICIAR_PROGRAMA);
 	mensaje->largo = 2*sizeof(uint16_t) + strlen(st->programa) + 1;
 
+	pthread_mutex_lock(&swap);
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
 	send(losParametros.sockSwap, &st->processId, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, &st->cantidadPaginas, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, st->programa, strlen(st->programa) + 1, 0);
+	pthread_mutex_unlock(&swap);
 
+	pthread_mutex_lock(&swap);
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
+	pthread_mutex_unlock(&swap);
 
 	if(mensaje->tipo != OK){
 		log_error("Error al inicializar el proceso %d en el swap", st->processId);
@@ -49,13 +55,17 @@ int enviarPagina(uint16_t pid, uint16_t pagina, char* buffer){
 	mensaje = nuevoHeaderIPC(ESCRIBIR_PAGINA);
 	mensaje->largo = 2*sizeof(uint16_t) + losParametros.frameSize;
 
+	pthread_mutex_lock(&swap);
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
 	send(losParametros.sockSwap, &pid, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, &pagina, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, buffer, losParametros.frameSize, 0);
+	pthread_mutex_unlock(&swap);
 
+	pthread_mutex_lock(&swap);
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
+	pthread_mutex_unlock(&swap);
 
 	if(mensaje->tipo != OK){
 		log_error("Error al escribir pagina %d del proceso %d en el swap", pagina, pid);
@@ -71,34 +81,45 @@ int enviarPagina(uint16_t pid, uint16_t pagina, char* buffer){
 // TODO: Estos pedidos deberian estar sincronizados? Atiende por otra coneccion?
 char* recibirPagina(uint16_t pid, uint16_t pagina){
 
-	unsigned char* paginaSwap;
+	char* paginaSwap;
 	stHeaderIPC* mensaje;
 	int recibidos;
+
+	pthread_mutex_lock(&swap);
 
 	mensaje = nuevoHeaderIPC(LEER_PAGINA);
 	mensaje->largo = 2*sizeof(uint16_t);
 
-	enviarHeaderIPC(losParametros.sockSwap, mensaje);
+	if(enviarHeaderIPC(losParametros.sockSwap, mensaje)<=0){
+		log_error("Error al enviar la solicitud de pagina al Swap");
+		return NULL;
+	}
 
 	send(losParametros.sockSwap, &pid, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, &pagina, sizeof(uint16_t), 0);
 
-	recibirHeaderIPC(losParametros.sockSwap, mensaje);
+	if(recibirHeaderIPC(losParametros.sockSwap, mensaje)<=0){
+		log_error("Error al recibir la pagina desde el Swap");
+		return NULL;
+	}
 
 	if(mensaje->tipo != OK){
 		log_error("Error al leer pagina %d del proceso %d desde el swap", pagina, pid);
 		liberarHeaderIPC(mensaje);
 		return NULL;
 	}
-	liberarHeaderIPC(mensaje);
 
-	paginaSwap = malloc(losParametros.frameSize);
-	recibidos = recv(losParametros.sockSwap, paginaSwap, losParametros.frameSize, 0);
+	paginaSwap = malloc(mensaje->largo);
+	recibidos = recv(losParametros.sockSwap, paginaSwap, mensaje->largo, 0);
 
-	if(recibidos!= losParametros.frameSize){
+	if(recibidos != mensaje->largo){
 		log_error("Error al recibir bytes de la pagina %d del proceso %d desde el swap", pagina, pid);
 		return NULL;
 	}
+
+	liberarHeaderIPC(mensaje);
+
+	pthread_mutex_unlock(&swap);
 
 	return paginaSwap;
 }
@@ -107,11 +128,11 @@ int destruirPrograma(uint16_t pid){
 	stHeaderIPC* mensaje;
 	int ret=EXIT_SUCCESS;
 
+	pthread_mutex_lock(&swap);
+
 	mensaje = nuevoHeaderIPC(DESTRUIR_PROGRAMA);
 	mensaje->largo = sizeof(uint16_t);
-
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
-
 	send(losParametros.sockSwap, &pid, sizeof(uint16_t), 0);
 
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
@@ -121,7 +142,7 @@ int destruirPrograma(uint16_t pid){
 		ret=EXIT_FAILURE;
 	}
 
+	pthread_mutex_unlock(&swap);
 	liberarHeaderIPC(mensaje);
-
 	return ret;
 }

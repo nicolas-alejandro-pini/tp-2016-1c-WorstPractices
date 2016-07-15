@@ -196,9 +196,9 @@ int main(int argc, char *argv[]) {
 	// Solo tests
 	//exit(EXIT_SUCCESS);
 
-	printf("-----------------------------------------------------------------------------\n");
-	printf("------------------------------------UMC--------------------------------------\n");
-	printf("------------------------------------v1.0-------------------------------------\n\n");
+	log_info("-----------------------------------------------------------------------------");
+	log_info("------------------------------------UMC--------------------------------------");
+	log_info("------------------------------------v1.0-------------------------------------\n");
 
 
 
@@ -264,7 +264,7 @@ int main(int argc, char *argv[]) {
 			}
 			else
 			{
-				FD_SET(losParametros.sockSwap, &(fds_master));
+				//FD_SET(losParametros.sockSwap, &(fds_master));
 				log_info("OK - Swap conectado.");
 				fflush(stdout);
 
@@ -283,8 +283,8 @@ int main(int argc, char *argv[]) {
 
 	/* ........................................Ciclo Principal SERVER........................................ */
 
-		printf(".............................................................................\n");
-		printf("..............................Esperando Conexion.............................\n");
+		log_info(".............................................................................");
+		log_info("..............................Esperando Conexion.............................");
 		fflush(stdout);
 
 
@@ -311,11 +311,11 @@ int main(int argc, char *argv[]) {
 
 		        		unCliente = aceptar(losParametros.sockEscuchador,&addressAceptado);
 
-		        		printf("Nuevo pedido de conexion...\n");
+		        		log_info("Nuevo pedido de conexion...\n");
 
 		        		unaCabecera = nuevoHeaderIPC(QUIENSOS);
 		        		if(!enviarHeaderIPC(unCliente,unaCabecera)){
-		        			printf("HandShake Error - No se pudo enviar mensaje QUIENSOS\n");
+		        			log_info("HandShake Error - No se pudo enviar mensaje QUIENSOS\n");
 		        			liberarHeaderIPC(unaCabecera);
 		        			close(unCliente);
 		        			continue;
@@ -387,10 +387,10 @@ int main(int argc, char *argv[]) {
 					else {
 
 						/* Valido si esta definido unMensaje */
-						unMensaje.contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
-						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
+//						unMensaje.contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
+//						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
 
-						if (!recibirMensajeIPC(unSocket,&unMensaje)){ /* Si se cerro una conexion, veo que el socket siga abierto*/
+						if (recibirHeaderIPC(unSocket,&unMensaje.header)<=0){ /* Si se cerro una conexion, veo que el socket siga abierto*/
 
 							if(unSocket==losParametros.sockSwap){
 								log_error("Se perdio conexion con el swap.. Finalizando UMC.");
@@ -425,14 +425,15 @@ int main(int argc, char *argv[]) {
 
 	        	        			end = calloc(1,sizeof(stEnd));
 	        	        			end->socketResp = unCliente;
-	        	        			end->pid = atoi(unMensaje.contenido);
+//	        	        			end->pid = *(unMensaje.contenido);
+	        	        			recv(unSocket, &end->pid, sizeof(uint16_t), 0);
 
 	        	        			finalizarProgramaNucleo(end);
 	        	        			break;
 
 
 	        	        		default:
-	        	        			printf("Se recibio una peticion con un codigo desconocido...%d", unMensaje.header.tipo);
+	        	        			log_info("Se recibio una peticion con un codigo desconocido...%d", unMensaje.header.tipo);
 	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;
@@ -455,7 +456,7 @@ int main(int argc, char *argv[]) {
 		cerrarSockets(&losParametros);
 		loadInfo_destruir(&losParametros); // libera losParametros
 		destruirMemoriaPrincipal();
-		printf("\nSERVER: Fin del programa\n");
+		log_info("\nSERVER: Fin del programa\n");
 		/*loguear(INFO_LOG,"Fin del programa","SERVER");*/
 		return EXIT_SUCCESS;
 
