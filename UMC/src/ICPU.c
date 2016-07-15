@@ -226,18 +226,18 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 }
 
 
-void *finalizarProgramaNucleo(stEnd *fin){
+void *finalizarProgramaNucleo(uint32_t pid){
 
 	// liberar tabla de paginas para el pid
-	liberarTablaPid(fin->pid);
+	liberarTablaPid(pid);
 
 	// liberar TLB
 	if (estaActivadaTLB()== OK){
-		flushTLB(fin->pid);
+		flushTLB(pid);
 	}
 
 	// liberar de swap del pid
-    if(destruirPrograma(fin->pid)){
+    if(destruirPrograma(pid)){
     	log_error("Finalizar programa: fallo la respuesta de confirmacion del Swap");
     }
 
@@ -269,8 +269,9 @@ uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 	return pid;
 }
 
-void realizarAccionCPU(uint16_t unSocket){
+void realizarAccionCPU(uint32_t *unSocketRecibido){
 
+	uint32_t unSocket=*unSocketRecibido;
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader;
 	uint32_t pidActivo;
