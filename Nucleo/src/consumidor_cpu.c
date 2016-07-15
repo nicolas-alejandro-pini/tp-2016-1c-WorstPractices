@@ -6,19 +6,18 @@
  */
 #include "includes/consumidor_cpu.h"
 
-
-
 /*Corroboramos  si el pcb corresponde a una consola activa*/
 int consola_activa(stPCB *unPCB) {
 	stHeaderIPC *unHeaderIPC;
 	if (buscar_consola(unPCB->pid) == 0) {
-		printf("PCB [PID - %d] corresponde a un ansisop abortado, se procede a finalizar el pcb...\n", unPCB->pid);
+		log_info("PCB [PID - %d] corresponde a un ansisop abortado, se procede a finalizar el PCB ...", unPCB->pid);
 		unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
 		unHeaderIPC->largo = sizeof(uint32_t);
 		if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*) &unPCB->pid)) {
 			log_error("Error al enviar el fin de programa a la UMC");
 			return (-4);
 		}
+		liberarHeaderIPC(unHeaderIPC);
 		return 0;
 	}
 	return 1;
