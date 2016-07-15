@@ -49,7 +49,7 @@ int bloquear_pcb(stPCB *unPCB,char *dispositivo_name,int dispositivo_time){
 	return EXIT_SUCCESS;
 }
 
-void *consumidor_cpu(int *unCliente) {
+void *consumidor_cpu(void *param) {
 	stHeaderIPC *unHeaderIPC;
 	stMensajeIPC unMensajeIPC;
 	stPCB *unPCB;
@@ -60,6 +60,7 @@ void *consumidor_cpu(int *unCliente) {
 	stConsola * consola;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
 	int error = 0, offset = 0, dispositivo_time,fin_ejecucion;
+	int unCliente = *((int *)param);
 
 	while (!error) {
 		fin_ejecucion = 0;
@@ -73,7 +74,7 @@ void *consumidor_cpu(int *unCliente) {
 
 		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
 		unHeaderIPC->largo = sizeof(uint32_t);
-		if (!enviarHeaderIPC(*unCliente, unHeaderIPC)) {
+		if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 			log_error("CPU error - No se pudo enviar el PCB[PID - %d]", unPCB->pid);
 			liberarHeaderIPC(unHeaderIPC);
 			error = 1;
@@ -81,7 +82,7 @@ void *consumidor_cpu(int *unCliente) {
 		}
 		liberarHeaderIPC(unHeaderIPC);
 		unHeaderIPC = nuevoHeaderIPC(ERROR);
-		if (!recibirHeaderIPC(*unCliente, unHeaderIPC)) {
+		if (!recibirHeaderIPC(unCliente, unHeaderIPC)) {
 			log_error("CPU error - No se pudo recibir el mensaje");
 			liberarHeaderIPC(unHeaderIPC);
 			error = 1;
@@ -90,7 +91,7 @@ void *consumidor_cpu(int *unCliente) {
 		if (unHeaderIPC->tipo == OK) {
 			crear_paquete(&paquete, EXECANSISOP);
 			serializar_pcb(&paquete, unPCB);
-			if (enviar_paquete(*unCliente, &paquete)) {
+			if (enviar_paquete(unCliente, &paquete)) {
 				log_error("Error al enviar el PCB [PID - %d]", unPCB->pid);
 				free_paquete(&paquete);
 				error = 1;
@@ -100,17 +101,17 @@ void *consumidor_cpu(int *unCliente) {
 			free_paquete(&paquete);
 		}
 		while(fin_ejecucion==0&&error!=1){
-		if (!recibirHeaderIPC(*unCliente, &unMensajeIPC.header)) {
+		if (!recibirHeaderIPC(unCliente, &unMensajeIPC.header)) {
 			log_error("Error al recibir respuesta del CPU");
 			error = 1;
-			close(*unCliente);
+			close(unCliente);
 			continue;
 		} else {
 			switch (unMensajeIPC.header.tipo) {
 			case IOANSISOP:
 				log_info("Recibido mensaje de I/O desde la CPU");
 				/*Se recibe el nombre del dispositivo y tiempo*/
-				if(recibir_paquete (*unCliente, &paquete)){
+				if(recibir_paquete (unCliente, &paquete)){
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					free_paquete(&paquete);
@@ -120,7 +121,7 @@ void *consumidor_cpu(int *unCliente) {
 				deserializar_campo(&paquete, &offset, &dispositivo_time, sizeof(dispositivo_time));
 
 				free_paquete(&paquete);
-				if (recibir_paquete(*unCliente, &paquete)) {
+				if (recibir_paquete(unCliente, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					free_paquete(&paquete);
@@ -141,7 +142,7 @@ void *consumidor_cpu(int *unCliente) {
 				break;
 			case FINANSISOP:
 				fin_ejecucion = 1;
-				recv(*unCliente, &pid_fin, sizeof(uint32_t), 0);
+				recv(unCliente, &pid_fin, sizeof(uint32_t), 0);
 				log_info("Recibido mensaje de fin de programa desde la CPU (PID: %d)", pid_fin);
 
 				unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
@@ -166,7 +167,7 @@ void *consumidor_cpu(int *unCliente) {
 			case QUANTUMFIN:
 				log_info("Recibido mensaje de fin de quantum desde la CPU");
 				fin_ejecucion = 1;
-				if(recibir_paquete (*unCliente, &paquete)){
+				if(recibir_paquete (unCliente, &paquete)){
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					free_paquete(&paquete);
@@ -189,7 +190,7 @@ void *consumidor_cpu(int *unCliente) {
 
 				/*TODO: Falta testear*/
 				unaSharedVar = obtener_shared_var(unMensajeIPC.contenido);
-				if(!enviarMensajeIPC(*unCliente,unHeaderIPC,(char*)unaSharedVar->valor)){
+				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar->valor)){
 					log_error("Error al enviar el valor la variable");
 					error = 1;
 					continue;
@@ -201,14 +202,14 @@ void *consumidor_cpu(int *unCliente) {
 				log_info("Nuevo pedido de actualizacion de variable compartida\n");
 				/*Me pasa la variable compartida y el valor*/
 				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(*unCliente, unHeaderIPC)) {
+				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 					log_error("CPU error - No se pudo enviar header");
 					error = 1;
 					continue;
 				}
 
 				offset = 0;
-				if (recibir_paquete(*unCliente, &paquete)) {
+				if (recibir_paquete(unCliente, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					continue;
@@ -223,7 +224,7 @@ void *consumidor_cpu(int *unCliente) {
 				log_info("Nuevo pedido de wait de semaforo ");
 				/*Wait del semaforo que pasa por parametro*/
 				offset = 0;
-				if (recibir_paquete(*unCliente, &paquete)) {
+				if (recibir_paquete(unCliente, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					continue;
@@ -239,7 +240,7 @@ void *consumidor_cpu(int *unCliente) {
 				/*Signal del semaforo que pasa por parametro*/
 				log_info("Nuevo pedido de signal de semaforo ");
 				offset = 0;
-				if (recibir_paquete(*unCliente, &paquete)) {
+				if (recibir_paquete(unCliente, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
 					error = 1;
 					continue;
@@ -250,7 +251,7 @@ void *consumidor_cpu(int *unCliente) {
 				/*TODO: Falta testear*/
 				if(signal_semaforo(identificador_semaforo)== EXIT_FAILURE){
 					unHeaderIPC = nuevoHeaderIPC(ERROR);
-					if (!enviarHeaderIPC(*unCliente, unHeaderIPC)) {
+					if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 						log_error("CPU error - No se pudo enviar header");
 						error = 1;
 						continue;
@@ -261,8 +262,8 @@ void *consumidor_cpu(int *unCliente) {
 			case IMPRIMIR:
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
 				log_info("Nuevo pedido de impresion...");
-				recv(*unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
-				recv(*unCliente, &valor_impresion, sizeof(t_valor_variable), 0);
+				recv(unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
+				recv(unCliente, &valor_impresion, sizeof(t_valor_variable), 0);
 
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIR);
 				unHeaderIPC->largo = sizeof(t_valor_variable);
@@ -277,8 +278,8 @@ void *consumidor_cpu(int *unCliente) {
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
 				log_info("Nuevo pedido de impresion...");
 
-				recv(*unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
-				recv(*unCliente, &texto_imprimir, unHeaderIPC->largo - sizeof(uint32_t), 0);
+				recv(unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
+				recv(unCliente, &texto_imprimir, unHeaderIPC->largo - sizeof(uint32_t), 0);
 
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIRTEXTO);
 				unHeaderIPC->largo = strlen(texto_imprimir)+1;
@@ -297,7 +298,7 @@ void *consumidor_cpu(int *unCliente) {
 		ready_productor(unPCB);
 		log_info("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
 		liberarHeaderIPC(unHeaderIPC);
-		close(*unCliente);
+		close(unCliente);
 		pthread_exit(NULL);
 	}
 

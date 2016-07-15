@@ -364,11 +364,9 @@ int main(int argc, char *argv[]) {
 				close(unCliente);
 				exit(-2);
 			}
-			log_info("----------------------------\n");
 			agregar_master(elEstadoActual.sockUmc,maximoAnterior);
 			log_info("Paginas por proceso:[%d]", UMCConfig.paginasXProceso);
 			log_info("Tamanio de pagina:[%d]", UMCConfig.tamanioPagina);
-			log_info("----------------------------\n");
 
 			elEstadoActual.tamanio_paginas = UMCConfig.tamanioPagina;
 		}
