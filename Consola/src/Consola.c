@@ -14,6 +14,7 @@
 #include <commons/sockets.h>
 #include <commons/socketsIPCIRC.h>
 #include <commons/ipctypes.h>
+#include <commons/parser/parser.h>
 
 void init_console(t_console* tConsole){
 	tConsole->pProgram = NULL;
@@ -192,22 +193,27 @@ int load_program(t_console* tConsole, char* argv)
 }
 
 int recv_print(t_console* tConsole){
-	stMensajeIPC unMensaje;
-	unMensaje.header.tipo = ERROR;
+	stHeaderIPC unMensaje;
+	unMensaje.tipo = ERROR;
+	t_valor_variable valor;
+	char * texto;
 
-	while(unMensaje.header.tipo != KILLPID){
+	while(unMensaje.tipo != KILLPID){
 
 		/* Valido cierre de conexion con el nucleo */
-		if(!recibirMensajeIPC(*(tConsole->pSockfd), &unMensaje))
+		if(!recibirHeaderIPC(*(tConsole->pSockfd), &unMensaje))
 			return EXIT_FAILURE;
 
-		switch(unMensaje.header.tipo)
+		switch(unMensaje.tipo)
 		{
 			case IMPRIMIR:
-				log_info("IMPRIMIR [%d]", (int) unMensaje.contenido);
+				//Leo del socket el valor de la variable
+				recv(*(tConsole->pSockfd), &valor, sizeof(t_valor_variable), 0);
+				log_info("IMPRIMIR VARIABLE [%d]", valor);
 				break;
 			case IMPRIMIRTEXTO:
-				log_info("IMPRIMIR [%s]", unMensaje.contenido);
+				recv(*(tConsole->pSockfd), &texto, unMensaje.largo, 0);
+				log_info("IMPRIMIR [%s]", texto);
 				break;
 			case KILLPID:
 				log_info("Finalizando consola...\n");

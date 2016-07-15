@@ -109,9 +109,9 @@ stPosicion *obtenerPosicion(t_puntero direccion_variable){
 t_valor_variable dereferenciar(t_puntero direccion_variable){
 
 	stPosicion *posicionVariable;
-	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader;
-	uint16_t pagina,offset,tamanio,valor_variable;
+	uint16_t pagina,offset,tamanio;
+	t_valor_variable valor_variable;
 	char* str_valor_variable;
 
 	log_info("Inicio primitiva dereferenciar con direccion_variable = %d",direccion_variable);
@@ -138,30 +138,21 @@ t_valor_variable dereferenciar(t_puntero direccion_variable){
 	log_info("Se obtiene de la UMC - Stack, size %d",tamanio);
 
 
-	if(!recibirMensajeIPC(configuracionInicial.sockUmc,&unMensaje)){
+	if(!recibirHeaderIPC(configuracionInicial.sockUmc,unHeader)){
 		log_error("No se pudo recibir la variable.");
 	}
 
-	if(unMensaje.header.tipo == OK)
-	{
-		str_valor_variable = (char*)malloc(unMensaje.header.largo + 1);
-		memcpy(str_valor_variable, unMensaje.contenido,unMensaje.header.largo);
-		str_valor_variable[unMensaje.header.largo] = '\0';
-		valor_variable = atoi(str_valor_variable);
+	if(unHeader->tipo == OK){
+		recv(configuracionInicial.sockUmc, &valor_variable, unHeader->largo, 0);
 		log_info("Se obtiene de la UMC - Stack, valor de variable %d",valor_variable);
-		free(str_valor_variable);
-	}
-	else{
-		imprimirTexto("Error de segmentación al dereferenciar.");
-		log_error ("Error de segmentacion");
+	}else{
+		log_error("Error de segmentación al dereferenciar.");
 		configuracionInicial.salir = 1;
 		quantum = 0;
 		liberarHeaderIPC(unHeader);
-		free(unMensaje.contenido);
 		return (-1);
 	}
 
-	free(unMensaje.contenido);
 	liberarHeaderIPC(unHeader);
 
 	return valor_variable;

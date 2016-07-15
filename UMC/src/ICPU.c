@@ -231,7 +231,7 @@ void *finalizarProgramaNucleo(stEnd *fin){
     }
 
 	return NULL;
-}//No se recibe respuesta
+}
 
 uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 
@@ -286,7 +286,7 @@ void realizarAccionCPU(uint16_t unSocket){
 			recv(unSocket, &(posR.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.size), sizeof(uint16_t),0);
 
-			reservarPosicion((void*)&buffer, posR.size);
+			buffer = malloc(posR.size);
 			if(leerBytes(&buffer, &posR, pidActivo)){
 				unHeader = nuevoHeaderIPC(ERROR);
 				unHeader->largo = 0;
@@ -402,19 +402,10 @@ void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos){
 	buffer = NULL;
 }
 
-void reservarPosicion(void **buffer, uint16_t size){
-	*buffer = malloc(size);
-}
-
 void loguear_buffer(void *buffer, uint16_t size){
 	char *buffer_log = malloc(size + 1);
-	int a;
 	memcpy(buffer_log, buffer, size);
 	buffer_log[size]='\0';
 	log_info("Buffer[%s]\n", buffer_log);
-	if(size==4){
-		a=*(int*)buffer;
-		log_info("Buffer[%d]\n", a);
-	}
 	free(buffer_log);
 }
