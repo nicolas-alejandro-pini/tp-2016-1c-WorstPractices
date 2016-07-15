@@ -208,10 +208,12 @@ int recv_print(t_console* tConsole){
 		{
 			case IMPRIMIR:
 				//Leo del socket el valor de la variable
+				log_info("Recibo un mensaje de IMPRIMIR");
 				recv(*(tConsole->pSockfd), &valor, sizeof(t_valor_variable), 0);
 				log_info("IMPRIMIR VARIABLE [%d]", valor);
 				break;
 			case IMPRIMIRTEXTO:
+				log_info("Recibo un mensaje de IMPRIMIR TEXTO");
 				recv(*(tConsole->pSockfd), &texto, unMensaje.largo, 0);
 				log_info("IMPRIMIR [%s]", texto);
 				break;
@@ -219,6 +221,7 @@ int recv_print(t_console* tConsole){
 				log_info("Finalizando consola...\n");
 				break;
 			default:
+				log_info("Me mandaron FRUTA");
 				break;
 		}
 		fflush(stdout);
