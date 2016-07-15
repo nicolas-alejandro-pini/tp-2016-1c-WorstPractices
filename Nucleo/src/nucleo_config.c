@@ -140,8 +140,9 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 	new->nombre = strdup(nombre);
 	new->retardo = retardo;
 	new->rafagas = queue_create();
-	pthread_mutex_init(&(new->mutex), 0);
-	pthread_mutex_init(&(new->empty), 0);
+	new->numInq = 0;
+	pthread_mutex_init(&(new->mutex), NULL);
+	pthread_mutex_init(&(new->empty), NULL);
 	return new;
 }
 

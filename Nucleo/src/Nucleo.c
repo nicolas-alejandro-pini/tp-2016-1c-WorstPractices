@@ -13,8 +13,6 @@
 #include "includes/planificador.h"
 #include "tests/test_nucleo.h"
 
-#include "commons/sockets.h"
-
 /*
  ============================================================================
  Estructuras y definiciones
@@ -171,11 +169,11 @@ void finalizarSistema(stMensajeIPC *unMensaje, int unSocket, stEstado *unEstado)
 	unEstado->salir = 1;
 	unMensaje->header.tipo = -1;
 }
-void inicializarThreadsDispositivos(stEstado* unEstado) {
+void inicializarThreadsDispositivos() {
 	int i = 0;
 	pthread_t unThread;
-	for (i = 0; i < list_size(unEstado->dispositivos); ++i) {
-		stDispositivo *unDispositivo = list_get(unEstado->dispositivos, i);
+	for (i = 0; i < list_size(elEstadoActual.dispositivos); ++i) {
+		stDispositivo *unDispositivo = list_get(elEstadoActual.dispositivos, i);
 		if (pthread_create(&unThread, NULL, (void*) threadDispositivo, unDispositivo) != 0) {
 			log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 			continue;
