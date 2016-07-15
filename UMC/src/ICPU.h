@@ -49,6 +49,5 @@ int guardarEnTabla(uint16_t cantidadPaginas);
 /* Auxiliares */
 void limpiarPosicion(void *buffer, stPosicion *pPos);
 void limpiarEscrituraPagina(void *buffer, stEscrituraPagina *pPos);
-void reservarPosicion(void **buffer, uint16_t size);
 void loguear_buffer(void *buffer, uint16_t size);
 #endif /* ICPU_H_ */
