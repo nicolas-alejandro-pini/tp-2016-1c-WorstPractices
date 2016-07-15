@@ -145,9 +145,10 @@ stDispositivo *crear_dispositivo(char *nombre, char *retardo) {
 	return new;
 }
 
-void monitor_configuracion(stEstado* info) {
+void * monitor_configuracion(void * param) {
 	char buffer[BUF_LEN];
 	int watch_descriptor;
+	stEstado* info = (stEstado *)param;
 
 	// Al inicializar inotify este nos devuelve un descriptor de archivo
 	int file_descriptor = inotify_init();

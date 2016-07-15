@@ -13,6 +13,8 @@
 #include "includes/planificador.h"
 #include "tests/test_nucleo.h"
 
+#include "commons/sockets.h"
+
 /*
  ============================================================================
  Estructuras y definiciones
@@ -286,15 +288,11 @@ int main(int argc, char *argv[]) {
 	listaBlock = list_create();
 	consola_crear_lista();
 
-	log_info("----------------------------------Elestac------------------------------------\n");
-	log_info("-----------------------------------Nucleo------------------------------------\n");
-	log_info("------------------------------------v0.1-------------------------------------\n\n");
-	fflush(stdout);
+	log_create(temp_file, "NUCLEO", -1, LOG_LEVEL_INFO);
 
-	/*Logger*/
-	t_log* logger = log_create(temp_file, "NUCLEO", -1, LOG_LEVEL_INFO);
+	log_info("Arrancando el Nucleo");
 
-	if (!elEstadoActual.path_conf) {
+	if (elEstadoActual.path_conf == NULL) {
 		log_error("Falta el parametro de configuracion");
 		exit(-1);
 	}
@@ -310,12 +308,12 @@ int main(int argc, char *argv[]) {
 		log_info("Error");
 		exit(-2);
 	}
-	log_info("OK\n");
+	log_info("OK");
 
 //	log_info("Configuracion cargada satisfactoriamente...\n");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
-	pthread_create(&p_thread, NULL, (void*) &monitor_configuracion, (void*) &elEstadoActual);
+	pthread_create(&p_thread, NULL, &monitor_configuracion, (void*) &elEstadoActual);
 
 	inicializarThreadsDispositivos(&elEstadoActual);
 
@@ -330,13 +328,13 @@ int main(int argc, char *argv[]) {
 	/*Iniciando escucha en el socket escuchador de Consola*/
 	elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
 	FD_SET(elEstadoActual.sockEscuchador, &(fds_master));
-	log_info("Se establecio conexion con el socket de escucha...\n");
+	log_info("Se establecio conexion con el socket de escucha...");
 
 	/*Seteamos el maximo socket*/
 	elEstadoActual.fdMax = elEstadoActual.sockEscuchador;
 
 	/*Conexion con el proceso UMC*/
-	log_info("Estableciendo conexion con la UMC...\n");
+	log_info("Estableciendo conexion con la UMC...");
 	elEstadoActual.sockUmc = conectar(elEstadoActual.ipUmc, elEstadoActual.puertoUmc);
 
 	if (elEstadoActual.sockUmc != -1) {
@@ -370,8 +368,8 @@ int main(int argc, char *argv[]) {
 			}
 			log_info("----------------------------\n");
 			agregar_master(elEstadoActual.sockUmc,maximoAnterior);
-			log_info("Paginas por proceso:[%d]\n", UMCConfig.paginasXProceso);
-			log_info("Tamanio de pagina:[%d]\n", UMCConfig.tamanioPagina);
+			log_info("Paginas por proceso:[%d]", UMCConfig.paginasXProceso);
+			log_info("Tamanio de pagina:[%d]", UMCConfig.tamanioPagina);
 			log_info("----------------------------\n");
 
 			elEstadoActual.tamanio_paginas = UMCConfig.tamanioPagina;
@@ -451,7 +449,7 @@ int main(int argc, char *argv[]) {
 									close(unCliente);
 									break;/*Sale del switch*/
 								}
-								if (inicializar_programa(unPCB, unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
+								if (inicializar_programa(unPCB, (char *)unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
 									log_error("No se pudo inicializar el programa");
 									/*TODO: Liberar toda la memoria del pcb!*/
 									quitar_master(unCliente, maximoAnterior);
@@ -482,12 +480,12 @@ int main(int argc, char *argv[]) {
 						}
 						liberarHeaderIPC(stHeaderSwitch);
 						log_info("Nuevo CPU conectado, lanzamiento de hilo...");
-						if (pthread_create(&p_threadCpu, NULL, (void*) consumidor_cpu, (void*) unCliente) != 0) {
+						if (pthread_create(&p_threadCpu, NULL, (void*) consumidor_cpu, (void*) &unCliente) != 0) {
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							close(unCliente);
 							break;/*Sale del switch*/
 						}
-						log_info("OK\n");
+						log_info("OK");
 						fflush(stdout);
 						break;
 					default:
@@ -498,21 +496,26 @@ int main(int argc, char *argv[]) {
 					}
 				} else {
 					/*Conexion existente*/
+					log_info("Recibi otro evento de un cliente ya conectado");
 					if (!recibirMensajeIPC(unSocket, &unMensaje)) {
+						log_info("Desconexion detectada");
+
 						// Desconexion de una consola
    						pid_desconectado = borrar_consola(unSocket);
 						if (pid_desconectado != 0) {
-							log_info("Se desconecto la consola asignada al PCB [PID - %d]\n", pid_desconectado);
+							log_info("Se desconecto la consola asignada al PCB [PID - %d]", pid_desconectado);
 							eliminar_pcb_ready(pid_desconectado);
 						}
+
+						// Desconexion de la UMC
 						if (unSocket == elEstadoActual.sockUmc) {
-							log_info("Se perdio conexion con la UMC...\n ");
+							log_info("Se perdio conexion con la UMC...");
 							elEstadoActual.salir = 1;
 							cerrarSockets(&elEstadoActual);
-
 						}
+
 						if (unSocket == elEstadoActual.sockEscuchador) {
-							log_info("Se perdio conexion...\n ");
+							log_info("Se perdio conexion...");
 						}
 						/*Saco el socket de la lista Master*/
 						quitar_master(unSocket, maximoAnterior);
@@ -529,6 +532,6 @@ int main(int argc, char *argv[]) {
 	consola_destruir_lista(&elEstadoActual);
 	cerrarSockets(&elEstadoActual);
 	finalizarSistema(&unMensaje, unSocket, &elEstadoActual);
-	log_info("NUCLEO: Fin del programa\n");
+	log_info("NUCLEO: Fin del programa");
 	return 0;
 }
