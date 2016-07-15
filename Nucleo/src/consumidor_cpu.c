@@ -109,6 +109,7 @@ void *consumidor_cpu(int unCliente) {
 		} else {
 			switch (unMensajeIPC.header.tipo) {
 			case IOANSISOP:
+				log_info("Recibido mensaje de I/O desde la CPU");
 				/*Se recibe el nombre del dispositivo y tiempo*/
 				if(recibir_paquete (unCliente, &paquete)){
 					log_error("No se pudo recibir el paquete\n");
@@ -141,27 +142,30 @@ void *consumidor_cpu(int unCliente) {
 				break;
 			case FINANSISOP:
 				fin_ejecucion = 1;
-				printf("\n--------------------------------------\n");
 				recv(unCliente, &pid_fin, sizeof(uint32_t), 0);
-				printf("PCB [PID - %d] Fin de ejecucion\n",pid_fin);
+				log_info("Recibido mensaje de fin de programa desde la CPU (PID: %d)", pid_fin);
 
 				unHeaderIPC = nuevoHeaderIPC(FINPROGRAMA);
 				unHeaderIPC->largo = sizeof(uint32_t);
+				log_info("Le mando el fin de programa a la UMC (PID: %d)", pid_fin);
 				if (!enviarMensajeIPC(obtenerEstadoActual().sockUmc, unHeaderIPC, (char*)&pid_fin)) {
 					log_error("Error al enviar el fin de programa a la UMC");
 				}
+				log_info("Fin de programa enviado satisfactoriamente a la UMC");
 
 				// Le debo enviar el fin de programa a la consola
+				log_info("Le mando el fin de programa a la consola");
 				consola = obtenerSocketConsolaPorPID(pid_fin);
-				if (!enviarMensajeIPC(socket_consola_to_print, unHeaderIPC, (char*)&pid_fin)) {
+				if (!enviarHeaderIPC(consola->socket, unHeaderIPC)) {
 					log_error("Error al enviar el fin de programa a la UMC");
 				}
+				log_info("Fin de programa enviado satisfactoriamente a la Consola");
 
 				free(consola);
 				liberarHeaderIPC(unHeaderIPC);
-				printf("\n--------------------------------------\n");
 				break;
 			case QUANTUMFIN:
+				log_info("Recibido mensaje de fin de quantum desde la CPU");
 				fin_ejecucion = 1;
 				if(recibir_paquete (unCliente, &paquete)){
 					log_error("No se pudo recibir el paquete\n");
@@ -177,12 +181,12 @@ void *consumidor_cpu(int unCliente) {
 				printf("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
 				break;
 			case EXECERROR:
+				log_info("Recibido mensaje de EXEC ERROR CPU, falta tratamiento!!!");
 				/*Se produjo una excepcion por acceso a una posicion de memoria invalida (segmentation fault), imprimir error
 				 * y bajar la consola tambien close (cliente)*/
 				break;
 			case OBTENERVALOR:
-				printf("\n--------------------------------------\n");
-				printf("Nuevo pedido de variable compartida...\n");
+				log_info("Nuevo pedido de variable compartida...");
 
 				/*TODO: Falta testear*/
 				unaSharedVar = obtener_shared_var(unMensajeIPC.contenido);
@@ -191,13 +195,11 @@ void *consumidor_cpu(int unCliente) {
 					error = 1;
 					continue;
 				}
-				printf("Se devolvio el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
-				printf("\n--------------------------------------\n");
+				log_info("Se devolvio el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
 				break;
 
 			case GRABARVALOR:
-				printf("\n--------------------------------------\n");
-				printf("Nuevo pedido de actualizacion de variable compartida\n");
+				log_info("Nuevo pedido de actualizacion de variable compartida\n");
 				/*Me pasa la variable compartida y el valor*/
 				unHeaderIPC = nuevoHeaderIPC(OK);
 				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
@@ -215,13 +217,11 @@ void *consumidor_cpu(int unCliente) {
 
 				deserializar_campo(&paquete, &offset, &unaSharedVar, sizeof(stSharedVar));
 				grabar_shared_var(unaSharedVar->nombre,&unaSharedVar->valor);
-				printf("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
-				printf("\n--------------------------------------\n");
+				log_info("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
 				free_paquete(&paquete);
 				break;
 			case WAIT:
-				printf("\n--------------------------------------\n");
-				printf("Nuevo pedido de wait de semaforo ");
+				log_info("Nuevo pedido de wait de semaforo ");
 				/*Wait del semaforo que pasa por parametro*/
 				offset = 0;
 				if (recibir_paquete(unCliente, &paquete)) {
@@ -234,13 +234,11 @@ void *consumidor_cpu(int unCliente) {
 				/*TODO: Falta testear*/
 				printf("%s\n",identificador_semaforo);
 				wait_semaforo(identificador_semaforo);
-				printf("\n--------------------------------------\n");
 
 				break;
 			case SIGNAL:
 				/*Signal del semaforo que pasa por parametro*/
-				printf("\n--------------------------------------\n");
-				printf("Nuevo pedido de signal de semaforo ");
+				log_info("Nuevo pedido de signal de semaforo ");
 				offset = 0;
 				if (recibir_paquete(unCliente, &paquete)) {
 					log_error("No se pudo recibir el paquete\n");
@@ -259,13 +257,11 @@ void *consumidor_cpu(int unCliente) {
 						continue;
 					}
 				}
-				printf("\n--------------------------------------\n");
 				free_paquete(&paquete);
 				break;
 			case IMPRIMIR:
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
-				printf("\n--------------------------------------\n");
-				printf("Nuevo pedido de impresion...\n");
+				log_info("Nuevo pedido de impresion...");
 				recv(unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
 				recv(unCliente, &valor_impresion, sizeof(t_valor_variable), 0);
 
@@ -276,13 +272,11 @@ void *consumidor_cpu(int unCliente) {
 					log_error("Error al imprimir en consola el valor de la variable");
 				}
 				liberarHeaderIPC(unHeaderIPC);
-				printf("\n--------------------------------------\n");
 
 				break;
 			case IMPRIMIRTEXTO:
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
-				printf("\n--------------------------------------\n");
-				printf("Nuevo pedido de impresion...\n");
+				log_info("Nuevo pedido de impresion...");
 
 				recv(unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
 				recv(unCliente, &texto_imprimir, unHeaderIPC->largo - sizeof(uint32_t), 0);
@@ -293,8 +287,7 @@ void *consumidor_cpu(int unCliente) {
 					log_error("Error al enviar el texto a imprimir");
 				}
 				liberarHeaderIPC(unHeaderIPC);
-				printf("Se imprimio el valor [%d]\n",valor_impresion);
-				printf("\n--------------------------------------\n");
+				log_info("Se imprimio el valor [%d]\n",valor_impresion);
 				break;
 			}
 		}
@@ -303,7 +296,7 @@ void *consumidor_cpu(int unCliente) {
 	if (error) {
 		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
 		ready_productor(unPCB);
-		printf("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
+		log_info("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
 		liberarHeaderIPC(unHeaderIPC);
 		close(unCliente);
 		pthread_exit(NULL);
