@@ -198,7 +198,7 @@ int recv_print(t_console* tConsole){
 	t_valor_variable valor;
 	char * texto;
 
-	while(unMensaje.tipo != KILLPID){
+	while(unMensaje.tipo != FINPROGRAMA){
 
 		/* Valido cierre de conexion con el nucleo */
 		if(!recibirHeaderIPC(*(tConsole->pSockfd), &unMensaje))
@@ -217,7 +217,7 @@ int recv_print(t_console* tConsole){
 				recv(*(tConsole->pSockfd), &texto, unMensaje.largo, 0);
 				log_info("IMPRIMIR [%s]", texto);
 				break;
-			case KILLPID:
+			case FINPROGRAMA:
 				log_info("Finalizando consola...\n");
 				break;
 			default:
