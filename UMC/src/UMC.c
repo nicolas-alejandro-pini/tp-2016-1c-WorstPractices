@@ -390,8 +390,8 @@ int main(int argc, char *argv[]) {
 						/* Valido si esta definido unMensaje */
 //						unMensaje.contenido = malloc(LONGITUD_MAX_DE_CONTENIDO);
 //						memset(unMensaje.contenido,'\0',LONGITUD_MAX_DE_CONTENIDO);
-
-						if (recibirHeaderIPC(unSocket,&unMensaje.header)<=0){ /* Si se cerro una conexion, veo que el socket siga abierto*/
+						unaCabecera=malloc(sizeof(stHeaderIPC));
+						if (recibirHeaderIPC(unSocket,unaCabecera)<=0){ /* Si se cerro una conexion, veo que el socket siga abierto*/
 
 							if(unSocket==losParametros.sockSwap){
 								log_error("Se perdio conexion con el swap.. Finalizando UMC.");
@@ -414,7 +414,7 @@ int main(int argc, char *argv[]) {
 
 	        	        	/* Se sigue comunicado con el Nucleo, podría recibir otros mensajes */
 
-	        	        	switch(unMensaje.header.tipo){
+	        	        	switch(unaCabecera->tipo){
 
 	        	        		case INICIALIZAR_PROGRAMA:
 
@@ -430,19 +430,19 @@ int main(int argc, char *argv[]) {
 	        	        			log_info("Se pidio recibir un pedido de fin de programa desde el socket %d", unCliente);
 	        	        			recv(unSocket, &pid, sizeof(uint32_t), 0);
 
-	        	        			log_info("Se recibe un pedido de fin de programa para el pid %d desde el socket %d", end->pid, unCliente);
+	        	        			log_info("Se recibe un pedido de fin de programa para el pid %d desde el socket %d", pid, unCliente);
 	        	        			finalizarProgramaNucleo(pid);
 	        	        			break;
 
 
 	        	        		default:
-	        	        			log_info("Se recibio una peticion con un codigo desconocido...%d", unMensaje.header.tipo);
+	        	        			log_info("Se recibio una peticion con un codigo desconocido...%d", unaCabecera->tipo);
 	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;
 
 	        	        	}
-
+	        	        	liberarHeaderIPC(unaCabecera);
 	        	        	fflush(stdout);
 
 	        	        }/*Ciero Else comunicacion con el servidor*/
