@@ -228,7 +228,24 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 
 	return EXIT_SUCCESS;
 }
+void setSecondChance(uint16_t pid, uint16_t pagina){
+	stNodoListaTP *nodo;
+	stRegistroTP* reg;
 
+	nodo = buscarPID(pid);
+	if (nodo==NULL){
+		log_error("no existe proceso %d para setear secondChance", pid);
+		return;
+	}
+	reg = obtenerRegistroTabladePaginas(nodo, pagina);
+	if (reg==NULL){
+		log_error("no existe registro de pagina %d de pid %d para setear secondChance", pagina, pid);
+		return;
+	}
+	reg->bit2ndChance=1;
+
+	return;
+}
 void creatListaDeTablas(){
 	//sleep(losParametros.delay);
 	TablaMarcos = list_mutex_create();
@@ -444,7 +461,7 @@ void liberarTablaPid(uint16_t pid){
 	void _comparo_con_pid_y_borro_tabla(stNodoListaTP *list_nodo){
 		if(list_nodo->pid == pid){
 			nodoListaTP = list_nodo;
-			liberarMarcosXTabla(nodoListaTP);
+			liberarMarcosXtabla(nodoListaTP);
 			free(nodoListaTP->tabla);
 			index = i;
 		}
