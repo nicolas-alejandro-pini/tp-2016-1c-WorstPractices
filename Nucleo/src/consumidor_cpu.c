@@ -132,6 +132,7 @@ void *consumidor_cpu(void *param) {
 					log_error("No se pudo bloquear el PCB [PID - %d]",unPCB->pid);
 					continue;
 				}
+				fin_ejecucion = 1;
 
 				break;
 			case FINANSISOP:

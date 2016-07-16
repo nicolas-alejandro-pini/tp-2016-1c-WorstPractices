@@ -213,6 +213,9 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	stMensajeIPC unMensajeIPC;
 	t_valor_variable resultado;
 
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(variable);
+
 	unHeaderIPC = nuevoHeaderIPC(OBTENERVALOR);
 	unHeaderIPC->largo = strlen(variable) +1;
 
@@ -237,6 +240,9 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
 
 	stHeaderIPC *unHeaderIPC;
+
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(variable);
 
 	//Hago el envío de la variabe con su valor
 	unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
@@ -373,6 +379,9 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	stHeaderIPC* unHeaderPrimitiva;
 
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(dispositivo);
+
 	unHeaderPrimitiva = nuevoHeaderIPC(IOANSISOP);
 	unHeaderPrimitiva->largo = strlen(dispositivo) + 1 + sizeof(int);
 
@@ -393,6 +402,9 @@ void wait(t_nombre_semaforo identificador_semaforo){
 
 	stHeaderIPC* unHeaderPrimitiva;
 
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(identificador_semaforo);
+
 	unHeaderPrimitiva = nuevoHeaderIPC(WAIT);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
 
@@ -412,6 +424,9 @@ void wait(t_nombre_semaforo identificador_semaforo){
 void signal_cpu(t_nombre_semaforo identificador_semaforo){
 
 	stHeaderIPC* unHeaderPrimitiva;
+
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(identificador_semaforo);
 
 	unHeaderPrimitiva = nuevoHeaderIPC(SIGNAL);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
@@ -727,13 +742,24 @@ char* getInstruccion (int startRequest, int sizeRequest){
 				memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
 				*(instruccionTemp + sizeToUMC) = '\0';
 
-				if(instruccion==NULL){
+				if (strlen(instruccionTemp) >0 && instruccionTemp != NULL){
+
+					log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
+
+					if(instruccion==NULL){
 					instruccion =(char*) malloc(sizeToUMC + 1 );
 					strcpy(instruccion, instruccionTemp);
-					log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
+
+					}else{
+						string_append (&instruccion,instruccionTemp);
+
+					}
 				}else{
-					string_append (&instruccion,instruccionTemp);
-					log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
+					log_error("Recibi de la UMC la instrucción Temporal nula");
+					free(instruccionTemp);
+					configuracionInicial.salir = 1;
+					instruccion = NULL;
+					return instruccion;
 				}
 
 				free(instruccionTemp);
@@ -816,11 +842,10 @@ int devolverPCBalNucleo(void){
 		if (solicitudIO == 0 ){
 			log_info("PCB PID[%d] Quantum finalizado. pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
 			unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
-		}else
-			unHeaderIPC = nuevoHeaderIPC(IOANSISOP);
+			enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+			liberarHeaderIPC(unHeaderIPC);
+		}
 
-
-		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
 		crear_paquete(&paquete, EXECANSISOP);
 		serializar_pcb(&paquete, unPCB);
@@ -832,8 +857,6 @@ int devolverPCBalNucleo(void){
 
 		free_paquete(&paquete);
 	}
-
-	liberarHeaderIPC(unHeaderIPC);
 
 	return resultado;
 }
@@ -1034,17 +1057,20 @@ int main(void) {
 
 									}else{
 										log_error("Error al ejecutar la instrucción.");
+										configuracionInicial.salir =1;
 										quantum = 0;
 									}
 
 								}
-								//Si no hubo error devuelvo PCB al nucleo y evaluo error//
-								if (configuracionInicial.salir != 0 || devolverPCBalNucleo() == -1){
+								//Si no hubo error devuelvo PCB al nucleo//
+								if (configuracionInicial.salir == 0){
 
-									log_info("Error al devolver PCB de ANSIPROG...");
-									configuracionInicial.salir = 1;
-									break;
+									if (devolverPCBalNucleo() == -1){
 
+										log_info("Error al devolver PCB de ANSIPROG...");
+										configuracionInicial.salir = 1;
+										break;
+									}
 								}
 
 							}else

@@ -200,21 +200,21 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 		unDispositivo->numInq--;
 		pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
 
-		for (unidad = 0; unidad < unaRafaga->unidades; ++unidad) {
-			usleep(atoi(unDispositivo->retardo));
-		}
+		log_info ("Retardo de dispositivo [%s] con [%d].",unDispositivo->nombre,atoi(unDispositivo->retardo));
+		usleep(atoi(unDispositivo->retardo)*unaRafaga->unidades);
+
 		/*Busqueda del pcb en la lista de pcb bloqueados*/
 		int _es_el_pcb(stPCB *p) {
 			return p->pid == unaRafaga->pid;
 		}
 		pthread_mutex_lock(&mutex_listaBlock);
 		unPCB = list_remove_by_condition(listaBlock, (void*) _es_el_pcb);
-		pthread_mutex_lock(&mutex_listaBlock);
+		pthread_mutex_unlock(&mutex_listaBlock);
 
 		/*Ponemos en la cola de Ready para que lo vuelva a ejecutar un CPU*/
 		ready_productor(unPCB);
-		free(unaRafaga);
 		log_info("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
+		free(unaRafaga);
 
 	}
 }
