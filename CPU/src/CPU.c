@@ -18,6 +18,7 @@ fd_set read_fds;		/* Sublista de fds_master. */
 int SocketAnterior = 0;
 int tamanioPaginaUMC ;
 int quantum=0;
+int solicitudIO =0;
 t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
@@ -164,7 +165,7 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 	stHeaderIPC *unHeader;
 	uint16_t pagina, offset,tamanio;
 
-	log_info("Inicio primitiva Asignar para variable %c y valor %d", direccion_variable, valor);
+	log_info("Inicio primitiva asignar para grabar valor [%d]", valor);
 
 	posicionVariable = obtenerPosicion(direccion_variable);
 
@@ -213,18 +214,21 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	t_valor_variable resultado;
 
 	unHeaderIPC = nuevoHeaderIPC(OBTENERVALOR);
-	unHeaderIPC->largo = sizeof(t_nombre_compartida);
+	unHeaderIPC->largo = strlen(variable) +1;
 
-	if(!enviarMensajeIPC(configuracionInicial.sockNucleo, unHeaderIPC, (char *) &variable)){
-		log_error("No se pudo enviar la variable %c", variable);
+	if(!enviarMensajeIPC(configuracionInicial.sockNucleo, unHeaderIPC, (char *) variable)){
+		log_error("No se pudo enviar la variable %s", variable);
 	}
 
 	if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensajeIPC)){
-		log_error("No se pudo recibir la variable %c", variable);
+		log_error("No se pudo recibir la variable %s", variable);
 	}
 
-	memcpy(&resultado, unMensajeIPC.contenido, sizeof(t_valor_variable));
-	free(unMensajeIPC.contenido);
+	if(unMensajeIPC.header.tipo == OK){
+		memcpy(&resultado, unMensajeIPC.contenido, sizeof(t_valor_variable));
+		free(unMensajeIPC.contenido);
+	}
+
 	liberarHeaderIPC(unHeaderIPC);
 
 	return resultado;
@@ -233,30 +237,17 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
 
 	stHeaderIPC *unHeaderIPC;
-	t_paquete paquete;
-	stSharedVar sharedVar;
-	long int offset = 0;
 
 	//Hago el envío de la variabe con su valor
 	unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
+	unHeaderIPC->largo = strlen(variable) + 1 + sizeof(t_valor_variable);
 	if(!enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderIPC)){
 		log_error("No se pudo enviar el mensaje para grabar el valor");
 		return -1;
 	}
 
-	sharedVar.nombre = variable;
-	sharedVar.valor = valor;
-
-	crear_paquete(&paquete, GRABARVALOR);
-	serializar_campo(&paquete, &offset, &sharedVar, sizeof(stSharedVar));
-	serializar_header(&paquete);
-
-	if (enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el SharedVar al Nucleo.");
-		return -1;
-	}
-
-	free_paquete(&paquete);
+	send(configuracionInicial.sockNucleo,variable, strlen(variable) + 1,0);
+	send(configuracionInicial.sockNucleo,&valor, sizeof(t_valor_variable),0);
 
 	//Recibo el mensaje de respuesta para conocer el resultado de la operación
 	if(recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderIPC) <= 0){
@@ -272,14 +263,31 @@ int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
 	return 0;
 }
 
+void reemplazarBarraN(char* buffer){
+
+	unsigned long int i , largo;
+
+	largo = strlen(buffer);
+
+	for (i=0; i<largo;i++){
+		if(buffer[i]=='\n')
+			buffer[i]='\0';
+	}
+
+}
+
 void irAlLabel(t_nombre_etiqueta etiqueta){
 
 	log_info("Llamada a la primitiva irAlLabel para etiqueta [%s] .",etiqueta);
 	t_puntero_instruccion ptr_instruccion;
+
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(etiqueta);
+
 	ptr_instruccion = metadata_buscar_etiqueta(etiqueta,unPCB->metadata_program->etiquetas,unPCB->metadata_program->etiquetas_size);
 
 	log_info("Se carga el pc con la posicion [%d] del label [%s].",ptr_instruccion,etiqueta);
-	unPCB->pc = ptr_instruccion;
+	unPCB->pc = ptr_instruccion - 1; //resto 1 xq me devuelve la instruccion siguiente a la primera linea de la funcion.
 }
 
 void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
@@ -292,17 +300,26 @@ void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorna
 	unIndiceStack->argumentos = list_create();
 	unIndiceStack->pos = list_size(unPCB->stack) + 1;
 	unIndiceStack->variables = list_create();
-	unIndiceStack->retPosicion = (uint32_t)donde_retornar;
+	unIndiceStack->retPosicion = (uint32_t)donde_retornar - 1;
 	list_add(unPCB->stack,unIndiceStack);
 }
 void retornar(t_valor_variable retorno){
 	log_info("Llamada a funcion retornar con valor de retorno [%d]", retorno);
 	stIndiceStack *unIndiceStack;
+
 	/*Sacamos del stack la variable a retornar*/
-	unIndiceStack = list_remove(unPCB->stack,list_size(unPCB->stack));
+	unIndiceStack = list_remove(unPCB->stack,list_size(unPCB->stack) - 1);
 	/*Actualizamos el program counter del pcb*/
 	unPCB->pc = unIndiceStack->retPosicion;
-	asignar(unIndiceStack->retVar.offset,retorno);
+
+	unIndiceStack->retVar.pagina = unPCB->offsetStack / tamanioPaginaUMC;
+	log_info("Se define variable de retorno, pagina: %d",unPCB->offsetStack / tamanioPaginaUMC);
+	unIndiceStack->retVar.offset= unPCB->offsetStack % tamanioPaginaUMC;
+	log_info("Se define variable de retorno, offset: %d", unPCB->offsetStack % tamanioPaginaUMC);
+	unIndiceStack->retVar.size = TAMANIOVARIABLES;
+	log_info("Se define variable de retorno, size: %d", TAMANIOVARIABLES);
+
+	asignar((unIndiceStack->retVar.pagina * tamanioPaginaUMC ) + unIndiceStack->retVar.offset, retorno);
 }
 
 void imprimir(t_valor_variable valor_mostrar){
@@ -352,35 +369,19 @@ void imprimirTexto(char* texto){
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	stHeaderIPC* unHeaderPrimitiva;
-	t_paquete paquete;
-	stIO dispositivoIO;
-	int offset = 0;
-
-	dispositivoIO.nombre = dispositivo;
-	dispositivoIO.tiempo = tiempo;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IOANSISOP);
-	unHeaderPrimitiva->largo = strlen(dispositivoIO.nombre) + 1 + sizeof(int);
+	unHeaderPrimitiva->largo = strlen(dispositivo) + 1 + sizeof(int);
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
-	crear_paquete(&paquete, IOANSISOP);
-
-	serializar_campo(&paquete, &offset, dispositivoIO.nombre, strlen(dispositivoIO.nombre) + 1); //Lo envío con el \0
-	serializar_campo(&paquete, &offset, &dispositivoIO.tiempo, sizeof(int));
-
-	serializar_header(&paquete);
-
-	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el paquete para primitiva IO");
-		return;
-	}
-
-	free_paquete(&paquete);
+	send(configuracionInicial.sockNucleo, dispositivo,strlen(dispositivo) + 1, 0);
+	send(configuracionInicial.sockNucleo, &tiempo,sizeof(int), 0);
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 
-	quantum = 0;
+	quantum = 0; //Termino el quantum para devolver el pcb por IO
+	solicitudIO = 1; // Flag globla para devolver PCB por bloqueo.
 
 	return;
 }
@@ -388,52 +389,33 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 void wait(t_nombre_semaforo identificador_semaforo){
 
 	stHeaderIPC* unHeaderPrimitiva;
-	t_paquete paquete;
-
-	int offset = 0;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(WAIT);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
-	crear_paquete(&paquete, WAIT);
+	send(configuracionInicial.sockNucleo,identificador_semaforo,strlen(identificador_semaforo) + 1,0 );
 
-	serializar_campo(&paquete, &offset, identificador_semaforo, unHeaderPrimitiva->largo);
 
-	serializar_header(&paquete);
-
-	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el paquete para primitiva WAIT");
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
+		log_error("Error al recibir ok del wait.");
+		configuracionInicial.salir = 1;
 	}
 
-	free_paquete(&paquete);
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
 
 void signal_cpu(t_nombre_semaforo identificador_semaforo){
 
 	stHeaderIPC* unHeaderPrimitiva;
-	t_paquete paquete;
-
-	int offset = 0;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(SIGNAL);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
-	crear_paquete(&paquete, SIGNAL);
-
-	serializar_campo(&paquete, &offset, identificador_semaforo, unHeaderPrimitiva->largo);
-
-	serializar_header(&paquete);
-
-	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el paquete para primitiva WAIT");
-	}
-
-	free_paquete(&paquete);
+	send (configuracionInicial.sockNucleo, identificador_semaforo,strlen(identificador_semaforo) + 1, 0 );
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
@@ -825,8 +807,12 @@ int devolverPCBalNucleo(void){
 	}
 	else
 	{
-		log_info("PCB PID[%d] Quantum finalizado. pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
-		unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
+		if (solicitudIO == 0 ){
+			log_info("PCB PID[%d] Quantum finalizado. pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
+			unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
+		}else
+			unHeaderIPC = nuevoHeaderIPC(IOANSISOP);
+
 
 		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
