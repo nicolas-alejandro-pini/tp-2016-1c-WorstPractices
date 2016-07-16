@@ -418,6 +418,7 @@ int main(int argc, char *argv[]) {
 
 	        	        		case INICIALIZAR_PROGRAMA:
 
+	        	        			log_info("Inicializar programa...");
 	        	        			inicializarPrograma(unSocket);
 
 	        	        			break;
