@@ -16,7 +16,7 @@
 
 int consola_activa(stPCB *unPCB);
 int bloquear_pcb(stPCB *unPCB,char *dispositivo_name,int dispositivo_time);
-void *consumidor_cpu(int * unCliente);
+void *consumidor_cpu(void *param);
 
 
 
