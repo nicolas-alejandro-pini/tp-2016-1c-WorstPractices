@@ -300,7 +300,7 @@ void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorna
 	unIndiceStack->argumentos = list_create();
 	unIndiceStack->pos = list_size(unPCB->stack) + 1;
 	unIndiceStack->variables = list_create();
-	unIndiceStack->retPosicion = (uint32_t)donde_retornar;
+	unIndiceStack->retPosicion = (uint32_t)donde_retornar - 1;
 	list_add(unPCB->stack,unIndiceStack);
 }
 void retornar(t_valor_variable retorno){
