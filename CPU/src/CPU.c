@@ -448,7 +448,7 @@ AnSISOP_funciones AnSISOP_functions = {
 };
 
 AnSISOP_kernel kernel_functions = {
-		.AnSISOP_signal		= wait,
+		.AnSISOP_wait		= wait,
 		.AnSISOP_signal		= signal_cpu
 };
 
@@ -727,17 +727,16 @@ char* getInstruccion (int startRequest, int sizeRequest){
 				memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
 				*(instruccionTemp + sizeToUMC) = '\0';
 
-				log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
-
 				if(instruccion==NULL){
 					instruccion =(char*) malloc(sizeToUMC + 1 );
 					strcpy(instruccion, instruccionTemp);
+					log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
 				}else{
 					string_append (&instruccion,instruccionTemp);
+					log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
 				}
 
 				free(instruccionTemp);
-
 
 				startToUMC = startToUMC + sizeToUMC;
 				sizeToUMC = sizeRequest - sizeToUMC;
