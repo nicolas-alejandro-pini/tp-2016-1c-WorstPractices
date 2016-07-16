@@ -13,7 +13,6 @@ EXECUTABLES :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
-src/tests \
 src \
 commons \
 commons/parser \

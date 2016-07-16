@@ -8,7 +8,6 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include src/tests/subdir.mk
 -include src/subdir.mk
 -include commons/parser/subdir.mk
 -include commons/collections/subdir.mk
@@ -27,26 +26,22 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: UMC
-
-dependents:
-	-cd /home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug && $(MAKE) clean all
+all: Swap
 
 # Tool invocations
-UMC: $(OBJS) $(USER_OBJS) /home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug/libCommons.so
+Swap: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug" -o "UMC" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc  -o "Swap" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) UMC
+	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) Swap
 	-@echo ' '
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug/libCommons.so:
 
 -include ../makefile.targets

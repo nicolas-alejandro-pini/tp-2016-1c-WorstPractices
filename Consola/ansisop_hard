@@ -1,4 +1,12 @@
 #!/usr/bin/ansisop
+begin
+variables a, b
+    a = 20
+    print a
+    b <- prueba
+    print b
+    print a
+end
 function prueba
     variables a,b
     a = 2
@@ -9,11 +17,3 @@ function prueba
     return a
 end
 
-begin
-variables a, b
-    a = 20
-    print a
-    b <- prueba
-    print b
-    print a
-end

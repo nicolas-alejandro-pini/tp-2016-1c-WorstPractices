@@ -29,14 +29,11 @@ endif
 # All Target
 all: UMC
 
-dependents:
-	-cd /home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug && $(MAKE) clean all
-
 # Tool invocations
-UMC: $(OBJS) $(USER_OBJS) /home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug/libCommons.so
+UMC: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug" -o "UMC" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc  -o "UMC" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -47,6 +44,5 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug/libCommons.so:
 
 -include ../makefile.targets
