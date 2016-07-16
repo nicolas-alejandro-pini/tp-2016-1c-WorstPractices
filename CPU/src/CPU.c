@@ -301,6 +301,9 @@ void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorna
 	unIndiceStack->pos = list_size(unPCB->stack) + 1;
 	unIndiceStack->variables = list_create();
 	unIndiceStack->retPosicion = (uint32_t)donde_retornar - 1;
+	unIndiceStack->retVar.pagina = unPCB->offsetStack / tamanioPaginaUMC;
+	unIndiceStack->retVar.offset = donde_retornar % tamanioPaginaUMC;
+	unIndiceStack->retVar.size = TAMANIOVARIABLES;
 	list_add(unPCB->stack,unIndiceStack);
 }
 void retornar(t_valor_variable retorno){
@@ -312,12 +315,12 @@ void retornar(t_valor_variable retorno){
 	/*Actualizamos el program counter del pcb*/
 	unPCB->pc = unIndiceStack->retPosicion;
 
-	unIndiceStack->retVar.pagina = unPCB->offsetStack / tamanioPaginaUMC;
-	log_info("Se define variable de retorno, pagina: %d",unPCB->offsetStack / tamanioPaginaUMC);
-	unIndiceStack->retVar.offset= unPCB->offsetStack % tamanioPaginaUMC;
-	log_info("Se define variable de retorno, offset: %d", unPCB->offsetStack % tamanioPaginaUMC);
-	unIndiceStack->retVar.size = TAMANIOVARIABLES;
-	log_info("Se define variable de retorno, size: %d", TAMANIOVARIABLES);
+//	unIndiceStack->retVar.pagina = unPCB->offsetStack / tamanioPaginaUMC;
+//	log_info("Se define variable de retorno, pagina: %d",unPCB->offsetStack / tamanioPaginaUMC);
+//	unIndiceStack->retVar.offset= unPCB->offsetStack % tamanioPaginaUMC;
+//	log_info("Se define variable de retorno, offset: %d", unPCB->offsetStack % tamanioPaginaUMC);
+//	unIndiceStack->retVar.size = TAMANIOVARIABLES;
+//	log_info("Se define variable de retorno, size: %d", TAMANIOVARIABLES);
 
 	asignar((unIndiceStack->retVar.pagina * tamanioPaginaUMC ) + unIndiceStack->retVar.offset, retorno);
 }
@@ -776,6 +779,10 @@ int ejecutarInstruccion(void){
 		return EXIT_FAILURE;
 	}
 
+	if(strcmp(instruccion, "end\n")==0){
+		unPCB->pc = unPCB->metadata_program->instrucciones_size + 1;
+
+	}
 	free(instruccion);
 	return OK;
 
