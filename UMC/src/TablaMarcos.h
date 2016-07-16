@@ -67,4 +67,5 @@ int obtenerPresenciasTabladePaginas(stNodoListaTP* nodo);
 stRegistroTP* obtenerRegistroTabladePaginas(stNodoListaTP* nodo, int pagina);
 int grabarEnSwap(uint16_t pid, uint16_t marco, uint16_t pagina);
 int agregarFrameATablaMarcos(uint16_t frameNuevo, stNodoListaTP *tablaPaginas, uint16_t pagina);
+void liberarMarcosXtabla(stNodoListaTP* nodo);
 #endif /* TABLAMARCOS_H_ */

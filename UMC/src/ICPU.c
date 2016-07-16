@@ -72,30 +72,33 @@ int validarPedido(uint16_t pid, uint16_t pagina, uint16_t offset, uint16_t size)
 
 int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 	uint16_t frameBuscado = 0;
-	uint16_t frameNuevo = 0;
 	stRegistroTLB stTLB;
 
 	/* si esta disponible cache*/
 	if (estaActivadaTLB()== OK){
 		buscarEnTLB(pid, posLogica->pagina, &frameBuscado);
 	}
+
 	// no hay TLB o es un TLB miss
-	if(estaActivadaTLB()==ERROR || frameBuscado==0)
+	if(estaActivadaTLB()==ERROR || frameBuscado==0){
 		buscarEnTabla(pid, posLogica->pagina, &frameBuscado);
 
-	// leo el frame desde memoria si estan en tabla o TLB
-	if(frameBuscado != 0){
+		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
+		if(estaActivadaTLB()== OK && frameBuscado!=0){
+			stTLB.pid = pid;
+			stTLB.pagina = posLogica->pagina;
+			stTLB.marco = frameBuscado;
+			reemplazarValorTLB(stTLB);
+		}
 
-		// acceder a memoria con el resultado encontrado en cache
-		if(leerMemoria(*buffer, frameBuscado, *posLogica))
-			return EXIT_FAILURE;
-
-		return EXIT_SUCCESS;
+		if(frameBuscado != 0){
+			setSecondChance(pid, posLogica->pagina);
+		}
 	}
 
 	if(frameBuscado == 0){
 
-		if(ejecutarPageFault(pid, posLogica->pagina, &frameNuevo)){
+		if(ejecutarPageFault(pid, posLogica->pagina, &frameBuscado)){
 			log_error("Pid [%d] Pagina[%d]: Error al ejecutar page fault.", pid, posLogica->pagina);
 			return EXIT_FAILURE;
 		}
@@ -104,27 +107,23 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 		if(estaActivadaTLB()== OK){
 			stTLB.pid = pid;
 			stTLB.pagina = posLogica->pagina;
-			stTLB.marco = frameNuevo;
+			stTLB.marco = frameBuscado;
 			reemplazarValorTLB(stTLB);
 		}
-
-		if(frameNuevo!=0){
-
-			// con la pagina obtenida separo los bytes que se pidieron leer
-			if(leerMemoria(*buffer, frameNuevo, *posLogica))
-				return EXIT_FAILURE;
-
-			return EXIT_SUCCESS;
-		}else
-			return EXIT_FAILURE;
 	}
 
-	return EXIT_FAILURE;
+	if(frameBuscado==0)
+		return EXIT_FAILURE;
+
+	// acceder a memoria con el resultado encontrado en cache
+	if(leerMemoria(*buffer, frameBuscado, *posLogica))
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
 }
 
 int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 	uint16_t frameBuscado = 0;
-	uint16_t frameNuevo = 0;
 	stRegistroTLB stTLB;
 
 	/* si esta disponible cache*/
@@ -132,24 +131,26 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 		buscarEnTLB(pid, unaEscritura->nroPagina, &frameBuscado);
 	}
 	// no hay TLB o es un TLB miss
-	if(estaActivadaTLB()==ERROR || frameBuscado==0)
+	if(estaActivadaTLB()==ERROR || frameBuscado==0){
 		buscarEnTabla(pid, unaEscritura->nroPagina, &frameBuscado);
 
-	// leo el frame desde memoria si estan en tabla o TLB
-	if(frameBuscado != 0){
+		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
+		if(estaActivadaTLB()== OK){
+			stTLB.pid = pid;
+			stTLB.pagina = unaEscritura->nroPagina;
+			stTLB.marco = frameBuscado;
+			reemplazarValorTLB(stTLB);
+		}
 
-		// en el marco obtenido indico posicion para escribir los bytes pedidos
-		if(escribirMemoria(unaEscritura->buffer, frameBuscado, unaEscritura->offset, unaEscritura->tamanio))
-			return EXIT_FAILURE;
-
-		// acceder a memoria con el resultado encontrado en cache
-		return EXIT_SUCCESS;
+		if(frameBuscado != 0){
+			setSecondChance(pid, unaEscritura->nroPagina);
+		}
 	}
 
 	// Page fault Escritura
 	if(frameBuscado == 0){
 
-		if(ejecutarPageFault(pid, unaEscritura->nroPagina, &frameNuevo)){
+		if(ejecutarPageFault(pid, unaEscritura->nroPagina, &frameBuscado)){
 			log_error("Pid [%d] Pagina[%d]: Error al ejecutar page fault.", pid, unaEscritura->nroPagina);
 			return EXIT_FAILURE;
 		}
@@ -158,21 +159,24 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 		if(estaActivadaTLB()== OK){
 			stTLB.pid = pid;
 			stTLB.pagina = unaEscritura->nroPagina;
-			stTLB.marco = frameNuevo;
+			stTLB.marco = frameBuscado;
 			reemplazarValorTLB(stTLB);
 		}
 
-		// en la pagina obtenida escribo los bytes que se pidieron
-		if(escribirMemoria(unaEscritura->buffer, frameNuevo, unaEscritura->offset, unaEscritura->tamanio))
-			return EXIT_FAILURE;
-
-		// Seteo el bit de modificado
-		if(setBitModificado(pid, unaEscritura->nroPagina))
-			return EXIT_FAILURE;
-
-		return EXIT_SUCCESS;
 	}
-	return EXIT_FAILURE;
+
+	if(frameBuscado == 0)
+		return EXIT_FAILURE;
+
+	// en la pagina obtenida escribo los bytes que se pidieron
+	if(escribirMemoria(unaEscritura->buffer, frameBuscado, unaEscritura->offset, unaEscritura->tamanio))
+		return EXIT_FAILURE;
+
+	// Seteo el bit de modificado
+	if(setBitModificado(pid, unaEscritura->nroPagina))
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
 }
 
 int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){

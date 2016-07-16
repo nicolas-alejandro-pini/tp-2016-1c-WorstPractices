@@ -470,5 +470,18 @@ void liberarTablaPid(uint16_t pid){
 	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid_y_borro_tabla);
 	sleep(losParametros.delay);
 	list_mutex_remove(TablaMarcos,index);
+
+	 mostrarTabla();
 }
 
+void liberarMarcosXtabla(stNodoListaTP* nodo){
+	stRegistroTP* registro = NULL;
+	int i;
+	for(i=0; i< nodo->size; i++){
+		registro = obtenerRegistroTabladePaginas(nodo, i);
+		if(registro->bitPresencia == 1)
+		{
+			liberarMarco(registro->marco);
+		}
+	}
+}
