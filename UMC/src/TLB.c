@@ -139,6 +139,7 @@ int reemplazarValorTLB(stRegistroTLB registro){
 }
 
 void flushTLB(uint16_t pid){
+	int seMostro=0;
 
 	// Elimino paginas asociadas a pid. Sin eliminar el nodo de la lista
 	void _flush_nodo(stRegistroTLB *list_nodo){
@@ -147,12 +148,19 @@ void flushTLB(uint16_t pid){
 			list_nodo->pagina = 0;   // necesarios
 			list_nodo->lastUsed = 0; //
 			list_nodo->marco = 0;
+			seMostro=1;
 		}
+	}
+	if(list_mutex_is_empty(TLB->lista)){
+		printf("La TLB esta vacia");
+		return;
 	}
 	// Itero lista
 	pthread_mutex_lock(&TLB->mutex);
 	list_iterate(TLB->lista,(void*)_flush_nodo);
 	pthread_mutex_unlock(&TLB->mutex);
+	if(seMostro==0)
+		printf("No se encontro el pid %d en la TLB", pid);
 }
 void flushTLB_all(){
 
@@ -163,10 +171,12 @@ void flushTLB_all(){
 		list_nodo->lastUsed = 0; //
 		list_nodo->marco = 0;
 	}
+
 	// Itero lista
 	pthread_mutex_lock(&TLB->mutex);
 	list_iterate(TLB->lista,(void*)_flush_nodo);
 	pthread_mutex_unlock(&TLB->mutex);
+	printf("Se realizo el flush de TLB\n");
 }
 
 void imprimirTLB(){

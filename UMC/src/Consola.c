@@ -9,7 +9,7 @@
 
 void mostrarHelp(){
 
-	printf("\nComandos disponibles a ejecutar: (Elegir el nuemro correspondiente)\n");
+	printf("\nComandos disponibles a ejecutar: (Elegir el numero correspondiente)\n");
 	printf("\t1. retardo <tiempo>\n");
 	printf("\t2. dump tabla\n");
 	printf("\t3. dump tabla <pid>\n");
@@ -18,6 +18,8 @@ void mostrarHelp(){
 	printf("\t6. flush tlb\n");
 	printf("\t7. flush memoria <pid>\n");
 	printf("\n>>>");
+	fflush(stdin);
+	fflush(stdout);
 
 }
 
@@ -40,18 +42,18 @@ void readConsole(char* buffer, char* comando, char parametros[CANTIDAD_PARAMETRO
 
 	for(i=0;i<MAX_BUFFER;i++)
 	{
-		if(param==1&& param<CANTIDAD_PARAMETROS)
-		{
-			parametros[param-1][k] = buffer[i];
-			k++;
-		}
+//		if(param==1&& param<CANTIDAD_PARAMETROS)
+//		{
+//			parametros[param-1][k] = buffer[i];
+//			k++;
+//		}
 
-		if(buffer[i]!=' ' && param !=1){
+		if(buffer[i]!=' ' && buffer[i]!='\n' && param ==0){
 			comando[j]=buffer[i];
 			j++;
 		}
 
-		if(buffer[i]==' ')
+		if(buffer[i]==' ' || buffer[i] =='\n')
 		{
 			param++;
 			k=0;
@@ -78,7 +80,8 @@ void consolaUMC(){
 	inicializar(comando,MAX_COMANDO);
 	inicializar(parametros[0],MAX_PARAMETROS);
 	inicializar(parametros[1],MAX_PARAMETROS);
-	//readConsole(buffer, comando, parametros);
+
+	readConsole(buffer, comando, parametros);
 
 	/*
 	 * Este comando permitirá modificar la cantidad de milisegundos que debe
@@ -88,12 +91,12 @@ void consolaUMC(){
 	//2. retardo <tiempo>
 	if(!strcmp(comando,"1"))
 	{
-		printf("Especificar retardo en segundos:");
+		printf("Especificar retardo en segundos:\n");
 		fgets(parametros[0], MAX_PARAMETROS, stdin);
 
 		retardo = atoi(parametros[0]);
-		log_info("se cambia el retardo. Ahora es %d", retardo);
 		losParametros.delay=retardo;
+		printf("Se cambia el retardo. Ahora es %d.\n", losParametros.delay);
 
 /*
  * Este comando generará un reporte en pantalla y en un archivo en disco del
@@ -120,15 +123,12 @@ void consolaUMC(){
 		mostrarTablaPid(pid);
 
 		// 4. dump memoria
-	}else if(!strcmp(parametros[0],"4")){
+	}else if(!strcmp(comando,"4")){
 
-		log_info("se hace el dump de la memoria de todos los procesos");
 		listarMemoria();
 
 		// 5. dump memoria <pid>
-	}else if (!strcmp(parametros[0],"5")){
-
-		log_info("se hace el dump de la memoria de un proceso");
+	}else if (!strcmp(comando,"5")){
 
 		printf("Especificar proceso:");
 		fgets(parametros[0], MAX_PARAMETROS, stdin);
@@ -143,7 +143,6 @@ void consolaUMC(){
 		// 6. flush tlb
 	}else if(!strcmp(comando,"6"))
 	{
-		log_info("se hace el flush de la TLB");
 		flushTLB_all();
 
 		// 7. flush memoria <pid>
