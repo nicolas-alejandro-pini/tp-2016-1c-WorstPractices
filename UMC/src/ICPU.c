@@ -58,32 +58,47 @@ int inicializarPrograma(int unCliente){
 	return EXIT_SUCCESS;
 }
 
+int validarPedido(uint16_t pid, uint16_t pagina, uint16_t offset, uint16_t size){
+	stNodoListaTP* p;
+
+	p=buscarPID(pid);
+	if(p==NULL || pagina >=  p->size || offset > losParametros.frameSize ||
+			(offset+size) > losParametros.frameSize){
+		log_error("acceso a memoria no valido");
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+
 int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 	uint16_t frameBuscado = 0;
-	uint16_t frameNuevo = 0;
 	stRegistroTLB stTLB;
 
 	/* si esta disponible cache*/
 	if (estaActivadaTLB()== OK){
 		buscarEnTLB(pid, posLogica->pagina, &frameBuscado);
 	}
+
 	// no hay TLB o es un TLB miss
-	if(estaActivadaTLB()==ERROR || frameBuscado==0)
+	if(estaActivadaTLB()==ERROR || frameBuscado==0){
 		buscarEnTabla(pid, posLogica->pagina, &frameBuscado);
 
-	// leo el frame desde memoria si estan en tabla o TLB
-	if(frameBuscado != 0){
+		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
+		if(estaActivadaTLB()== OK && frameBuscado!=0){
+			stTLB.pid = pid;
+			stTLB.pagina = posLogica->pagina;
+			stTLB.marco = frameBuscado;
+			reemplazarValorTLB(stTLB);
+		}
 
-		// acceder a memoria con el resultado encontrado en cache
-		if(leerMemoria(*buffer, frameBuscado, *posLogica))
-			return EXIT_FAILURE;
-
-		return EXIT_SUCCESS;
+		if(frameBuscado != 0){
+			setSecondChance(pid, posLogica->pagina);
+		}
 	}
 
 	if(frameBuscado == 0){
 
-		if(ejecutarPageFault(pid, posLogica->pagina, &frameNuevo)){
+		if(ejecutarPageFault(pid, posLogica->pagina, &frameBuscado)){
 			log_error("Pid [%d] Pagina[%d]: Error al ejecutar page fault.", pid, posLogica->pagina);
 			return EXIT_FAILURE;
 		}
@@ -92,27 +107,23 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 		if(estaActivadaTLB()== OK){
 			stTLB.pid = pid;
 			stTLB.pagina = posLogica->pagina;
-			stTLB.marco = frameNuevo;
+			stTLB.marco = frameBuscado;
 			reemplazarValorTLB(stTLB);
 		}
-
-		if(frameNuevo!=0){
-
-			// con la pagina obtenida separo los bytes que se pidieron leer
-			if(leerMemoria(*buffer, frameNuevo, *posLogica))
-				return EXIT_FAILURE;
-
-			return EXIT_SUCCESS;
-		}else
-			return EXIT_FAILURE;
 	}
 
-	return EXIT_FAILURE;
+	if(frameBuscado==0)
+		return EXIT_FAILURE;
+
+	// acceder a memoria con el resultado encontrado en cache
+	if(leerMemoria(*buffer, frameBuscado, *posLogica))
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
 }
 
 int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 	uint16_t frameBuscado = 0;
-	uint16_t frameNuevo = 0;
 	stRegistroTLB stTLB;
 
 	/* si esta disponible cache*/
@@ -120,24 +131,26 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 		buscarEnTLB(pid, unaEscritura->nroPagina, &frameBuscado);
 	}
 	// no hay TLB o es un TLB miss
-	if(estaActivadaTLB()==ERROR || frameBuscado==0)
+	if(estaActivadaTLB()==ERROR || frameBuscado==0){
 		buscarEnTabla(pid, unaEscritura->nroPagina, &frameBuscado);
 
-	// leo el frame desde memoria si estan en tabla o TLB
-	if(frameBuscado != 0){
+		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
+		if(estaActivadaTLB()== OK){
+			stTLB.pid = pid;
+			stTLB.pagina = unaEscritura->nroPagina;
+			stTLB.marco = frameBuscado;
+			reemplazarValorTLB(stTLB);
+		}
 
-		// en el marco obtenido indico posicion para escribir los bytes pedidos
-		if(escribirMemoria(unaEscritura->buffer, frameBuscado, unaEscritura->offset, unaEscritura->tamanio))
-			return EXIT_FAILURE;
-
-		// acceder a memoria con el resultado encontrado en cache
-		return EXIT_SUCCESS;
+		if(frameBuscado != 0){
+			setSecondChance(pid, unaEscritura->nroPagina);
+		}
 	}
 
 	// Page fault Escritura
 	if(frameBuscado == 0){
 
-		if(ejecutarPageFault(pid, unaEscritura->nroPagina, &frameNuevo)){
+		if(ejecutarPageFault(pid, unaEscritura->nroPagina, &frameBuscado)){
 			log_error("Pid [%d] Pagina[%d]: Error al ejecutar page fault.", pid, unaEscritura->nroPagina);
 			return EXIT_FAILURE;
 		}
@@ -146,21 +159,24 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 		if(estaActivadaTLB()== OK){
 			stTLB.pid = pid;
 			stTLB.pagina = unaEscritura->nroPagina;
-			stTLB.marco = frameNuevo;
+			stTLB.marco = frameBuscado;
 			reemplazarValorTLB(stTLB);
 		}
 
-		// en la pagina obtenida escribo los bytes que se pidieron
-		if(escribirMemoria(unaEscritura->buffer, frameNuevo, unaEscritura->offset, unaEscritura->tamanio))
-			return EXIT_FAILURE;
-
-		// Seteo el bit de modificado
-		if(setBitModificado(pid, unaEscritura->nroPagina))
-			return EXIT_FAILURE;
-
-		return EXIT_SUCCESS;
 	}
-	return EXIT_FAILURE;
+
+	if(frameBuscado == 0)
+		return EXIT_FAILURE;
+
+	// en la pagina obtenida escribo los bytes que se pidieron
+	if(escribirMemoria(unaEscritura->buffer, frameBuscado, unaEscritura->offset, unaEscritura->tamanio))
+		return EXIT_FAILURE;
+
+	// Seteo el bit de modificado
+	if(setBitModificado(pid, unaEscritura->nroPagina))
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
 }
 
 int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
@@ -181,16 +197,18 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 
 	/* Obtiene Tabla de Paginas de PID */
 	tablaPaginas = buscarPID(pid);
-	if(tablaPaginas==NULL) // valido que exista
+	if(tablaPaginas==NULL){ // valido que exista
+		log_info("No hay tabla de paginas para el pid %d solicitado", pid);
 		return EXIT_FAILURE;
-
+	}
 	/* Obtengo presencias en MP de la tabla de PID */
 	presencias = obtenerPresenciasTabladePaginas(tablaPaginas);
 
 	// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
-	if(0 == presencias && 0 == hayMarcoLibre())
+	if(0 == presencias && 0 == hayMarcoLibre()){
+		log_info("Se rechaza por presencias %d", presencias);
 		return EXIT_FAILURE;
-
+	}
 	// Reemplazo dentro de los marcos
 	if(presencias < losParametros.frameByProc && 0 != hayMarcoLibre()){
 		log_info("Pid[%d] Marcos[%d/%d] Disponibles MP[%d] asigno...", pid, presencias, losParametros.frameByProc, hayMarcoLibre());
@@ -204,18 +222,22 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	}
 	// Me las arreglo con los marcos que tengo (que no puede ser 0 )
 	else if(presencias >= losParametros.frameByProc){
-		if(0 == presencias )  // por las dudas avisarlo... (error de configuracion)
+		if(0 == presencias ){  // por las dudas avisarlo... (error de configuracion)
+			log_info("Marcos por proceso esta en 0");
 			return EXIT_FAILURE;
+		}
 		log_info("Pid[%d] Marcos[%d/%d] reemplazo...", pid, presencias, losParametros.frameByProc);
 		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
 	}
 
-	if(0 == frameNuevo)
+	if(0 == frameNuevo){
+		log_info("frameNuevo es 0, no hay marco libre");
 		return EXIT_FAILURE;
-
+	}
 	// cargo en memoria la pagina obtenida
 	if(escribirMemoria(paginaLeidaSwap, frameNuevo, 0, losParametros.frameSize)){
 		free(paginaLeidaSwap);
+		log_info("error al escribir en memoria - pagina de swap: %d, frameNuevo: %d", paginaLeidaSwap, frameNuevo);
 		return EXIT_FAILURE;
 	}
 	free(paginaLeidaSwap);
@@ -315,6 +337,15 @@ void realizarAccionCPU(uint32_t unSocket){
 				liberarHeaderIPC(unHeader);
 				break;
 			}
+			if( validarPedido( pidActivo, posR.pagina, posR.offset, posR.size) != EXIT_SUCCESS){
+				log_error("Thread socket[%d] Error de acceso al leer bytes", unSocket);
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				enviarHeaderIPC(unSocket,unHeader);
+				liberarHeaderIPC(unHeader);
+				break;
+			}
+
 
 			buffer = malloc(posR.size);
 			if(leerBytes(&buffer, &posR, pidActivo)){
@@ -350,6 +381,15 @@ void realizarAccionCPU(uint32_t unSocket){
 			// Valido pedidos nulos
 			if(posW.tamanio == 0){
 				log_error("Error de longitud al escribir bytes");
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				enviarHeaderIPC(unSocket,unHeader);
+				liberarHeaderIPC(unHeader);
+				break;
+			}
+
+			if( validarPedido( pidActivo, posW.nroPagina, posW.offset, posW.tamanio) != EXIT_SUCCESS){
+				log_error("Thread socket[%d] Error de acceso al leer bytes", unSocket);
 				unHeader = nuevoHeaderIPC(ERROR);
 				unHeader->largo = 0;
 				enviarHeaderIPC(unSocket,unHeader);

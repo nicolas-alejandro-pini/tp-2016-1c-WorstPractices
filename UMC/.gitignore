@@ -1,2 +1,4 @@
-/Debug/
 umc.log
+*.o
+*.d
+

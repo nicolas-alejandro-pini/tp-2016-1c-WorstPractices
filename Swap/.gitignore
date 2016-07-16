@@ -1,5 +1,5 @@
-/Debug/
-/Debug/
 /swap_data
-/swap.log
-/swap.config
+*.log
+*.config
+*.o
+*.d
