@@ -215,7 +215,7 @@ int recv_print(t_console* tConsole){
 			case IMPRIMIRTEXTO:
 				log_info("Recibo un mensaje de IMPRIMIR TEXTO");
 				texto = malloc(unMensaje.largo + 1);
-				recv(*(tConsole->pSockfd), &texto, unMensaje.largo, 0);
+				recv(*(tConsole->pSockfd), texto, unMensaje.largo, 0);
 				log_info("IMPRIMIR [%s]", texto);
 				free(texto);
 				break;
