@@ -18,6 +18,7 @@ fd_set read_fds;		/* Sublista de fds_master. */
 int SocketAnterior = 0;
 int tamanioPaginaUMC ;
 int quantum=0;
+int solicitudIO =0;
 t_puntero ultimaPosicionStack = 0;
 t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de conexion y parametros. */
 
@@ -236,7 +237,6 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
 
 	stHeaderIPC *unHeaderIPC;
-	long int offset = 0;
 
 	//Hago el envío de la variabe con su valor
 	unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
@@ -372,35 +372,19 @@ void imprimirTexto(char* texto){
 void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	stHeaderIPC* unHeaderPrimitiva;
-	t_paquete paquete;
-	stIO dispositivoIO;
-	int offset = 0;
-
-	dispositivoIO.nombre = dispositivo;
-	dispositivoIO.tiempo = tiempo;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IOANSISOP);
-	unHeaderPrimitiva->largo = strlen(dispositivoIO.nombre) + 1 + sizeof(int);
+	unHeaderPrimitiva->largo = strlen(dispositivo) + 1 + sizeof(int);
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
-	crear_paquete(&paquete, IOANSISOP);
-
-	serializar_campo(&paquete, &offset, dispositivoIO.nombre, strlen(dispositivoIO.nombre) + 1); //Lo envío con el \0
-	serializar_campo(&paquete, &offset, &dispositivoIO.tiempo, sizeof(int));
-
-	serializar_header(&paquete);
-
-	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el paquete para primitiva IO");
-		return;
-	}
-
-	free_paquete(&paquete);
+	send(configuracionInicial.sockNucleo, dispositivo,strlen(dispositivo) + 1, 0);
+	send(configuracionInicial.sockNucleo, &tiempo,sizeof(int), 0);
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 
-	quantum = 0;
+	quantum = 0; //Termino el quantum para devolver el pcb por IO
+	solicitudIO = 1; // Flag globla para devolver PCB por bloqueo.
 
 	return;
 }
@@ -408,52 +392,33 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 void wait(t_nombre_semaforo identificador_semaforo){
 
 	stHeaderIPC* unHeaderPrimitiva;
-	t_paquete paquete;
-
-	int offset = 0;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(WAIT);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
-	crear_paquete(&paquete, WAIT);
+	send(configuracionInicial.sockNucleo,identificador_semaforo,strlen(identificador_semaforo) + 1,0 );
 
-	serializar_campo(&paquete, &offset, identificador_semaforo, unHeaderPrimitiva->largo);
 
-	serializar_header(&paquete);
-
-	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el paquete para primitiva WAIT");
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderPrimitiva)){
+		log_error("Error al recibir ok del wait.");
+		configuracionInicial.salir = 1;
 	}
 
-	free_paquete(&paquete);
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
 
 void signal_cpu(t_nombre_semaforo identificador_semaforo){
 
 	stHeaderIPC* unHeaderPrimitiva;
-	t_paquete paquete;
-
-	int offset = 0;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(SIGNAL);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
 
 	enviarHeaderIPC(configuracionInicial.sockNucleo, unHeaderPrimitiva);
 
-	crear_paquete(&paquete, SIGNAL);
-
-	serializar_campo(&paquete, &offset, identificador_semaforo, unHeaderPrimitiva->largo);
-
-	serializar_header(&paquete);
-
-	if (!enviar_paquete(configuracionInicial.sockNucleo, &paquete)) {
-		log_error("No se pudo enviar el paquete para primitiva WAIT");
-	}
-
-	free_paquete(&paquete);
+	send (configuracionInicial.sockNucleo, identificador_semaforo,strlen(identificador_semaforo) + 1, 0 );
 
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
@@ -845,8 +810,12 @@ int devolverPCBalNucleo(void){
 	}
 	else
 	{
-		log_info("PCB PID[%d] Quantum finalizado. pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
-		unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
+		if (solicitudIO == 0 ){
+			log_info("PCB PID[%d] Quantum finalizado. pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
+			unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
+		}else
+			unHeaderIPC = nuevoHeaderIPC(IOANSISOP);
+
 
 		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
