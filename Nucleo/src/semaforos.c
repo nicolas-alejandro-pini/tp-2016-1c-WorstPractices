@@ -40,8 +40,6 @@ int wait_semaforo(char* nombre_semaforo) {
 	stSemaforo *unSemaforo = buscar_semaforo(nombre_semaforo);
 
 	if(unSemaforo==NULL){
-		/*No se encontro el semaforo buscado*/
-		free(unSemaforo);
 		return EXIT_FAILURE;
 	}
 
@@ -63,8 +61,6 @@ int signal_semaforo(char* nombre_semaforo){
 	stSemaforo *unSemaforo = buscar_semaforo(nombre_semaforo);
 
 	if (unSemaforo == NULL) {
-		/*No se encontro el semaforo buscado*/
-		free(unSemaforo);
 		return EXIT_FAILURE;
 	}
 	pthread_mutex_lock(&unSemaforo->mutex);

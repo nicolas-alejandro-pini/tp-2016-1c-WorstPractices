@@ -1,3 +1,4 @@
-/Debug/
-/Release/
 /nucleo.log
+*.o
+*.d
+

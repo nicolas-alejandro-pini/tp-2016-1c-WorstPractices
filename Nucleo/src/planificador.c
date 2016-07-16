@@ -17,11 +17,13 @@ void inicializar_cola_ready(){
 
 void *ready_productor(void* arg) {
 	stPCB *pcb_to_produce = arg;
+
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	queue_push(colaReady, pcb_to_produce);
 	printf("READY size [%d]\n",queue_size(colaReady));
 	numInQ++;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
+
 	pthread_mutex_unlock(&empty);	// Comienzo de espera de consumidor
 	fflush(stdout);
 	return NULL;
@@ -30,11 +32,13 @@ void *ready_productor(void* arg) {
 stPCB *ready_consumidor() {
 	stPCB *pcb_aux;
 	while (numInQ == 0) pthread_mutex_lock(&empty);
+
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	pcb_aux = queue_pop(colaReady);
 	printf("READY size [%d]\n",queue_size(colaReady));
 	numInQ--;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
+
 	return pcb_aux;
 }
 void eliminar_pcb_ready(int pid){
