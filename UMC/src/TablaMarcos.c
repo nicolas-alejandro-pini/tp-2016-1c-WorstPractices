@@ -385,6 +385,7 @@ void _mostrarContenidoTP(stNodoListaTP *list_nodo){
 		printf("bitPresencia: %d ", (nodo+(i*sizeof(stRegistroTP)))->bitPresencia);
 		printf("\n");
 	}
+	fflush(stdout);
 }
 void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 	stRegistroTP *nodo;
@@ -393,8 +394,13 @@ void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 	uint16_t marco;
 	void* buffer;
 
+	if(nodoPid->size==0){
+		printf("La memoria esta vacia para el proceso %d", nodoPid->pid);
+		return;
+	}
 	printf("\npid: %d\n", nodoPid->pid);
 	nodo= ((stRegistroTP*)nodoPid->tabla);
+
 	for(i=0;i<nodoPid->size;i++){
 		if(((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->bitPresencia==1){
 			printf("Pagina %d:\n", i);
@@ -419,6 +425,14 @@ void marcarMemoriaModificada(uint16_t pid){
 	stNodoListaTP *list_nodo;
 
 	list_nodo = buscarPID(pid);
+	if(list_nodo == NULL){
+		printf("No se encuentra el proceso %d para marcarlo como modificado", pid);
+		return;
+	}
+	if(list_nodo->size==0){
+		printf("No hay memoria disponible para este el proceso %d para marcarlo como modificado", pid);
+		return;
+	}
 	printf("pid: %d\n", list_nodo->pid);
 	nodo= ((stRegistroTP*)list_nodo->tabla);
 	for(i=0;i<list_nodo->size;i++){
@@ -431,6 +445,10 @@ void marcarMemoriaModificada(uint16_t pid){
 }
 void listarMemoria(){
 
+	if(list_mutex_is_empty(TablaMarcos)){
+		printf("La memoria esta vacia");
+		return;
+	}
 	list_mutex_iterate(TablaMarcos, (void*)_mostrarContenidoMemoria);
 
 }
@@ -439,18 +457,32 @@ void listarMemoriaPid(uint16_t pid){
 	stNodoListaTP* nodoPid;
 
 	//sleep(losParametros.delay);
+
 	nodoPid = buscarPID(pid);
+	if(nodoPid==NULL){
+		printf("El proceso %d no se encuentra en memoria\n", pid);
+		return;
+	}
 	_mostrarContenidoMemoria(nodoPid);
 }
 void mostrarTabla(){
 
+	if(list_mutex_is_empty(TablaMarcos))
+		printf("La Tabla esta vacia\n");
 	//sleep(losParametros.delay);
 	list_mutex_iterate(TablaMarcos, (void*)_mostrarContenidoTP);
 	return;
 }
 void mostrarTablaPid(uint16_t pid){
+	stNodoListaTP* nodo;
+
 	//sleep(losParametros.delay);
-	_mostrarContenidoTP(buscarPID(pid));
+	nodo = buscarPID(pid);
+	if (nodo==NULL){
+		printf("No se encuentra el proceso en la Tabla de Pagina\n");
+		return;
+	}
+	_mostrarContenidoTP(nodo);
 }
 
 void liberarTablaPid(uint16_t pid){
@@ -471,7 +503,7 @@ void liberarTablaPid(uint16_t pid){
 	sleep(losParametros.delay);
 	list_mutex_remove(TablaMarcos,index);
 
-	 mostrarTabla();
+	// mostrarTabla();
 }
 
 void liberarMarcosXtabla(stNodoListaTP* nodo){
