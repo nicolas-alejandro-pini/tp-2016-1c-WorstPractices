@@ -348,7 +348,7 @@ int main(int argc, char *argv[]) {
 								// enviar tamaño de pagina a CPU
 								enviarConfigUMC(unCliente, losParametros.frameSize, losParametros.frameByProc);
 
-								pthread_create(&tid, &attr, (void*)realizarAccionCPU, &unCliente);
+								pthread_create(&tid, &attr, (void*)realizarAccionCPU, unCliente);
 
 								FD_CLR(unCliente,&fds_master);
 								if(unCliente>losParametros.fdMax){
@@ -436,7 +436,7 @@ int main(int argc, char *argv[]) {
 
 
 	        	        		default:
-	        	        			log_info("Se recibio una peticion con un codigo desconocido...%d", unaCabecera->tipo);
+	        	        			log_info("Se recibio una peticion con un codigo desconocido...[%d], pid: [%d]", unaCabecera->tipo, pid);
 	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;

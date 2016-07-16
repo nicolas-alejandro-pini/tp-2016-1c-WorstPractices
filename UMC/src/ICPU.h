@@ -40,7 +40,7 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid);
 void *finalizarProgramaNucleo(uint32_t fin);
 uint32_t cambiarContexto(stMensajeIPC *unMensaje);
 int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo);
-void realizarAccionCPU(uint32_t *socket);
+void realizarAccionCPU(uint32_t socket);
 
 int guardarEnTabla(uint16_t cantidadPaginas);
 

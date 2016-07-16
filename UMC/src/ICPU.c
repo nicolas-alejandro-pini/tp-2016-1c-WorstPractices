@@ -269,9 +269,9 @@ uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 	return pid;
 }
 
-void realizarAccionCPU(uint32_t *unSocketRecibido){
+void realizarAccionCPU(uint32_t unSocket){
 
-	uint32_t unSocket=*unSocketRecibido;
+	//uint32_t unSocket=*unSocketRecibido;
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader;
 	uint32_t pidActivo;
