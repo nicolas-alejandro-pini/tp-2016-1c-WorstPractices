@@ -76,12 +76,18 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 
 	/* si esta disponible cache*/
 	if (estaActivadaTLB()== OK){
+		log_info("se busca en la TLB la pagina: %d", posLogica->pagina);
 		buscarEnTLB(pid, posLogica->pagina, &frameBuscado);
+		if(frameBuscado!=0)
+			log_info("El frame encontrado es %d en la TLB", frameBuscado);
 	}
 
 	// no hay TLB o es un TLB miss
 	if(estaActivadaTLB()==ERROR || frameBuscado==0){
+		log_info("se busca en la Tabla de Pagina la pagina: %d", posLogica->pagina);
 		buscarEnTabla(pid, posLogica->pagina, &frameBuscado);
+		if(frameBuscado!=0)
+			log_info("El frame encontrado es %d en la Tabla de pagina", frameBuscado);
 
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
 		if(estaActivadaTLB()== OK && frameBuscado!=0){
@@ -128,11 +134,18 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 
 	/* si esta disponible cache*/
 	if (estaActivadaTLB()== OK){
+		log_info("se busca en la TLB la pagina: %d", unaEscritura->nroPagina);
 		buscarEnTLB(pid, unaEscritura->nroPagina, &frameBuscado);
+		if(frameBuscado!=0)
+			log_info("El frame encontrado es %d en la TLB", frameBuscado);
 	}
 	// no hay TLB o es un TLB miss
 	if(estaActivadaTLB()==ERROR || frameBuscado==0){
+		log_info("se busca en la Tabla de Pagina la pagina: %d", unaEscritura->nroPagina);
 		buscarEnTabla(pid, unaEscritura->nroPagina, &frameBuscado);
+		if(frameBuscado!=0)
+			log_info("El frame encontrado es %d en la Tabla de pagina", frameBuscado);
+
 
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
 		if(estaActivadaTLB()== OK){
