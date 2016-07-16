@@ -58,6 +58,7 @@ uint32_t borrar_consola(int unSocket) {
 			return consola->pid;
 		}
 	}
+	pthread_mutex_unlock(&mutex_lista_consolas);
 	return 0;  // No encontrada
 }
 
@@ -336,7 +337,7 @@ int main(int argc, char *argv[]) {
 	elEstadoActual.sockUmc = conectar(elEstadoActual.ipUmc, elEstadoActual.puertoUmc);
 
 	if (elEstadoActual.sockUmc != -1) {
-		FD_SET(elEstadoActual.sockUmc, &(fds_master));
+		//FD_SET(elEstadoActual.sockUmc, &(fds_master));
 
 		unHeaderIPC = nuevoHeaderIPC(ERROR);
 		if (!recibirHeaderIPC(elEstadoActual.sockUmc, unHeaderIPC)) {

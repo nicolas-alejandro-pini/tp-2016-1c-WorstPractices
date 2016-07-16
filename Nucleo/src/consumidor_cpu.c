@@ -155,7 +155,11 @@ void *consumidor_cpu(void *param) {
 
 				// Le debo enviar el fin de programa a la consola
 				consola = obtenerSocketConsolaPorPID(pid_fin);
-				log_info("Le mando el fin de programa a la consola (Sock: %d)", consola->socket);
+				if(consola==NULL){
+					log_warning("No se encontro el socket [PID - %d] en la lista", pid_fin);
+					break;
+				}
+					log_info("Le mando el fin de programa a la consola (Sock: %d)", consola->socket);
 				if (!enviarHeaderIPC(consola->socket, unHeaderIPC)) {
 					log_error("Error al enviar el fin de programa a la UMC");
 				}
@@ -276,10 +280,11 @@ void *consumidor_cpu(void *param) {
 				break;
 			case IMPRIMIRTEXTO:
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
-				log_info("Nuevo pedido de impresion...");
+				log_info("Nuevo pedido de impresion de texto...");
 
 				recv(unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
-				recv(unCliente, &texto_imprimir, unHeaderIPC->largo - sizeof(uint32_t), 0);
+				texto_imprimir = malloc(unMensajeIPC.header.largo - sizeof(uint32_t));
+				recv(unCliente, texto_imprimir, unMensajeIPC.header.largo - sizeof(uint32_t), 0);
 
 				unHeaderIPC = nuevoHeaderIPC(IMPRIMIRTEXTO);
 				unHeaderIPC->largo = strlen(texto_imprimir)+1;
@@ -287,7 +292,8 @@ void *consumidor_cpu(void *param) {
 					log_error("Error al enviar el texto a imprimir");
 				}
 				liberarHeaderIPC(unHeaderIPC);
-				log_info("Se imprimio el valor [%d]\n",valor_impresion);
+				free(texto_imprimir);
+				log_info("Se imprimio el valor [%d]\n",texto_imprimir);
 				break;
 			}
 		}
