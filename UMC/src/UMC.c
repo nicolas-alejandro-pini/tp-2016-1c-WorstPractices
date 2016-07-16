@@ -168,26 +168,22 @@ void finalizarSistema(stMensajeIPC *unMensaje,int unSocket, stParametro *unEstad
 
 int main(int argc, char *argv[]) {
 
-	stMensajeIPC unMensaje;
 	stHeaderIPC *unaCabecera = NULL;
 	stHeaderIPC *unaCabecera2 = NULL;
 	int unCliente = 0, unSocket = 0;
 	struct sockaddr addressAceptado;
-	int maximoAnterior = 0;
 	char enviolog[TAMDATOS];
 	int pid;
-	//char elsocket[10];
 	int agregarSock;
 	pthread_attr_t attr;
 	pthread_t tid;
 	char* temp_file = "umc.log";
-	stEnd *end = NULL;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
 
 	//Primero instancio el log
-		logger = log_create(temp_file, "UMC",-1, LOG_LEVEL_INFO);
+		logger = log_create(temp_file, "UMC", 0, LOG_LEVEL_INFO);
 
 	// Ejecuto las pruebas
 	if(argv[2])
@@ -380,7 +376,6 @@ int main(int argc, char *argv[]) {
 								if(agregarSock==1){
 									FD_SET(unCliente,&(fds_master));
 									if (unCliente > losParametros.fdMax){
-										maximoAnterior = losParametros.fdMax;
 										losParametros.fdMax = unCliente;
 									}
 									agregarSock=0;
@@ -409,7 +404,6 @@ int main(int argc, char *argv[]) {
 							close (unSocket);
 
 							if (unSocket > losParametros.fdMax){
-								maximoAnterior = losParametros.fdMax;
 								losParametros.fdMax = unSocket;
 							}
 							memset(enviolog,'\0',TAMDATOS);

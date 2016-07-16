@@ -29,13 +29,13 @@ endif
 all: CPU
 
 dependents:
-	-cd /home/nico/git/tp-2016-1c-WorstPractices/Commons/Release && $(MAKE) clean all
+	-cd /home/utnso/git/tp-2016-1c-WorstPractices/Commons/Debug && $(MAKE) all
 
 # Tool invocations
-CPU: $(OBJS) $(USER_OBJS) /home/nico/git/tp-2016-1c-WorstPractices/Commons/Release/libCommons.so
+CPU: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2016-1c-WorstPractices/Commons/Debug/libCommons.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/nico/git/tp-2016-1c-WorstPractices/Commons/Release" -o "CPU" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/git/tp-2016-1c-WorstPractices/Commons/Debug" -o "CPU" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -46,6 +46,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/nico/git/tp-2016-1c-WorstPractices/Commons/Release/libCommons.so:
+/home/utnso/git/tp-2016-1c-WorstPractices/Commons/Debug/libCommons.so:
 
 -include ../makefile.targets

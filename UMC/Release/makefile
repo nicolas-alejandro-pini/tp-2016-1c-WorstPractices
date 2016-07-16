@@ -10,6 +10,9 @@ RM := rm -rf
 -include sources.mk
 -include src/tests/subdir.mk
 -include src/subdir.mk
+-include commons/parser/subdir.mk
+-include commons/collections/subdir.mk
+-include commons/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -26,11 +29,14 @@ endif
 # All Target
 all: UMC
 
+dependents:
+	-cd /home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug && $(MAKE) clean all
+
 # Tool invocations
-UMC: $(OBJS) $(USER_OBJS)
+UMC: $(OBJS) $(USER_OBJS) /home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug/libCommons.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc  -o "UMC" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug" -o "UMC" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -41,5 +47,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
+/home/nico/git/tp-2016-1c-WorstPractices/Commons/Debug/libCommons.so:
 
 -include ../makefile.targets

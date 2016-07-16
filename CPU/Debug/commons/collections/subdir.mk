@@ -4,10 +4,10 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-/home/nico/git/tp-2016-1c-WorstPractices/Commons/commons/collections/dictionary.c \
-/home/nico/git/tp-2016-1c-WorstPractices/Commons/commons/collections/list.c \
-/home/nico/git/tp-2016-1c-WorstPractices/Commons/commons/collections/list_mutex.c \
-/home/nico/git/tp-2016-1c-WorstPractices/Commons/commons/collections/queue.c 
+/home/utnso/git/tp-2016-1c-WorstPractices/Commons/commons/collections/dictionary.c \
+/home/utnso/git/tp-2016-1c-WorstPractices/Commons/commons/collections/list.c \
+/home/utnso/git/tp-2016-1c-WorstPractices/Commons/commons/collections/list_mutex.c \
+/home/utnso/git/tp-2016-1c-WorstPractices/Commons/commons/collections/queue.c 
 
 OBJS += \
 ./commons/collections/dictionary.o \
@@ -23,31 +23,31 @@ C_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
-commons/collections/dictionary.o: /home/nico/git/tp-2016-1c-WorstPractices/Commons/commons/collections/dictionary.c
+commons/collections/dictionary.o: /home/utnso/git/tp-2016-1c-WorstPractices/Commons/commons/collections/dictionary.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -I"/home/nico/git/tp-2016-1c-WorstPractices/Commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	gcc -I"/home/utnso/git/tp-2016-1c-WorstPractices/Commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
-commons/collections/list.o: /home/nico/git/tp-2016-1c-WorstPractices/Commons/commons/collections/list.c
+commons/collections/list.o: /home/utnso/git/tp-2016-1c-WorstPractices/Commons/commons/collections/list.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -I"/home/nico/git/tp-2016-1c-WorstPractices/Commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	gcc -I"/home/utnso/git/tp-2016-1c-WorstPractices/Commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
-commons/collections/list_mutex.o: /home/nico/git/tp-2016-1c-WorstPractices/Commons/commons/collections/list_mutex.c
+commons/collections/list_mutex.o: /home/utnso/git/tp-2016-1c-WorstPractices/Commons/commons/collections/list_mutex.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -I"/home/nico/git/tp-2016-1c-WorstPractices/Commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	gcc -I"/home/utnso/git/tp-2016-1c-WorstPractices/Commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
-commons/collections/queue.o: /home/nico/git/tp-2016-1c-WorstPractices/Commons/commons/collections/queue.c
+commons/collections/queue.o: /home/utnso/git/tp-2016-1c-WorstPractices/Commons/commons/collections/queue.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C Compiler'
-	gcc -I"/home/nico/git/tp-2016-1c-WorstPractices/Commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	gcc -I"/home/utnso/git/tp-2016-1c-WorstPractices/Commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

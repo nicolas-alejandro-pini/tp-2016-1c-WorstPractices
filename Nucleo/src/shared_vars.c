@@ -32,15 +32,15 @@ stSharedVar *quitar_shared_var(char *nombre){
 	return unaSharedVar;
 }
 
-void grabar_shared_var(char *nombre,int valor){
-	stSharedVar *unaSharedVar = quitar_shared_var(nombre);
-	unaSharedVar->valor = valor;
+void grabar_shared_var(stSharedVar *unaSharedVar){
+	stSharedVar *auxSharedVar = quitar_shared_var(unaSharedVar->nombre);
+	auxSharedVar->valor = unaSharedVar->valor;
 	pthread_mutex_lock(&mutex_lista_shared_var);
-	list_add(lista_shared_vars,unaSharedVar);
+	list_add(lista_shared_vars,auxSharedVar);
 	pthread_mutex_unlock(&mutex_lista_shared_var);
 }
 
-stSharedVar *obtener_shared_var(char *nombre){
+stSharedVar obtener_shared_var(char *nombre){
 	stSharedVar *unaSharedVar;
 	/*Busqueda de la variable compartida*/
 	int _es_la_shared_var(stSharedVar *s) {
@@ -49,7 +49,7 @@ stSharedVar *obtener_shared_var(char *nombre){
 	pthread_mutex_lock(&mutex_lista_shared_var);
 	unaSharedVar = list_find(lista_shared_vars, (void*) _es_la_shared_var);
 	pthread_mutex_unlock(&mutex_lista_shared_var);
-	return unaSharedVar;
+	return *unaSharedVar;
 }
 
 
