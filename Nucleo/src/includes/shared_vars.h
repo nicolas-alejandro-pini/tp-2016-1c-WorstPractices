@@ -15,7 +15,7 @@
 void inicializar_lista_shared_var();
 void crear_shared_var(char *nombre);
 stSharedVar *quitar_shared_var(char *nombre);
-void grabar_shared_var(char *nombre,int valor);
-stSharedVar *obtener_shared_var(char *nombre);
+void grabar_shared_var(stSharedVar *unaSharedVar);
+stSharedVar obtener_shared_var(char *nombre);
 
 #endif /* INCLUDES_SHARED_VARS_H_ */

@@ -54,7 +54,7 @@ void *consumidor_cpu(void *param) {
 	stMensajeIPC unMensajeIPC;
 	stPCB *unPCB;
 	t_paquete paquete;
-	stSharedVar *unaSharedVar;
+	stSharedVar unaSharedVar;
 	uint32_t socket_consola_to_print,pid_fin;
 	t_valor_variable valor_impresion;
 	stConsola * consola;
@@ -110,19 +110,13 @@ void *consumidor_cpu(void *param) {
 			switch (unMensajeIPC.header.tipo) {
 			case IOANSISOP:
 				log_info("Recibido mensaje de I/O desde la CPU");
-				/*Se recibe el nombre del dispositivo y tiempo*/
-				if(recibir_paquete (unCliente, &paquete)){
-					log_error("No se pudo recibir el paquete\n");
-					error = 1;
-					free_paquete(&paquete);
-					continue;
-				}
-				deserializar_campo(&paquete, &offset, &dispositivo_name, sizeof(dispositivo_name));
-				deserializar_campo(&paquete, &offset, &dispositivo_time, sizeof(dispositivo_time));
-
-				free_paquete(&paquete);
+				dispositivo_name = malloc(unMensajeIPC.header.largo);
+				recv(unCliente,dispositivo_name,unMensajeIPC.header.largo - sizeof(dispositivo_time),0);
+				recv(unCliente,&dispositivo_time,sizeof(dispositivo_time),0);
+				log_info("Nombre dispositivo [%s] | Cantidad de tiempo [%d]",dispositivo_name,dispositivo_time);
+				log_info("Se recibe un PCB a bloquear");
 				if (recibir_paquete(unCliente, &paquete)) {
-					log_error("No se pudo recibir el paquete\n");
+					log_error("No se pudo recibir el paquete");
 					error = 1;
 					free_paquete(&paquete);
 					continue;
@@ -191,77 +185,56 @@ void *consumidor_cpu(void *param) {
 				break;
 			case OBTENERVALOR:
 				log_info("Nuevo pedido de variable compartida...");
-
+				unMensajeIPC.contenido = malloc(sizeof(unMensajeIPC.header.largo));
+				recv(unCliente,unMensajeIPC.contenido,unMensajeIPC.header.largo,0);
 				/*TODO: Falta testear*/
-				unaSharedVar = obtener_shared_var(unMensajeIPC.contenido);
-				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar->valor)){
+				unaSharedVar = obtener_shared_var((char*)unMensajeIPC.contenido);
+				unHeaderIPC = nuevoHeaderIPC(OK);
+				unHeaderIPC->largo = sizeof(t_valor_variable);
+				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar.valor)){
 					log_error("Error al enviar el valor la variable");
 					error = 1;
+					liberarHeaderIPC(unHeaderIPC);
 					continue;
 				}
-				log_info("Se devolvio el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
+				liberarHeaderIPC(unHeaderIPC);
+				log_info("Se devolvio el valor [%s] de la variable compartida [%d]\n",unaSharedVar.nombre,unaSharedVar.valor);
+				free(unMensajeIPC.contenido);
 				break;
 
 			case GRABARVALOR:
-				log_info("Nuevo pedido de actualizacion de variable compartida\n");
-				/*Me pasa la variable compartida y el valor*/
-				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
-					log_error("CPU error - No se pudo enviar header");
-					error = 1;
-					continue;
-				}
-
-				offset = 0;
-				if (recibir_paquete(unCliente, &paquete)) {
-					log_error("No se pudo recibir el paquete\n");
-					error = 1;
-					continue;
-				}
-
-				deserializar_campo(&paquete, &offset, &unaSharedVar, sizeof(stSharedVar));
-				grabar_shared_var(unaSharedVar->nombre,&unaSharedVar->valor);
-				log_info("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar->nombre,unaSharedVar->valor);
-				free_paquete(&paquete);
+				log_info("Nuevo pedido de actualizacion de variable compartida");
+				unaSharedVar.nombre = malloc(unMensajeIPC.header.largo - sizeof(t_valor_variable));
+				recv(unCliente,&unaSharedVar.nombre,unMensajeIPC.header.largo - sizeof(t_valor_variable),0);
+				recv(unCliente,&unaSharedVar.valor,sizeof(t_valor_variable),0);
+				grabar_shared_var(&unaSharedVar);
+				log_info("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar.nombre,unaSharedVar.valor);
 				break;
 			case WAIT:
 				log_info("Nuevo pedido de wait de semaforo ");
 				/*Wait del semaforo que pasa por parametro*/
-				offset = 0;
-				if (recibir_paquete(unCliente, &paquete)) {
-					log_error("No se pudo recibir el paquete\n");
-					error = 1;
-					continue;
-				}
-				deserializar_campo(&paquete, &offset, &identificador_semaforo, sizeof(identificador_semaforo));
-				free_paquete(&paquete);
-				/*TODO: Falta testear*/
-				printf("%s\n",identificador_semaforo);
+				identificador_semaforo = malloc(unMensajeIPC.header.largo);
+				recv(unCliente, identificador_semaforo, unMensajeIPC.header.largo, 0);
 				wait_semaforo(identificador_semaforo);
+				free(identificador_semaforo);
 
+				unHeaderIPC = nuevoHeaderIPC(OK);
+				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
+					log_error("No se pudo bloquear el semaforo");
+				}else{
+					log_info("Se hizo wait al semaforo %s",identificador_semaforo);
+				}
+				liberarHeaderIPC(unHeaderIPC);
 				break;
 			case SIGNAL:
 				/*Signal del semaforo que pasa por parametro*/
 				log_info("Nuevo pedido de signal de semaforo ");
-				offset = 0;
-				if (recibir_paquete(unCliente, &paquete)) {
-					log_error("No se pudo recibir el paquete\n");
-					error = 1;
-					continue;
-				}
+				identificador_semaforo = malloc(unMensajeIPC.header.largo);
+				recv(unCliente, identificador_semaforo, unMensajeIPC.header.largo, 0);
 
-				deserializar_campo(&paquete, &offset, &identificador_semaforo, sizeof(identificador_semaforo));
-
-				/*TODO: Falta testear*/
 				if(signal_semaforo(identificador_semaforo)== EXIT_FAILURE){
-					unHeaderIPC = nuevoHeaderIPC(ERROR);
-					if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
-						log_error("CPU error - No se pudo enviar header");
-						error = 1;
-						continue;
-					}
+					log_info("No se hizo signal al semaforo %s",identificador_semaforo);
 				}
-				free_paquete(&paquete);
 				break;
 			case IMPRIMIR:
 				/*Me comunico con la correspondiente consola que inicio el PCB*/
@@ -303,12 +276,9 @@ void *consumidor_cpu(void *param) {
 		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
 		ready_productor(unPCB);
 		log_info("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
-		liberarHeaderIPC(unHeaderIPC);
 		close(unCliente);
 		pthread_exit(NULL);
 	}
-
-	liberarHeaderIPC(unHeaderIPC);
 	pthread_exit(NULL);
 	return NULL;
 }
