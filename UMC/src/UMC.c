@@ -211,9 +211,14 @@ int main(int argc, char *argv[]) {
 			exit(-1);
 		}
 		loadInfo(&losParametros,argv[1]);
-		log_info("Configuración OK");
-
-
+		log_info("Entradas TLB UMC[%d]",losParametros.entradasTLB);
+		log_info("Marcos MP [%d]",losParametros.frames);
+		log_info("Tamanio Marco UMC[%d]",losParametros.frameSize);
+		log_info("Algoritmo UMC[%s]",losParametros.algoritmo);
+		log_info("Delay [%d]",losParametros.delay);
+		log_info("Puerto UMC[%d]",losParametros.miPuerto);
+		log_info("IP Swap [%s]",losParametros.ipSwap);
+		log_info("IP Swap [%d]",losParametros.puertoSwap);
 
 		/* --------------------------------Se realiza la Inicializacion de estructuras---------------------------- */
 		t_list_mutex *TablaMarcos;
