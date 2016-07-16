@@ -12,6 +12,7 @@
 #include "includes/nucleo_config.h"
 #include "includes/planificador.h"
 #include "tests/test_nucleo.h"
+#include <commons/sockets.h>
 
 /*
  ============================================================================
@@ -302,14 +303,11 @@ int main(int argc, char *argv[]) {
 			test_unit_nucleo();
 
 	/*Carga del archivo de configuracion*/
-	log_info("Obteniendo configuracion...");
 	if (loadInfo(&elEstadoActual, 0)) {
-		log_info("Error");
+		log_info("Error al cargar la configuracion");
 		exit(-2);
 	}
-	log_info("OK");
-
-//	log_info("Configuracion cargada satisfactoriamente...\n");
+	log_info("Configuracion cargada satisfactoriamente...\n");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
 	pthread_create(&p_thread, NULL, &monitor_configuracion, (void*) &elEstadoActual);
@@ -423,7 +421,7 @@ int main(int argc, char *argv[]) {
 							break;/*Sale del switch*/
 						}
 						liberarHeaderIPC(stHeaderSwitch);
-						log_info("Nueva consola conectada\n");
+						log_info("Nueva consola conectada");
 						agregarSock = 1;
 						/*Agrego el socket conectado a la lista Master*/
 						if (agregarSock == 1) {
@@ -448,7 +446,6 @@ int main(int argc, char *argv[]) {
 								}
 								if (inicializar_programa(unPCB, (char *)unMensaje.contenido, elEstadoActual.sockUmc) == EXIT_FAILURE) {
 									log_error("No se pudo inicializar el programa");
-									/*TODO: Liberar toda la memoria del pcb!*/
 									quitar_master(unCliente, maximoAnterior);
 									close(unCliente);
 									break;/*Sale del switch*/
