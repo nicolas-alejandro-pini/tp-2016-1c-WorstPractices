@@ -17,7 +17,7 @@
 #define MAX_BUFFER 200ul
 #define MAX_COMANDO 20ul
 #define MAX_PARAMETROS 20ul
-#define CANTIDAD_PARAMETROS 2
+#define CANTIDAD_PARAMETROS 1
 
 void mostrarHelp();
 void consolaUMC();
