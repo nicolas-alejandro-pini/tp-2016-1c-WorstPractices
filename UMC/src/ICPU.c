@@ -30,6 +30,8 @@ int inicializarPrograma(int unCliente){
 	unPageIni = (stPageIni*)malloc(sizeof(stPageIni));
 	deserializar_inicializar_programa(unPageIni,&paquete_stPageIni);
 
+	log_info("Creando tabla de paginas Pid[%d] Cantidad de paginas[%d]", unPageIni->processId , unPageIni->cantidadPaginas);
+
 	/* Crea Tabla de Paginas , Copia los valores, se puede liberar unPageIni */
 	crearTabla(unPageIni->processId, unPageIni->cantidadPaginas);
 
@@ -47,6 +49,7 @@ int inicializarPrograma(int unCliente){
 		close(unCliente);
 		return EXIT_FAILURE;
 	}
+	log_info("Pid[%d] enviado al Swap y confirmado al nucleo", unPageIni->processId);
 
 	liberarHeaderIPC(unHeader);
 	free(unPageIni->programa);
@@ -241,6 +244,7 @@ void *finalizarProgramaNucleo(uint32_t pid){
     	log_error("Finalizar programa: fallo la respuesta de confirmacion del Swap");
     }
 
+	log_info("finalizando el pid[%d]", pid);
 	return NULL;
 }
 
@@ -269,9 +273,9 @@ uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 	return pid;
 }
 
-void realizarAccionCPU(uint32_t *unSocketRecibido){
+void realizarAccionCPU(uint32_t unSocket){
 
-	uint32_t unSocket=*unSocketRecibido;
+	//uint32_t unSocket=*unSocketRecibido;
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader;
 	uint32_t pidActivo;

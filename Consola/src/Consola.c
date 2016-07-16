@@ -196,7 +196,7 @@ int recv_print(t_console* tConsole){
 	stHeaderIPC unMensaje;
 	unMensaje.tipo = ERROR;
 	t_valor_variable valor;
-	char * texto;
+	char *texto = NULL;
 
 	while(unMensaje.tipo != FINPROGRAMA){
 
@@ -214,8 +214,10 @@ int recv_print(t_console* tConsole){
 				break;
 			case IMPRIMIRTEXTO:
 				log_info("Recibo un mensaje de IMPRIMIR TEXTO");
-				recv(*(tConsole->pSockfd), &texto, unMensaje.largo, 0);
+				texto = malloc(unMensaje.largo + 1);
+				recv(*(tConsole->pSockfd), texto, unMensaje.largo, 0);
 				log_info("IMPRIMIR [%s]", texto);
+				free(texto);
 				break;
 			case FINPROGRAMA:
 				log_info("Finalizando consola...\n");
