@@ -58,6 +58,18 @@ int inicializarPrograma(int unCliente){
 	return EXIT_SUCCESS;
 }
 
+int validarPedido(uint16_t pid, uint16_t pagina, uint16_t offset, uint16_t size){
+	stNodoListaTP* p;
+
+	p=buscarPID(pid);
+	if(p==NULL || pagina >=  p->size || offset > losParametros.frameSize ||
+			(offset+size) > losParametros.frameSize){
+		log_error("acceso a memoria no valido");
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
+}
+
 int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 	uint16_t frameBuscado = 0;
 	uint16_t frameNuevo = 0;
@@ -181,16 +193,18 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 
 	/* Obtiene Tabla de Paginas de PID */
 	tablaPaginas = buscarPID(pid);
-	if(tablaPaginas==NULL) // valido que exista
+	if(tablaPaginas==NULL){ // valido que exista
+		log_info("No hay tabla de paginas para el pid %d solicitado", pid);
 		return EXIT_FAILURE;
-
+	}
 	/* Obtengo presencias en MP de la tabla de PID */
 	presencias = obtenerPresenciasTabladePaginas(tablaPaginas);
 
 	// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
-	if(0 == presencias && 0 == hayMarcoLibre())
+	if(0 == presencias && 0 == hayMarcoLibre()){
+		log_info("Se rechaza por presencias %d", presencias);
 		return EXIT_FAILURE;
-
+	}
 	// Reemplazo dentro de los marcos
 	if(presencias < losParametros.frameByProc && 0 != hayMarcoLibre()){
 		log_info("Pid[%d] Marcos[%d/%d] Disponibles MP[%d] asigno...", pid, presencias, losParametros.frameByProc, hayMarcoLibre());
@@ -204,18 +218,22 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	}
 	// Me las arreglo con los marcos que tengo (que no puede ser 0 )
 	else if(presencias >= losParametros.frameByProc){
-		if(0 == presencias )  // por las dudas avisarlo... (error de configuracion)
+		if(0 == presencias ){  // por las dudas avisarlo... (error de configuracion)
+			log_info("Marcos por proceso esta en 0");
 			return EXIT_FAILURE;
+		}
 		log_info("Pid[%d] Marcos[%d/%d] reemplazo...", pid, presencias, losParametros.frameByProc);
 		reemplazarValorTabla(&frameNuevo, tablaPaginas, pagina);
 	}
 
-	if(0 == frameNuevo)
+	if(0 == frameNuevo){
+		log_info("frameNuevo es 0, no hay marco libre");
 		return EXIT_FAILURE;
-
+	}
 	// cargo en memoria la pagina obtenida
 	if(escribirMemoria(paginaLeidaSwap, frameNuevo, 0, losParametros.frameSize)){
 		free(paginaLeidaSwap);
+		log_info("error al escribir en memoria - pagina de swap: %d, frameNuevo: %d", paginaLeidaSwap, frameNuevo);
 		return EXIT_FAILURE;
 	}
 	free(paginaLeidaSwap);
@@ -315,6 +333,15 @@ void realizarAccionCPU(uint32_t unSocket){
 				liberarHeaderIPC(unHeader);
 				break;
 			}
+			if( validarPedido( pidActivo, posR.pagina, posR.offset, posR.size) != EXIT_SUCCESS){
+				log_error("Thread socket[%d] Error de acceso al leer bytes", unSocket);
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				enviarHeaderIPC(unSocket,unHeader);
+				liberarHeaderIPC(unHeader);
+				break;
+			}
+
 
 			buffer = malloc(posR.size);
 			if(leerBytes(&buffer, &posR, pidActivo)){
@@ -350,6 +377,15 @@ void realizarAccionCPU(uint32_t unSocket){
 			// Valido pedidos nulos
 			if(posW.tamanio == 0){
 				log_error("Error de longitud al escribir bytes");
+				unHeader = nuevoHeaderIPC(ERROR);
+				unHeader->largo = 0;
+				enviarHeaderIPC(unSocket,unHeader);
+				liberarHeaderIPC(unHeader);
+				break;
+			}
+
+			if( validarPedido( pidActivo, posW.nroPagina, posW.offset, posW.tamanio) != EXIT_SUCCESS){
+				log_error("Thread socket[%d] Error de acceso al leer bytes", unSocket);
 				unHeader = nuevoHeaderIPC(ERROR);
 				unHeader->largo = 0;
 				enviarHeaderIPC(unSocket,unHeader);
