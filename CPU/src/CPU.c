@@ -72,7 +72,7 @@ t_puntero obtenerPosicionVariable(t_nombre_variable identificador_variable ){
 	unsigned long int cantVars, i;
 	int tamanioStack;
 
-	log_info("Inicio primitiva obtenerPosicionVariable para cariable %c.",identificador_variable);
+	log_info("Inicio primitiva obtenerPosicionVariable para variable %c.",identificador_variable);
 
 	tamanioStack = list_size(unPCB->stack); //considero que en pila del stack el ultimo es el contexto actual.
 
@@ -273,15 +273,19 @@ int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
 }
 
 void irAlLabel(t_nombre_etiqueta etiqueta){
+
+	log_info("Llamada a la primitiva irAlLabel para etiqueta [%s] .",etiqueta);
 	t_puntero_instruccion ptr_instruccion;
 	ptr_instruccion = metadata_buscar_etiqueta(etiqueta,unPCB->metadata_program->etiquetas,unPCB->metadata_program->etiquetas_size);
+
+	log_info("Se carga el pc con la posicion [%d] del label [%s].",ptr_instruccion,etiqueta);
 	unPCB->pc = ptr_instruccion;
 }
 
 void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar){
 	/*Creamos una nuevo indice de stack correspondiente al nuevo call de la funcion*/
 	/*Buscamos la etiqueta definida en el metadata, para actualizar el program counter del PCB*/
-	printf("Llamada a llamarFuncionConRetorno\n");
+	log_info("Llamada a la primitiva llamarFuncionConRetorno para etiqueta [%s] y retornar en [%d]",etiqueta , donde_retornar);
 	stIndiceStack *unIndiceStack;
 	irAlLabel(etiqueta);
 	unIndiceStack = (stIndiceStack*) malloc(sizeof(stIndiceStack));
@@ -292,7 +296,7 @@ void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorna
 	list_add(unPCB->stack,unIndiceStack);
 }
 void retornar(t_valor_variable retorno){
-	printf("Llamada a funcion retornar\n");
+	log_info("Llamada a funcion retornar con valor de retorno [%d]", retorno);
 	stIndiceStack *unIndiceStack;
 	/*Sacamos del stack la variable a retornar*/
 	unIndiceStack = list_remove(unPCB->stack,list_size(unPCB->stack));
@@ -324,6 +328,7 @@ void imprimir(t_valor_variable valor_mostrar){
 
 void imprimirTexto(char* texto){
 
+	log_info("Inicio primitiva imprimirTexto con valor:  %s",texto);
 	stHeaderIPC* unHeaderPrimitiva;
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IMPRIMIRTEXTO);
@@ -477,33 +482,39 @@ void cargarConf(t_configCPU* config,char* file_name){
 
 	t_config* miConf = config_create ("cpu.conf"); /*Estructura de configuracion*/
 
-		if (config_has_property(miConf,"NUCLEO_IP")) {
-			config->ipNucleo = config_get_string_value(miConf,"NUCLEO_IP");
-		} else {
-			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","NUCLEO_IP");
-			exit(EXIT_FAILURE);
-		}
+	config->salir = 0; //Inicializo OK el flag.
 
-		if (config_has_property(miConf,"PUERTO_NUCLEO")) {
-			config->puertoNucleo = config_get_int_value(miConf,"PUERTO_NUCLEO");
-		} else {
-			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_NUCLEO");
-			exit(EXIT_FAILURE);
-		}
+	if (config_has_property(miConf,"NUCLEO_IP")) {
+		config->ipNucleo = config_get_string_value(miConf,"NUCLEO_IP");
+	} else {
+		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","NUCLEO_IP");
+		config->salir = 1;
+		exit(EXIT_FAILURE);
+	}
 
-		if (config_has_property(miConf,"UMC_IP")) {
-			config->ipUmc= config_get_string_value(miConf,"UMC_IP");
-		} else {
-			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","UMC_IP");
-			exit(EXIT_FAILURE);
-		}
+	if (config_has_property(miConf,"PUERTO_NUCLEO")) {
+		config->puertoNucleo = config_get_int_value(miConf,"PUERTO_NUCLEO");
+	} else {
+		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_NUCLEO");
+		config->salir = 1;
+		exit(EXIT_FAILURE);
+	}
 
-		if (config_has_property(miConf,"PUERTO_UMC")) {
-			config->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
-		} else {
-			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
-			exit(EXIT_FAILURE);
-		}
+	if (config_has_property(miConf,"UMC_IP")) {
+		config->ipUmc= config_get_string_value(miConf,"UMC_IP");
+	} else {
+		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","UMC_IP");
+		config->salir = 1;
+		exit(EXIT_FAILURE);
+	}
+
+	if (config_has_property(miConf,"PUERTO_UMC")) {
+		config->puertoUmc = config_get_int_value(miConf,"PUERTO_UMC");
+	} else {
+		log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n","PUERTO_UMC");
+		config->salir = 1;
+		exit(EXIT_FAILURE);
+	}
 
 }
 
@@ -526,7 +537,7 @@ int cpuHandShake (int socket, int tipoHeader)
 		fflush(stdout);
 		return(-1);
 	}
-	printf("HandShake mensaje recibido %ld\n", headerIPC->tipo);
+	log_info("HandShake mensaje recibido %d\n", headerIPC->tipo);
 
 	if (headerIPC->tipo == QUIENSOS)
 	{
@@ -585,6 +596,8 @@ int cpuConectarse(char* IP, int puerto, char* aQuien){
 			return socket;
 	}
 
+	//Caso de Error//
+	configuracionInicial.salir = 1;
 	return (-1); // Retorna -1 si no se pudo crear el socket o fallo el handshake
 
 }
@@ -705,7 +718,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 			paginaToUMC = calcularPaginaInstruccion(pagina);
 			startToUMC %= tamanioPaginaUMC;
 			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-			unHeader->largo = sizeof(uint16_t);
+			unHeader->largo = sizeof(uint16_t)*3;
 
 			if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
 				log_error("Error al enviar mensaje de leer bytes pagina.");
@@ -839,7 +852,7 @@ int cambiarContextoUMC(uint32_t pid){
 
 	stMensajeIPC unMensajeIPC;
 	unMensajeIPC.header.tipo = CAMBIOCONTEXTO;
-	unMensajeIPC.header.largo = sizeof(pid);
+	unMensajeIPC.header.largo = sizeof(uint32_t);
 
 	if(!enviarMensajeIPC(configuracionInicial.sockUmc,&unMensajeIPC.header, (char*) &pid))
 		return EXIT_FAILURE;
@@ -890,7 +903,7 @@ int main(void) {
 
 	configuracionInicial.sockNucleo = cpuConectarse(configuracionInicial.ipNucleo, configuracionInicial.puertoNucleo, "Nucleo");
 
-	if (configuracionInicial.sockNucleo != -1){
+	if (configuracionInicial.salir == 0 && configuracionInicial.sockNucleo != -1){
 		FD_SET(configuracionInicial.sockNucleo,&(fds_master));
 		configuracionInicial.socketMax = configuracionInicial.sockNucleo;
 		SocketAnterior = configuracionInicial.socketMax;
@@ -903,37 +916,41 @@ int main(void) {
 
 	/***** Lanzo conexión con el UMC ********/
 
-	log_info("Conectando al UMC...");
+	if (configuracionInicial.salir == 0){
 
-	configuracionInicial.sockUmc = cpuConectarse(configuracionInicial.ipUmc, configuracionInicial.puertoUmc, "UMC");
+		log_info("Conectando al UMC...");
 
-	if (configuracionInicial.sockUmc > 0){
+		configuracionInicial.sockUmc = cpuConectarse(configuracionInicial.ipUmc, configuracionInicial.puertoUmc, "UMC");
 
-		FD_SET(configuracionInicial.sockUmc,&(fds_master));
-		configuracionInicial.socketMax = configuracionInicial.sockUmc;
-		SocketAnterior = configuracionInicial.socketMax;
-		log_info("OK - UMC conectada.");
-		fflush(stdout);
+		if (configuracionInicial.sockUmc > 0){
+
+			FD_SET(configuracionInicial.sockUmc,&(fds_master));
+			configuracionInicial.socketMax = configuracionInicial.sockUmc;
+			SocketAnterior = configuracionInicial.socketMax;
+			log_info("OK - UMC conectada.");
+			fflush(stdout);
+
+		}
+
+		//Recibo tamanio de pagina UMC//
+
+		configUMC = malloc(sizeof(t_UMCConfig));
+
+		if(recibirConfigUMC(configuracionInicial.sockUmc, configUMC )!=0){
+
+			log_info("Error al recibir paginas de UMC.");
+			configuracionInicial.salir = 1;
+		}
+
+		log_info("Recibiendo de la UMC el tamaño de pagina.");
+
+		tamanioPaginaUMC = configUMC->tamanioPagina; //Guardo el tamaño de la pagina de la umc.
+
+		log_info("Recibí tamaño de pagina: %d",tamanioPaginaUMC);
+
+		//Fin de conexion al UMC//
 
 	}
-
-	//Recibo tamanio de pagina UMC//
-
-	configUMC = malloc(sizeof(t_UMCConfig));
-
-	if(recibirConfigUMC(configuracionInicial.sockUmc, configUMC )!=0){
-
-		log_info("Error al recibir paginas de UMC.");
-		configuracionInicial.salir = 1;
-	}
-
-	log_info("Recibiendo de la UMC el tamaño de pagina.");
-
-	tamanioPaginaUMC = configUMC->tamanioPagina; //Guardo el tamaño de la pagina de la umc.
-
-	log_info("Recibí tamaño de pagina: %d",tamanioPaginaUMC);
-
-	//Fin de conexion al UMC//
 
 	while(configuracionInicial.salir == 0)
 	{
@@ -1030,7 +1047,7 @@ int main(void) {
 
 								}
 								//Si no hubo error devuelvo PCB al nucleo y evaluo error//
-								if (configuracionInicial.salir == 0 && devolverPCBalNucleo() == -1){
+								if (configuracionInicial.salir != 0 || devolverPCBalNucleo() == -1){
 
 									log_info("Error al devolver PCB de ANSIPROG...");
 									configuracionInicial.salir = 1;
@@ -1056,10 +1073,12 @@ int main(void) {
 		} // for socket max
 	} // while salir
 
-	//Informo al Nucleo que estoy terminando
-	unHeaderIPC = nuevoHeaderIPC(SIGUSR1CPU);
-	enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
-	liberarHeaderIPC(unHeaderIPC);
+	if (configuracionInicial.sockNucleo != -1){
+		//Informo al Nucleo que estoy terminando
+		unHeaderIPC = nuevoHeaderIPC(SIGUSR1CPU);
+		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+		liberarHeaderIPC(unHeaderIPC);
+	}
 
 	cerrarSockets(&configuracionInicial);
 	log_info("CPU: Fin del programa");
