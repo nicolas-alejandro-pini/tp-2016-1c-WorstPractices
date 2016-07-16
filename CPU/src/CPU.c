@@ -306,20 +306,17 @@ void llamarFuncionConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retorna
 void retornar(t_valor_variable retorno){
 	log_info("Llamada a funcion retornar con valor de retorno [%d]", retorno);
 	stIndiceStack *unIndiceStack;
-	stPosicion *unaVariable;
 
 	/*Sacamos del stack la variable a retornar*/
 	unIndiceStack = list_remove(unPCB->stack,list_size(unPCB->stack) - 1);
 	/*Actualizamos el program counter del pcb*/
 	unPCB->pc = unIndiceStack->retPosicion;
 
-	unaVariable = (stPosicion*)malloc(sizeof(stPosicion));
-
-	unaVariable->pagina = unPCB->offsetStack / tamanioPaginaUMC;
+	unIndiceStack->retVar.pagina = unPCB->offsetStack / tamanioPaginaUMC;
 	log_info("Se define variable de retorno, pagina: %d",unPCB->offsetStack / tamanioPaginaUMC);
-	unaVariable->offset= unPCB->offsetStack % tamanioPaginaUMC;
+	unIndiceStack->retVar.offset= unPCB->offsetStack % tamanioPaginaUMC;
 	log_info("Se define variable de retorno, offset: %d", unPCB->offsetStack % tamanioPaginaUMC);
-	unaVariable->size= TAMANIOVARIABLES;
+	unIndiceStack->retVar.size = TAMANIOVARIABLES;
 	log_info("Se define variable de retorno, size: %d", TAMANIOVARIABLES);
 
 	asignar((unIndiceStack->retVar.pagina * tamanioPaginaUMC ) + unIndiceStack->retVar.offset, retorno);
