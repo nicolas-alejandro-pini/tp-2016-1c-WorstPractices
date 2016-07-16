@@ -444,6 +444,7 @@ void liberarTablaPid(uint16_t pid){
 	void _comparo_con_pid_y_borro_tabla(stNodoListaTP *list_nodo){
 		if(list_nodo->pid == pid){
 			nodoListaTP = list_nodo;
+			liberarMarcosXTabla(nodoListaTP);
 			free(nodoListaTP->tabla);
 			index = i;
 		}
