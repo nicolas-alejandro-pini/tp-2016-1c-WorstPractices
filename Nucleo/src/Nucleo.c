@@ -11,7 +11,6 @@
 #include "includes/consumidor_cpu.h"
 #include "includes/nucleo_config.h"
 #include "includes/planificador.h"
-#include "tests/test_nucleo.h"
 #include <commons/sockets.h>
 
 /*
@@ -188,7 +187,6 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 	t_queue *colaRafaga;
 	stRafaga *unaRafaga;
 	stPCB *unPCB;
-	int unidad;
 
 	colaRafaga = unDispositivo->rafagas;
 
@@ -296,11 +294,6 @@ int main(int argc, char *argv[]) {
 		log_error("Falta el parametro de configuracion");
 		exit(-1);
 	}
-
-	// Ejecuto las pruebas
-	if (argv[2])
-		if (strcmp(argv[2], "--cunit") == 0)
-			test_unit_nucleo();
 
 	/*Carga del archivo de configuracion*/
 	if (loadInfo(&elEstadoActual, 0)) {
