@@ -255,18 +255,9 @@ int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
 	send(configuracionInicial.sockNucleo,variable, strlen(variable) + 1,0);
 	send(configuracionInicial.sockNucleo,&valor, sizeof(t_valor_variable),0);
 
-	//Recibo el mensaje de respuesta para conocer el resultado de la operación
-	if(recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderIPC) <= 0){
-		log_error("Error al obtener la respuesta desde el Nucleo");
-		return -1;
-	}
-
 	liberarHeaderIPC(unHeaderIPC);
 
-	if(unHeaderIPC->tipo != OK)
-		return -1;
-
-	return 0;
+	return valor;
 }
 
 void reemplazarBarraN(char* buffer){
@@ -279,7 +270,7 @@ void reemplazarBarraN(char* buffer){
 		if(buffer[i]=='\n')
 			buffer[i]='\0';
 	}
-
+	return;
 }
 
 void irAlLabel(t_nombre_etiqueta etiqueta){
