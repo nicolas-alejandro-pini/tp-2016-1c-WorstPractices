@@ -45,6 +45,8 @@
 #define QUANTUM				131ul
 #define QUANTUMSLEEP		132ul
 #define CONSOLA				133ul
+#define WAIT_NO_OK			134ul
+#define WAIT_OK				135ul
 
 /*Definicion de tipos de mensaje enre la UMC y el Swap*/
 #define SOYUMC				140ul
