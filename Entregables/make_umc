@@ -1,1 +1,43 @@
-echo '<<Make UMC>>'
+CC := gcc
+CFLAGS := -O0 -g3 -Wall
+BINARIO := UMC
+FUENTES := src/Memoria.c src/ISwap.c src/ICPU.c src/TLB.c src/TablaMarcos.c src/Consola.c src/UMC.c src/tests/test_umc_swap.c src/tests/test_umc.c
+OBJS := Memoria.o ISwap.o ICPU.o TLB.o TablaMarcos.o Consola.o UMC.o test_umc_swap.o test_umc.o
+
+LIBPATH := ../Commons/
+INCPATH := -I../Commons/
+LINKER := -lCommons -lcunit -lpthread
+
+# ALL
+all: ejecutable
+
+# Consola
+ejecutable: $(OBJS)
+	$(CC) -o $(BINARIO) $(CFLAGS) $(OBJS) -L$(LIBPATH) $(LINKER)
+
+Memoria.o:
+	$(CC) -c $(CFLAGS) src/Memoria.c $(INCPATH) $(LINKER)
+
+ISwap.o:
+	$(CC) -c $(CFLAGS) src/ISwap.c $(INCPATH) $(LINKER)
+
+ICPU.o:
+	$(CC) -c $(CFLAGS) src/ICPU.c $(INCPATH) $(LINKER)
+
+TLB.o:
+	$(CC) -c $(CFLAGS) src/TLB.c $(INCPATH) $(LINKER)
+
+TablaMarcos.o:
+	$(CC) -c $(CFLAGS) src/TablaMarcos.c $(INCPATH) $(LINKER)
+
+Consola.o:
+	$(CC) -c $(CFLAGS) src/Consola.c $(INCPATH) $(LINKER)
+
+UMC.o:
+	$(CC) -c $(CFLAGS) src/UMC.c $(INCPATH) $(LINKER)
+
+test_umc_swap.o:
+	$(CC) -c $(CFLAGS) src/tests/test_umc_swap.c $(INCPATH) $(LINKER)
+
+test_umc.o:
+	$(CC) -c $(CFLAGS) src/tests/test_umc.c $(INCPATH) $(LINKER)

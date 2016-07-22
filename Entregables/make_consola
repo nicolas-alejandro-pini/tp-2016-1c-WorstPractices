@@ -3,7 +3,6 @@ CFLAGS := -O0 -g3 -Wall
 BINARIO := Consola
 FUENTES := src/consola_main.c src/Consola.c
 OBJS := consola_main.o Consola.o
-HDRS := Consola.h
 
 LIBPATH := ../Commons/
 LINKER := Commons

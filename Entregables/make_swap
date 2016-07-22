@@ -1,1 +1,24 @@
-echo '<<Make Swap>>'
+CC := gcc
+CFLAGS := -O0 -g3 -Wall
+BINARIO := Swap
+FUENTES := src/Swap.c src/particionSwap.c src/gestionAsignacion.c
+OBJS := Swap.o particionSwap.o gestionAsignacion.o
+
+LIBPATH := ../Commons/
+LINKER := Commons
+
+# ALL
+all: ejecutable
+
+# Consola
+ejecutable: $(OBJS)
+	$(CC) -o $(BINARIO) $(CFLAGS) $(OBJS) -L$(LIBPATH) -l$(LINKER)
+
+Swap.o:
+	$(CC) -c $(CFLAGS) src/Swap.c -I$(LIBPATH) -l$(LINKER)
+
+particionSwap.o:
+	$(CC) -c $(CFLAGS) src/particionSwap.c -I$(LIBPATH) -l$(LINKER)
+
+gestionAsignacion.o:
+	$(CC) -c $(CFLAGS) src/gestionAsignacion.c -I$(LIBPATH) -l$(LINKER)

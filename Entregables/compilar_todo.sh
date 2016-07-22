@@ -88,23 +88,23 @@ chmod 665 $ENTREGABLES/Nucleo/makefile
 chmod 665 $ENTREGABLES/CPU/makefile
 chmod 665 $ENTREGABLES/Consola/makefile
 
-echo '\nCompilando Swap...'
+echo '\n\nCompilando Swap...'
 cd $ENTREGABLES/Swap
 make
 
-echo '\nCompilando UMC...'
+echo '\n\nCompilando UMC...'
 cd $ENTREGABLES/UMC
 make
 
-echo '\nCompilando Nucleo...'
+echo '\n\nCompilando Nucleo...'
 cd $ENTREGABLES/Nucleo
 make
 
-echo '\nCompilando CPU...'
+echo '\n\nCompilando CPU...'
 cd $ENTREGABLES/CPU
 make
 
-echo '\nCompilando Consola...'
+echo '\n\nCompilando Consola...'
 cd $ENTREGABLES/Consola
 make
 
