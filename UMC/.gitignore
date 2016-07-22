@@ -1,4 +1,5 @@
 umc.log
 *.o
 *.d
-
+/Debug
+/Release
