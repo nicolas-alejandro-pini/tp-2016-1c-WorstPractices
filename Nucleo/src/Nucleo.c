@@ -466,13 +466,12 @@ int main(int argc, char *argv[]) {
 							break;/*Sale del switch*/
 						}
 						liberarHeaderIPC(stHeaderSwitch);
-						log_info("Nuevo CPU conectado, lanzamiento de hilo...");
 						if (pthread_create(&p_threadCpu, NULL, (void*) consumidor_cpu, (void*) &unCliente) != 0) {
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							close(unCliente);
 							break;/*Sale del switch*/
 						}
-						log_info("OK");
+						log_info("Se lanza hilo de atencion a CPU conectado");
 						fflush(stdout);
 						break;
 					default:

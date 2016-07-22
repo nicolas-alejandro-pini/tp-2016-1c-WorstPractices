@@ -98,7 +98,7 @@ void *consumidor_cpu(void *param) {
 				error = 1;
 				continue;
 			}
-			printf("PCB [PID - %d] READY a EXEC\n", unPCB->pid);
+			printf("PCB [PID - %d] READY a EXEC (CPU - Sock [%d]) \n", unPCB->pid, unCliente);
 			free_paquete(&paquete);
 		}
 		while(fin_ejecucion==0&&error!=1){
