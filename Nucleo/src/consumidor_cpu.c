@@ -60,7 +60,7 @@ void *consumidor_cpu(void *param) {
 	stConsola * consola;
 	stSemaforo *semaforo_request;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
-	int error = 0, offset = 0, dispositivo_time,fin_ejecucion;
+	int error = 0,dispositivo_time,fin_ejecucion;
 	int unCliente = *((int *)param);
 
 	while (!error) {
