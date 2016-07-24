@@ -409,6 +409,12 @@ void wait(t_nombre_semaforo identificador_semaforo){
 		configuracionInicial.salir = 1;
 	}
 
+	//En el caso que haya un error con el wait devuelvo el pcb al nucleo.//
+	if(unHeaderPrimitiva->tipo == WAIT_NO_OK){
+		quantum = 0; //Termino el quantum para devolver el pcb.
+		solicitudIO = 1; // Flag global para devolver PCB por bloqueo.
+	}
+
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
 
