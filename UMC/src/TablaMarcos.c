@@ -46,16 +46,14 @@ int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame){
 stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
 	stRegistroTP *victima = NULL;
 	stRegistroTP *regTP = NULL;
-	uint16_t i = tablaPaginas->punteroClock;
-	uint16_t puntero_siguiente = 0;
+	uint16_t i;// = tablaPaginas->punteroClock;
+	int puntero_siguiente = -1;
 
 	// Me posiciono donde apunta el puntero
-	while(!victima){
+	for(i=tablaPaginas->punteroClock;!victima && i<=tablaPaginas->size;i++){
 
-		if(i < (tablaPaginas->size - 1))
-			i++;
-		else
-			i=0;  // todas las paginas empiezan en 0
+		if(i == (tablaPaginas->size))
+			i=0;	// todas las paginas empiezan en 0
 
 		regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
 
@@ -69,12 +67,14 @@ stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
 				victima=regTP;
 			}
 		}
+
 	}
 	// Posiciono el puntero en la pagina siguiente con presencia
-	// con el ultimo i del while anterior
-	while(0 == puntero_siguiente){
+	// con la pagina que se busca
+	i=pagina;
+	while(-1 == puntero_siguiente){
 
-		if(i < (tablaPaginas->size - 1))
+		if(i < (tablaPaginas->size))
 			i++;
 		else
 			i=0;  // todas las paginas empiezan en 0
@@ -177,6 +177,11 @@ int agregarFrameATablaMarcos(uint16_t frameNuevo, stNodoListaTP *tablaPaginas, u
 	registro->bit2ndChance = 1;   // Empieza inicializado en 1 (ver ppt)
 
 	// Muevo el puntero de marcos de esta tabladePaginas
+	if(pagina==(tablaPaginas->size-1))
+		pagina=0;
+	else
+		pagina++;
+
 	tablaPaginas->punteroClock = pagina;
 
 	return EXIT_SUCCESS;

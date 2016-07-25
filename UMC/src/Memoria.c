@@ -64,7 +64,7 @@ void* inicializarMemoriaPrincipal(long tamanio, long cantidad){
 	}
 	// inicializo la lista de marcos libres
 	marcosLibres = queue_create();
-	for(i=1;i<cantidad;i++){
+	for(i=1;i<=cantidad;i++){
 		p=malloc(sizeof(uint16_t));
 		*p = i;
 		queue_push(marcosLibres, p);
