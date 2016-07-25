@@ -1,0 +1,21 @@
+CC := gcc
+CFLAGS := -O0 -g3 -Wall
+BINARIO := CPU
+FUENTES := src/cpuSignals.c src/CPU.c
+OBJS := cpuSignals.o CPU.o
+
+LIBPATH := ../Commons/
+LINKER := Commons
+
+# ALL
+all: ejecutable
+
+# Consola
+ejecutable: $(OBJS)
+	$(CC) -o $(BINARIO) $(CFLAGS) $(OBJS) -L$(LIBPATH) -l$(LINKER)
+
+cpuSignals.o:
+	$(CC) -c $(CFLAGS) src/cpuSignals.c -I$(LIBPATH) -l$(LINKER)
+
+CPU.o:
+	$(CC) -c $(CFLAGS) src/CPU.c -I$(LIBPATH) -l$(LINKER)

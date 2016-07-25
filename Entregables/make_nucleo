@@ -1,0 +1,34 @@
+CC := gcc
+CFLAGS := -O0 -g3 -Wall
+BINARIO := Nucleo
+FUENTES := src/shared_vars.c src/nucleo_config.c src/semaforos.c src/planificador.c src/Nucleo.c src/consumidor_cpu.c
+OBJS := shared_vars.o nucleo_config.o semaforos.o planificador.o Nucleo.o consumidor_cpu.o
+
+LIBPATH := ../Commons/
+INCPATH := -I../Commons/ -I./includes
+LINKER := -lCommons -lpthread
+
+# ALL
+all: ejecutable
+
+# Consola
+ejecutable: $(OBJS)
+	$(CC) -o $(BINARIO) $(CFLAGS) $(OBJS) -L$(LIBPATH) $(LINKER)
+
+shared_vars.o:
+	$(CC) -c $(CFLAGS) src/shared_vars.c $(INCPATH) $(LINKER)
+
+nucleo_config.o:
+	$(CC) -c $(CFLAGS) src/nucleo_config.c $(INCPATH) $(LINKER)
+
+semaforos.o:
+	$(CC) -c $(CFLAGS) src/semaforos.c $(INCPATH) $(LINKER)
+
+planificador.o:
+	$(CC) -c $(CFLAGS) src/planificador.c $(INCPATH) $(LINKER)
+
+Nucleo.o:
+	$(CC) -c $(CFLAGS) src/Nucleo.c $(INCPATH) $(LINKER)
+
+consumidor_cpu.o:
+	$(CC) -c $(CFLAGS) src/consumidor_cpu.c $(INCPATH) $(LINKER)

@@ -1,5 +1,8 @@
-/swap_data
+swap_data
+swap.log
 *.log
 *.config
 *.o
 *.d
+/Debug
+/Release

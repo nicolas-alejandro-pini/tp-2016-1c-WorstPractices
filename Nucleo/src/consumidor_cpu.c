@@ -58,8 +58,9 @@ void *consumidor_cpu(void *param) {
 	uint32_t socket_consola_to_print,pid_fin;
 	t_valor_variable valor_impresion;
 	stConsola * consola;
+	stSemaforo *semaforo_request;
 	char *dispositivo_name, *identificador_semaforo, *texto_imprimir;
-	int error = 0, offset = 0, dispositivo_time,fin_ejecucion;
+	int error = 0,dispositivo_time,fin_ejecucion;
 	int unCliente = *((int *)param);
 
 	while (!error) {
@@ -97,7 +98,7 @@ void *consumidor_cpu(void *param) {
 				error = 1;
 				continue;
 			}
-			printf("PCB [PID - %d] READY a EXEC\n", unPCB->pid);
+			printf("PCB [PID - %d] READY a EXEC (CPU - Sock [%d]) \n", unPCB->pid, unCliente);
 			free_paquete(&paquete);
 		}
 		while(fin_ejecucion==0&&error!=1){
@@ -124,7 +125,7 @@ void *consumidor_cpu(void *param) {
 				deserializar_pcb(unPCB, &paquete);
 				free_paquete(&paquete);
 				/*Se comprueba que el PCB corresponda a una consola que este conectada, si esta desconectada libera el pcb que pide I/O y el CPU sigue con otro pcb*/
-				printf("PCB [PID - %d] READY a EXEC\n", unPCB->pid);
+				printf("PCB [PID - %d] READY a BLOCK\n", unPCB->pid);
 				if(!consola_activa(unPCB)){
 					continue;
 				}
@@ -132,6 +133,7 @@ void *consumidor_cpu(void *param) {
 					log_error("No se pudo bloquear el PCB [PID - %d]",unPCB->pid);
 					continue;
 				}
+				fin_ejecucion = 1;
 
 				break;
 			case FINANSISOP:
@@ -187,16 +189,14 @@ void *consumidor_cpu(void *param) {
 				log_info("Nuevo pedido de variable compartida...");
 				unMensajeIPC.contenido = malloc(sizeof(unMensajeIPC.header.largo));
 				recv(unCliente,unMensajeIPC.contenido,unMensajeIPC.header.largo,0);
-				/*TODO: Falta testear*/
 				unaSharedVar = obtener_shared_var((char*)unMensajeIPC.contenido);
 				unHeaderIPC = nuevoHeaderIPC(OK);
 				unHeaderIPC->largo = sizeof(t_valor_variable);
-				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar.valor)){
-					log_error("Error al enviar el valor la variable");
+				if(!enviarHeaderIPC(unCliente,unHeaderIPC)){
+					log_error("Error al enviar el header IPC");
 					error = 1;
-					liberarHeaderIPC(unHeaderIPC);
-					continue;
 				}
+				send(unCliente,(t_valor_variable*)&unaSharedVar.valor,unHeaderIPC->largo,0);
 				liberarHeaderIPC(unHeaderIPC);
 				log_info("Se devolvio el valor [%s] de la variable compartida [%d]\n",unaSharedVar.nombre,unaSharedVar.valor);
 				free(unMensajeIPC.contenido);
@@ -205,35 +205,62 @@ void *consumidor_cpu(void *param) {
 			case GRABARVALOR:
 				log_info("Nuevo pedido de actualizacion de variable compartida");
 				unaSharedVar.nombre = malloc(unMensajeIPC.header.largo - sizeof(t_valor_variable));
-				recv(unCliente,&unaSharedVar.nombre,unMensajeIPC.header.largo - sizeof(t_valor_variable),0);
+				recv(unCliente,unaSharedVar.nombre,unMensajeIPC.header.largo - sizeof(t_valor_variable),0);
 				recv(unCliente,&unaSharedVar.valor,sizeof(t_valor_variable),0);
 				grabar_shared_var(&unaSharedVar);
 				log_info("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar.nombre,unaSharedVar.valor);
 				break;
 			case WAIT:
-				log_info("Nuevo pedido de wait de semaforo ");
 				/*Wait del semaforo que pasa por parametro*/
 				identificador_semaforo = malloc(unMensajeIPC.header.largo);
 				recv(unCliente, identificador_semaforo, unMensajeIPC.header.largo, 0);
-				wait_semaforo(identificador_semaforo);
-				free(identificador_semaforo);
+				semaforo_request = buscar_semaforo(identificador_semaforo);
+				log_info("Nuevo pedido de WAIT de semaforo [%s]",identificador_semaforo);
 
-				unHeaderIPC = nuevoHeaderIPC(OK);
-				if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
-					log_error("No se pudo bloquear el semaforo");
-				}else{
-					log_info("Se hizo wait al semaforo %s",identificador_semaforo);
+				if(wait_semaforo(identificador_semaforo)==EXIT_FAILURE){
+					//Debe quedar bloqueado ya que el valor del semaforo < 0
+					//Se pide el pcb al CPU
+					unHeaderIPC = nuevoHeaderIPC(WAIT_NO_OK);
+					if(!enviarHeaderIPC(unCliente,unHeaderIPC)){
+						log_error("Error en pedido de WAIT, no se pudo enviar mensaje de WAIT_NO_OK");
+					}
+					liberarHeaderIPC(unHeaderIPC);
+					if (recibir_paquete(unCliente, &paquete)) {
+						log_error("No se pudo recibir el paquete");
+						error = 1;
+						free_paquete(&paquete);
+						continue;
+					}
+					deserializar_pcb(unPCB, &paquete);
+					free_paquete(&paquete);
+					//Ingresa a la cola de procesos bloqueados del semaforo
+					queue_push(semaforo_request->bloqueados,unPCB);
+					log_info("El PCB [PID - %d] entra a la cola de bloqueados del semaforo [%s]",unPCB->pid,identificador_semaforo);
+					printf("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
+					fin_ejecucion = 1;
+					//El CPU debe agarrar otro PCB de la cola de listos y sigue su ejecucion normal
+				}else
+				{
+					unHeaderIPC = nuevoHeaderIPC(WAIT_OK);
+					if(!enviarHeader(unCliente,unHeaderIPC)){
+						log_error("Error en pedido de WAIT, no se pudo enviar mensaje de WAIT_OK");
+					}
+					liberarHeaderIPC(unHeaderIPC);
+					log_info("Se hizo WAIT al semaforo [%s]",identificador_semaforo);
+					//Se realizo el WAIT correctamente, sigue su ejecucion normal. Con el mensaje de WAIT_OK el CPU NO debe mandar el PCB
 				}
-				liberarHeaderIPC(unHeaderIPC);
+				free(identificador_semaforo);
 				break;
 			case SIGNAL:
-				/*Signal del semaforo que pasa por parametro*/
-				log_info("Nuevo pedido de signal de semaforo ");
 				identificador_semaforo = malloc(unMensajeIPC.header.largo);
 				recv(unCliente, identificador_semaforo, unMensajeIPC.header.largo, 0);
+				log_info("Nuevo pedido de SIGNAL de semaforo [%s]",identificador_semaforo);
 
 				if(signal_semaforo(identificador_semaforo)== EXIT_FAILURE){
-					log_info("No se hizo signal al semaforo %s",identificador_semaforo);
+					semaforo_request = buscar_semaforo(identificador_semaforo);
+					unPCB = queue_pop(semaforo_request->bloqueados);
+					printf("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
+					ready_productor(unPCB);
 				}
 				break;
 			case IMPRIMIR:

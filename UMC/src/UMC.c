@@ -182,13 +182,17 @@ int main(int argc, char *argv[]) {
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
 
-	//Primero instancio el log
-		logger = log_create(temp_file, "UMC", 0, LOG_LEVEL_INFO);
 
 	// Ejecuto las pruebas
 	if(argv[2])
-		if(strcmp(argv[2], "--cunit")==0)
+		if(strcmp(argv[2], "--cunit")==0){
+			logger = log_create(temp_file, "UMC", -1, LOG_LEVEL_INFO);
 			test_unit_umc();
+			exit(0);
+		}
+
+	//Primero instancio el log
+	logger = log_create(temp_file, "UMC", 0, LOG_LEVEL_INFO);
 
 	// Solo tests
 	//exit(EXIT_SUCCESS);

@@ -355,7 +355,7 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 			memcpy(bufferSector, (bufferPrograma + offset), loaded_config->tamanioPagina);
 		}
 
-		if(escribirSector(bufferSector, offset/loaded_config->tamanioPagina) < 0){
+		if(escribirSector(bufferSector, info_bloque_libre.offset + (offset / loaded_config->tamanioPagina)) < 0){
 			//Error al escribir el sector en disco con el codigo del programa
 			log_error("Error al escribir el codigo del programa en un sector del SWAP, se hace rollback de lo asignado");
 			//Libero lo asignado al programa

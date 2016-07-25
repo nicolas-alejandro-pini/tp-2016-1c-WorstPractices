@@ -6,67 +6,48 @@
  */
 #include "includes/semaforos.h"
 
-pthread_mutex_t mutex_lista_sem = PTHREAD_MUTEX_INITIALIZER;	// mutual exclusion lock
-t_list *lista_semaforos;
+static pthread_mutex_t diccionario_semaforos_mutex = PTHREAD_MUTEX_INITIALIZER;	// mutual exclusion lock
+t_dictionary *diccionario_semaforos;
+
 
 void inicializar_semaforos(){
-	lista_semaforos = list_create();
+	diccionario_semaforos = dictionary_create();
 }
 
 void crear_semaforo(char *nombre, char* valor) {
-	stSemaforo *new = malloc(sizeof(stSemaforo));/*TODO: liberar estos semaforos al final*/
-	new->nombre = strdup(nombre);
-	new->count = atoi(valor);
-	pthread_mutex_init(&(new->mutex), 0);
-	pthread_cond_init(&(new->cond),0);
-	list_add(lista_semaforos,new);
+	stSemaforo *semaforo = malloc(sizeof(stSemaforo));/*TODO: liberar estos semaforos al final*/
+	semaforo->nombre = strdup(nombre);
+	semaforo->valor = atoi(valor);
+	semaforo->bloqueados = queue_create();
+	pthread_mutex_lock(&diccionario_semaforos_mutex);
+	dictionary_put(diccionario_semaforos,nombre,semaforo);
+	pthread_mutex_unlock(&diccionario_semaforos_mutex);
 }
 
-stSemaforo *buscar_semaforo(char *nombre ){
-	stSemaforo *unSemaforo;
-	/*Busqueda del semaforo*/
-	int _es_el_semaforo(stSemaforo *s) {
-		return string_equals_ignore_case(s->nombre, nombre);
-	}
-	pthread_mutex_lock(&mutex_lista_sem);
-	unSemaforo = list_remove_by_condition(lista_semaforos, (void*) _es_el_semaforo);
-	pthread_mutex_unlock(&mutex_lista_sem);
-
-	return unSemaforo;
+stSemaforo *buscar_semaforo(char *nombre_semaforo){
+	pthread_mutex_lock(&diccionario_semaforos_mutex);
+	stSemaforo* semaforo = dictionary_get(diccionario_semaforos, nombre_semaforo);
+	pthread_mutex_unlock(&diccionario_semaforos_mutex);
+	return semaforo;
 }
 
 int wait_semaforo(char* nombre_semaforo) {
-	int count;
-	stSemaforo *unSemaforo = buscar_semaforo(nombre_semaforo);
+	stSemaforo* semaforo = buscar_semaforo(nombre_semaforo);
+	semaforo->valor--;
 
-	if(unSemaforo==NULL){
+	if (semaforo->valor < 0) {
 		return EXIT_FAILURE;
 	}
 
-	pthread_mutex_lock(&(unSemaforo->mutex));
-	count = unSemaforo->count -1;
-	printf("Valor de count [%d]",count);
-	if(count<0){
-		pthread_cond_wait(&unSemaforo->cond, &unSemaforo->mutex);
-	}
-	unSemaforo->count = count;
-	pthread_mutex_lock(&mutex_lista_sem);
-	list_add(lista_semaforos,unSemaforo);
-	pthread_mutex_unlock(&mutex_lista_sem);
-	pthread_mutex_unlock(&(unSemaforo->mutex));
 	return EXIT_SUCCESS;
 }
 
-int signal_semaforo(char* nombre_semaforo){
-	stSemaforo *unSemaforo = buscar_semaforo(nombre_semaforo);
+int signal_semaforo(char* nombre_semaforo) {
+	stSemaforo *semaforo = buscar_semaforo(nombre_semaforo);
+	semaforo->valor++;
 
-	if (unSemaforo == NULL) {
+	if (semaforo->valor <= 0) {
 		return EXIT_FAILURE;
 	}
-	pthread_mutex_lock(&unSemaforo->mutex);
-	unSemaforo->count++;
-	printf("Valor de count [%d]",unSemaforo->count);
-	pthread_cond_broadcast(&unSemaforo->cond);
-	pthread_mutex_unlock(&unSemaforo->mutex);
 	return EXIT_SUCCESS;
 }

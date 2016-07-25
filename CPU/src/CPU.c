@@ -210,33 +210,38 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	stHeaderIPC *unHeaderIPC;
-	stMensajeIPC unMensajeIPC;
-	t_valor_variable resultado;
+	t_valor_variable resultado = 0;
+
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(variable);
 
 	unHeaderIPC = nuevoHeaderIPC(OBTENERVALOR);
 	unHeaderIPC->largo = strlen(variable) +1;
 
 	if(!enviarMensajeIPC(configuracionInicial.sockNucleo, unHeaderIPC, (char *) variable)){
 		log_error("No se pudo enviar la variable %s", variable);
+		liberarHeaderIPC(unHeaderIPC);
 	}
 
-	if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensajeIPC)){
-		log_error("No se pudo recibir la variable %s", variable);
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC)){
+		log_error("No se pudo recibir el header");
+		liberarHeaderIPC(unHeaderIPC);
 	}
 
-	if(unMensajeIPC.header.tipo == OK){
-		memcpy(&resultado, unMensajeIPC.contenido, sizeof(t_valor_variable));
-		free(unMensajeIPC.contenido);
+	if((unHeaderIPC->tipo == OK) && (unHeaderIPC->largo== sizeof(t_valor_variable))){
+		recv(configuracionInicial.sockNucleo,&resultado,unHeaderIPC->largo,0);
 	}
 
 	liberarHeaderIPC(unHeaderIPC);
-
 	return resultado;
 }
 
 int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor){
 
 	stHeaderIPC *unHeaderIPC;
+
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(variable);
 
 	//Hago el envío de la variabe con su valor
 	unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
@@ -249,18 +254,9 @@ int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
 	send(configuracionInicial.sockNucleo,variable, strlen(variable) + 1,0);
 	send(configuracionInicial.sockNucleo,&valor, sizeof(t_valor_variable),0);
 
-	//Recibo el mensaje de respuesta para conocer el resultado de la operación
-	if(recibirHeaderIPC(configuracionInicial.sockNucleo, unHeaderIPC) <= 0){
-		log_error("Error al obtener la respuesta desde el Nucleo");
-		return -1;
-	}
-
 	liberarHeaderIPC(unHeaderIPC);
 
-	if(unHeaderIPC->tipo != OK)
-		return -1;
-
-	return 0;
+	return valor;
 }
 
 void reemplazarBarraN(char* buffer){
@@ -273,7 +269,7 @@ void reemplazarBarraN(char* buffer){
 		if(buffer[i]=='\n')
 			buffer[i]='\0';
 	}
-
+	return;
 }
 
 void irAlLabel(t_nombre_etiqueta etiqueta){
@@ -373,6 +369,9 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 
 	stHeaderIPC* unHeaderPrimitiva;
 
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(dispositivo);
+
 	unHeaderPrimitiva = nuevoHeaderIPC(IOANSISOP);
 	unHeaderPrimitiva->largo = strlen(dispositivo) + 1 + sizeof(int);
 
@@ -393,6 +392,9 @@ void wait(t_nombre_semaforo identificador_semaforo){
 
 	stHeaderIPC* unHeaderPrimitiva;
 
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(identificador_semaforo);
+
 	unHeaderPrimitiva = nuevoHeaderIPC(WAIT);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
 
@@ -406,12 +408,21 @@ void wait(t_nombre_semaforo identificador_semaforo){
 		configuracionInicial.salir = 1;
 	}
 
+	//En el caso que haya un error con el wait devuelvo el pcb al nucleo.//
+	if(unHeaderPrimitiva->tipo == WAIT_NO_OK){
+		quantum = 0; //Termino el quantum para devolver el pcb.
+		solicitudIO = 1; // Flag global para devolver PCB por bloqueo.
+	}
+
 	liberarHeaderIPC(unHeaderPrimitiva);
 }
 
 void signal_cpu(t_nombre_semaforo identificador_semaforo){
 
 	stHeaderIPC* unHeaderPrimitiva;
+
+	//Elimino el barra n que manda el parser //
+	reemplazarBarraN(identificador_semaforo);
 
 	unHeaderPrimitiva = nuevoHeaderIPC(SIGNAL);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
@@ -680,72 +691,98 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader = NULL;
+	uint16_t sizeToUMC = 0;
+	uint16_t startToUMC = 0;
+	uint16_t sizeRequestLeft = 0;
+	int pagina = 0;
 
-	uint16_t paginaToUMC;
-	uint16_t startToUMC = startRequest;
-	uint16_t sizeToUMC = sizeRequest;
-	int sizeAux;
-	int pagina;
-
+	/* Estado inicial */
 	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
+	int paginaInicial = startRequest / tamanioPaginaUMC;
+	startToUMC = startRequest;
+	sizeRequestLeft = sizeRequest;
 
-	for (pagina=0;pagina<=cantidadPaginas;pagina++)
+	pagina=paginaInicial;
+
+	while(pagina<cantidadPaginas && sizeRequestLeft > 0)
 	{
+		/* Offset */
+		startToUMC %= tamanioPaginaUMC;
 
-		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
+		/* Size */
+		if((sizeRequestLeft / tamanioPaginaUMC) > 0)
+			/* Caso pagina completa */
+			sizeToUMC = tamanioPaginaUMC;
+		else
+			/* Caso request completo */
+			sizeToUMC = sizeRequestLeft;
+
+		/* Si el offset + size se pasan del tamaño de la pagina pido lo que puedo */
+		if((startToUMC+sizeToUMC) > tamanioPaginaUMC)
+			sizeToUMC = tamanioPaginaUMC - startToUMC;
+
+		unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
+		unHeader->largo = sizeof(uint16_t)*3;
+
+		if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
+			log_error("Error al enviar mensaje de leer bytes pagina.");
+			return NULL;
+		}
+		liberarHeaderIPC(unHeader);
+
+		/*Envio los tres datos a la UMC*/
+		send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+		log_info("CPU To UMC - Pagina pedida: %d",pagina);
+		send(configuracionInicial.sockUmc,&startToUMC,sizeof(uint16_t),0);
+		log_info("CPU To UMC - Offset pedid: %d",startToUMC);
+		send(configuracionInicial.sockUmc,&sizeToUMC,sizeof(uint16_t),0);
+		log_info("CPU To UMC - Size pedido: %d",sizeToUMC);
+
+		/*Me quedo esperando que vuelva el contenido*/
+		if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
+			log_error("Se cerro la conexion con la UMC.");
+			return NULL;
+		}
+
+		/* Valido que la respuesta de la UMC tenga el largo correcto y sea OK */
+		if(unMensaje.header.tipo != OK || unMensaje.header.largo != sizeToUMC)
 		{
-			sizeAux = (pagina*tamanioPaginaUMC) - (startRequest + sizeRequest);
-
-			if (sizeAux < 0)
-				sizeToUMC = pagina*tamanioPaginaUMC - startToUMC;
-
-
-			paginaToUMC = calcularPaginaInstruccion(pagina);
-			startToUMC %= tamanioPaginaUMC;
-			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-			unHeader->largo = sizeof(uint16_t)*3;
-
-			if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
-				log_error("Error al enviar mensaje de leer bytes pagina.");
-			}
-
-			/*Envio los tres datos a la UMC*/
-			send(configuracionInicial.sockUmc,&paginaToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Pagina pedida: %d",paginaToUMC);
-			send(configuracionInicial.sockUmc,&startToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Offset pedid: %d",startToUMC);
-			send(configuracionInicial.sockUmc,&sizeToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Size pedido: %d",sizeToUMC);
-
-			/*Me quedo esperando que vuelva el contenido*/
-			if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
-				log_error("Error al recibir mensaje de bytes intruccion.");
-				return NULL;
-			}else{
-
-				instruccionTemp =(char*) malloc(sizeToUMC + 1 );
-				memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
-				*(instruccionTemp + sizeToUMC) = '\0';
-
-				if(instruccion==NULL){
-					instruccion =(char*) malloc(sizeToUMC + 1 );
-					strcpy(instruccion, instruccionTemp);
-					log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
-				}else{
-					string_append (&instruccion,instruccionTemp);
-					log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
-				}
-
-				free(instruccionTemp);
-
-				startToUMC = startToUMC + sizeToUMC;
-				sizeToUMC = sizeRequest - sizeToUMC;
-			}
+			log_error("Error al recibir mensaje de bytes intruccion.");
+			return NULL;
 
 		}
 
+		instruccionTemp =(char*) malloc(sizeToUMC + 1 );
+		memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
+		*(instruccionTemp + sizeToUMC) = '\0';
+
+		if (strlen(instruccionTemp) >0 && instruccionTemp != NULL){
+
+			log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
+
+			if(instruccion==NULL){
+			instruccion =(char*) malloc(sizeToUMC + 1 );
+			strcpy(instruccion, instruccionTemp);
+
+			}else{
+				string_append (&instruccion,instruccionTemp);
+
+			}
+		}else{
+			log_error("Recibi de la UMC la instrucción Temporal nula");
+			free(instruccionTemp);
+			configuracionInicial.salir = 1;
+			instruccion = NULL;
+			return instruccion;
+		}
+
+		free(instruccionTemp);
+		free(unMensaje.contenido);  // Por cada recv hace un malloc
+
+		startToUMC += sizeToUMC;
+		sizeRequestLeft -= sizeToUMC;
+		pagina++;
 	}
-	liberarHeaderIPC(unHeader);
 	//Imprimi la instrucción solicitada//
 	log_info(instruccion);
 	return instruccion;
@@ -816,11 +853,10 @@ int devolverPCBalNucleo(void){
 		if (solicitudIO == 0 ){
 			log_info("PCB PID[%d] Quantum finalizado. pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
 			unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
-		}else
-			unHeaderIPC = nuevoHeaderIPC(IOANSISOP);
+			enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+			liberarHeaderIPC(unHeaderIPC);
+		}
 
-
-		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
 
 		crear_paquete(&paquete, EXECANSISOP);
 		serializar_pcb(&paquete, unPCB);
@@ -832,8 +868,6 @@ int devolverPCBalNucleo(void){
 
 		free_paquete(&paquete);
 	}
-
-	liberarHeaderIPC(unHeaderIPC);
 
 	return resultado;
 }
@@ -1034,17 +1068,20 @@ int main(void) {
 
 									}else{
 										log_error("Error al ejecutar la instrucción.");
+										configuracionInicial.salir =1;
 										quantum = 0;
 									}
 
 								}
-								//Si no hubo error devuelvo PCB al nucleo y evaluo error//
-								if (configuracionInicial.salir != 0 || devolverPCBalNucleo() == -1){
+								//Si no hubo error devuelvo PCB al nucleo//
+								if (configuracionInicial.salir == 0){
 
-									log_info("Error al devolver PCB de ANSIPROG...");
-									configuracionInicial.salir = 1;
-									break;
+									if (devolverPCBalNucleo() == -1){
 
+										log_info("Error al devolver PCB de ANSIPROG...");
+										configuracionInicial.salir = 1;
+										break;
+									}
 								}
 
 							}else

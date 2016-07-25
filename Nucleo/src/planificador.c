@@ -20,7 +20,7 @@ void *ready_productor(void* arg) {
 
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	queue_push(colaReady, pcb_to_produce);
-	printf("READY size [%d]\n",queue_size(colaReady));
+	printf("Tamanio cola de READY [%d]\n",queue_size(colaReady));
 	numInQ++;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
 
@@ -35,7 +35,7 @@ stPCB *ready_consumidor() {
 
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	pcb_aux = queue_pop(colaReady);
-	printf("READY size [%d]\n",queue_size(colaReady));
+	printf("Tamanio cola de READY [%d]\n",queue_size(colaReady));
 	numInQ--;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
 

@@ -11,7 +11,6 @@
 #include "includes/consumidor_cpu.h"
 #include "includes/nucleo_config.h"
 #include "includes/planificador.h"
-#include "tests/test_nucleo.h"
 #include <commons/sockets.h>
 
 /*
@@ -188,7 +187,6 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 	t_queue *colaRafaga;
 	stRafaga *unaRafaga;
 	stPCB *unPCB;
-	int unidad;
 
 	colaRafaga = unDispositivo->rafagas;
 
@@ -200,21 +198,21 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 		unDispositivo->numInq--;
 		pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
 
-		for (unidad = 0; unidad < unaRafaga->unidades; ++unidad) {
-			usleep(atoi(unDispositivo->retardo));
-		}
+		log_info ("Retardo de dispositivo [%s] con [%d].",unDispositivo->nombre,atoi(unDispositivo->retardo));
+		usleep(atoi(unDispositivo->retardo)*unaRafaga->unidades);
+
 		/*Busqueda del pcb en la lista de pcb bloqueados*/
 		int _es_el_pcb(stPCB *p) {
 			return p->pid == unaRafaga->pid;
 		}
 		pthread_mutex_lock(&mutex_listaBlock);
 		unPCB = list_remove_by_condition(listaBlock, (void*) _es_el_pcb);
-		pthread_mutex_lock(&mutex_listaBlock);
+		pthread_mutex_unlock(&mutex_listaBlock);
 
 		/*Ponemos en la cola de Ready para que lo vuelva a ejecutar un CPU*/
 		ready_productor(unPCB);
-		free(unaRafaga);
 		log_info("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
+		free(unaRafaga);
 
 	}
 }
@@ -296,11 +294,6 @@ int main(int argc, char *argv[]) {
 		log_error("Falta el parametro de configuracion");
 		exit(-1);
 	}
-
-	// Ejecuto las pruebas
-	if (argv[2])
-		if (strcmp(argv[2], "--cunit") == 0)
-			test_unit_nucleo();
 
 	/*Carga del archivo de configuracion*/
 	if (loadInfo(&elEstadoActual, 0)) {
@@ -473,13 +466,12 @@ int main(int argc, char *argv[]) {
 							break;/*Sale del switch*/
 						}
 						liberarHeaderIPC(stHeaderSwitch);
-						log_info("Nuevo CPU conectado, lanzamiento de hilo...");
 						if (pthread_create(&p_threadCpu, NULL, (void*) consumidor_cpu, (void*) &unCliente) != 0) {
 							log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
 							close(unCliente);
 							break;/*Sale del switch*/
 						}
-						log_info("OK");
+						log_info("Se lanza hilo de atencion a CPU conectado");
 						fflush(stdout);
 						break;
 					default:
