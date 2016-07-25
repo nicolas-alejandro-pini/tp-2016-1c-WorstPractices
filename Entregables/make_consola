@@ -1,0 +1,21 @@
+CC := gcc
+CFLAGS := -O0 -g3 -Wall
+BINARIO := Consola
+FUENTES := src/consola_main.c src/Consola.c
+OBJS := consola_main.o Consola.o
+
+LIBPATH := ../Commons/
+LINKER := Commons
+
+# ALL
+all: ejecutable
+
+# Consola
+ejecutable: $(OBJS)
+	$(CC) -o $(BINARIO) $(CFLAGS) $(OBJS) -L$(LIBPATH) -l$(LINKER)
+
+consola_main.o:
+	$(CC) -c $(CFLAGS) src/consola_main.c -I$(LIBPATH) -l$(LINKER)
+
+Consola.o:
+	$(CC) -c $(CFLAGS) src/Consola.c -I$(LIBPATH) -l$(LINKER)

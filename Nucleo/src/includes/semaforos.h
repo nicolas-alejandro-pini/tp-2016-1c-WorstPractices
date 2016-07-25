@@ -10,13 +10,13 @@
 
 #include <pthread.h>
 #include <stdlib.h>
-#include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
+#include <commons/collections/queue.h>
 
 typedef struct {
-	char* 			nombre; 	/*Nombre del semaforo*/
-	int 			count;
-	pthread_mutex_t mutex;
-	pthread_cond_t 	cond;
+	char *nombre;
+	int32_t valor;
+	t_queue *bloqueados;
 } __attribute__((packed)) stSemaforo;
 
 void crear_semaforo(char *nombre, char* valor);

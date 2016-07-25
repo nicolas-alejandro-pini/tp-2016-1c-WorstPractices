@@ -1,6 +1,5 @@
 /nucleo.log
 *.o
 *.d
-
 /Debug/
 /Release/
