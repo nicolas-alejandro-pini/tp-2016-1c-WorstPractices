@@ -702,7 +702,9 @@ char* getInstruccion (int startRequest, int sizeRequest){
 	startToUMC = startRequest;
 	sizeRequestLeft = sizeRequest;
 
-	for (pagina=paginaInicial;pagina<cantidadPaginas;pagina++)
+	pagina=paginaInicial;
+
+	while(pagina<cantidadPaginas && sizeRequestLeft > 0)
 	{
 		/* Offset */
 		startToUMC %= tamanioPaginaUMC;
@@ -779,7 +781,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 		startToUMC += sizeToUMC;
 		sizeRequestLeft -= sizeToUMC;
-
+		pagina++;
 	}
 	//Imprimi la instrucción solicitada//
 	log_info(instruccion);
