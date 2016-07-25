@@ -691,83 +691,96 @@ char* getInstruccion (int startRequest, int sizeRequest){
 
 	stMensajeIPC unMensaje;
 	stHeaderIPC *unHeader = NULL;
+	uint16_t sizeToUMC = 0;
+	uint16_t startToUMC = 0;
+	uint16_t sizeRequestLeft = 0;
+	int pagina = 0;
 
-	uint16_t paginaToUMC;
-	uint16_t startToUMC = startRequest;
-	uint16_t sizeToUMC = sizeRequest;
-	int sizeAux;
-	int pagina;
-
+	/* Estado inicial */
 	int cantidadPaginas = ((startRequest + sizeRequest) / tamanioPaginaUMC) + 1;
+	int paginaInicial = startRequest / tamanioPaginaUMC;
+	startToUMC = startRequest;
+	sizeRequestLeft = sizeRequest;
 
-	for (pagina=0;pagina<=cantidadPaginas;pagina++)
+	for (pagina=paginaInicial;pagina<cantidadPaginas;pagina++)
 	{
+		/* Offset */
+		startToUMC %= tamanioPaginaUMC;
 
-		if (startToUMC <= (pagina * tamanioPaginaUMC)) //Si la posicion de offset no se encuentra en la pagina paso a la siguiente.
+		/* Size */
+		if((sizeRequestLeft / tamanioPaginaUMC) > 0)
+			/* Caso pagina completa */
+			sizeToUMC = tamanioPaginaUMC;
+		else
+			/* Caso request completo */
+			sizeToUMC = sizeRequestLeft;
+
+		/* Si el offset + size se pasan del tamaño de la pagina pido lo que puedo */
+		if((startToUMC+sizeToUMC) > tamanioPaginaUMC)
+			sizeToUMC = tamanioPaginaUMC - startToUMC;
+
+		unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
+		unHeader->largo = sizeof(uint16_t)*3;
+
+		if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
+			log_error("Error al enviar mensaje de leer bytes pagina.");
+			return NULL;
+		}
+		liberarHeaderIPC(unHeader);
+
+		/*Envio los tres datos a la UMC*/
+		send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+		log_info("CPU To UMC - Pagina pedida: %d",pagina);
+		send(configuracionInicial.sockUmc,&startToUMC,sizeof(uint16_t),0);
+		log_info("CPU To UMC - Offset pedid: %d",startToUMC);
+		send(configuracionInicial.sockUmc,&sizeToUMC,sizeof(uint16_t),0);
+		log_info("CPU To UMC - Size pedido: %d",sizeToUMC);
+
+		/*Me quedo esperando que vuelva el contenido*/
+		if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
+			log_error("Se cerro la conexion con la UMC.");
+			return NULL;
+		}
+
+		/* Valido que la respuesta de la UMC tenga el largo correcto y sea OK */
+		if(unMensaje.header.tipo != OK || unMensaje.header.largo != sizeToUMC)
 		{
-			sizeAux = (pagina*tamanioPaginaUMC) - (startRequest + sizeRequest);
-
-			if (sizeAux < 0)
-				sizeToUMC = pagina*tamanioPaginaUMC - startToUMC;
-
-
-			paginaToUMC = calcularPaginaInstruccion(pagina);
-			startToUMC %= tamanioPaginaUMC;
-			unHeader = nuevoHeaderIPC(READ_BTYES_PAGE);
-			unHeader->largo = sizeof(uint16_t)*3;
-
-			if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
-				log_error("Error al enviar mensaje de leer bytes pagina.");
-			}
-
-			/*Envio los tres datos a la UMC*/
-			send(configuracionInicial.sockUmc,&paginaToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Pagina pedida: %d",paginaToUMC);
-			send(configuracionInicial.sockUmc,&startToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Offset pedid: %d",startToUMC);
-			send(configuracionInicial.sockUmc,&sizeToUMC,sizeof(uint16_t),0);
-			log_info("CPU To UMC - Size pedido: %d",sizeToUMC);
-
-			/*Me quedo esperando que vuelva el contenido*/
-			if(!recibirMensajeIPC(configuracionInicial.sockUmc, &unMensaje )){
-				log_error("Error al recibir mensaje de bytes intruccion.");
-				return NULL;
-			}else{
-
-				instruccionTemp =(char*) malloc(sizeToUMC + 1 );
-				memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
-				*(instruccionTemp + sizeToUMC) = '\0';
-
-				if (strlen(instruccionTemp) >0 && instruccionTemp != NULL){
-
-					log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
-
-					if(instruccion==NULL){
-					instruccion =(char*) malloc(sizeToUMC + 1 );
-					strcpy(instruccion, instruccionTemp);
-
-					}else{
-						string_append (&instruccion,instruccionTemp);
-
-					}
-				}else{
-					log_error("Recibi de la UMC la instrucción Temporal nula");
-					free(instruccionTemp);
-					configuracionInicial.salir = 1;
-					instruccion = NULL;
-					return instruccion;
-				}
-
-				free(instruccionTemp);
-
-				startToUMC = startToUMC + sizeToUMC;
-				sizeToUMC = sizeRequest - sizeToUMC;
-			}
+			log_error("Error al recibir mensaje de bytes intruccion.");
+			return NULL;
 
 		}
 
+		instruccionTemp =(char*) malloc(sizeToUMC + 1 );
+		memcpy(instruccionTemp, unMensaje.contenido, sizeToUMC);
+		*(instruccionTemp + sizeToUMC) = '\0';
+
+		if (strlen(instruccionTemp) >0 && instruccionTemp != NULL){
+
+			log_info("Recibi de la UMC la instrucción Temporal: %s",instruccionTemp);
+
+			if(instruccion==NULL){
+			instruccion =(char*) malloc(sizeToUMC + 1 );
+			strcpy(instruccion, instruccionTemp);
+
+			}else{
+				string_append (&instruccion,instruccionTemp);
+
+			}
+		}else{
+			log_error("Recibi de la UMC la instrucción Temporal nula");
+			free(instruccionTemp);
+			configuracionInicial.salir = 1;
+			instruccion = NULL;
+			return instruccion;
+		}
+
+		free(instruccionTemp);
+		free(unMensaje.contenido);  // Por cada recv hace un malloc
+
+		startToUMC += sizeToUMC;
+		sizeRequestLeft -= sizeToUMC;
+
 	}
-	liberarHeaderIPC(unHeader);
 	//Imprimi la instrucción solicitada//
 	log_info(instruccion);
 	return instruccion;
