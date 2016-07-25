@@ -192,12 +192,11 @@ void *consumidor_cpu(void *param) {
 				unaSharedVar = obtener_shared_var((char*)unMensajeIPC.contenido);
 				unHeaderIPC = nuevoHeaderIPC(OK);
 				unHeaderIPC->largo = sizeof(t_valor_variable);
-				if(!enviarMensajeIPC(unCliente,unHeaderIPC,(char*)unaSharedVar.valor)){
-					log_error("Error al enviar el valor la variable");
+				if(!enviarHeaderIPC(unCliente,unHeaderIPC)){
+					log_error("Error al enviar el header IPC");
 					error = 1;
-					liberarHeaderIPC(unHeaderIPC);
-					continue;
 				}
+				send(unCliente,(t_valor_variable*)&unaSharedVar.valor,unHeaderIPC->largo,0);
 				liberarHeaderIPC(unHeaderIPC);
 				log_info("Se devolvio el valor [%s] de la variable compartida [%d]\n",unaSharedVar.nombre,unaSharedVar.valor);
 				free(unMensajeIPC.contenido);
@@ -206,7 +205,7 @@ void *consumidor_cpu(void *param) {
 			case GRABARVALOR:
 				log_info("Nuevo pedido de actualizacion de variable compartida");
 				unaSharedVar.nombre = malloc(unMensajeIPC.header.largo - sizeof(t_valor_variable));
-				recv(unCliente,&unaSharedVar.nombre,unMensajeIPC.header.largo - sizeof(t_valor_variable),0);
+				recv(unCliente,unaSharedVar.nombre,unMensajeIPC.header.largo - sizeof(t_valor_variable),0);
 				recv(unCliente,&unaSharedVar.valor,sizeof(t_valor_variable),0);
 				grabar_shared_var(&unaSharedVar);
 				log_info("Se actualizo con el valor [%s] de la variable compartida [%d]\n",unaSharedVar.nombre,unaSharedVar.valor);
@@ -222,7 +221,7 @@ void *consumidor_cpu(void *param) {
 					//Debe quedar bloqueado ya que el valor del semaforo < 0
 					//Se pide el pcb al CPU
 					unHeaderIPC = nuevoHeaderIPC(WAIT_NO_OK);
-					if(!enviarHeader(unCliente,unHeaderIPC)){
+					if(!enviarHeaderIPC(unCliente,unHeaderIPC)){
 						log_error("Error en pedido de WAIT, no se pudo enviar mensaje de WAIT_NO_OK");
 					}
 					liberarHeaderIPC(unHeaderIPC);

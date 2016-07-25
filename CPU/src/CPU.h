@@ -82,6 +82,7 @@ char* getInstruccion (int startRequest, int sizeRequest);
 int ejecutarInstruccion(void);
 int devolverPCBalNucleo(void);
 int cambiarContextoUMC(uint32_t pid);
+void reemplazarBarraN(char* buffer);
 
 
 

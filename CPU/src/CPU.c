@@ -210,8 +210,7 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	stHeaderIPC *unHeaderIPC;
-	stMensajeIPC unMensajeIPC;
-	t_valor_variable resultado;
+	t_valor_variable resultado = 0;
 
 	//Elimino el barra n que manda el parser //
 	reemplazarBarraN(variable);
@@ -221,19 +220,19 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 
 	if(!enviarMensajeIPC(configuracionInicial.sockNucleo, unHeaderIPC, (char *) variable)){
 		log_error("No se pudo enviar la variable %s", variable);
+		liberarHeaderIPC(unHeaderIPC);
 	}
 
-	if(!recibirMensajeIPC(configuracionInicial.sockNucleo,&unMensajeIPC)){
-		log_error("No se pudo recibir la variable %s", variable);
+	if(!recibirHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC)){
+		log_error("No se pudo recibir el header");
+		liberarHeaderIPC(unHeaderIPC);
 	}
 
-	if(unMensajeIPC.header.tipo == OK){
-		memcpy(&resultado, unMensajeIPC.contenido, sizeof(t_valor_variable));
-		free(unMensajeIPC.contenido);
+	if((unHeaderIPC->tipo == OK) && (unHeaderIPC->largo== sizeof(t_valor_variable))){
+		recv(configuracionInicial.sockNucleo,&resultado,unHeaderIPC->largo,0);
 	}
 
 	liberarHeaderIPC(unHeaderIPC);
-
 	return resultado;
 }
 
