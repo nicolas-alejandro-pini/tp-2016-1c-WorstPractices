@@ -873,15 +873,24 @@ int devolverPCBalNucleo(void){
 	{
 		log_info("PCB PID[%d] con fin de programa pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
 		unHeaderIPC = nuevoHeaderIPC(FINANSISOP);
-		enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
-		send(configuracionInicial.sockNucleo,&unPCB->pid,sizeof(uint32_t),0);
+		if(enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC) <= 0){
+			log_error("Error al enviar mensaje de FINANSISOP");
+			return -1;
+		}
+		if(send(configuracionInicial.sockNucleo,&unPCB->pid,sizeof(uint32_t),0)!=sizeof(uint32_t)){
+			log_error("Error al enviar el PID");
+			return -1;
+		}
 	}
 	else
 	{
 		if (solicitudIO == 0 ){
 			log_info("PCB PID[%d] Quantum finalizado. pc[%d] instrucciones size[%d]", unPCB->pid, unPCB->pc, unPCB->metadata_program->instrucciones_size);
 			unHeaderIPC = nuevoHeaderIPC(QUANTUMFIN);
-			enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC);
+			if(enviarHeaderIPC(configuracionInicial.sockNucleo,unHeaderIPC)<=0){
+				log_error("Error al enviar mensaje de FINQUANTUM");
+				return -1;
+			}
 			liberarHeaderIPC(unHeaderIPC);
 		}
 
