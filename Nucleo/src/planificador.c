@@ -6,10 +6,10 @@
  */
 #include "includes/planificador.h"
 
-static t_queue* colaReady;
-static int numInQ = 0;										// number of items in the queue
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;	// mutual exclusion lock
-static pthread_mutex_t empty = PTHREAD_MUTEX_INITIALIZER;	// synchronization lock
+t_queue* colaReady;
+int numInQ = 0;										// number of items in the queue
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;	// mutual exclusion lock
+pthread_mutex_t empty = PTHREAD_MUTEX_INITIALIZER;	// synchronization lock
 
 void inicializar_cola_ready(){
 	colaReady = queue_create();
@@ -20,7 +20,7 @@ void *ready_productor(void* arg) {
 
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	queue_push(colaReady, pcb_to_produce);
-	log_info("Cantidad de procesos en READY [%d]",queue_size(colaReady));
+	log_info("Ingresa el PCB [PID - %d] a la cola de READY, Cantidad de procesos que quedan en la cola de READY [%d]",pcb_to_produce->pid,queue_size(colaReady));
 	numInQ++;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
 
@@ -35,7 +35,7 @@ stPCB *ready_consumidor() {
 
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	pcb_aux = queue_pop(colaReady);
-	log_info("Cantidad de procesos en READY [%d]",queue_size(colaReady));
+	log_info("Se va a procesar el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",pcb_aux->pid,queue_size(colaReady));
 	numInQ--;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
 
@@ -51,7 +51,7 @@ void eliminar_pcb_ready(int pid){
 			list_remove(colaReady->elements,i);
 		}
 	}
-	log_info("Cantidad de procesos en READY [%d]",queue_size(colaReady));
+	log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
 	pthread_mutex_unlock(&mutex);
 }
 
