@@ -74,11 +74,12 @@ stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
 	i=pagina;
 	while(-1 == puntero_siguiente){
 
-		if(i < (tablaPaginas->size))
+		if(i < (tablaPaginas->size-1))
 			i++;
 		else
 			i=0;  // todas las paginas empiezan en 0
 
+		regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
 		if(regTP->bitPresencia==1)
 			puntero_siguiente=i;
 	}
@@ -90,76 +91,92 @@ stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
 stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t pagina){
 //stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag){
 	stRegistroTP *regTP = NULL;
-//	int i, estado;
-//
-//	/*
-//	 * Clock Modificado o Enhanced second chance
-//	 * Si el frame tiene el bit de acceso en 1, lo actualiza a 0 y avanza el puntero.
-//	 * Cuando encuentra un frame en 0, reemplaza la pagina que contiene por la que produjo el fallo de pagina.
-//	 *
-//	 * Las pagina modificadas no pueden reemplazarse hasta que se escriban en memoria secundaria (Disco).
-//	 * El clock mejorado genera 4 clases de frames:
-//	 * 		1) No accedida, No Modificada (bit2ndChance=0;bitModificado=0)
-//	 * 		2) Accedida, No modificada (bit2ndChance=1;bitModificado=0)
-//	 * 		3) No accedida, Modificada (bit2ndChance=0;bitModificado=1)
-//	 * 		4) Accedida, Modificada (bit2ndChance=1;bitModificado=1)
-//	 * 	Paso 1: Recorro la lista de frames buscando uno con los bits bit2ndChance=0; bitModificado=0 (No cambiar los bits de uso)
-//	 * 	Paso 2: Si en el paso anterior no encuentro ningun frame, recorro la lista de frames buscando los bits bit2ndChance=0; bitModificado=1.
-//	 * 	En el recorrido pongo el bit bit2ndChance en 0 a medida que voy pasando.
-//	 *	Paso 3: Si el paso anterior no encontro ningun frame, habre regresado a la posicion de comienzo y todos los frames tienen el bit2ndChance=0.
-//	 *	Proseguir con el paso 1 y de ser necesario el paso 2.
-//	 */
-//
-//	do{
-//		// recorro tabla Paso 1
-//		for(i=0;i<nodo->size;i++){
-//			regTP = nodo->tabla+(sizeof(stRegistroTP)*i);
-//
-//			// Si es valido el registro
-//			if(regTP->bitPresencia==1){
-//				// Si bit2ndChance=0; bitModificado=0 o avanzo.
-//				if(regTP->bit2ndChance==0 && regTP->bitModificado==0){
-//					regTP->bit2ndChance=registro.bit2ndChance;
-//					regTP->bitModificado=registro.bitModificado;
-//					regTP->bitPresencia=registro.bitPresencia;
-//					// Si no tengo que reusar la memoria, asigno el nuevo marco a la pagina
-//					if (flag!=REEMPLAZAR_MARCO)
-//						regTP->marco=registro.marco;
-//					// termino de recorrer
-//					estado=ENCONTRADO;
-//					return regTP;
-//				}
-//			}
-//			// avanzo
-//		}
-//		// recorro tabla Paso 2
-//		for(i=0;i<nodo->size && estado==NO_ENCONTRADO;i++){
-//			regTP = nodo->tabla+(sizeof(stRegistroTP)*i);
-//
-//			// Si es valido el registro
-//			if(regTP->bitPresencia==1){
-//				// Si bit2ndChance=0; bitModificado=1 o avanzo.
-//				if(regTP->bit2ndChance==0 && regTP->bitModificado==1){
-//					regTP->bit2ndChance=registro.bit2ndChance;
-//					regTP->bitModificado=registro.bitModificado;
-//					regTP->bitPresencia=registro.bitPresencia;
-//					// Si no tengo que reusar la memoria, asigno el nuevo marco a la pagina
-//					if (flag!=REEMPLAZAR_MARCO)
-//						regTP->marco=registro.marco;
-//					// termino de recorrer
-//					estado=ENCONTRADO;
-//					break;
-//				}else if(regTP->bit2ndChance==1){
-//					// Si bit2ndChance es 1 lo pongo en 0 y avanzo.
-//					regTP->bit2ndChance=0;
-//				}
-//			}
-//			// avanzo
-//
-//		}
-//	}while(estado==ENCONTRADO);
-//
-	return regTP;
+	stRegistroTP *victima = NULL;
+	int i, posicionInicial, posicionActual=-1;
+	int puntero_siguiente = -1;
+	/*
+	 * Clock Modificado o Enhanced second chance
+	 * Si el frame tiene el bit de acceso en 1, lo actualiza a 0 y avanza el puntero.
+	 * Cuando encuentra un frame en 0, reemplaza la pagina que contiene por la que produjo el fallo de pagina.
+	 *
+	 * Las pagina modificadas no pueden reemplazarse hasta que se escriban en memoria secundaria (Disco).
+	 * El clock mejorado genera 4 clases de frames:
+	 * 		1) No accedida, No Modificada (bit2ndChance=0;bitModificado=0)
+	 * 		2) Accedida, No modificada (bit2ndChance=1;bitModificado=0)
+	 * 		3) No accedida, Modificada (bit2ndChance=0;bitModificado=1)
+	 * 		4) Accedida, Modificada (bit2ndChance=1;bitModificado=1)
+	 * 	Paso 1: Recorro la lista de frames buscando uno con los bits bit2ndChance=0; bitModificado=0 (No cambiar los bits de uso)
+	 * 	Paso 2: Si en el paso anterior no encuentro ningun frame, recorro la lista de frames buscando los bits bit2ndChance=0; bitModificado=1.
+	 * 	En el recorrido pongo el bit bit2ndChance en 0 a medida que voy pasando.
+	 *	Paso 3: Si el paso anterior no encontro ningun frame, habre regresado a la posicion de comienzo y todos los frames tienen el bit2ndChance=0.
+	 *	Proseguir con el paso 1 y de ser necesario el paso 2.
+	 */
+
+	do{
+		// recorro tabla Paso 1
+		posicionInicial = tablaPaginas->punteroClock;
+		for(i=tablaPaginas->punteroClock;!victima;i++){
+
+			if(i == (tablaPaginas->size))
+				i=0;	// todas las paginas empiezan en 0
+
+			if(posicionInicial==posicionActual)// recorri un ciclo y no encontre
+				break;
+
+			regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
+
+			// Si es valido el registro
+			if(regTP->bitPresencia==1){
+				posicionActual=i;
+				// Si bit2ndChance=0; bitModificado=0 o avanzo.
+				if(regTP->bit2ndChance==0 && regTP->bitModificado==0){
+					victima=regTP;
+				} // no modifico ningun bit en el primer recorrido
+			}
+			// avanzo
+		}
+		// recorro tabla Paso 2
+		for(;!victima;i++){
+
+			if(i == (tablaPaginas->size))
+				i=0;	// todas las paginas empiezan en 0
+
+			if(posicionInicial==i)// recorri un ciclo y no encontre
+				break;
+
+			regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
+
+			// Si es valido el registro
+			if(regTP->bitPresencia==1){
+				// Si bit2ndChance=0; bitModificado=1 o avanzo.
+				if(regTP->bit2ndChance==0 && regTP->bitModificado==1){
+					victima=regTP;
+				}else if(regTP->bit2ndChance==1){
+					// Si bit2ndChance es 1 lo pongo en 0 y avanzo.
+					regTP->bit2ndChance=0;
+				}
+			}
+			// paso 3 es volver a empezar a recorrer desde el paso 1 con los bits modificados
+		}
+	}while(!victima);
+
+	// Posiciono el puntero en la pagina siguiente con presencia
+	// con la pagina que se busca
+	i=pagina;
+	while(-1 == puntero_siguiente){
+
+		if(i < (tablaPaginas->size))
+			i++;
+		else
+			i=0;  // todas las paginas empiezan en 0
+
+		regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
+		if(regTP->bitPresencia==1)
+			puntero_siguiente=i;
+	}
+	tablaPaginas->punteroClock=puntero_siguiente;
+
+	return victima;
 }
 
 

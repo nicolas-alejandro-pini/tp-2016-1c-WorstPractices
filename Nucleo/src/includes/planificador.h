@@ -13,6 +13,7 @@
 #include	<stdlib.h>
 #include	<stdio.h>
 #include	<pthread.h>
+#include    <commons/log.h>
 
 void *ready_productor(void *arg);
 stPCB *ready_consumidor();
