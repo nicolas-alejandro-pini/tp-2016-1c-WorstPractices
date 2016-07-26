@@ -214,7 +214,7 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 
 	// El registro de la pagina solicitada se va a guardar en frameNuevo
 	// Busco victima en la tabla de paginas del proceso.
-	if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK_MODIFICADO"))
+	if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK-M"))
 		victima = EjecutarClockModificado(tablaPaginas, pagina);
 	else
 		victima = EjecutarClock(tablaPaginas, pagina);
@@ -297,7 +297,7 @@ int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 	nodo->punteroClock = 0; // Apunta al ultimo elemento de la tabla
 
 	// agrego retardo
-	sleep(losParametros.delay);
+	usleep(losParametros.delay);
 	//enlazo en la lista
 	posicionEnTablaMarcos = list_mutex_add(TablaMarcos, nodo);
 
@@ -312,7 +312,7 @@ stNodoListaTP *buscarPID(uint16_t pid){
 			nodoListaTP = list_nodo;
 		}
 	}
-	sleep(losParametros.delay);
+	usleep(losParametros.delay);
 	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid);
 
 	// NULL: si no lo encontro, sino puntero a nodo
@@ -522,7 +522,7 @@ void liberarTablaPid(uint16_t pid){
 		i++;
 	}
 	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid_y_borro_tabla);
-	sleep(losParametros.delay);
+	usleep(losParametros.delay);
 	list_mutex_remove(TablaMarcos,index);
 
 	// mostrarTabla();

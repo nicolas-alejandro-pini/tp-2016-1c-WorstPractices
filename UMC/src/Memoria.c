@@ -27,7 +27,7 @@ int leerMemoria(void *buffer, uint16_t frameBuscado, stPosicion posLogica){
 	posFisica = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize);
 
 	pthread_mutex_lock(&memoria);
-	sleep(losParametros.delay);
+	usleep(losParametros.delay);
 	memcpy(buffer, posFisica + posLogica.offset, posLogica.size);
 	pthread_mutex_unlock(&memoria);
 
@@ -49,7 +49,7 @@ int escribirMemoria(void* buffer, uint16_t frameBuscado, uint16_t offset, uint16
 	posFisica = memoriaPrincipal+((frameBuscado-1)*losParametros.frameSize) + offset;
 
 	pthread_mutex_lock(&memoria);
-	sleep(losParametros.delay);
+	usleep(losParametros.delay);
 	memcpy(posFisica, buffer, size);
 	pthread_mutex_unlock(&memoria);
 
