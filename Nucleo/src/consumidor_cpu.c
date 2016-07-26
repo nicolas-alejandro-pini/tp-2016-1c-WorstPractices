@@ -236,13 +236,13 @@ void *consumidor_cpu(void *param) {
 					//Ingresa a la cola de procesos bloqueados del semaforo
 					queue_push(semaforo_request->bloqueados,unPCB);
 					log_info("El PCB [PID - %d] entra a la cola de bloqueados del semaforo [%s]",unPCB->pid,identificador_semaforo);
-					printf("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
+					printf("PCB [PID - %d] READY a BLOCK\n", unPCB->pid);
 					fin_ejecucion = 1;
 					//El CPU debe agarrar otro PCB de la cola de listos y sigue su ejecucion normal
 				}else
 				{
 					unHeaderIPC = nuevoHeaderIPC(WAIT_OK);
-					if(!enviarHeader(unCliente,unHeaderIPC)){
+					if(!enviarHeaderIPC(unCliente,unHeaderIPC)){
 						log_error("Error en pedido de WAIT, no se pudo enviar mensaje de WAIT_OK");
 					}
 					liberarHeaderIPC(unHeaderIPC);
