@@ -3,7 +3,7 @@
 # Nota: Hay que setear el HOME_TP y correr con super usuario
 export HOME_TP=/home/utnso/workspace/tp-2016-1c-WorstPractices
 export ENTREGABLES=$HOME_TP/Entregables
-export PRUEBA=$ENTREGABLES/prueba1
+export PRUEBA=$ENTREGABLES/prueba4
 
 # permisos de ejecucion sobre los programas del directorio
 chmod 555 *.ansisop

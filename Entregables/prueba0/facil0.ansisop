@@ -1,0 +1,15 @@
+#!/usr/bin/ansisop
+begin
+# primero declaro las variables
+variables a, b
+a = 20
+a = 400
+a = 123
+b = 9000
+b = 1244
+a = 9999
+b = 8888
+print b
+print a
+
+end
