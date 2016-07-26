@@ -438,6 +438,7 @@ void wait(t_nombre_semaforo identificador_semaforo){
 	if(unHeaderPrimitiva->tipo == WAIT_NO_OK){
 		quantum = 0; //Termino el quantum para devolver el pcb.
 		solicitudIO = 1; // Flag global para devolver PCB por bloqueo.
+		log_info ("Recibi un WAIT_NO_OK del Nucleo. Quantum [%d]", quantum);
 	}
 
 	liberarHeaderIPC(unHeaderPrimitiva);
@@ -672,6 +673,7 @@ int cargarPCB(void){
 		//log_info("PCB de ANSIPROG cargado. /n");
 		free_paquete(&paquete);
 		log_info("Recibi correctamente el PCB del nucleo.");
+		solicitudIO = 0;
 		return 0;
 	}else{
 		log_error("Error al recibir el PCB del nucleo.");
@@ -1102,6 +1104,7 @@ int main(void) {
 										usleep(quantumSleep*1000);
 										quantum --; 	/* descuento un quantum para proxima ejecución */
 										unPCB->pc ++; 	/* actualizo el program counter a la siguiente posición */
+										log_info("Quantum a ejecutar [%d].", quantum );
 
 									}else{
 										log_error("Error al ejecutar la instrucción.");
