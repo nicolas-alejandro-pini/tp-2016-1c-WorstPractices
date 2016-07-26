@@ -838,7 +838,7 @@ int ejecutarInstruccion(void){
 	if (instruccion != NULL){
 		analizadorLinea(strdup(instruccion), &AnSISOP_functions, &kernel_functions);
 	}else{
-		printf("Error: fallo la ejecución de instrucción.\n");
+		log_error("Error: fallo la ejecución de instrucción.\n");
 		configuracionInicial.salir = 1;
 		return EXIT_FAILURE;
 	}
@@ -943,7 +943,7 @@ int main(void) {
 	//Primero instancio el log
 	t_log* logger = log_create(temp_file, "CPU",-1, LOG_LEVEL_INFO);
 
-	log_info("Iniciando el proceo CPU..."); /* prints CPU Application */
+	log_info("Iniciando el proceso CPU..."); /* prints CPU Application */
 
 	init_signal_handler(&configuracionInicial);
 
@@ -1089,7 +1089,7 @@ int main(void) {
 								log_info("Quantum a ejecutar [%d].", quantum );
 
 								if (quantum <= 0){
-									printf("Error en Quantum definido. /n");
+									log_error("Error en Quantum definido.");
 									break;
 								}
 
@@ -1127,7 +1127,7 @@ int main(void) {
 							}else
 								log_info("Error en lectura ANSIPROG...");
 
-							printf("AnSISOP fin de Ejecucion por Quantum");
+							log_info("AnSISOP fin de Ejecucion por Quantum");
 							break;
 
 						default:
