@@ -395,6 +395,9 @@ t_asignacion *buscarAsignacionPaginaProceso(unsigned long int pID, unsigned long
 int leerPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *bufferPagina){
 	t_asignacion *asignacion;
 
+	log_info("La operacion de lectura llevara %d milisegundos", loaded_config->retardoAcceso);
+	usleep(loaded_config->retardoAcceso * 1000);
+
 	if((asignacion = buscarAsignacionPaginaProceso(pID, nroPagina)) == NULL){
 		//Asignacion no encontrada
 		return -1;
@@ -414,6 +417,9 @@ int leerPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *
  */
 int escribirPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *bufferPagina){
 	t_asignacion *asignacion;
+
+	log_info("La operacion de escritura llevara %d milisegundos", loaded_config->retardoAcceso);
+	usleep(loaded_config->retardoAcceso * 1000);
 
 	if((asignacion = buscarAsignacionPaginaProceso(pID, nroPagina)) == NULL){
 		//Asignacion no encontrada
