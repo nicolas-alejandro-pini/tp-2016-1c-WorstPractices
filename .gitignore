@@ -32,5 +32,4 @@
 *.dSYM/
 
 *.log
-*.config
 swap_data
