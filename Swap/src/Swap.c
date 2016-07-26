@@ -64,12 +64,14 @@ int main(void) {
     loaded_config.cantidadPaginas = config_get_long_value(config, "CANTIDAD_PAGINAS");
     loaded_config.tamanioPagina = config_get_long_value(config, "TAMANIO_PAGINA");
     loaded_config.retardoCompactacion = config_get_long_value(config, "RETARDO_COMPACTACION");
+    loaded_config.retardoAcceso = config_get_long_value(config, "RETARDO_ACCESO");
 
     log_info("Puerto de escucha: %d", loaded_config.puertoEscucha);
     log_info("Nombre del archivo Swap: %s", loaded_config.nombreSwap);
     log_info("Cantidad de paginas: %d", loaded_config.cantidadPaginas);
     log_info("Tamanio de pagina: %d", loaded_config.tamanioPagina);
     log_info("Retardo de compactacion: %d", loaded_config.retardoCompactacion);
+    log_info("Retardo de acceso: %d", loaded_config.retardoAcceso);
 
     //Creo la particion SWAP
     if(crearParticionSwap(loaded_config.nombreSwap, loaded_config.cantidadPaginas, loaded_config.tamanioPagina) <  0){

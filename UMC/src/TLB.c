@@ -151,7 +151,7 @@ void flushTLB(uint16_t pid){
 			seMostro=1;
 		}
 	}
-	if(list_mutex_is_empty(TLB->lista)){
+	if(list_mutex_is_empty(TLB)){
 		printf("La TLB esta vacia");
 		return;
 	}

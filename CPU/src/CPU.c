@@ -163,48 +163,74 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 
 	stPosicion *posicionVariable;
 	stHeaderIPC *unHeader;
-	uint16_t pagina, offset,tamanio;
+	uint16_t pagina = 0, offset = 0, tamanio = 0;
+	uint16_t tamanioRestante = TAMANIOVARIABLES;
+	char valor_parcial[TAMANIOVARIABLES];
 
+	/* Asigno valor parcial */
+	valor_parcial[3] = (valor>>24) & 0xFF;
+	valor_parcial[2] = (valor>>16) & 0xFF;
+	valor_parcial[1] = (valor>>8) & 0xFF;
+	valor_parcial[0] = valor & 0xFF;
+
+	valor = *(int *)valor_parcial; // Verifico que haya guardado bien el valor TODO BORRAR
 	log_info("Inicio primitiva asignar para grabar valor [%d]", valor);
 
+	/* Posicion inicial */
 	posicionVariable = obtenerPosicion(direccion_variable);
-
 	pagina = posicionVariable->pagina + unPCB->paginaInicioStack;
 	offset = posicionVariable->offset;
-	tamanio = posicionVariable->size;
 
-	unHeader = nuevoHeaderIPC(WRITE_BYTES_PAGE);
-	unHeader->largo = sizeof(uint16_t) *4;
+	while(tamanioRestante > 0){
 
-	if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
-		log_error("Error al enviar mensaje de leer bytes intruccion.");
-	}
-
-	/*Envio los tres datos a la UMC*/
-	send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
-	log_info("Se asigna en la UMC - Stack,pagina: %d",pagina);
-	send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
-	log_info("Se asigna en la UMC - Stack,offset: %d",offset);
-	send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
-	log_info("Se asigna en la UMC - Stack, tamanio: %d",tamanio);
-	send(configuracionInicial.sockUmc,&valor,tamanio,0);
-	log_info("Se asigna en la UMC - Stack, valor: %d",valor);
-
-	unHeader = nuevoHeaderIPC(ERROR);
-	if(!recibirHeaderIPC(configuracionInicial.sockUmc, unHeader)){
-		log_error("Error al recibir confirmacion de asignar en UMC.");
-	}
-
-	if(unHeader->tipo == OK)
-			log_info("Se asigno correctamente.");
-		else{
-			imprimirTexto("Error de segmentación al asignar.");
-			log_error ("Error de segmentacion al asignar");
-			configuracionInicial.salir = 1;
-			quantum = 0;
+		if(tamanioRestante + offset > tamanioPaginaUMC){
+			tamanio = tamanioPaginaUMC - offset;
 		}
-	liberarHeaderIPC(unHeader);
+		else
+		{
+			tamanio = tamanioRestante;
+		}
 
+		unHeader = nuevoHeaderIPC(WRITE_BYTES_PAGE);
+		unHeader->largo = (sizeof(uint16_t) * 3) + tamanio;
+
+		if(!enviarHeaderIPC(configuracionInicial.sockUmc,unHeader)){
+			log_error("Error al enviar mensaje de leer bytes intruccion.");
+		}
+
+		/*Envio los tres datos a la UMC*/
+		send(configuracionInicial.sockUmc,&pagina,sizeof(uint16_t),0);
+		log_info("Se asigna en la UMC - Stack,pagina: %d",pagina);
+		send(configuracionInicial.sockUmc,&offset,sizeof(uint16_t),0);
+		log_info("Se asigna en la UMC - Stack,offset: %d",offset);
+		send(configuracionInicial.sockUmc,&tamanio,sizeof(uint16_t),0);
+		log_info("Se asigna en la UMC - Stack, tamanio: %d",tamanio);
+		send(configuracionInicial.sockUmc,&valor_parcial[TAMANIOVARIABLES - tamanioRestante],tamanio,0);
+		//log_info("Se asigna en la UMC - Stack, valor: %d",valor);
+
+		unHeader = nuevoHeaderIPC(ERROR);
+		if(!recibirHeaderIPC(configuracionInicial.sockUmc, unHeader)){
+			log_error("Error al recibir confirmacion de asignar en UMC.");
+		}
+
+		if(unHeader->tipo == OK)
+				log_info("Se asigno correctamente.");
+			else{
+				imprimirTexto("Error de segmentación al asignar.");
+				log_error ("Error de segmentacion al asignar");
+				configuracionInicial.salir = 1;
+				quantum = 0;
+			}
+		liberarHeaderIPC(unHeader);
+
+
+		// Actualizo el tamanio restante no enviado
+		tamanioRestante -= tamanio;
+		// Me posiciono en la pagina de stack siguiente
+		pagina++;
+		// Seteo offset al inicio de la pagina siguiente
+		offset = 0;
+	} // While
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
@@ -1049,6 +1075,7 @@ int main(void) {
 
 								/* Obtengo el quantum del programa */
 								quantum = unPCB->quantum;
+								log_info("Quantum a ejecutar [%d].", quantum );
 
 								if (quantum <= 0){
 									printf("Error en Quantum definido. /n");
@@ -1056,6 +1083,7 @@ int main(void) {
 								}
 
 								quantumSleep = unPCB->quantumSleep;
+								log_info("Quantum sleep [%d].", quantumSleep );
 
 								//Ejecuto las instrucciones defidas por quamtum
 
