@@ -396,7 +396,7 @@ void cargarTabla(stNodoListaTP *tablaPaginas, uint16_t pagina){
 	return;
 }
 void test_clock(){
-	stRegistroTP *victima, *registro;
+	stRegistroTP *victima; //, *registro;
 	stNodoListaTP *tablaPaginas;
 	uint16_t pagina;
 
