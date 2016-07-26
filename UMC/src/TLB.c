@@ -151,12 +151,15 @@ void flushTLB(uint16_t pid){
 			seMostro=1;
 		}
 	}
-	if(list_mutex_is_empty(TLB)){
-		printf("La TLB esta vacia");
-		return;
-	}
 	// Itero lista
 	pthread_mutex_lock(&TLB->mutex);
+
+	// Antes de invocar flushTLB deberia validarse si esta activa la TLB
+	// dejo igual esta validacion dentro de la zona critica
+	if(list_is_empty(TLB->lista)){
+		return;
+	}
+
 	list_iterate(TLB->lista,(void*)_flush_nodo);
 	pthread_mutex_unlock(&TLB->mutex);
 	if(seMostro==0)

@@ -27,7 +27,7 @@ void readConsole(char* buffer, char* comando, char parametros[CANTIDAD_PARAMETRO
 {
 	int i;
 	int j = 0;
-	int k = 0;
+	//int k = 0;
 	int param = 0;
 
 	// inicializo comando
@@ -56,7 +56,7 @@ void readConsole(char* buffer, char* comando, char parametros[CANTIDAD_PARAMETRO
 		if(buffer[i]==' ' || buffer[i] =='\n')
 		{
 			param++;
-			k=0;
+			//k=0;
 
 		}
 
