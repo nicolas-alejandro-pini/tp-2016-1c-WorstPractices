@@ -1075,6 +1075,7 @@ int main(void) {
 
 								/* Obtengo el quantum del programa */
 								quantum = unPCB->quantum;
+								log_info("Quantum a ejecutar [%d].", quantum );
 
 								if (quantum <= 0){
 									printf("Error en Quantum definido. /n");
@@ -1082,6 +1083,7 @@ int main(void) {
 								}
 
 								quantumSleep = unPCB->quantumSleep;
+								log_info("Quantum sleep [%d].", quantumSleep );
 
 								//Ejecuto las instrucciones defidas por quamtum
 
