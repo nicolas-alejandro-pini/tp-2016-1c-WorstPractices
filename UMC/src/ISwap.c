@@ -142,7 +142,7 @@ int destruirPrograma(uint16_t pid){
 		log_error("Error al desruir programa %d en swap", pid);
 		ret=EXIT_FAILURE;
 	}
-
+	log_info("Se envio el destruir programa %d al SWAP", pid);
 	liberarHeaderIPC(mensaje);
 
 	pthread_mutex_unlock(&swap);
