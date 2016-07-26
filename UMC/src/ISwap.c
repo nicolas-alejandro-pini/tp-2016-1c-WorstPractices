@@ -13,20 +13,18 @@ int inicializarSwap(stPageIni *st){
 	stHeaderIPC* mensaje;
 	int ret=EXIT_SUCCESS;
 
+	pthread_mutex_lock(&swap);
+
 	mensaje = nuevoHeaderIPC(INICIAR_PROGRAMA);
 	mensaje->largo = 2*sizeof(uint16_t) + strlen(st->programa) + 1;
 
-	pthread_mutex_lock(&swap);
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
 	send(losParametros.sockSwap, &st->processId, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, &st->cantidadPaginas, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, st->programa, strlen(st->programa) + 1, 0);
-	pthread_mutex_unlock(&swap);
 
-	pthread_mutex_lock(&swap);
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
-	pthread_mutex_unlock(&swap);
 
 	if(mensaje->tipo != OK){
 		log_error("Error al inicializar el proceso %d en el swap", st->processId);
@@ -34,6 +32,9 @@ int inicializarSwap(stPageIni *st){
 	}
 
 	liberarHeaderIPC(mensaje);
+
+	pthread_mutex_unlock(&swap);
+
 	return ret;
 }
 
@@ -52,20 +53,18 @@ int enviarPagina(uint16_t pid, uint16_t pagina, char* buffer){
 	stHeaderIPC* mensaje;
 	int ret=EXIT_SUCCESS;
 
+	pthread_mutex_lock(&swap);
+
 	mensaje = nuevoHeaderIPC(ESCRIBIR_PAGINA);
 	mensaje->largo = 2*sizeof(uint16_t) + losParametros.frameSize;
 
-	pthread_mutex_lock(&swap);
 	enviarHeaderIPC(losParametros.sockSwap, mensaje);
 
 	send(losParametros.sockSwap, &pid, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, &pagina, sizeof(uint16_t), 0);
 	send(losParametros.sockSwap, buffer, losParametros.frameSize, 0);
-	pthread_mutex_unlock(&swap);
 
-	pthread_mutex_lock(&swap);
 	recibirHeaderIPC(losParametros.sockSwap, mensaje);
-	pthread_mutex_unlock(&swap);
 
 	if(mensaje->tipo != OK){
 		log_error("Error al escribir pagina %d del proceso %d en el swap", pagina, pid);
@@ -73,6 +72,8 @@ int enviarPagina(uint16_t pid, uint16_t pagina, char* buffer){
 	}
 
 	liberarHeaderIPC(mensaje);
+
+	pthread_mutex_unlock(&swap);
 
 	return ret;
 }
@@ -142,7 +143,9 @@ int destruirPrograma(uint16_t pid){
 		ret=EXIT_FAILURE;
 	}
 
-	pthread_mutex_unlock(&swap);
 	liberarHeaderIPC(mensaje);
+
+	pthread_mutex_unlock(&swap);
+
 	return ret;
 }
