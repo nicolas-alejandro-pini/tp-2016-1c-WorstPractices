@@ -215,6 +215,7 @@ void *consumidor_cpu(void *param) {
 					identificador_semaforo = malloc(unMensajeIPC.header.largo);
 					recv(unCliente, identificador_semaforo, unMensajeIPC.header.largo, 0);
 					semaforo_request = buscar_semaforo(identificador_semaforo);
+					pthread_mutex_lock(&semaforo_request->mutex_bloqueados);
 					log_info("Inicio pedido de WAIT de semaforo [%s], valor del semaforo [%d]", semaforo_request->nombre,semaforo_request->valor);
 
 					if (wait_semaforo(identificador_semaforo) == EXIT_FAILURE) {
@@ -234,6 +235,7 @@ void *consumidor_cpu(void *param) {
 						deserializar_pcb(unPCB, &paquete);
 						free_paquete(&paquete);
 						//Ingresa a la cola de procesos bloqueados del semaforo
+
 						queue_push(semaforo_request->bloqueados, unPCB);
 						log_info("PCB [PID - %d] EXEC a BLOCK, entra a la cola de bloqueados del semaforo [%s]", unPCB->pid, identificador_semaforo);
 						fin_ejecucion = 1;
@@ -247,12 +249,14 @@ void *consumidor_cpu(void *param) {
 						log_info("Fin pedido de WAIT al semaforo [%s]", identificador_semaforo);
 						//Se realizo el WAIT correctamente, sigue su ejecucion normal. Con el mensaje de WAIT_OK el CPU NO debe mandar el PCB
 					}
+					pthread_mutex_unlock(&semaforo_request->mutex_bloqueados);
 					free(identificador_semaforo);
 					break;
 				case SIGNAL:
 					identificador_semaforo = malloc(unMensajeIPC.header.largo);
 					recv(unCliente, identificador_semaforo, unMensajeIPC.header.largo, 0);
 					semaforo_request = buscar_semaforo(identificador_semaforo);
+					pthread_mutex_lock(&semaforo_request->mutex_bloqueados);
 					log_info("Inicio pedido de SIGNAL de semaforo [%s], valor del semaforo [%d]", semaforo_request->nombre,semaforo_request->valor);
 
 					if (signal_semaforo(semaforo_request->nombre) == EXIT_FAILURE) {
@@ -260,7 +264,8 @@ void *consumidor_cpu(void *param) {
 						log_info("PCB [PID - %d] BLOCK a READY, sale de la cola de bloqueados del semaforo [%s]", unPCB->pid,semaforo_request->nombre);
 						ready_productor(unPCB);
 					}
-					log_info("Fin pedido de SIGNAL al semaforo [%s]", semaforo_request->nombre);
+					log_info("Fin pedido de SIGNAL al semaforo [%s]", identificador_semaforo);
+					pthread_mutex_unlock(&semaforo_request->mutex_bloqueados);
 					break;
 				case IMPRIMIR:
 					/*Me comunico con la correspondiente consola que inicio el PCB*/

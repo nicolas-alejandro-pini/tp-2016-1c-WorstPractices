@@ -19,6 +19,7 @@ void crear_semaforo(char *nombre, char* valor) {
 	semaforo->nombre = strdup(nombre);
 	semaforo->valor = atoi(valor);
 	semaforo->bloqueados = queue_create();
+	pthread_mutex_init(&semaforo->mutex_bloqueados,NULL);
 	pthread_mutex_lock(&diccionario_semaforos_mutex);
 	dictionary_put(diccionario_semaforos,nombre,semaforo);
 	pthread_mutex_unlock(&diccionario_semaforos_mutex);

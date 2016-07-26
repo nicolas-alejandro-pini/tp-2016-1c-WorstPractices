@@ -16,6 +16,7 @@
 typedef struct {
 	char *nombre;
 	int32_t valor;
+	pthread_mutex_t mutex_bloqueados;
 	t_queue *bloqueados;
 } __attribute__((packed)) stSemaforo;
 

@@ -14,6 +14,7 @@
 #include	<stdio.h>
 #include	<pthread.h>
 #include    <commons/log.h>
+#include    <commons/string.h>
 
 void *ready_productor(void *arg);
 stPCB *ready_consumidor();
@@ -22,5 +23,6 @@ void eliminar_pcb_ready(int pid);
 void destruir_cola_ready();
 void destruir_semaforos_ready();
 void destruir_planificador();
+char *imprimir_cola();
 
 #endif /* PLANIFICADOR_H_ */
