@@ -5,6 +5,7 @@
  *      Author: utnso
  */
 #include "includes/semaforos.h"
+#include <string.h>
 
 static pthread_mutex_t diccionario_semaforos_mutex = PTHREAD_MUTEX_INITIALIZER;	// mutual exclusion lock
 t_dictionary *diccionario_semaforos;
