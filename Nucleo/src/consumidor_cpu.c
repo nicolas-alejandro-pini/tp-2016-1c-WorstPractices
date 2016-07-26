@@ -178,7 +178,6 @@ void *consumidor_cpu(void *param) {
 				/*Lo alojamos en la cola de ready para que vuelva a ser tomado por algun CPU*/
 				printf("PCB [PID - %d] FIN QUANTUM\n", unPCB->pid);
 				ready_productor(unPCB);
-				printf("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
 				break;
 			case EXECERROR:
 				log_info("Recibido mensaje de EXEC ERROR CPU, falta tratamiento!!!");
