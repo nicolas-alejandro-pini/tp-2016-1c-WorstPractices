@@ -283,10 +283,12 @@ void *finalizarProgramaNucleo(uint32_t pid){
 	return NULL;
 }
 
+/* Devuelve pid 0 si no admite el cambio de contexto */
 uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 
 	stNodoListaTP *data = NULL;
 	uint32_t pid = 0;
+	uint32_t marcosEnMP = 0;
 
 	/* Valido que lleguen los 4 bytes del int pid */
 	if(unMensaje->header.largo != sizeof(uint32_t))
@@ -295,12 +297,25 @@ uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 	}
 
 	memcpy(&(pid), unMensaje->contenido, sizeof(uint32_t));
+
+	/* Obtiene Tabla de Paginas de PID */
 	data = buscarPID(pid);
 
 	if(data==NULL)
 	{
-		log_error("pid %d no encontrado en el cambio de contexto - programa no inicializado", pid);
+		log_error("pid [%d] no encontrado en el cambio de contexto - programa no inicializado", pid);
 		pid = 0;  // PID 0 (disponible)
+	}else{
+		/* Obtengo presencias en MP de la tabla de PID */
+		marcosEnMP = obtenerPresenciasTabladePaginas(data);
+
+		/* Si es un proceso nuevo, sin marcos asignados, Y no hay marcos libres...
+		 * que vuelva a intentar ingresar en un rato
+		 */
+		if(0 == marcosEnMP && 0 == hayMarcoLibre()){
+			log_info("Se rechaza pid [%d] por no tener marcos y no haber mas disponibles");
+			pid = 0;
+		}
 	}
 
 	// No se actuliza tabla de pagina del otro proceso asi qeu no es necesario actualizar swap con paginas que tienen byte modificado
@@ -447,15 +462,25 @@ void realizarAccionCPU(uint32_t unSocket){
 
 			pidActivo = cambiarContexto(&unMensaje);
 
+			/* Confirmacion al CPU del cambio de contexto */
+			unHeader = nuevoHeaderIPC(ERROR);
+			unHeader->largo = 0;
+
 			if(0 == pidActivo)
-			{
-				log_error("Thread socket[%d]: PID erroneo", unSocket);
-				free(unMensaje.contenido);
-				break;
+				log_info("Thread socket[%d]: Confirma al CPU que no se atiende el pid enviado", unSocket);
+			else{
+				log_info("Thread socket[%d] atiende Pid[%d]:", unSocket, pidActivo);
+				unHeader->tipo = OK;
+				unHeader->largo = pidActivo;  // Confirmo con el pid que envio, alcanza solo el OK / ERROR
 			}
 
-			log_info("Thread socket[%d] atiende Pid[%d]:", unSocket, pidActivo);
+			/* Envia confirmacion */
+			if(!enviarHeaderIPC(unSocket,unHeader)){
+				log_error("Thread socket[%d] error al enviar header confirmacion al CPU (CAMBIOCONTEXTO)", unSocket);
+			}
+			liberarHeaderIPC(unHeader);
 			free(unMensaje.contenido);
+
 			break;
 
 		default:
