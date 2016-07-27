@@ -76,7 +76,7 @@ char *imprimir_cola(){
 	stPCB *pcb;
 	char *string = string_new();
 	string_append(&string, "PIDs en cola READY->[");
-	for (i = 0; i < queue_size(colaReady); ++i) {
+	for (i = 0; i < queue_size(colaReady); i++) {
 		pcb = list_get(colaReady->elements,i);
 		string_append(&string,string_itoa(pcb->pid));
 		if((i+1)<queue_size(colaReady)){
