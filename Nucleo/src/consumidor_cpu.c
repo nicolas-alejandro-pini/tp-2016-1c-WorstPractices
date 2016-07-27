@@ -268,14 +268,13 @@ void *consumidor_cpu(void *param) {
 					log_info("Inicio pedido de SIGNAL de semaforo [%s], valor del semaforo [%d]", semaforo_request->nombre,semaforo_request->valor);
 					log_info(imprimir_cola());
 					//if (signal_semaforo(&semaforo_request) == EXIT_FAILURE) {
-					if (++(semaforo_request->valor) >= 0) {
-						if(queue_size(semaforo_request->bloqueados) > 0){
-							unPCB = queue_pop(semaforo_request->bloqueados);
-							log_info("PCB [PID - %d] BLOCK a READY, sale de la cola de bloqueados del semaforo [%s]", unPCB->pid,semaforo_request->nombre);
-							ready_productor(unPCB);
-						}else{
-							log_info("No hay PCB que quitar de la cola del semaforo [%s]", semaforo_request->nombre);
-						}
+					++(semaforo_request->valor);
+					if(queue_size(semaforo_request->bloqueados) > 0){
+						unPCB = queue_pop(semaforo_request->bloqueados);
+						log_info("PCB [PID - %d] BLOCK a READY, sale de la cola de bloqueados del semaforo [%s]", unPCB->pid,semaforo_request->nombre);
+						ready_productor(unPCB);
+					}else{
+						log_info("No hay PCB que quitar de la cola del semaforo [%s]", semaforo_request->nombre);
 					}
 					log_info("Fin pedido de SIGNAL al semaforo [%s]", identificador_semaforo);
 					pthread_mutex_unlock(&semaforo_request->mutex_bloqueados);
