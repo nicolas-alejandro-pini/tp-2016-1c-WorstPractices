@@ -176,10 +176,12 @@ void *consumidor_cpu(void *param) {
 						continue;
 					}
 					unPCB = malloc(sizeof(stPCB));
+					log_info("Antes de deserializar [%s]\n", imprimir_cola());
 					deserializar_pcb(unPCB, &paquete);
 					free_paquete(&paquete);
 					/*Lo alojamos en la cola de ready para que vuelva a ser tomado por algun CPU*/
 					log_info("PCB [PID - %d] FIN QUANTUM\n", unPCB->pid);
+					log_info("Antes de entrar a la cola [%s]\n", imprimir_cola());
 					ready_productor(unPCB);
 					log_info("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
 					break;
@@ -220,7 +222,7 @@ void *consumidor_cpu(void *param) {
 					semaforo_request = buscar_semaforo(identificador_semaforo);
 					pthread_mutex_lock(&semaforo_request->mutex_bloqueados);
 					log_info("Inicio pedido de WAIT de semaforo [%s], valor del semaforo [%d]", semaforo_request->nombre,semaforo_request->valor);
-
+					log_info(imprimir_cola());
 					//if (wait_semaforo(&semaforo_request) == EXIT_FAILURE) {
 					if (--(semaforo_request->valor) < 0) {
 						//Debe quedar bloqueado ya que el valor del semaforo < 0
@@ -264,7 +266,7 @@ void *consumidor_cpu(void *param) {
 					semaforo_request = buscar_semaforo(identificador_semaforo);
 					pthread_mutex_lock(&semaforo_request->mutex_bloqueados);
 					log_info("Inicio pedido de SIGNAL de semaforo [%s], valor del semaforo [%d]", semaforo_request->nombre,semaforo_request->valor);
-
+					log_info(imprimir_cola());
 					//if (signal_semaforo(&semaforo_request) == EXIT_FAILURE) {
 					if (++(semaforo_request->valor) >= 0) {
 						if(queue_size(semaforo_request->bloqueados) > 0){
