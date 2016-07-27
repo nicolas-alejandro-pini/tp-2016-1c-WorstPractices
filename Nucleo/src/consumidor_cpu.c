@@ -99,6 +99,7 @@ void *consumidor_cpu(void *param) {
 				continue;
 			}
 			log_info("PCB [PID - %d] READY a EXEC (CPU - Sock [%d]) \n", unPCB->pid, unCliente);
+			pcb_destroy(unPCB);
 			free_paquete(&paquete);
 		}
 		while (fin_ejecucion == 0 && error != 1) {
@@ -122,6 +123,7 @@ void *consumidor_cpu(void *param) {
 						free_paquete(&paquete);
 						continue;
 					}
+					unPCB = malloc(sizeof(stPCB));
 					deserializar_pcb(unPCB, &paquete);
 					free_paquete(&paquete);
 					/*Se comprueba que el PCB corresponda a una consola que este conectada, si esta desconectada libera el pcb que pide I/O y el CPU sigue con otro pcb*/
@@ -173,6 +175,7 @@ void *consumidor_cpu(void *param) {
 						free_paquete(&paquete);
 						continue;
 					}
+					unPCB = malloc(sizeof(stPCB));
 					deserializar_pcb(unPCB, &paquete);
 					free_paquete(&paquete);
 					/*Lo alojamos en la cola de ready para que vuelva a ser tomado por algun CPU*/
@@ -233,6 +236,7 @@ void *consumidor_cpu(void *param) {
 							free_paquete(&paquete);
 							continue;
 						}
+						unPCB = malloc(sizeof(stPCB));
 						deserializar_pcb(unPCB, &paquete);
 						free_paquete(&paquete);
 						//Ingresa a la cola de procesos bloqueados del semaforo
