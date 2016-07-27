@@ -22,9 +22,8 @@ typedef struct {
 
 void crear_semaforo(char *nombre, char* valor);
 stSemaforo *buscar_semaforo(char *nombre );
-int wait_semaforo(char* nombre_semaforo);
-int signal_semaforo(char* nombre_semaforo);
 void inicializar_semaforos();
-
+int wait_semaforo(stSemaforo *semaforo);
+int signal_semaforo(stSemaforo *semaforo);
 
 #endif /* SEMAFOROS_H_ */

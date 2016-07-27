@@ -44,16 +44,18 @@ stPCB *ready_consumidor() {
 	return pcb_aux;
 }
 void eliminar_pcb_ready(int pid){
-	stPCB *unPCB;
+	stPCB *unPCB = NULL;
 	int i;
 	pthread_mutex_lock(&mutex);
 	for (i = 0; i < queue_size(colaReady) ; ++i) {
 		unPCB = list_get(colaReady->elements,i);
 		if(unPCB->pid == pid){
 			list_remove(colaReady->elements,i);
+			break;
 		}
 	}
-	log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
+	if(unPCB != NULL)
+		log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
 	pthread_mutex_unlock(&mutex);
 }
 
@@ -76,7 +78,7 @@ char *imprimir_cola(){
 	stPCB *pcb;
 	char *string = string_new();
 	string_append(&string, "PIDs en cola READY->[");
-	for (i = 0; i < queue_size(colaReady); ++i) {
+	for (i = 0; i < queue_size(colaReady); i++) {
 		pcb = list_get(colaReady->elements,i);
 		string_append(&string,string_itoa(pcb->pid));
 		if((i+1)<queue_size(colaReady)){
