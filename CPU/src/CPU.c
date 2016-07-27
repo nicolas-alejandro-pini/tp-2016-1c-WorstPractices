@@ -916,10 +916,27 @@ int cambiarContextoUMC(uint32_t pid){
 	stMensajeIPC unMensajeIPC;
 	unMensajeIPC.header.tipo = CAMBIOCONTEXTO;
 	unMensajeIPC.header.largo = sizeof(uint32_t);
+	stHeaderIPC* unHeaderConfirmacion = nuevoHeaderIPC(ERROR);
 
-	if(!enviarMensajeIPC(configuracionInicial.sockUmc,&unMensajeIPC.header, (char*) &pid))
+	if(!enviarMensajeIPC(configuracionInicial.sockUmc,&unMensajeIPC.header, (char*) &pid)){
+		log_error("Error al enviar cambio de contexto a la UMC..");
 		return EXIT_FAILURE;
+	}
 
+	if (!recibirHeaderIPC(configuracionInicial.sockUmc, unHeaderConfirmacion)) {
+		log_error("Error al recibir confirmacion de cambio de contexto de la UMC");
+		return EXIT_FAILURE;
+	}
+
+	if(OK != unHeaderConfirmacion->tipo){
+		/* El pid es el enviado el CPU y lo confirma en el largo del header
+		 *  para no usar un enviarMensaje */
+		log_info("La UMC rechaza atender el pid[%d] por no tener marcos disponibles y ser un proceso nuevo", pid);
+		return EXIT_FAILURE;
+	}
+
+	log_info("La UMC rechaza atender el pid[%d", unHeaderConfirmacion->largo);
+	liberarHeaderIPC(unHeaderConfirmacion);
 	return EXIT_SUCCESS;
 }
 
@@ -1080,7 +1097,12 @@ int main(void) {
 							{
 								//Cambio el contexto con la UMC
 								if(cambiarContextoUMC(unPCB->pid)!=EXIT_SUCCESS){
-									log_info("Error al cambiar de contexto...");
+									log_info("Devuelvo PCB al nucleo para que sea atendido en otro momento");
+									if (devolverPCBalNucleo() == -1){
+										log_info("Error al devolver PCB de ANSIPROG...");
+										configuracionInicial.salir = 1;
+										break;
+									}
 									break;
 								}
 
