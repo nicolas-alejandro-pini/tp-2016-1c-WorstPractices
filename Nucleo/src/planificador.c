@@ -44,7 +44,7 @@ stPCB *ready_consumidor() {
 	return pcb_aux;
 }
 void eliminar_pcb_ready(int pid){
-	stPCB *unPCB;
+	stPCB *unPCB = NULL;
 	int i;
 	pthread_mutex_lock(&mutex);
 	for (i = 0; i < queue_size(colaReady) ; ++i) {
@@ -54,7 +54,8 @@ void eliminar_pcb_ready(int pid){
 			break;
 		}
 	}
-	log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
+	if(unPCB != NULL)
+		log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
 	pthread_mutex_unlock(&mutex);
 }
 
