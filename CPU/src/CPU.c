@@ -906,6 +906,7 @@ int devolverPCBalNucleo(void){
 		free_paquete(&paquete);
 	}
 
+	pcb_destroy(unPCB);
 	return resultado;
 }
 
