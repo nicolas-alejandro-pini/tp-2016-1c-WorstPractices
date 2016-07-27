@@ -218,7 +218,8 @@ void *consumidor_cpu(void *param) {
 					pthread_mutex_lock(&semaforo_request->mutex_bloqueados);
 					log_info("Inicio pedido de WAIT de semaforo [%s], valor del semaforo [%d]", semaforo_request->nombre,semaforo_request->valor);
 
-					if (wait_semaforo(identificador_semaforo) == EXIT_FAILURE) {
+					//if (wait_semaforo(&semaforo_request) == EXIT_FAILURE) {
+					if (--(semaforo_request->valor) < 0) {
 						//Debe quedar bloqueado ya que el valor del semaforo < 0
 						log_info("Se envia mensaje WAIT_NO_OK al CPU (Sock:%d)",unCliente);
 						unHeaderIPC = nuevoHeaderIPC(WAIT_NO_OK);
@@ -240,7 +241,8 @@ void *consumidor_cpu(void *param) {
 						log_info("PCB [PID - %d] EXEC a BLOCK, entra a la cola de bloqueados del semaforo [%s]", unPCB->pid, identificador_semaforo);
 						fin_ejecucion = 1;
 						//El CPU debe agarrar otro PCB de la cola de listos y sigue su ejecucion normal
-					} else {
+					}
+					else {
 						unHeaderIPC = nuevoHeaderIPC(WAIT_OK);
 						if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 							log_error("Error en pedido de WAIT, no se pudo enviar mensaje de WAIT_OK");
@@ -259,10 +261,15 @@ void *consumidor_cpu(void *param) {
 					pthread_mutex_lock(&semaforo_request->mutex_bloqueados);
 					log_info("Inicio pedido de SIGNAL de semaforo [%s], valor del semaforo [%d]", semaforo_request->nombre,semaforo_request->valor);
 
-					if (signal_semaforo(semaforo_request->nombre) == EXIT_FAILURE) {
-						unPCB = queue_pop(semaforo_request->bloqueados);
-						log_info("PCB [PID - %d] BLOCK a READY, sale de la cola de bloqueados del semaforo [%s]", unPCB->pid,semaforo_request->nombre);
-						ready_productor(unPCB);
+					//if (signal_semaforo(&semaforo_request) == EXIT_FAILURE) {
+					if (++(semaforo_request->valor) >= 0) {
+						if(queue_size(semaforo_request->bloqueados) > 0){
+							unPCB = queue_pop(semaforo_request->bloqueados);
+							log_info("PCB [PID - %d] BLOCK a READY, sale de la cola de bloqueados del semaforo [%s]", unPCB->pid,semaforo_request->nombre);
+							ready_productor(unPCB);
+						}else{
+							log_info("No hay PCB que quitar de la cola del semaforo [%s]", semaforo_request->nombre);
+						}
 					}
 					log_info("Fin pedido de SIGNAL al semaforo [%s]", identificador_semaforo);
 					pthread_mutex_unlock(&semaforo_request->mutex_bloqueados);

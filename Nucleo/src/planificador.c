@@ -27,7 +27,7 @@ void *ready_productor(void* arg) {
 
 	pthread_mutex_unlock(&empty);	// Comienzo de espera de consumidor
 	fflush(stdout);
-	return NULL;
+	return NULL;s
 }
 
 stPCB *ready_consumidor() {

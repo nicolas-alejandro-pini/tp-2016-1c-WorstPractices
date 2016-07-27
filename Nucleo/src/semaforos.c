@@ -33,8 +33,7 @@ stSemaforo *buscar_semaforo(char *nombre_semaforo){
 	return semaforo;
 }
 
-int wait_semaforo(char* nombre_semaforo) {
-	stSemaforo* semaforo = buscar_semaforo(nombre_semaforo);
+int wait_semaforo(stSemaforo *semaforo) {
 	semaforo->valor--;
 
 	if (semaforo->valor < 0) {
@@ -44,11 +43,11 @@ int wait_semaforo(char* nombre_semaforo) {
 	return EXIT_SUCCESS;
 }
 
-int signal_semaforo(char* nombre_semaforo) {
-	stSemaforo *semaforo = buscar_semaforo(nombre_semaforo);
+int signal_semaforo(stSemaforo *semaforo) {
+
 	semaforo->valor++;
 
-	if (semaforo->valor <= 0) {
+	if (semaforo->valor < 0) {
 		return EXIT_FAILURE;
 	}
 	return EXIT_SUCCESS;
