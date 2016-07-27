@@ -27,7 +27,7 @@ void *ready_productor(void* arg) {
 
 	pthread_mutex_unlock(&empty);	// Comienzo de espera de consumidor
 	fflush(stdout);
-	return NULL;s
+	return NULL;
 }
 
 stPCB *ready_consumidor() {
@@ -51,6 +51,7 @@ void eliminar_pcb_ready(int pid){
 		unPCB = list_get(colaReady->elements,i);
 		if(unPCB->pid == pid){
 			list_remove(colaReady->elements,i);
+			break;
 		}
 	}
 	log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
