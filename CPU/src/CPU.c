@@ -936,7 +936,7 @@ int cambiarContextoUMC(uint32_t pid){
 		return EXIT_FAILURE;
 	}
 
-	log_info("La UMC rechaza atender el pid[%d", unHeaderConfirmacion->largo);
+	log_info("La UMC acepto atender el pid[%d]", unHeaderConfirmacion->largo);
 	liberarHeaderIPC(unHeaderConfirmacion);
 	return EXIT_SUCCESS;
 }
