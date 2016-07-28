@@ -4,8 +4,8 @@ BINARIO := UMC
 FUENTES := src/Memoria.c src/ISwap.c src/ICPU.c src/TLB.c src/TablaMarcos.c src/Consola.c src/UMC.c src/tests/test_umc_swap.c src/tests/test_umc.c
 OBJS := Memoria.o ISwap.o ICPU.o TLB.o TablaMarcos.o Consola.o UMC.o test_umc_swap.o test_umc.o
 
-LIBPATH := ../Commons/
-INCPATH := -I../Commons/
+LIBPATH := -L../Commons
+INCPATH := -I../Commons
 LINKER := -lCommons -lcunit -lpthread
 
 # ALL
@@ -13,7 +13,7 @@ all: ejecutable
 
 # Consola
 ejecutable: $(OBJS)
-	$(CC) -o $(BINARIO) $(CFLAGS) $(OBJS) -L$(LIBPATH) $(LINKER)
+	$(CC) -o $(BINARIO) $(CFLAGS) $(OBJS) $(LIBPATH) $(LINKER)
 
 Memoria.o:
 	$(CC) -c $(CFLAGS) src/Memoria.c $(INCPATH) $(LINKER)

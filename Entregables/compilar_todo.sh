@@ -62,10 +62,9 @@ then
   mkdir $ENTREGABLES/Commons/commons/collections
   mkdir $ENTREGABLES/Commons/commons/parser
 fi
-cp $COMMONS/commons/*.h $ENTREGABLES/Commons/commons
-cp $COMMONS/commons/collections/*.h $ENTREGABLES/Commons/commons/collections
-cp $COMMONS/commons/parser/*.h $ENTREGABLES/Commons/commons/parser
-cp $COMMONS/Debug/libCommons.so $ENTREGABLES/Commons/libCommons.so
+cp -r $COMMONS/commons $ENTREGABLES/Commons
+#cp $COMMONS/commons/collections/*.h $ENTREGABLES/Commons/commons/collections
+#cp $COMMONS/commons/parser/*.h $ENTREGABLES/Commons/commons/parser
 
 echo '\nCopio fuentes...'
 cp -r $SWAP_TP/src $ENTREGABLES/Swap/src
@@ -75,6 +74,7 @@ cp -r $CPU_TP/src $ENTREGABLES/CPU/src
 cp -r $CONSOLA_TP/src $ENTREGABLES/Consola/src
 
 echo '\nCopio makefiles a directorio de entregables...'
+cp $ENTREGABLES/make_commons $ENTREGABLES/Commons/makefile
 cp $ENTREGABLES/make_swap $ENTREGABLES/Swap/makefile
 cp $ENTREGABLES/make_umc $ENTREGABLES/UMC/makefile
 cp $ENTREGABLES/make_nucleo $ENTREGABLES/Nucleo/makefile
@@ -82,11 +82,17 @@ cp $ENTREGABLES/make_cpu $ENTREGABLES/CPU/makefile
 cp $ENTREGABLES/make_consola $ENTREGABLES/Consola/makefile
 
 echo '\nMakefiles con permisos de ejecucion...'
+chmod 665 $ENTREGABLES/Commons/makefile
 chmod 665 $ENTREGABLES/Swap/makefile
 chmod 665 $ENTREGABLES/UMC/makefile
 chmod 665 $ENTREGABLES/Nucleo/makefile
 chmod 665 $ENTREGABLES/CPU/makefile
 chmod 665 $ENTREGABLES/Consola/makefile
+
+echo '\n\nCompilando Commons...'
+cd $ENTREGABLES/Commons
+make
+cp $ENTREGABLES/Commons/build/libCommons.so $ENTREGABLES/Commons/libCommons.so
 
 echo '\n\nCompilando Swap...'
 cd $ENTREGABLES/Swap

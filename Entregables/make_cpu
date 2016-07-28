@@ -4,7 +4,7 @@ BINARIO := CPU
 FUENTES := src/cpuSignals.c src/CPU.c
 OBJS := cpuSignals.o CPU.o
 
-LIBPATH := ../Commons/
+LIBPATH := ../Commons
 LINKER := Commons
 
 # ALL

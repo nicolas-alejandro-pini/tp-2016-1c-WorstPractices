@@ -4,7 +4,7 @@ BINARIO := Consola
 FUENTES := src/consola_main.c src/Consola.c
 OBJS := consola_main.o Consola.o
 
-LIBPATH := ../Commons/
+LIBPATH := ../Commons
 LINKER := Commons
 
 # ALL

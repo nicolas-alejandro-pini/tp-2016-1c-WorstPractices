@@ -4,8 +4,8 @@ BINARIO := Nucleo
 FUENTES := src/shared_vars.c src/nucleo_config.c src/semaforos.c src/planificador.c src/Nucleo.c src/consumidor_cpu.c
 OBJS := shared_vars.o nucleo_config.o semaforos.o planificador.o Nucleo.o consumidor_cpu.o
 
-LIBPATH := ../Commons/
-INCPATH := -I../Commons/ -I./includes
+LIBPATH := ../Commons
+INCPATH := -I../Commons -I./includes
 LINKER := -lCommons -lpthread
 
 # ALL
