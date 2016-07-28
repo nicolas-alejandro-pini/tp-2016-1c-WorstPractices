@@ -128,6 +128,13 @@ chmod 444 $ENTREGABLES/Nucleo/nucleo.conf
 chmod 444 $ENTREGABLES/CPU/cpu.conf
 chmod 444 $ENTREGABLES/Consola/consola.config
 
+echo '\nCambio el propietario de los archivos binarios de root a utnso'
+chown utnso:utnso $ENTREGABLES/Swap/Swap
+chown utnso:utnso $ENTREGABLES/UMC/UMC
+chown utnso:utnso $ENTREGABLES/Nucleo/Nucleo
+chown utnso:utnso $ENTREGABLES/CPU/CPU
+chown utnso:utnso $ENTREGABLES/Consola/Consola
+
 echo '\nCorrer ./source run.sh para setear el LD_LIBRARY_PATH de la shared library Commons...'
 source $ENTREGABLES/run.sh
 echo '\n'
