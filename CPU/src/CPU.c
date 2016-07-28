@@ -25,6 +25,19 @@ t_configCPU configuracionInicial; /* Estructura del CPU, contiene los sockets de
 stPCB* unPCB; /* Estructura del pcb para ejecutar las instrucciones */
 
 
+void reemplazarBarraN(char* buffer){
+
+	unsigned long int i , largo;
+
+	largo = strlen(buffer);
+
+	for (i=0; i<largo;i++){
+		if(buffer[i]=='\n')
+			buffer[i]='\0';
+	}
+	return;
+}
+
 /*
  ============================================================================
  Name        : Funciones Primitivas para ANSISOP Program.
@@ -239,7 +252,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable){
 	t_valor_variable resultado = 0;
 
 	//Elimino el barra n que manda el parser //
-	reemplazarBarraN(variable);
+//	reemplazarBarraN(variable);
 
 	unHeaderIPC = nuevoHeaderIPC(OBTENERVALOR);
 	unHeaderIPC->largo = strlen(variable) +1;
@@ -267,7 +280,7 @@ int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
 	stHeaderIPC *unHeaderIPC;
 
 	//Elimino el barra n que manda el parser //
-	reemplazarBarraN(variable);
+//	reemplazarBarraN(variable);
 
 	//Hago el envío de la variabe con su valor
 	unHeaderIPC = nuevoHeaderIPC(GRABARVALOR);
@@ -285,26 +298,13 @@ int asignarValorCompartida(t_nombre_compartida variable, t_valor_variable valor)
 	return valor;
 }
 
-void reemplazarBarraN(char* buffer){
-
-	unsigned long int i , largo;
-
-	largo = strlen(buffer);
-
-	for (i=0; i<largo;i++){
-		if(buffer[i]=='\n')
-			buffer[i]='\0';
-	}
-	return;
-}
-
 void irAlLabel(t_nombre_etiqueta etiqueta){
 
 	log_info("Llamada a la primitiva irAlLabel para etiqueta [%s] .",etiqueta);
 	t_puntero_instruccion ptr_instruccion;
 
 	//Elimino el barra n que manda el parser //
-	reemplazarBarraN(etiqueta);
+//	reemplazarBarraN((char*)etiqueta);
 
 	ptr_instruccion = metadata_buscar_etiqueta(etiqueta,unPCB->metadata_program->etiquetas,unPCB->metadata_program->etiquetas_size);
 
@@ -335,7 +335,7 @@ void retornar(t_valor_variable retorno){
 	/*Sacamos del stack la variable a retornar*/
 	unIndiceStack = list_remove(unPCB->stack,list_size(unPCB->stack) - 1);
 	/*Actualizamos el program counter del pcb*/
-	unPCB->pc = unIndiceStack->retPosicion;
+	unPCB->pc = unIndiceStack->retPosicion - 1; //resto 1 xq me devuelve la instruccion siguiente a la primera linea de la funcion.
 
 //	unIndiceStack->retVar.pagina = unPCB->offsetStack / tamanioPaginaUMC;
 //	log_info("Se define variable de retorno, pagina: %d",unPCB->offsetStack / tamanioPaginaUMC);
@@ -396,7 +396,7 @@ void entradaSalida(t_nombre_dispositivo dispositivo, int tiempo){
 	stHeaderIPC* unHeaderPrimitiva;
 
 	//Elimino el barra n que manda el parser //
-	reemplazarBarraN(dispositivo);
+//	reemplazarBarraN(dispositivo);
 
 	unHeaderPrimitiva = nuevoHeaderIPC(IOANSISOP);
 	unHeaderPrimitiva->largo = strlen(dispositivo) + 1 + sizeof(int);
@@ -419,7 +419,7 @@ void wait(t_nombre_semaforo identificador_semaforo){
 	stHeaderIPC* unHeaderPrimitiva;
 
 	//Elimino el barra n que manda el parser //
-	reemplazarBarraN(identificador_semaforo);
+//	reemplazarBarraN(identificador_semaforo);
 
 	unHeaderPrimitiva = nuevoHeaderIPC(WAIT);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
@@ -449,7 +449,7 @@ void signal_cpu(t_nombre_semaforo identificador_semaforo){
 	stHeaderIPC* unHeaderPrimitiva;
 
 	//Elimino el barra n que manda el parser //
-	reemplazarBarraN(identificador_semaforo);
+//	reemplazarBarraN(identificador_semaforo);
 
 	unHeaderPrimitiva = nuevoHeaderIPC(SIGNAL);
 	unHeaderPrimitiva->largo = strlen(identificador_semaforo) + 1;
@@ -800,8 +800,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 			log_error("Recibi de la UMC la instrucción Temporal nula");
 			free(instruccionTemp);
 			configuracionInicial.salir = 1;
-			instruccion = NULL;
-			return instruccion;
+			return NULL;
 		}
 
 		free(instruccionTemp);
@@ -812,6 +811,7 @@ char* getInstruccion (int startRequest, int sizeRequest){
 		pagina++;
 	}
 	//Imprimi la instrucción solicitada//
+	reemplazarBarraN(instruccion);
 	log_info(instruccion);
 	return instruccion;
 
@@ -843,7 +843,7 @@ int ejecutarInstruccion(void){
 		return EXIT_FAILURE;
 	}
 
-	if(strcmp(instruccion, "end\n")==0){
+	if(strcmp(instruccion, "end")==0){
 		unPCB->pc = unPCB->metadata_program->instrucciones_size + 1;
 
 	}
