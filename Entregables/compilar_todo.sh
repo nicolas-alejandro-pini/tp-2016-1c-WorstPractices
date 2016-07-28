@@ -21,30 +21,37 @@ export ENTREGABLES=$HOME_TP/Entregables
 if [ ! -d "$ENTREGABLES" ];
 then
   mkdir -p $ENTREGABLES
+  chown utnso:utnso $ENTREGABLES
 fi
 if [ ! -d "$ENTREGABLES/Commons" ];
 then
   mkdir -p $ENTREGABLES/Commons
+  chown utnso:utnso $ENTREGABLES/Commons
 fi
 if [ ! -d "$ENTREGABLES/Swap" ];
 then
   mkdir -p $ENTREGABLES/Swap
+  chown utnso:utnso $ENTREGABLES/Swap
 fi
 if [ ! -d "$ENTREGABLES/UMC" ];
 then
   mkdir -p $ENTREGABLES/UMC
+  chown utnso:utnso $ENTREGABLES/UMC
 fi
 if [ ! -d "$ENTREGABLES/Nucleo" ];
 then
   mkdir -p $ENTREGABLES/Nucleo
+  chown utnso:utnso $ENTREGABLES/Nucleo
 fi
 if [ ! -d "$ENTREGABLES/CPU" ];
 then
   mkdir -p $ENTREGABLES/CPU
+  chown utnso:utnso $ENTREGABLES/CPU
 fi
 if [ ! -d "$ENTREGABLES/Consola" ];
 then
   mkdir -p $ENTREGABLES/Consola
+  chown utnso:utnso $ENTREGABLES/Consola
 fi
 
 echo '\nLimpio directorio entregables...'
@@ -56,15 +63,7 @@ rm -rf $ENTREGABLES/CPU/*
 rm -rf $ENTREGABLES/Consola/*
 
 echo '\nCopio libCommons...'
-if [ ! -d "$ENTREGABLES/Commons/commons" ];
-then
-  mkdir $ENTREGABLES/Commons/commons
-  mkdir $ENTREGABLES/Commons/commons/collections
-  mkdir $ENTREGABLES/Commons/commons/parser
-fi
 cp -r $COMMONS/commons $ENTREGABLES/Commons
-#cp $COMMONS/commons/collections/*.h $ENTREGABLES/Commons/commons/collections
-#cp $COMMONS/commons/parser/*.h $ENTREGABLES/Commons/commons/parser
 
 echo '\nCopio fuentes...'
 cp -r $SWAP_TP/src $ENTREGABLES/Swap/src
