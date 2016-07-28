@@ -78,36 +78,40 @@ void *consumidor_cpu(void *param) {
 		if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 			log_error("CPU error - No se pudo enviar el PCB[PID - %d]", unPCB->pid);
 			liberarHeaderIPC(unHeaderIPC);
-			error = 1;
-			continue;
+			log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
+			close(unCliente);
+			pthread_exit(NULL);
 		}
 		liberarHeaderIPC(unHeaderIPC);
 		unHeaderIPC = nuevoHeaderIPC(ERROR);
 		if (!recibirHeaderIPC(unCliente, unHeaderIPC)) {
 			log_error("CPU error - No se pudo recibir el mensaje");
 			liberarHeaderIPC(unHeaderIPC);
-			error = 1;
-			continue;
+			log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
+			close(unCliente);
+			pthread_exit(NULL);
 		}
 		if (unHeaderIPC->tipo == OK) {
 			crear_paquete(&paquete, EXECANSISOP);
 			serializar_pcb(&paquete, unPCB);
 			if (enviar_paquete(unCliente, &paquete)) {
 				log_error("Error al enviar el PCB [PID - %d]", unPCB->pid);
+				log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
+				close(unCliente);
+				pthread_exit(NULL);
 				free_paquete(&paquete);
-				error = 1;
 				continue;
 			}
 			log_info("PCB [PID - %d] READY a EXEC (CPU - Sock [%d]) \n", unPCB->pid, unCliente);
 			pcb_destroy(unPCB);
 			free_paquete(&paquete);
 		}
-		while (fin_ejecucion == 0 && error != 1) {
+		while (!fin_ejecucion) {
 			if (!recibirHeaderIPC(unCliente, &unMensajeIPC.header)) {
 				log_error("Error al recibir respuesta del CPU");
-				error = 1;
+				log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
 				close(unCliente);
-				continue;
+				pthread_exit(NULL);
 			} else {
 				switch (unMensajeIPC.header.tipo) {
 				case IOANSISOP:
@@ -117,11 +121,13 @@ void *consumidor_cpu(void *param) {
 					recv(unCliente, &dispositivo_time, sizeof(dispositivo_time), 0);
 					log_info("Nombre dispositivo [%s] | Cantidad de tiempo [%d]", dispositivo_name, dispositivo_time);
 					log_info("Se recibe un PCB a bloquear");
+
 					if (recibir_paquete(unCliente, &paquete)) {
 						log_error("No se pudo recibir el paquete");
-						error = 1;
 						free_paquete(&paquete);
-						continue;
+						log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
+						close(unCliente);
+						pthread_exit(NULL);
 					}
 					unPCB = malloc(sizeof(stPCB));
 					deserializar_pcb(unPCB, &paquete);
@@ -135,11 +141,13 @@ void *consumidor_cpu(void *param) {
 						log_error("No se pudo bloquear el PCB [PID - %d]", unPCB->pid);
 						continue;
 					}
+
 					fin_ejecucion = 1;
 
 					break;
 				case FINANSISOP:
 					fin_ejecucion = 1;
+
 					recv(unCliente, &pid_fin, sizeof(uint32_t), 0);
 					log_info("Recibido mensaje de fin de programa desde la CPU (PID: %d)", pid_fin);
 
@@ -171,9 +179,10 @@ void *consumidor_cpu(void *param) {
 					fin_ejecucion = 1;
 					if (recibir_paquete(unCliente, &paquete)) {
 						log_error("No se pudo recibir el paquete\n");
-						error = 1;
 						free_paquete(&paquete);
-						continue;
+						log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
+						close(unCliente);
+						pthread_exit(NULL);
 					}
 					unPCB = malloc(sizeof(stPCB));
 					log_info("Antes de deserializar [%s]\n", imprimir_cola());
@@ -199,7 +208,9 @@ void *consumidor_cpu(void *param) {
 					unHeaderIPC->largo = sizeof(t_valor_variable);
 					if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
 						log_error("Error al enviar el header IPC");
-						error = 1;
+						log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
+						close(unCliente);
+						pthread_exit(NULL);
 					}
 					send(unCliente, (t_valor_variable*) &unaSharedVar.valor, unHeaderIPC->largo, 0);
 					liberarHeaderIPC(unHeaderIPC);
@@ -234,9 +245,9 @@ void *consumidor_cpu(void *param) {
 						liberarHeaderIPC(unHeaderIPC);
 						if (recibir_paquete(unCliente, &paquete)) {
 							log_error("No se pudo recibir el paquete");
-							error = 1;
-							free_paquete(&paquete);
-							continue;
+							log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
+							close(unCliente);
+							pthread_exit(NULL);
 						}
 						unPCB = malloc(sizeof(stPCB));
 						deserializar_pcb(unPCB, &paquete);
@@ -291,8 +302,8 @@ void *consumidor_cpu(void *param) {
 					if (!enviarMensajeIPC(socket_consola_to_print, unHeaderIPC, (char*) &valor_impresion)) {
 						log_error("Error al imprimir en consola el valor de la variable");
 					}
+					log_info("Fin solicitud de impresion...");
 					liberarHeaderIPC(unHeaderIPC);
-
 					break;
 				case IMPRIMIRTEXTO:
 					/*Me comunico con la correspondiente consola que inicio el PCB*/
@@ -315,14 +326,6 @@ void *consumidor_cpu(void *param) {
 			}
 		}
 	}
-	if (error) {
-		/*Lo ponemos en la cola de Ready para que otro CPU lo vuelva a tomar*/
-		ready_productor(unPCB);
-		log_info("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
-		close(unCliente);
-		pthread_exit(NULL);
-	}
 	pthread_exit(NULL);
-	return NULL;
 }
 
