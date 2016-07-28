@@ -43,7 +43,7 @@ int buscarEnTabla(uint16_t pid, uint16_t paginaBuscada, uint16_t *frame){
 	 * Cuando encuentra un frame en 0, reemplaza la pagiina que contiene por la que produjo el fallo de pagina.
 	 */
 
-stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
+stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t paginaEntrante, uint16_t *paginaSaliente){
 	stRegistroTP *victima = NULL;
 	stRegistroTP *regTP = NULL;
 	uint16_t i;// = tablaPaginas->punteroClock;
@@ -65,13 +65,14 @@ stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
 			// Si bit2ndChance es 0, reemplazo
 			}else{
 				victima=regTP;
+				*paginaSaliente = i; // Lo uso por si tiene bit modificado
 			}
 		}
 
 	}
 	// Posiciono el puntero en la pagina siguiente con presencia
 	// con la pagina que se busca
-	i=pagina;
+	i=paginaEntrante;
 	while(-1 == puntero_siguiente){
 
 		if(i < (tablaPaginas->size-1))
@@ -88,7 +89,7 @@ stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t pagina){
 	return victima;
 }
 
-stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t pagina){
+stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t pagina, uint16_t *paginaSaliente){
 //stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag){
 	stRegistroTP *regTP = NULL;
 	stRegistroTP *victima = NULL;
@@ -151,6 +152,7 @@ stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t pagi
 				// Si bit2ndChance=0; bitModificado=1 o avanzo.
 				if(regTP->bit2ndChance==0 && regTP->bitModificado==1){
 					victima=regTP;
+					*paginaSaliente=i;  // Lo utilizo para guardar en swap la pagina modificada
 				}else if(regTP->bit2ndChance==1){
 					// Si bit2ndChance es 1 lo pongo en 0 y avanzo.
 					regTP->bit2ndChance=0;
@@ -211,21 +213,26 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 
 	stRegistroTP *victima = NULL;
 	stRegistroTP *registroPresencia = NULL;
+	uint16_t paginaSaliente = -1;
 
 	// El registro de la pagina solicitada se va a guardar en frameNuevo
 	// Busco victima en la tabla de paginas del proceso.
-	if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK-M"))
-		victima = EjecutarClockModificado(tablaPaginas, pagina);
-	else
-		victima = EjecutarClock(tablaPaginas, pagina);
+	if(string_equals_ignore_case(losParametros.algoritmo,"CLOCK-M")){
+		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+		log_info("Pid[%d] CLOCK-M: Pagina Victima[%d] Pagina Nueva[%d]", tablaPaginas->pid, paginaSaliente, pagina);
+	}
+	else{
+		victima = EjecutarClock(tablaPaginas, pagina, &paginaSaliente);
+		log_info("Pid[%d] CLOCK: Pagina Victima[%d] Pagina Nueva[%d]", tablaPaginas->pid, paginaSaliente, pagina);
+	}
 
 	if(victima==NULL)
 		return EXIT_FAILURE;
 
 	if(victima->bitModificado==1){
-		log_info("Pid[%d]: graba pagina[%d] en Swap. Libero marco[%d]", tablaPaginas->pid, pagina, victima->marco);
-		if(grabarEnSwap(tablaPaginas->pid, victima->marco, pagina)){
-			log_error("Error al guardar pagina [%d] del Pid[%d] en swap", pagina, tablaPaginas->pid);
+		log_info("Pid[%d]: graba pagina[%d] en Swap. Libero marco[%d]", tablaPaginas->pid, paginaSaliente, victima->marco);
+		if(grabarEnSwap(tablaPaginas->pid, victima->marco, paginaSaliente)){
+			log_error("Error al guardar pagina [%d] del Pid[%d] en swap", paginaSaliente, tablaPaginas->pid);
 			return EXIT_FAILURE;
 		}
 		else

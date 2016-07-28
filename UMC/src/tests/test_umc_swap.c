@@ -20,7 +20,7 @@ void agregar_tests_con_swap(){
 	//CU_add_test(suite_umc_swap, "test_diapositiva_clock()", test_diapositiva_clock);
 	//CU_add_test(suite_umc_swap, "test_programa_base()", test_programa_base);
 	CU_add_test(suite_umc_swap, "test_clock()", test_clock);
-	CU_add_test(suite_umc_swap, "test_clock_modificado()", test_clock_modificado);
+	//CU_add_test(suite_umc_swap, "test_clock_modificado()", test_clock_modificado);
 }
 
 int inicializar_umc_swap(){
@@ -399,6 +399,7 @@ void test_clock(){
 	stRegistroTP *victima; //, *registro;
 	stNodoListaTP *tablaPaginas;
 	uint16_t pagina;
+	uint16_t paginaSaliente;
 
 	tablaPaginas = buscarPID(gPidActivo);
 
@@ -421,7 +422,7 @@ void test_clock(){
 	log_info("---------------------------------------------Evaluo reemplazo clock----------------------------------------------------");
 
 	pagina = 3;
-	victima = EjecutarClock(tablaPaginas,pagina);
+	victima = EjecutarClock(tablaPaginas,pagina, &paginaSaliente);
 	CU_ASSERT_EQUAL(victima->marco, 1);
 	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
 	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
@@ -429,7 +430,7 @@ void test_clock(){
 	actualizarTabla(tablaPaginas, victima, pagina);
 	log_info("----------------------------------------------------------------------------------------------------");
 	pagina = 0;
-	victima = EjecutarClock(tablaPaginas,pagina);
+	victima = EjecutarClock(tablaPaginas,pagina, &paginaSaliente);
 	CU_ASSERT_EQUAL(victima->marco, 2); //-----------------> FAIL
 	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
 	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
@@ -437,7 +438,7 @@ void test_clock(){
 	actualizarTabla(tablaPaginas, victima, pagina);
 	log_info("----------------------------------------------------------------------------------------------------");
 	pagina = 1;
-	victima = EjecutarClock(tablaPaginas,pagina);
+	victima = EjecutarClock(tablaPaginas,pagina, &paginaSaliente);
 	CU_ASSERT_EQUAL(victima->marco, 3); //-----------------> FAIL
 	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
 	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
@@ -445,7 +446,7 @@ void test_clock(){
 	actualizarTabla(tablaPaginas, victima, pagina);
 	log_info("----------------------------------------------------------------------------------------------------");
 	pagina = 4;
-	victima = EjecutarClock(tablaPaginas,pagina);
+	victima = EjecutarClock(tablaPaginas,pagina, &paginaSaliente);
 	CU_ASSERT_EQUAL(victima->marco, 1); //-----------------> FAIL
 	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
 	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
@@ -469,7 +470,7 @@ void test_clock(){
 //	actualizarTabla(tablaPaginas, victima, pagina);
 	log_info("----------------------------------------------------------------------------------------------------");
 	pagina = 2;
-	victima = EjecutarClock(tablaPaginas,pagina);
+	victima = EjecutarClock(tablaPaginas,pagina, &paginaSaliente);
 	CU_ASSERT_EQUAL(victima->marco, 2); //-----------------> FAIL
 	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
 	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
@@ -477,7 +478,7 @@ void test_clock(){
 	actualizarTabla(tablaPaginas, victima, pagina);
 	log_info("----------------------------------------------------------------------------------------------------");
 	pagina = 3;
-	victima = EjecutarClock(tablaPaginas,pagina);
+	victima = EjecutarClock(tablaPaginas,pagina, &paginaSaliente);
 	CU_ASSERT_EQUAL(victima->marco, 3); //-----------------> FAIL
 	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
 	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
