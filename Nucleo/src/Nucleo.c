@@ -199,7 +199,7 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 		pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
 
 		log_info ("Retardo de dispositivo [%s] con [%d].",unDispositivo->nombre,atoi(unDispositivo->retardo));
-		usleep(atoi(unDispositivo->retardo)*unaRafaga->unidades);
+		usleep(atoi(unDispositivo->retardo)*unaRafaga->unidades*1000);
 
 		/*Busqueda del pcb en la lista de pcb bloqueados*/
 		int _es_el_pcb(stPCB *p) {
