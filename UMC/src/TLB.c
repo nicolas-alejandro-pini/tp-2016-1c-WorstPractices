@@ -138,6 +138,30 @@ int reemplazarValorTLB(stRegistroTLB registro){
 	return 0;
 }
 
+void quitarValorTLB(stRegistroTLB registro){
+	stRegistroTLB *lastNodeUsed = NULL;
+
+	// Implemento LRU (Last Recently Used)
+	void _marco_buscado(stRegistroTLB *list_nodo){
+		if(registro.marco == list_nodo->marco){
+			lastNodeUsed = list_nodo;
+		}
+	}
+
+	// Busco en la TLB atomicamente
+	pthread_mutex_lock(&TLB->mutex);
+	list_iterate(TLB->lista,(void*)_marco_buscado);
+
+	// Reemplazo registro
+	if(lastNodeUsed != NULL)
+	{
+		memcpy(lastNodeUsed, &registro, sizeof(stRegistroTLB));
+		lastNodeUsed->lastUsed=MAX_LAST_RECENTLY_USED;  // Reemplazo inicializa en 0
+	}
+	pthread_mutex_unlock(&TLB->mutex);
+}
+
+
 void flushTLB(uint16_t pid){
 	int seMostro=0;
 

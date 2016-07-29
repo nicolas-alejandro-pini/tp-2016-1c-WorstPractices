@@ -95,6 +95,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 			stTLB.pagina = posLogica->pagina;
 			stTLB.marco = frameBuscado;
 			reemplazarValorTLB(stTLB);
+			log_info("TLB Reemplazo: pid[%d] pagina[%d] marco[%d] ", stTLB.pid, stTLB.pagina, stTLB.marco);
 		}
 
 		if(frameBuscado != 0){
@@ -109,12 +110,18 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 			return EXIT_FAILURE;
 		}
 
+		if(frameBuscado==0){
+			log_error("Luego de un page fault frame no puede ser 0.");
+			return EXIT_FAILURE;
+		}
+
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
-		if(estaActivadaTLB()== OK){
+		if(estaActivadaTLB()== OK && frameBuscado!=0){
 			stTLB.pid = pid;
 			stTLB.pagina = posLogica->pagina;
 			stTLB.marco = frameBuscado;
 			reemplazarValorTLB(stTLB);
+			log_info("TLB Reemplazo: pid[%d] pagina[%d] marco[%d] ", stTLB.pid, stTLB.pagina, stTLB.marco);
 		}
 	}
 
@@ -148,11 +155,12 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 
 
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
-		if(estaActivadaTLB()== OK){
+		if(estaActivadaTLB()== OK && frameBuscado!=0){
 			stTLB.pid = pid;
 			stTLB.pagina = unaEscritura->nroPagina;
 			stTLB.marco = frameBuscado;
 			reemplazarValorTLB(stTLB);
+			log_info("TLB Reemplazo: pid[%d] pagina[%d] marco[%d] ", stTLB.pid, stTLB.pagina, stTLB.marco);
 		}
 
 		if(frameBuscado != 0){
@@ -168,12 +176,18 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 			return EXIT_FAILURE;
 		}
 
+		if(frameBuscado==0){
+			log_error("Luego de un page fault frame no puede ser 0.");
+			return EXIT_FAILURE;
+		}
+
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
-		if(estaActivadaTLB()== OK){
+		if(estaActivadaTLB()== OK && frameBuscado!=0){
 			stTLB.pid = pid;
 			stTLB.pagina = unaEscritura->nroPagina;
 			stTLB.marco = frameBuscado;
 			reemplazarValorTLB(stTLB);
+			log_info("TLB Reemplazo: pid[%d] pagina[%d] marco[%d] ", stTLB.pid, stTLB.pagina, stTLB.marco);
 		}
 
 	}
