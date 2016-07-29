@@ -1173,7 +1173,7 @@ int main(void) {
 	}
 
 	cerrarSockets(&configuracionInicial);
-	log_info("CPU: Fin del programa");
+	log_info("Se finaliza el proceso CPU");
 	log_destroy(logger);
 	return EXIT_SUCCESS;
 }
