@@ -4,7 +4,7 @@ BINARIO := Swap
 FUENTES := src/Swap.c src/particionSwap.c src/gestionAsignacion.c
 OBJS := Swap.o particionSwap.o gestionAsignacion.o
 
-LIBPATH := ../Commons/
+LIBPATH := ../Commons
 LINKER := Commons
 
 # ALL
