@@ -90,12 +90,13 @@ stRegistroTP *EjecutarClock(stNodoListaTP *tablaPaginas, uint16_t paginaEntrante
 	return victima;
 }
 
-stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t pagina, uint16_t *paginaSaliente){
-//stRegistroTP *EjecutarClockModificado(stNodoListaTP *nodo, uint16_t pagina, stRegistroTP registro, uint8_t flag){
+stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t paginaNueva, uint16_t *paginaSaliente){
+
 	stRegistroTP *regTP = NULL;
 	stRegistroTP *victima = NULL;
-	int i, posicionInicial, posicionActual=-1;
-	int puntero_siguiente = -1;
+	int i, j, size;//posicionInicial, posicionActual=-1;
+	t_queue *cola;
+	uint16_t *paginaCola;
 	/*
 	 * Clock Modificado o Enhanced second chance
 	 * Si el frame tiene el bit de acceso en 1, lo actualiza a 0 y avanza el puntero.
@@ -113,71 +114,62 @@ stRegistroTP *EjecutarClockModificado(stNodoListaTP *tablaPaginas, uint16_t pagi
 	 *	Paso 3: Si el paso anterior no encontro ningun frame, habre regresado a la posicion de comienzo y todos los frames tienen el bit2ndChance=0.
 	 *	Proseguir con el paso 1 y de ser necesario el paso 2.
 	 */
+	// Creo una cola con las paginas presentes
+	cola = queue_create();
+	j=tablaPaginas->punteroClock;
+
+	for(i=0; i<tablaPaginas->size; i++, j++){
+		if(j == (tablaPaginas->size))
+			j=0;
+		regTP = obtenerRegistroTabladePaginas(tablaPaginas, j);
+		if(regTP->bitPresencia==1){
+			paginaCola = calloc(1,sizeof(uint16_t));
+			*paginaCola = j;
+			queue_push(cola,paginaCola);
+		}
+	}
 
 	do{
 		// recorro tabla Paso 1
-		posicionInicial = tablaPaginas->punteroClock;
-		for(i=tablaPaginas->punteroClock;!victima;i++){
 
-			if(i == (tablaPaginas->size))
-				i=0;	// todas las paginas empiezan en 0
+		for(i=0;victima==NULL && (size=queue_size(cola))!=i;i++){
 
-			if(posicionInicial==posicionActual)// recorri un ciclo y no encontre
-				break;
+			paginaCola = (uint16_t*)queue_pop(cola);
+			regTP= obtenerRegistroTabladePaginas(tablaPaginas,*paginaCola);
 
-			regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
-
-			// Si es valido el registro
-			if(regTP->bitPresencia==1){
-				posicionActual=i;
-				// Si bit2ndChance=0; bitModificado=0 o avanzo.
-				if(regTP->bit2ndChance==0 && regTP->bitModificado==0){
-					victima=regTP;
-				} // no modifico ningun bit en el primer recorrido
-			}
+			// Si bit2ndChance=0; bitModificado=0 o avanzo.
+			if(regTP->bit2ndChance==0 && regTP->bitModificado==0){
+				victima = regTP;
+				*paginaSaliente=*paginaCola;
+			} // no modifico ningun bit en el primer recorrido
+			queue_push(cola, paginaCola);
 			// avanzo
 		}
 		// recorro tabla Paso 2
-		for(;!victima;i++){
+		for(i=0;!victima && (size=queue_size(cola))!=i;i++){
 
-			if(i == (tablaPaginas->size))
-				i=0;	// todas las paginas empiezan en 0
+			paginaCola = (uint16_t*)queue_pop(cola);
+			regTP = obtenerRegistroTabladePaginas(tablaPaginas, *paginaCola);
 
-			if(posicionInicial==i)// recorri un ciclo y no encontre
-				break;
-
-			regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
-
-			// Si es valido el registro
-			if(regTP->bitPresencia==1){
-				// Si bit2ndChance=0; bitModificado=1 o avanzo.
-				if(regTP->bit2ndChance==0 && regTP->bitModificado==1){
-					victima=regTP;
-					*paginaSaliente=i;  // Lo utilizo para guardar en swap la pagina modificada
-				}else if(regTP->bit2ndChance==1){
-					// Si bit2ndChance es 1 lo pongo en 0 y avanzo.
-					regTP->bit2ndChance=0;
-				}
+			// Si bit2ndChance=0; bitModificado=1 o avanzo.
+			if(regTP->bit2ndChance==0 && regTP->bitModificado==1){
+				victima=regTP;
+				*paginaSaliente=*paginaCola;  // Lo utilizo para guardar en swap la pagina modificada
+			}else if(regTP->bit2ndChance==1){
+				// Si bit2ndChance es 1 lo pongo en 0 y avanzo.
+				regTP->bit2ndChance=0;
 			}
+			queue_push(cola, paginaCola);
 			// paso 3 es volver a empezar a recorrer desde el paso 1 con los bits modificados
 		}
 	}while(!victima);
 
 	// Posiciono el puntero en la pagina siguiente con presencia
 	// con la pagina que se busca
-	i=pagina;
-	while(-1 == puntero_siguiente){
+	paginaCola = (uint16_t*)queue_pop(cola);
+	tablaPaginas->punteroClock = *paginaCola;
 
-		if(i < (tablaPaginas->size))
-			i++;
-		else
-			i=0;  // todas las paginas empiezan en 0
-
-		regTP = obtenerRegistroTabladePaginas(tablaPaginas, i);
-		if(regTP->bitPresencia==1)
-			puntero_siguiente=i;
-	}
-	tablaPaginas->punteroClock=puntero_siguiente;
+	queue_clean(cola);
 
 	return victima;
 }
