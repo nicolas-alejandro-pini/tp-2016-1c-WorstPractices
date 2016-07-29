@@ -83,6 +83,7 @@ stDispositivo *buscar_dispositivo_io(char *dispositivo_name);
 int inicializar_programa(stPCB *unPCB, char* unPrograma, int socket_umc);
 uint32_t borrar_consola(int unSocket);
 uint32_t buscar_consola(int pid) ;
+uint32_t buscar_consola_por_socket(int socket);
 stConsola * obtenerSocketConsolaPorPID(uint32_t pid);
 void consola_crear_lista();
 void consola_destruir_lista();
