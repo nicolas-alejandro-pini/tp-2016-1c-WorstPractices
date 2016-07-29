@@ -1137,15 +1137,13 @@ int main(void) {
 
 								}
 								//Si no hubo error devuelvo PCB al nucleo//
-								if (configuracionInicial.salir == 0){
+								if (devolverPCBalNucleo() == -1){
 
-									if (devolverPCBalNucleo() == -1){
-
-										log_info("Error al devolver PCB de ANSIPROG...");
-										configuracionInicial.salir = 1;
-										break;
-									}
+									log_info("Error al devolver PCB de ANSIPROG...");
+									configuracionInicial.salir = 1;
+									break;
 								}
+								log_info("Se devolvio PCB al nucleo por signal");
 
 							}else
 								log_info("Error en lectura ANSIPROG...");
