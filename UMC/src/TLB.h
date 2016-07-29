@@ -50,5 +50,6 @@ void destruirTLB();
 int estaActivadaTLB();
 int cantidadRegistrosTLB();
 void imprimirTLB();
+void quitarValorTLB(stRegistroTLB registro);
 
 #endif /* TLB_H_ */

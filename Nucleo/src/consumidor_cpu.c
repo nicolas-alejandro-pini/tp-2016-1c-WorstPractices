@@ -18,6 +18,7 @@ int consola_activa(stPCB *unPCB) {
 			return (-4);
 		}
 		liberarHeaderIPC(unHeaderIPC);
+		pcb_destroy(unPCB);
 		return 0;
 	}
 	return 1;
@@ -188,11 +189,15 @@ void *consumidor_cpu(void *param) {
 					log_info("Antes de deserializar [%s]\n", imprimir_cola());
 					deserializar_pcb(unPCB, &paquete);
 					free_paquete(&paquete);
-					/*Lo alojamos en la cola de ready para que vuelva a ser tomado por algun CPU*/
-					log_info("PCB [PID - %d] FIN QUANTUM\n", unPCB->pid);
-					log_info("Antes de entrar a la cola [%s]\n", imprimir_cola());
-					ready_productor(unPCB);
-					log_info("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
+
+					if(consola_activa(unPCB)!= 0){
+						/*Lo alojamos en la cola de ready para que vuelva a ser tomado por algun CPU*/
+						log_info("PCB [PID - %d] FIN QUANTUM\n", unPCB->pid);
+						log_info("Antes de entrar a la cola [%s]\n", imprimir_cola());
+						ready_productor(unPCB);
+						log_info("PCB [PID - %d] EXEC a READY\n", unPCB->pid);
+					}
+
 					break;
 				case EXECERROR:
 					log_info("Recibido mensaje de EXEC ERROR CPU, falta tratamiento!!!");
@@ -254,10 +259,12 @@ void *consumidor_cpu(void *param) {
 						free_paquete(&paquete);
 						//Ingresa a la cola de procesos bloqueados del semaforo
 
-						queue_push(semaforo_request->bloqueados, unPCB);
-						log_info("PCB [PID - %d] EXEC a BLOCK, entra a la cola de bloqueados del semaforo [%s]", unPCB->pid, identificador_semaforo);
-						fin_ejecucion = 1;
-						//El CPU debe agarrar otro PCB de la cola de listos y sigue su ejecucion normal
+						if(consola_activa(unPCB) != 0){
+							queue_push(semaforo_request->bloqueados, unPCB);
+							log_info("PCB [PID - %d] EXEC a BLOCK, entra a la cola de bloqueados del semaforo [%s]", unPCB->pid, identificador_semaforo);
+							fin_ejecucion = 1;
+							//El CPU debe agarrar otro PCB de la cola de listos y sigue su ejecucion normal
+						}
 					}
 					else {
 						unHeaderIPC = nuevoHeaderIPC(WAIT_OK);
@@ -280,13 +287,18 @@ void *consumidor_cpu(void *param) {
 					log_info(imprimir_cola());
 					//if (signal_semaforo(&semaforo_request) == EXIT_FAILURE) {
 					++(semaforo_request->valor);
-					if(queue_size(semaforo_request->bloqueados) > 0){
+
+					while(queue_size(semaforo_request->bloqueados) > 0){
 						unPCB = queue_pop(semaforo_request->bloqueados);
-						log_info("PCB [PID - %d] BLOCK a READY, sale de la cola de bloqueados del semaforo [%s]", unPCB->pid,semaforo_request->nombre);
-						ready_productor(unPCB);
-					}else{
-						log_info("No hay PCB que quitar de la cola del semaforo [%s]", semaforo_request->nombre);
+						if(consola_activa(unPCB) == 0){
+							continue;
+						} else {
+							log_info("PCB [PID - %d] BLOCK a READY, sale de la cola de bloqueados del semaforo [%s]", unPCB->pid,semaforo_request->nombre);
+							ready_productor(unPCB);
+							break;
+						}
 					}
+
 					log_info("Fin pedido de SIGNAL al semaforo [%s]", identificador_semaforo);
 					pthread_mutex_unlock(&semaforo_request->mutex_bloqueados);
 					break;
@@ -296,14 +308,16 @@ void *consumidor_cpu(void *param) {
 					recv(unCliente, &socket_consola_to_print, sizeof(uint32_t), 0);
 					recv(unCliente, &valor_impresion, sizeof(t_valor_variable), 0);
 
-					unHeaderIPC = nuevoHeaderIPC(IMPRIMIR);
-					unHeaderIPC->largo = sizeof(t_valor_variable);
-					log_info("Se envia al socket [%d] de la consola, el valor [%d] para imprimir", socket_consola_to_print, valor_impresion);
-					if (!enviarMensajeIPC(socket_consola_to_print, unHeaderIPC, (char*) &valor_impresion)) {
-						log_error("Error al imprimir en consola el valor de la variable");
+					if(buscar_consola_por_socket(socket_consola_to_print) !=0){
+						unHeaderIPC = nuevoHeaderIPC(IMPRIMIR);
+						unHeaderIPC->largo = sizeof(t_valor_variable);
+						log_info("Se envia al socket [%d] de la consola, el valor [%d] para imprimir", socket_consola_to_print, valor_impresion);
+						if (!enviarMensajeIPC(socket_consola_to_print, unHeaderIPC, (char*) &valor_impresion)) {
+							log_error("Error al imprimir en consola el valor de la variable");
+						}
+						log_info("Fin solicitud de impresion...");
+						liberarHeaderIPC(unHeaderIPC);
 					}
-					log_info("Fin solicitud de impresion...");
-					liberarHeaderIPC(unHeaderIPC);
 					break;
 				case IMPRIMIRTEXTO:
 					/*Me comunico con la correspondiente consola que inicio el PCB*/
@@ -313,14 +327,16 @@ void *consumidor_cpu(void *param) {
 					texto_imprimir = malloc(unMensajeIPC.header.largo - sizeof(uint32_t));
 					recv(unCliente, texto_imprimir, unMensajeIPC.header.largo - sizeof(uint32_t), 0);
 
-					unHeaderIPC = nuevoHeaderIPC(IMPRIMIRTEXTO);
-					unHeaderIPC->largo = strlen(texto_imprimir) + 1;
-					if (!enviarMensajeIPC(socket_consola_to_print, unHeaderIPC, texto_imprimir)) {
-						log_error("Error al enviar el texto a imprimir");
+					if(buscar_consola_por_socket(socket_consola_to_print) !=0){
+						unHeaderIPC = nuevoHeaderIPC(IMPRIMIRTEXTO);
+						unHeaderIPC->largo = strlen(texto_imprimir) + 1;
+						if (!enviarMensajeIPC(socket_consola_to_print, unHeaderIPC, texto_imprimir)) {
+							log_error("Error al enviar el texto a imprimir");
+						}
+						liberarHeaderIPC(unHeaderIPC);
+						log_info("Se imprimio el valor [%d]\n", texto_imprimir);
 					}
-					liberarHeaderIPC(unHeaderIPC);
 					free(texto_imprimir);
-					log_info("Se imprimio el valor [%d]\n", texto_imprimir);
 					break;
 				}
 			}

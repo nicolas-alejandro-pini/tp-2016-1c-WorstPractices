@@ -160,9 +160,11 @@ int deserializar_pcb(stPCB *self, t_paquete *paquete) {
 }
 
 void pcb_destroy(stPCB *self) {
-	metadata_destruir(self->metadata_program);
-	list_destroy_and_destroy_elements(self->stack, (void*)stack_destroy);
-    free(self);
+	if(self != NULL){
+		metadata_destruir(self->metadata_program);
+		list_destroy_and_destroy_elements(self->stack, (void*)stack_destroy);
+		free(self);
+	}
 }
 
 void stack_destroy(stIndiceStack *self) {

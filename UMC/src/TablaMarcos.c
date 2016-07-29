@@ -6,6 +6,7 @@
  */
 
 #include "TablaMarcos.h"
+#include "TLB.h"
 
 /* puntero a la tabla de Marcos */
 static t_list_mutex *TablaMarcos;
@@ -205,6 +206,7 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 
 	stRegistroTP *victima = NULL;
 	stRegistroTP *registroPresencia = NULL;
+	stRegistroTLB registro;
 	uint16_t paginaSaliente = -1;
 
 	// El registro de la pagina solicitada se va a guardar en frameNuevo
@@ -238,11 +240,20 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 	registroPresencia->bitPresencia = 1;
 	registroPresencia->marco = victima->marco;  // guardo la direccion del marco a usar
 
+	// Quito victima de la TLB
+	registro.marco = victima->marco;
+	registro.pagina = paginaSaliente;
+	registro.pid = tablaPaginas->pid;
+	quitarValorTLB(registro);
+	log_info("Pid[%d] Pagina[%d] Marco[%d] borrada de la TLB", registro.pid, registro.pagina, registro.marco);
+
 	// Seteo bits de la victima en 0
 	victima->bit2ndChance = 0;
 	victima->bitModificado = 0;
 	victima->bitPresencia = 0;
 	victima->marco = 0;  // ya lo guarde, ahora no tiene marco asignado
+
+
 
 	// Devuelvo el marco de la victima
 	*frameNuevo = registroPresencia->marco;

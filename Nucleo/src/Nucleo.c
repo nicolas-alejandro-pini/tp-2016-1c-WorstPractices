@@ -80,6 +80,23 @@ uint32_t buscar_consola(int pid) {
 	return 0;  // No encontrada
 }
 
+uint32_t buscar_consola_por_socket(int socket) {
+	stConsola *consola = NULL;
+	int i = 0;
+	pthread_mutex_lock(&mutex_lista_consolas);
+	int size = list_size(lista_consolas);
+
+	for (i = 0; i < size; i++) {
+		consola = list_get(lista_consolas, i);
+		if (consola->socket == socket) {
+			pthread_mutex_unlock(&mutex_lista_consolas);
+			return 1;
+		}
+	}
+	pthread_mutex_unlock(&mutex_lista_consolas);
+	return 0;  // No encontrada
+}
+
 /**
  * Busco el socket de la consola que me cargo el pid pasado como parametro
  *
@@ -199,7 +216,7 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 		pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
 
 		log_info ("Retardo de dispositivo [%s] con [%d].",unDispositivo->nombre,atoi(unDispositivo->retardo));
-		usleep(atoi(unDispositivo->retardo)*unaRafaga->unidades);
+		usleep(atoi(unDispositivo->retardo)*unaRafaga->unidades*1000);
 
 		/*Busqueda del pcb en la lista de pcb bloqueados*/
 		int _es_el_pcb(stPCB *p) {
