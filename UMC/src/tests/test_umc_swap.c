@@ -19,8 +19,8 @@ void agregar_tests_con_swap(){
 	//CU_add_test(suite_umc_swap, "test_write_stack()", test_write_stack);
 	//CU_add_test(suite_umc_swap, "test_diapositiva_clock()", test_diapositiva_clock);
 	//CU_add_test(suite_umc_swap, "test_programa_base()", test_programa_base);
-	CU_add_test(suite_umc_swap, "test_clock()", test_clock);
-	//CU_add_test(suite_umc_swap, "test_clock_modificado()", test_clock_modificado);
+	//CU_add_test(suite_umc_swap, "test_clock()", test_clock);
+	CU_add_test(suite_umc_swap, "test_clock_modificado()", test_clock_modificado);
 }
 
 int inicializar_umc_swap(){
@@ -369,7 +369,8 @@ void cargarTabla(stNodoListaTP *tablaPaginas, uint16_t pagina){
 	agregarFrameATablaMarcos(marco, tablaPaginas, pagina);
 
 	reg = obtenerRegistroTabladePaginas(tablaPaginas, pagina);
-	reg->bitModificado=1;
+	if(pagina%2!=0)// mientras sea impar la marco como modificada
+		reg->bitModificado=1;
 	log_info("Pagina[%d] Marco[%d] cargados inicualmente en tabla", pagina, marco);
 	log_info("puntero clock pagina [%d]", tablaPaginas->punteroClock);
 	log_info("Flag de Second Chance [%d]", obtenerRegistroTabladePaginas(tablaPaginas, pagina)->bit2ndChance);
@@ -463,6 +464,7 @@ void test_clock(){
 //	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
 //	// modifico la tabla pero no la memoria
 //	actualizarTabla(tablaPaginas, victima, pagina);
+	setSecondChance(gPidActivo, pagina);
 	log_info("----------------------------------------------------------------------------------------------------");
 	pagina = 1;// no hay page fault
 //	victima = EjecutarClock(tablaPaginas,pagina);
@@ -471,6 +473,7 @@ void test_clock(){
 //	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
 //	// modifico la tabla pero no la memoria
 //	actualizarTabla(tablaPaginas, victima, pagina);
+	setSecondChance(gPidActivo, pagina);
 	log_info("----------------------------------------------------------------------------------------------------");
 	pagina = 2;
 	victima = EjecutarClock(tablaPaginas,pagina, &paginaSaliente);
@@ -495,12 +498,14 @@ void test_clock(){
 //	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
 //	// modifico la tabla pero no la memoria
 //	actualizarTabla(tablaPaginas, victima, pagina);
+	setSecondChance(gPidActivo, pagina);
 	log_info("----------------------------------------------------------------------------------------------------");
 }
 void test_clock_modificado(){
 	stRegistroTP *victima; //, *registro;
 		stNodoListaTP *tablaPaginas;
 		uint16_t pagina;
+		uint16_t paginaSaliente = -1;
 
 		tablaPaginas = buscarPID(gPidActivo);
 
@@ -522,88 +527,118 @@ void test_clock_modificado(){
 		//	M3 			210	210	20	10	10	10	10	10	31	31
 		//		PF	PF	PF	PF	PF	PF	PF			PF	PF
 
-		log_info("---------------------------------------------Evaluo reemplazo clock----------------------------------------------------");
-
+		log_info("-------------------------------------Evaluo reemplazo clock Modificado---------------------------------------");
 		//		PSM
 		// M1	010 -> 310
-		// M2	111
-		// M3	210
+		// M2	111 -> 101
+		// M3	210 -> 200
 		pagina = 3;
-		victima = EjecutarClockModificado(tablaPaginas,pagina);
+		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
 		CU_ASSERT_EQUAL(victima->marco, 1);
-		CU_ASSERT_EQUAL(victima->bit2ndChance, 1);
+		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
 		CU_ASSERT_EQUAL(victima->bitModificado, 0);
 		CU_ASSERT_EQUAL(victima->bitPresencia, 1);
 		// modifico la tabla pero no la memoria
 		actualizarTabla(tablaPaginas, victima, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
 		//		PSM
-		// M1	310
-		// M2	111
-		// M3	210
+		// M1	310 -> 310
+		// M2	101 -> 101
+		// M3	200 -> 010
 		pagina = 0;
-		victima = EjecutarClockModificado(tablaPaginas,pagina);
-		CU_ASSERT_EQUAL(victima->marco, 2); //-----------------> FAIL
+		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+		CU_ASSERT_EQUAL(victima->marco, 3);
 		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
-		CU_ASSERT_EQUAL(victima->bitPresencia, 1);
+		CU_ASSERT_EQUAL(victima->bitModificado, 0);
 		// modifico la tabla pero no la memoria
 		actualizarTabla(tablaPaginas, victima, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
+		// No hay PF
+		// M1	310 -> 310
+		// M2	101 -> 111
+		// M3	010 -> 010
 		pagina = 1;
-		victima = EjecutarClockModificado(tablaPaginas,pagina);
-		CU_ASSERT_EQUAL(victima->marco, 3); //-----------------> FAIL
-		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
-		CU_ASSERT_EQUAL(victima->bitPresencia, 1);
-		// modifico la tabla pero no la memoria
-		actualizarTabla(tablaPaginas, victima, pagina);
+//		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+//		CU_ASSERT_EQUAL(victima->marco, );
+//		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
+//		CU_ASSERT_EQUAL(victima->bitModificado, 1);
+//		// modifico la tabla pero no la memoria
+//		actualizarTabla(tablaPaginas, victima, pagina);
+		setSecondChance(gPidActivo, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
+		//		PSM
+		// M1	310 -> 410
+		// M2	111 -> 101
+		// M3	010 -> 000
 		pagina = 4;
-		victima = EjecutarClockModificado(tablaPaginas,pagina);
-		CU_ASSERT_EQUAL(victima->marco, 1); //-----------------> FAIL
+		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+		CU_ASSERT_EQUAL(victima->marco, 1);
 		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
-		CU_ASSERT_EQUAL(victima->bitPresencia, 1);
+		CU_ASSERT_EQUAL(victima->bitModificado, 0);
 		// modifico la tabla pero no la memoria
 		actualizarTabla(tablaPaginas, victima, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
-		pagina = 0;// no hay page fault
-	//	victima = EjecutarClockModificado(tablaPaginas,pagina);
-	//	CU_ASSERT_EQUAL(victima->marco, 2);
-	//	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
-	//	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
-	//	// modifico la tabla pero no la memoria
-	//	actualizarTabla(tablaPaginas, victima, pagina);
+		// No hay PF
+		// M1	410 -> 410
+		// M2	101 -> 101
+		// M3	000 -> 010
+		pagina = 0;
+//		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+//		CU_ASSERT_EQUAL(victima->marco, 2);
+//		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
+//		CU_ASSERT_EQUAL(victima->bitModificado, 1);
+//		// modifico la tabla pero no la memoria
+//		actualizarTabla(tablaPaginas, victima, pagina);
+		setSecondChance(gPidActivo, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
-		pagina = 1;// no hay page fault
-	//	victima = EjecutarClockModificado(tablaPaginas,pagina);
-	//	CU_ASSERT_EQUAL(victima->marco, );
-	//	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
-	//	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
-	//	// modifico la tabla pero no la memoria
-	//	actualizarTabla(tablaPaginas, victima, pagina);
+		// No hay PF
+		// M1	410 -> 410
+		// M2	101 -> 111
+		// M3	010 -> 010
+		pagina = 1;
+//		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+//		CU_ASSERT_EQUAL(victima->marco, );
+//		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
+//		CU_ASSERT_EQUAL(victima->bitModificado, 1);
+//		// modifico la tabla pero no la memoria
+//		actualizarTabla(tablaPaginas, victima, pagina);
+		setSecondChance(gPidActivo, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
+		//		PSM
+		// M1	410 -> 400
+		// M2	111 -> 101
+		// M3	010 -> 210
 		pagina = 2;
-		victima = EjecutarClockModificado(tablaPaginas,pagina);
-		CU_ASSERT_EQUAL(victima->marco, 2); //-----------------> FAIL
+		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+		CU_ASSERT_EQUAL(victima->marco, 3);
 		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
-		CU_ASSERT_EQUAL(victima->bitPresencia, 1);
+		CU_ASSERT_EQUAL(victima->bitModificado, 0);
 		// modifico la tabla pero no la memoria
 		actualizarTabla(tablaPaginas, victima, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
+		//		PSM
+		// M1	400 -> 310
+		// M2	101 -> 101
+		// M3	210 -> 210
 		pagina = 3;
-		victima = EjecutarClockModificado(tablaPaginas,pagina);
-		CU_ASSERT_EQUAL(victima->marco, 3); //-----------------> FAIL
+		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+		CU_ASSERT_EQUAL(victima->marco, 1);
 		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
-		CU_ASSERT_EQUAL(victima->bitPresencia, 1);
+		CU_ASSERT_EQUAL(victima->bitModificado, 0);
 		// modifico la tabla pero no la memoria
 		actualizarTabla(tablaPaginas, victima, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
-		pagina = 4; // no hay page fault
-	//	victima = EjecutarClockModificado(tablaPaginas,pagina);
-	//	CU_ASSERT_EQUAL(victima->marco, );
-	//	CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
-	//	CU_ASSERT_EQUAL(victima->bitPresencia, 1);
-	//	// modifico la tabla pero no la memoria
-	//	actualizarTabla(tablaPaginas, victima, pagina);
+		//		PSM
+		// M1	310 -> 310
+		// M2	101 -> 410
+		// M3	210 -> 210
+		pagina = 4;
+		victima = EjecutarClockModificado(tablaPaginas, pagina, &paginaSaliente);
+		CU_ASSERT_EQUAL(victima->marco, 2);
+		CU_ASSERT_EQUAL(victima->bit2ndChance, 0);
+		CU_ASSERT_EQUAL(victima->bitModificado, 1);
+		// modifico la tabla pero no la memoria
+		actualizarTabla(tablaPaginas, victima, pagina);
 		log_info("----------------------------------------------------------------------------------------------------");
 
 }
