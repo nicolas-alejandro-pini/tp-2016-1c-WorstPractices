@@ -22,6 +22,8 @@ void signal_handler(int sigNumber)
  */
 void init_signal_handler(t_configCPU *configuracion_inicial){
 
+	config = configuracion_inicial;
+
 	if(signal(SIGUSR1, signal_handler) == SIG_ERR)
 		log_error("No pude trapear la signal SIGUSR1");
 	if(signal(SIGINT, signal_handler) == SIG_ERR)
