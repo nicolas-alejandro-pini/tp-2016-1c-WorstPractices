@@ -319,8 +319,8 @@ void *consumidor_cpu(void *param) {
 						log_error("Error al enviar el texto a imprimir");
 					}
 					liberarHeaderIPC(unHeaderIPC);
-					free(texto_imprimir);
 					log_info("Se imprimio el valor [%d]\n", texto_imprimir);
+					free(texto_imprimir);
 					break;
 				}
 			}
