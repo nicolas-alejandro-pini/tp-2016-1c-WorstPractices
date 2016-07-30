@@ -122,11 +122,16 @@ cp $CPU_TP/cpu.conf $ENTREGABLES/CPU
 cp $CONSOLA_TP/consola.config $ENTREGABLES/Consola
 
 echo '\nSeteo permisos de lectura de los archivos de configuracion...'
-chmod 444 $ENTREGABLES/Swap/swap.config
-chmod 444 $ENTREGABLES/UMC/umc.conf
-chmod 444 $ENTREGABLES/Nucleo/nucleo.conf
-chmod 444 $ENTREGABLES/CPU/cpu.conf
-chmod 444 $ENTREGABLES/Consola/consola.config
+chmod 666 $ENTREGABLES/Swap/swap.config
+chmod 666 $ENTREGABLES/UMC/umc.conf
+chmod 666 $ENTREGABLES/Nucleo/nucleo.conf
+chmod 666 $ENTREGABLES/CPU/cpu.conf
+chmod 666 $ENTREGABLES/Consola/consola.config
+chown utnso:utnso $ENTREGABLES/Swap/swap.config
+chown utnso:utnso $ENTREGABLES/UMC/umc.conf
+chown utnso:utnso $ENTREGABLES/Nucleo/nucleo.conf
+chown utnso:utnso $ENTREGABLES/CPU/cpu.conf
+chown utnso:utnso $ENTREGABLES/Consola/consola.config
 
 echo '\nCambio el propietario de los archivos binarios de root a utnso'
 chown utnso:utnso $ENTREGABLES/Swap/Swap
