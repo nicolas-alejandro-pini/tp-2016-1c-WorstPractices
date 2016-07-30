@@ -330,7 +330,7 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 		compactarParticionSwap();
 		usleep(loaded_config->retardoCompactacion * 1000);
 		cantidadSectoresLibresContiguosMaxima(&info_bloque_libre);
-		log_info("Compactación terminada, ahora se dispone de un espacio contiguo de %ld sectores", info_bloque_libre.largo);
+		log_debug("Compactación terminada, ahora se dispone de un espacio contiguo de %ld sectores", info_bloque_libre.largo);
 	}
 
 	if(reservarEspacioProceso(pID, info_bloque_libre.offset, cantidadPaginas) < 0){
@@ -338,7 +338,7 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 		return -4;
 	}
 
-	log_info("Asignacion de paginas satisfactoria al proceso(PID %u): %u->%u",
+	log_debug("Asignacion de paginas satisfactoria al proceso(PID %u): %u->%u",
 			pID, info_bloque_libre.offset, info_bloque_libre.offset + cantidadPaginas - 1);
 
 	//Grabo la particion SWAP con el codigo del programa
@@ -395,7 +395,7 @@ t_asignacion *buscarAsignacionPaginaProceso(unsigned long int pID, unsigned long
 int leerPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *bufferPagina){
 	t_asignacion *asignacion;
 
-	log_info("La operacion de lectura llevara %d milisegundos", loaded_config->retardoAcceso);
+	log_debug("La operacion de lectura llevara %d milisegundos", loaded_config->retardoAcceso);
 	usleep(loaded_config->retardoAcceso * 1000);
 
 	if((asignacion = buscarAsignacionPaginaProceso(pID, nroPagina)) == NULL){
@@ -418,7 +418,7 @@ int leerPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *
 int escribirPaginaProceso(unsigned long int pID, unsigned long int nroPagina, char *bufferPagina){
 	t_asignacion *asignacion;
 
-	log_info("La operacion de escritura llevara %d milisegundos", loaded_config->retardoAcceso);
+	log_debug("La operacion de escritura llevara %d milisegundos", loaded_config->retardoAcceso);
 	usleep(loaded_config->retardoAcceso * 1000);
 
 	if((asignacion = buscarAsignacionPaginaProceso(pID, nroPagina)) == NULL){

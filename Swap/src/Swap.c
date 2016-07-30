@@ -45,18 +45,13 @@ int main(void) {
     //Configuracion cargada
     t_swap_config loaded_config;
 
-    //Primero instancio el log
-    t_log* logger = log_create(temp_file, "SWAP",-1, LOG_LEVEL_INFO);
-
-    log_info("Arancando el proceso SWAP...");
+    printf("Arancando el proceso SWAP...\n");
 
     config = config_create(configPath);
     if(config == NULL){
-        log_error("Error arracando la configuracion...");
-        log_destroy(logger);
+        printf("Error arracando la configuracion...\n");
     	return EXIT_FAILURE;
     }
-    log_info("Configuracion cargada satisfactoriamente...");
 
     //Cargo la configuracion del proceso y la imprimo en el log
     loaded_config.puertoEscucha = config_get_int_value(config, "PUERTO_ESCUCHA");
@@ -65,7 +60,12 @@ int main(void) {
     loaded_config.tamanioPagina = config_get_long_value(config, "TAMANIO_PAGINA");
     loaded_config.retardoCompactacion = config_get_long_value(config, "RETARDO_COMPACTACION");
     loaded_config.retardoAcceso = config_get_long_value(config, "RETARDO_ACCESO");
+    loaded_config.logLevel = config_get_int_value(config, "LOG_LEVEL");
 
+    //Primero instancio el log
+    t_log* logger = log_create(temp_file, "SWAP",-1, loaded_config.logLevel);
+
+    log_debug("Configuracion cargada satisfactoriamente...");
     log_info("Puerto de escucha: %d", loaded_config.puertoEscucha);
     log_info("Nombre del archivo Swap: %s", loaded_config.nombreSwap);
     log_info("Cantidad de paginas: %d", loaded_config.cantidadPaginas);
@@ -82,7 +82,7 @@ int main(void) {
     	return EXIT_FAILURE;
     }
 
-    log_info("Partición SWAP creada satisfactoriamente");
+    log_debug("Partición SWAP creada satisfactoriamente");
 
     //Creo la gestión de asignación
     if(initGestionAsignacion(&loaded_config) < 0){
@@ -93,7 +93,7 @@ int main(void) {
     	return EXIT_FAILURE;
     }
 
-    log_info("Gestión de asignación del SWAP inicializada satisfactoriamente");
+    log_debug("Gestión de asignación del SWAP inicializada satisfactoriamente");
 
     //Creo el socket de escucha
     srvSock = escuchar(loaded_config.puertoEscucha);
@@ -139,7 +139,7 @@ int main(void) {
 //		log_error("Error al leer la pagina del proceso");
 //	}
 //
-//	log_info("Buffer PID %d pag %d: %s", 2, 0, bufferPrograma);
+//	log_debug("Buffer PID %d pag %d: %s", 2, 0, bufferPrograma);
 
 //	//---------------------
 //	//---------------------
@@ -147,7 +147,7 @@ int main(void) {
 
 
     //Arranco a escuchar mensajes
-    log_info("Esperando conexiones...");
+    log_debug("Esperando conexiones...");
     while(!terminar){
     	cliSock = aceptar(srvSock, (struct sockaddr *)&sockAddress);
     	if(cliSock == -1){
@@ -155,7 +155,7 @@ int main(void) {
             continue;
     	}
 
-    	log_info("Nuevo cliente conectado");
+    	log_debug("Nuevo cliente conectado");
 
     	ipcHeader = nuevoHeaderIPC(QUIENSOS);
     	enviarHeaderIPC(cliSock, ipcHeader);
@@ -168,6 +168,8 @@ int main(void) {
 
     	if(ipcHeader->tipo == SOYUMC){
     		// Se me conecto un UMC por lo cual me quedo escuchando sus mensajes
+
+    		log_info("Se detecta conexion desde UMC");
 
     		//Le envio un OK a modo respuesta de que el handshake se realizó con éxito
     		ipcHeader->tipo = OK;
@@ -187,7 +189,7 @@ int main(void) {
 					case INICIAR_PROGRAMA:
 						//Espero PID(uint16_t), Cantidad paginas (uint16_t), programa (buffer)
 
-						log_info("Nuevo comando recibido: INICIALIZAR PROGRAMA...");
+						log_debug("Nuevo comando recibido: INICIALIZAR PROGRAMA...");
 
 						//Recibo el PID
 						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
@@ -206,9 +208,8 @@ int main(void) {
 							log_error("Error recibiendo el programa");
 						}
 
-						log_info("PID: %d", pID);
-						log_info("Cantidad de paginas solicitadas: %d", cantPaginas);
-						log_info("Programa: %s", bufferPrograma);
+						log_info("Inicia PID: %d con %d paginas", pID, cantPaginas);
+						log_debug("Programa: %s", bufferPrograma);
 
 						//Llamo a la funcion de asignacion y armo la respuesta
 						ipcHeader->tipo = OK;
@@ -226,14 +227,14 @@ int main(void) {
 
 					case DESTRUIR_PROGRAMA:
 
-						log_info("Nuevo comando recibido: DESTRUIR PROGRAMA...");
+						log_debug("Nuevo comando recibido: DESTRUIR PROGRAMA...");
 
 						//Recibo el PID
 						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
 							log_error("Error al recibir el PID del proceso");
 						}
 
-						log_info("PID: %d", pID);
+						log_info("Finaliza PID: %d", pID);
 
 						//LLamo a la funcion de asignacion y armo la respuesta
 						ipcHeader->tipo = OK;
@@ -250,7 +251,7 @@ int main(void) {
 
 					case LEER_PAGINA:
 
-						log_info("Nuevo comando recibido: LEER PAGINA...");
+						log_debug("Nuevo comando recibido: LEER PAGINA...");
 
 						ipcHeader->tipo = OK;
 						//Recibo el PID
@@ -272,9 +273,8 @@ int main(void) {
 							ipcHeader->tipo = ERROR;
 						}
 
-						log_info("PID: %d", pID);
-						log_info("Numero de pagina solicitada: %d", nroPagina);
-						log_info("Pagina leida: %s", bufferPagina);
+						log_info("Lectura PID: %d, pagina: %d", pID, nroPagina);
+						log_debug("Pagina leida: %s", bufferPagina);
 
 						//Envio la respuesta a la UMC
 						ipcHeader->largo = loaded_config.tamanioPagina;
@@ -291,7 +291,7 @@ int main(void) {
 
 					case ESCRIBIR_PAGINA:
 
-						log_info("Nuevo comando recibido: ESCRIBIR PAGINA...");
+						log_debug("Nuevo comando recibido: ESCRIBIR PAGINA...");
 
 						//Recibo el PID
 						if(sizeof(uint16_t) != recv(cliSock, &pID, sizeof(uint16_t), 0)){
@@ -310,9 +310,8 @@ int main(void) {
 							ipcHeader->tipo = ERROR;
 						}
 
-						log_info("PID: %d", pID);
-						log_info("Numero de pagina solicitada: %d", nroPagina);
-						log_info("Pagina a escribir: %s", bufferPagina);
+						log_debug("Escribir PID: %d, pagina: %d", pID, nroPagina);
+						log_debug("Pagina a escribir: %s", bufferPagina);
 
 						//Escribo la pagina del proceso
 						ipcHeader->tipo = OK;
@@ -343,6 +342,8 @@ int main(void) {
     log_destroy(logger);
     config_destroy(config);
     destruirParticionSwap();
+
+    log_info("Proceso Swap finalizado");
 
 	return EXIT_SUCCESS;
 }
