@@ -307,7 +307,7 @@ int crearTabla(uint16_t processId, uint16_t longitud_tabla){
 	nodo->punteroClock = 0; // Apunta al ultimo elemento de la tabla
 
 	// agrego retardo
-	usleep(losParametros.delay);
+	usleep(losParametros.delay*1000);
 	//enlazo en la lista
 	posicionEnTablaMarcos = list_mutex_add(TablaMarcos, nodo);
 
@@ -322,7 +322,7 @@ stNodoListaTP *buscarPID(uint16_t pid){
 			nodoListaTP = list_nodo;
 		}
 	}
-	usleep(losParametros.delay);
+	usleep(losParametros.delay*1000);
 	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid);
 
 	// NULL: si no lo encontro, sino puntero a nodo
@@ -532,7 +532,7 @@ void liberarTablaPid(uint16_t pid){
 		i++;
 	}
 	list_mutex_iterate(TablaMarcos, (void*)_comparo_con_pid_y_borro_tabla);
-	usleep(losParametros.delay);
+	usleep(losParametros.delay*1000);
 	list_mutex_remove(TablaMarcos,index);
 
 	// mostrarTabla();

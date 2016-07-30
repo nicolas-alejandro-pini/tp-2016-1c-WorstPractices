@@ -77,7 +77,8 @@ void *consumidor_cpu(void *param) {
 		unHeaderIPC = nuevoHeaderIPC(EXECANSISOP);
 		unHeaderIPC->largo = sizeof(uint32_t);
 		if (!enviarHeaderIPC(unCliente, unHeaderIPC)) {
-			log_error("CPU error - No se pudo enviar el PCB[PID - %d]", unPCB->pid);
+			log_error("CPU error - No se pudo enviar el PCB[PID - %d]. Se lo devuelve a la cola de Ready", unPCB->pid);
+			ready_productor(unPCB); //Devuelvo el PCB a la cola de Ready
 			liberarHeaderIPC(unHeaderIPC);
 			log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
 			close(unCliente);
@@ -109,7 +110,8 @@ void *consumidor_cpu(void *param) {
 		}
 		while (!fin_ejecucion) {
 			if (!recibirHeaderIPC(unCliente, &unMensajeIPC.header)) {
-				log_error("Error al recibir respuesta del CPU");
+				log_error("Error al recibir respuesta del CPU... devuelvo el PCB a la cola de ready");
+				ready_productor(unPCB); //Devuelvo el PCB a la cola de Ready
 				log_info("Se cierra el hilo del CPU (Sock: %d)",unCliente);
 				close(unCliente);
 				pthread_exit(NULL);
