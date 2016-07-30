@@ -9,7 +9,7 @@
 
 
 /*
- *  TODO casos especiales:
+ *  casos especiales:
  *  	- el proceso no tiene marcos asignados y no tiene marcos disponibles-> rechazar pedido de memoria
  *  	- el proceso tiene marcos asignados,
  *  		no llego al maximo, pero no hay marcos libres en la memoria->aplicar reemplazo sobre los marcos que tenga en su tabla
@@ -333,7 +333,7 @@ uint32_t cambiarContexto(stMensajeIPC *unMensaje){
 	}
 
 	// No se actuliza tabla de pagina del otro proceso asi qeu no es necesario actualizar swap con paginas que tienen byte modificado
-	// TODO es necesario hacer un flush del pid en TLB ??? creo que no
+	// es necesario hacer un flush del pid en TLB ??? creo que no
 	return pid;
 }
 

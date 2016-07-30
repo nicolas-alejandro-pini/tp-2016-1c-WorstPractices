@@ -99,7 +99,7 @@ void loadInfo (stParametro* info, char* file_name){
 }
 
 void loadInfo_destruir (stParametro* info){
-	// Libera ipSwap y algoritmo + todo el tConfig
+	// Libera ipSwap y algoritmo + tod0 el tConfig
 	free(info->tConfig);
 }
 
@@ -254,7 +254,6 @@ int main(int argc, char *argv[]) {
 		FD_SET(losParametros.sockEscuchador,&(fds_master));
 		losParametros.fdMax =	losParametros.sockEscuchador;
 		log_info("Socket de escucha OK\n");
-		/*loguear(INFO_LOG,"Esperando conexiones...","SERVER");*/
 
 		/********************************* Lanzo conexión con el Swap ********************************************/
 		log_info("Conectando con el Swap");
