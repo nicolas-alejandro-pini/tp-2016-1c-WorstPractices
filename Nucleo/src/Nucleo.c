@@ -193,7 +193,7 @@ void inicializarThreadsDispositivos() {
 	for (i = 0; i < list_size(elEstadoActual.dispositivos); ++i) {
 		stDispositivo *unDispositivo = list_get(elEstadoActual.dispositivos, i);
 		if (pthread_create(&unThread, NULL, (void*) threadDispositivo, unDispositivo) != 0) {
-			log_error("No se pudo lanzar el hilo correspondiente al cpu conectado");
+			log_error("No se pudo lanzar el hilo correspondiente al dispositivo conectado");
 			continue;
 		}
 	}
@@ -215,7 +215,7 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 		unDispositivo->numInq--;
 		pthread_mutex_unlock(&unDispositivo->mutex);	// Se desbloquea el acceso a la cola
 
-		log_info ("Retardo de dispositivo [%s] con [%d].",unDispositivo->nombre,atoi(unDispositivo->retardo));
+		log_info("Pedido I/O - Retardo de dispositivo [%s] con [%d].",unDispositivo->nombre,atoi(unDispositivo->retardo));
 		usleep(atoi(unDispositivo->retardo)*unaRafaga->unidades*1000);
 
 		/*Busqueda del pcb en la lista de pcb bloqueados*/
@@ -228,7 +228,7 @@ void threadDispositivo(stDispositivo* unDispositivo) {
 
 		/*Ponemos en la cola de Ready para que lo vuelva a ejecutar un CPU*/
 		ready_productor(unPCB);
-		log_info("PCB [PID - %d] BLOCK a READY\n", unPCB->pid);
+		log_info("El PCB [PID - %d] cambia de estado BLOCK a READY\n", unPCB->pid);
 		free(unaRafaga);
 
 	}
@@ -258,7 +258,7 @@ int inicializar_programa(stPCB *unPCB, char* unPrograma, int socket_umc) {
 	serializar_inicializar_programa(&paquete, unInicioUMC);
 
 	if (enviar_paquete(socket_umc, &paquete)) {
-		log_info("No se pudo enviar paquete de inicio de programa para PID [%d]", unPCB->pid);
+		log_error("No se pudo enviar paquete de inicio de programa para PID [%d]", unPCB->pid);
 		close(socket_umc);
 		return EXIT_FAILURE;
 	}
@@ -314,10 +314,10 @@ int main(int argc, char *argv[]) {
 
 	/*Carga del archivo de configuracion*/
 	if (loadInfo(&elEstadoActual, 0)) {
-		log_info("Error al cargar la configuracion");
+		log_error("Error al cargar la configuracion");
 		exit(-2);
 	}
-	log_info("Configuracion cargada satisfactoriamente...\n");
+	log_info("Configuracion cargada satisfactoriamente...");
 
 	/*Se lanza el thread para identificar cambios en el archivo de configuracion*/
 	pthread_create(&p_thread, NULL, &monitor_configuracion, (void*) &elEstadoActual);
@@ -335,13 +335,13 @@ int main(int argc, char *argv[]) {
 	/*Iniciando escucha en el socket escuchador de Consola*/
 	elEstadoActual.sockEscuchador = escuchar(elEstadoActual.miPuerto);
 	FD_SET(elEstadoActual.sockEscuchador, &(fds_master));
-	log_info("Se establecio conexion con el socket de escucha...");
+	log_debug("Se establecio conexion con el socket de escucha...");
 
 	/*Seteamos el maximo socket*/
 	elEstadoActual.fdMax = elEstadoActual.sockEscuchador;
 
 	/*Conexion con el proceso UMC*/
-	log_info("Estableciendo conexion con la UMC...");
+	log_debug("Estableciendo conexion con la UMC...");
 	elEstadoActual.sockUmc = conectar(elEstadoActual.ipUmc, elEstadoActual.puertoUmc);
 
 	if (elEstadoActual.sockUmc != -1) {
@@ -386,7 +386,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/*Ciclo Principal del Nucleo*/
-	log_info(".............................................................................\n");
+	log_info(".............................................................................");
 	log_info("..............................Esperando Conexion.............................\n\n");
 	fflush(stdout);
 
@@ -449,7 +449,7 @@ int main(int argc, char *argv[]) {
 								/***Creacion del PCB***/
 								unPCB = crear_pcb(unCliente, cantidadDePaginasCodigo, elEstadoActual.stackSize, &unMensaje);
 								if (unPCB == NULL) {
-									log_info("Error al crear el PCB... se cierra la consola\n");
+									log_error("Error al crear el PCB... se cierra la consola\n");
 									quitar_master(unCliente, maximoAnterior);
 									close(unCliente);
 									break;/*Sale del switch*/
@@ -499,16 +499,12 @@ int main(int argc, char *argv[]) {
 					}
 				} else {
 					/*Conexion existente*/
-					log_info("Recibi otro evento de un cliente ya conectado");
+					log_debug("Recibi otro evento de un cliente ya conectado");
 					if (!recibirMensajeIPC(unSocket, &unMensaje)) {
 						log_info("Desconexion detectada");
 
 						// Desconexion de una consola
    						pid_desconectado = borrar_consola(unSocket);
-//						if (pid_desconectado != 0) {
-//							log_info("Se desconecto la consola asignada al PCB [PID - %d]", pid_desconectado);
-//							eliminar_pcb_ready(pid_desconectado);
-//						}
 
 						// Desconexion de la UMC
 						if (unSocket == elEstadoActual.sockUmc) {
@@ -518,7 +514,7 @@ int main(int argc, char *argv[]) {
 						}
 
 						if (unSocket == elEstadoActual.sockEscuchador) {
-							log_info("Se perdio conexion...");
+							log_debug("Se perdio conexion...");
 						}
 						/*Saco el socket de la lista Master*/
 						quitar_master(unSocket, maximoAnterior);
@@ -535,6 +531,6 @@ int main(int argc, char *argv[]) {
 	consola_destruir_lista(&elEstadoActual);
 	cerrarSockets(&elEstadoActual);
 	finalizarSistema(&unMensaje, unSocket, &elEstadoActual);
-	log_info("NUCLEO: Fin del programa");
+	log_info("Fin del programa");
 	return 0;
 }

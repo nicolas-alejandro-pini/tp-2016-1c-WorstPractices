@@ -178,6 +178,7 @@ int main(int argc, char *argv[]) {
 	pthread_attr_t attr;
 	pthread_t tid;
 	char* temp_file = "umc.log";
+	int esDebug = LOG_LEVEL_INFO;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -190,9 +191,11 @@ int main(int argc, char *argv[]) {
 			test_unit_umc();
 			exit(0);
 		}
-
+		if(strcmp(argv[2], "-d")==0){
+			esDebug= LOG_LEVEL_DEBUG;
+		}
 	//Primero instancio el log
-	logger = log_create(temp_file, "UMC", 0, LOG_LEVEL_INFO);
+	logger = log_create(temp_file, "UMC", 0, esDebug);
 
 	// Solo tests
 	//exit(EXIT_SUCCESS);
