@@ -109,13 +109,13 @@ void consolaUMC(){
 		// 2. dump tabla
 	}else if(!strcmp(comando,"2"))
 	{
-		log_info("se hace el dump de la tabla de todos los procesos");
+		log_debug("se hace el dump de la tabla de todos los procesos");
 		mostrarTabla();
 
 		// 2. dump tabla <pid>
 	}else if (!strcmp(comando,"3")){
 
-		log_info("se hace el dump de la tabla de un proceso");
+		log_debug("se hace el dump de la tabla de un proceso");
 		printf("Especificar proceso:");
 		fgets(parametros[0], MAX_PARAMETROS, stdin);
 
@@ -148,7 +148,7 @@ void consolaUMC(){
 		// 7. flush memoria <pid>
 	}else if (!strcmp(comando,"7")){
 
-		log_info("se hace el flush de la memoria de un proceso");
+		log_debug("se hace el flush de la memoria de un proceso");
 		printf("Especificar proceso:");
 		fgets(parametros[0], MAX_PARAMETROS, stdin);
 

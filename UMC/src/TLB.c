@@ -187,7 +187,7 @@ void flushTLB(uint16_t pid){
 	list_iterate(TLB->lista,(void*)_flush_nodo);
 	pthread_mutex_unlock(&TLB->mutex);
 	if(seMostro==0)
-		printf("No se encontro el pid %d en la TLB", pid);
+		log_debug("No se encontro el pid %d en la TLB", pid);
 }
 void flushTLB_all(){
 
@@ -208,7 +208,7 @@ void flushTLB_all(){
 
 void imprimirTLB(){
 
-	printf("\nPid | Pagina | Marco | LastUsed \n");
+	log_debug("\nPid | Pagina | Marco | LastUsed \n");
 
 	pthread_mutex_lock(&TLB->mutex);
 	list_iterate(TLB->lista,imprimirNodoTLB);
@@ -217,7 +217,7 @@ void imprimirTLB(){
 
 void imprimirNodoTLB(void *nodo){
 	stRegistroTLB *list_nodo = (stRegistroTLB*) nodo;
-	printf("[%d][%d][%d][%d]\n", list_nodo->pid, list_nodo->pagina, list_nodo->marco, list_nodo->lastUsed);
+	log_debug("[%d][%d][%d][%d]\n", list_nodo->pid, list_nodo->pagina, list_nodo->marco, list_nodo->lastUsed);
 }
 
 void destruirNodoTLB(void *nodo){
