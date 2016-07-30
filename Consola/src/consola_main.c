@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 
 	if(recv_print(&tConsola))
 	{
-		log_error("El nucleo se desconecto. Finaliza la consola...");
+		log_error("Se perdio la conexion con el nucleo. Finaliza la consola...");
 	    log_destroy(logger);
 	    destroy_console(&tConsola);
 	    exit(EXIT_FAILURE);
