@@ -15,6 +15,7 @@ typedef struct{
     long tamanioPagina;
     long retardoCompactacion;
     long retardoAcceso;
+    int logLevel;
 }t_swap_config;
 
 
