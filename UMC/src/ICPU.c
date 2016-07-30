@@ -32,15 +32,18 @@ int inicializarPrograma(int unCliente){
 
 	log_info("Creando tabla de paginas Pid[%d] Cantidad de paginas[%d]", unPageIni->processId , unPageIni->cantidadPaginas);
 
-	/* Crea Tabla de Paginas , Copia los valores, se puede liberar unPageIni */
-	crearTabla(unPageIni->processId, unPageIni->cantidadPaginas);
-
 	if(inicializarSwap(unPageIni) == EXIT_FAILURE){
 		log_error("No se pudo enviar el codigo a Swap");
 		unHeader=nuevoHeaderIPC(ERROR);
 		enviarHeaderIPC(unCliente, unHeader);
+		liberarHeaderIPC(unHeader);
+		free(unPageIni->programa);
+		free(unPageIni);
 		return EXIT_FAILURE;
 	}
+
+	/* Crea Tabla de Paginas , Copia los valores, se puede liberar unPageIni */
+	crearTabla(unPageIni->processId, unPageIni->cantidadPaginas);
 
 	/*Se informa al nucleo que el programa se inicializo OK*/
 	unHeader=nuevoHeaderIPC(OK);

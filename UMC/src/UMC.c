@@ -427,10 +427,6 @@ int main(int argc, char *argv[]) {
 
 	        	        		case FINPROGRAMA:
 
-	        	        			//end = calloc(1,sizeof(stEnd));
-	        	        			//end->socketResp = unCliente;
-	        	        			//end->pid = *(unMensaje.contenido);
-	        	        			log_info("Se pidio recibir un pedido de fin de programa desde el socket %d", unCliente);
 	        	        			recv(unSocket, &pid, sizeof(uint32_t), 0);
 
 	        	        			log_info("Se recibe un pedido de fin de programa para el pid %d desde el socket %d", pid, unCliente);
@@ -440,8 +436,6 @@ int main(int argc, char *argv[]) {
 
 	        	        		default:
 	        	        			log_info("Se recibio una peticion con un codigo desconocido...[%d], pid: [%d]", unaCabecera->tipo, pid);
-	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
-	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;
 
 	        	        	}
@@ -463,7 +457,6 @@ int main(int argc, char *argv[]) {
 		loadInfo_destruir(&losParametros); // libera losParametros
 		destruirMemoriaPrincipal();
 		log_info("\nSERVER: Fin del programa\n");
-		/*loguear(INFO_LOG,"Fin del programa","SERVER");*/
 		return EXIT_SUCCESS;
 
 }
