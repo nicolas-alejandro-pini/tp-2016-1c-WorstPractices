@@ -136,9 +136,9 @@ void *consumidor_cpu(void *param) {
 					deserializar_pcb(unPCB, &paquete);
 					free_paquete(&paquete);
 					/*Se comprueba que el PCB corresponda a una consola que este conectada, si esta desconectada libera el pcb que pide I/O y el CPU sigue con otro pcb*/
-					log_info("PCB [PID - %d] EXEC a BLOCK\n", unPCB->pid);
 					if (!consola_activa(unPCB)) {
-						continue;
+						fin_ejecucion = 1;
+						break;
 					}
 					if (bloquear_pcb(unPCB, dispositivo_name, dispositivo_time) != EXIT_SUCCESS) {
 						log_error("No se pudo bloquear el PCB [PID - %d]", unPCB->pid);
