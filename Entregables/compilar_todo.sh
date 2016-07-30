@@ -92,6 +92,7 @@ echo '\n\nCompilando Commons...'
 cd $ENTREGABLES/Commons
 make
 cp $ENTREGABLES/Commons/build/libCommons.so $ENTREGABLES/Commons/libCommons.so
+chown utnso:utnso $ENTREGABLES/Commons/libCommons.so
 
 echo '\n\nCompilando Swap...'
 cd $ENTREGABLES/Swap
