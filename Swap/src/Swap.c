@@ -310,7 +310,7 @@ int main(void) {
 							ipcHeader->tipo = ERROR;
 						}
 
-						log_debug("Escribir PID: %d, pagina: %d", pID, nroPagina);
+						log_info("Escritura PID: %d, pagina: %d", pID, nroPagina);
 						log_debug("Pagina a escribir: %s", bufferPagina);
 
 						//Escribo la pagina del proceso
