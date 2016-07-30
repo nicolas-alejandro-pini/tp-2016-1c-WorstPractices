@@ -958,16 +958,23 @@ int cambiarContextoUMC(uint32_t pid){
  Description : Proceso principal del programa.
  =========================================================================================
  */
-int main(void) {
+int main(int argc, char *argv[]) {
 
 	stHeaderIPC *unHeaderIPC;
 	t_UMCConfig *configUMC;
 	int unSocket;
 	int quantumSleep=0;
 	char* temp_file = "cpu.log";
+	int log_level = LOG_LEVEL_INFO;
+
+	// Nivel de logueo por parametro//
+		if(argv[1]){
+			if(strcmp(argv[1], "debug")==0)
+				log_level=LOG_LEVEL_DEBUG;
+		}
 
 	//Primero instancio el log
-	t_log* logger = log_create(temp_file, "CPU",-1, LOG_LEVEL_INFO);
+	t_log* logger = log_create(temp_file, "CPU",-1, log_level);
 
 	log_info("Iniciando el proceso CPU..."); /* prints CPU Application */
 
