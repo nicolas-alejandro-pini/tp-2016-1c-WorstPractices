@@ -244,7 +244,8 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 	registro.marco = victima->marco;
 	registro.pagina = paginaSaliente;
 	registro.pid = tablaPaginas->pid;
-	quitarValorTLB(registro);
+	if(estaActivadaTLB()==OK)
+		quitarValorTLB(registro);
 	log_info("Pid[%d] Pagina[%d] Marco[%d] borrada de la TLB", registro.pid, registro.pagina, registro.marco);
 
 	// Seteo bits de la victima en 0
@@ -405,22 +406,28 @@ int setBitModificado(uint16_t pid, uint16_t pagina){
 
 void _mostrarContenidoTP(stNodoListaTP *list_nodo){
 	int i;
-	stRegistroTP *nodo;
+	//stRegistroTP *nodo;
+	stRegistroTP* regTP;
 
+	printf("--------------------------------------------------------------------------------\n");
 	printf("pid: %d\n", list_nodo->pid);
-	nodo= ((stRegistroTP*)list_nodo->tabla);
+	//nodo= ((stRegistroTP*)list_nodo->tabla);
+
 	for(i=0;i<list_nodo->size;i++){
+		regTP = obtenerRegistroTabladePaginas(list_nodo, i);
 		printf("Pagina: %d ", i);
-		printf("Marco: %d ", (nodo+(i*sizeof(stRegistroTP)))->marco);
-		printf("bit2ndChance: %d ", (nodo+(i*sizeof(stRegistroTP)))->bit2ndChance);
-		printf("bitModificado: %d ", (nodo+(i*sizeof(stRegistroTP)))->bitModificado);
-		printf("bitPresencia: %d ", (nodo+(i*sizeof(stRegistroTP)))->bitPresencia);
+		printf("Marco: %d ", regTP->marco);
+		printf("bit2ndChance: %d ", regTP->bit2ndChance);
+		printf("bitModificado: %d ", regTP->bitModificado);
+		printf("bitPresencia: %d ", regTP->bitPresencia);
+		if(regTP->bitPresencia==1)
+			printf("<<<<<--------------");
 		printf("\n");
 	}
 	fflush(stdout);
 }
 void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
-	stRegistroTP *nodo;
+	stRegistroTP *regTP;
 	stPosicion posicion;
 	int i;
 	uint16_t marco;
@@ -431,16 +438,20 @@ void _mostrarContenidoMemoria(stNodoListaTP* nodoPid){
 		return;
 	}
 	printf("\npid: %d\n", nodoPid->pid);
-	nodo= ((stRegistroTP*)nodoPid->tabla);
+	//nodo= ((stRegistroTP*)nodoPid->tabla);
 
 	for(i=0;i<nodoPid->size;i++){
-		if(((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->bitPresencia==1){
+		regTP = obtenerRegistroTabladePaginas(nodoPid, i);
+
+		if(regTP->bitPresencia==1){
+			printf("\n--------------------------------------------------------------------------------\n");
 			printf("Pagina %d:\n", i);
+			printf("--------------------------------------------------------------------------------\n");
 			posicion.offset=0;
 			posicion.pagina=i;
 			posicion.size=losParametros.frameSize;
 
-			marco = ((stRegistroTP*)nodo+(i*sizeof(stRegistroTP)))->marco;
+			marco = regTP->marco;
 			buffer = calloc(1, losParametros.frameSize+1);
 			if(leerMemoria(buffer, marco, posicion)!=0){
 				log_error("no se pudo leer memoria - marco: %d", marco);
@@ -466,11 +477,13 @@ void marcarMemoriaModificada(uint16_t pid){
 		return;
 	}
 	printf("pid: %d\n", list_nodo->pid);
-	nodo= ((stRegistroTP*)list_nodo->tabla);
+	//nodo= ((stRegistroTP*)list_nodo->tabla);
 	for(i=0;i<list_nodo->size;i++){
+		nodo = obtenerRegistroTabladePaginas(list_nodo, i);
 		printf("Pagina: %d ", i);
-		printf("Marco: %d ", (nodo+(i*sizeof(stRegistroTP)))->marco);
-		(nodo+(i*sizeof(stRegistroTP)))->bitModificado=1;
+		//printf("Marco: %d ", (nodo+(i*sizeof(stRegistroTP)))->marco);
+		printf("Marco: %d ", nodo->marco);
+		nodo->bitModificado=1;
 		printf("Marcado como modificado");
 		printf("\n");
 	}
