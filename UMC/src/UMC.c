@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
 
 
 	// Ejecuto las pruebas
-	if(argv[2])
+	if(argv[2]){
 		if(strcmp(argv[2], "--cunit")==0){
 			logger = log_create(temp_file, "UMC", -1, LOG_LEVEL_INFO);
 			test_unit_umc();
@@ -194,6 +194,7 @@ int main(int argc, char *argv[]) {
 		if(strcmp(argv[2], "-d")==0){
 			esDebug= LOG_LEVEL_DEBUG;
 		}
+	}
 	//Primero instancio el log
 	logger = log_create(temp_file, "UMC", 0, esDebug);
 
