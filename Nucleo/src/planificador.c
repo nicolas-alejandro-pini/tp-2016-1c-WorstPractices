@@ -50,12 +50,12 @@ void eliminar_pcb_ready(int pid){
 	for (i = 0; i < queue_size(colaReady) ; ++i) {
 		unPCB = list_get(colaReady->elements,i);
 		if(unPCB->pid == pid){
-			list_remove(colaReady->elements,i);
+			unPCB = list_remove(colaReady->elements,i);
+			log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
+			pcb_destroy(unPCB);
 			break;
 		}
 	}
-	if(unPCB != NULL)
-		log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
 	pthread_mutex_unlock(&mutex);
 }
 

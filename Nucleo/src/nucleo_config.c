@@ -99,12 +99,13 @@ int loadInfo(stEstado* info, char inotify) {
 		otraConf = config_create(info->path_conf);
 		if (config_has_property(otraConf, "QUANTUM")) {
 			info->quantum = config_get_int_value(otraConf, "QUANTUM");
+			info->quantumSleep = config_get_int_value(otraConf, "QUANTUM_SLEEP");
 		} else {
-			log_error("Parametro no cargado en el archivo de configuracion\n \"%s\"  \n", "QUANTUM");
+			log_error("Parametros no actualizados desde el archivo de configuracion");
 			return EXIT_FAILURE;
 		}
 		config_destroy(otraConf);
-		printf("Valor del quantum [%d]\n", info->quantum);
+		log_info("Quantum [%d], Quantum Sleep [%d]", info->quantum, info->quantumSleep);
 		return EXIT_SUCCESS;
 
 	}
