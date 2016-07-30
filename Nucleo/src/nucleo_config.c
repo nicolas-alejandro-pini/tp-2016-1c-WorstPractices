@@ -104,7 +104,7 @@ int loadInfo(stEstado* info, char inotify) {
 			return EXIT_FAILURE;
 		}
 		config_destroy(otraConf);
-		log_debug("Quantum [%d], Quantum Sleep [%d]", info->quantum, info->quantumSleep);
+		log_info("Quantum [%d], Quantum Sleep [%d]", info->quantum, info->quantumSleep);
 		return EXIT_SUCCESS;
 	}
 }
