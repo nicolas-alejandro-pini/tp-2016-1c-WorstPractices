@@ -178,6 +178,7 @@ int main(int argc, char *argv[]) {
 	pthread_attr_t attr;
 	pthread_t tid;
 	char* temp_file = "umc.log";
+	int esDebug = LOG_LEVEL_INFO;
 
 	memset(&enviolog,'\0',TAMDATOS);
 	/*elEstadoActual = (stParametro*)calloc(1, sizeof(stParametro)); */
@@ -190,9 +191,11 @@ int main(int argc, char *argv[]) {
 			test_unit_umc();
 			exit(0);
 		}
-
+		if(strcmp(argv[2], "-d")==0){
+			esDebug= LOG_LEVEL_DEBUG;
+		}
 	//Primero instancio el log
-	logger = log_create(temp_file, "UMC", 0, LOG_LEVEL_INFO);
+	logger = log_create(temp_file, "UMC", 0, esDebug);
 
 	// Solo tests
 	//exit(EXIT_SUCCESS);
@@ -427,10 +430,6 @@ int main(int argc, char *argv[]) {
 
 	        	        		case FINPROGRAMA:
 
-	        	        			//end = calloc(1,sizeof(stEnd));
-	        	        			//end->socketResp = unCliente;
-	        	        			//end->pid = *(unMensaje.contenido);
-	        	        			log_info("Se pidio recibir un pedido de fin de programa desde el socket %d", unCliente);
 	        	        			recv(unSocket, &pid, sizeof(uint32_t), 0);
 
 	        	        			log_info("Se recibe un pedido de fin de programa para el pid %d desde el socket %d", pid, unCliente);
@@ -440,8 +439,6 @@ int main(int argc, char *argv[]) {
 
 	        	        		default:
 	        	        			log_info("Se recibio una peticion con un codigo desconocido...[%d], pid: [%d]", unaCabecera->tipo, pid);
-	        	        			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
-	        	        			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 	        	        			break;
 
 	        	        	}
@@ -463,7 +460,6 @@ int main(int argc, char *argv[]) {
 		loadInfo_destruir(&losParametros); // libera losParametros
 		destruirMemoriaPrincipal();
 		log_info("\nSERVER: Fin del programa\n");
-		/*loguear(INFO_LOG,"Fin del programa","SERVER");*/
 		return EXIT_SUCCESS;
 
 }

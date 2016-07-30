@@ -314,12 +314,12 @@ int asignarEspacioAProceso(unsigned long int pID, unsigned long int cantidadPagi
 
 	//Si la cantidad de paginas requeridas para el PID es mayor a las disponibles totales
 	if(cantidadPaginas > bitArray->size){
-		log_debug("La unidad SWAP no posee sectores suficientes para satisfacer la solicitud");
+		log_info("La unidad SWAP no posee sectores suficientes para satisfacer la solicitud");
 		return -2;
 	}
 
 	if(cantidadSectoresLibres() < cantidadPaginas){
-		log_debug("La unidad SWAP no posee suficientes sectores libres para satisfacer la solicitud");
+		log_info("La unidad SWAP no posee suficientes sectores libres para satisfacer la solicitud");
 		return -3;
 	}
 

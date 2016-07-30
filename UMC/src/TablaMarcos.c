@@ -244,8 +244,10 @@ int reemplazarValorTabla(uint16_t *frameNuevo, stNodoListaTP *tablaPaginas, uint
 	registro.marco = victima->marco;
 	registro.pagina = paginaSaliente;
 	registro.pid = tablaPaginas->pid;
-	if(estaActivadaTLB()==OK)
+	if(estaActivadaTLB()==OK){
+		imprimirTLB();
 		quitarValorTLB(registro);
+	}
 	log_info("Pid[%d] Pagina[%d] Marco[%d] borrada de la TLB", registro.pid, registro.pagina, registro.marco);
 
 	// Seteo bits de la victima en 0

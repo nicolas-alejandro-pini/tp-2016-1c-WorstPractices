@@ -32,15 +32,18 @@ int inicializarPrograma(int unCliente){
 
 	log_info("Creando tabla de paginas Pid[%d] Cantidad de paginas[%d]", unPageIni->processId , unPageIni->cantidadPaginas);
 
-	/* Crea Tabla de Paginas , Copia los valores, se puede liberar unPageIni */
-	crearTabla(unPageIni->processId, unPageIni->cantidadPaginas);
-
 	if(inicializarSwap(unPageIni) == EXIT_FAILURE){
 		log_error("No se pudo enviar el codigo a Swap");
 		unHeader=nuevoHeaderIPC(ERROR);
 		enviarHeaderIPC(unCliente, unHeader);
+		liberarHeaderIPC(unHeader);
+		free(unPageIni->programa);
+		free(unPageIni);
 		return EXIT_FAILURE;
 	}
+
+	/* Crea Tabla de Paginas , Copia los valores, se puede liberar unPageIni */
+	crearTabla(unPageIni->processId, unPageIni->cantidadPaginas);
 
 	/*Se informa al nucleo que el programa se inicializo OK*/
 	unHeader=nuevoHeaderIPC(OK);
@@ -49,7 +52,7 @@ int inicializarPrograma(int unCliente){
 		close(unCliente);
 		return EXIT_FAILURE;
 	}
-	log_info("Pid[%d] enviado al Swap y confirmado al nucleo", unPageIni->processId);
+	log_debug("Pid[%d] enviado al Swap y confirmado al nucleo", unPageIni->processId);
 
 	liberarHeaderIPC(unHeader);
 	free(unPageIni->programa);
@@ -77,6 +80,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 	/* si esta disponible cache*/
 	if (estaActivadaTLB()== OK){
 		log_info("se busca en la TLB la pagina: %d", posLogica->pagina);
+		imprimirTLB();
 		buscarEnTLB(pid, posLogica->pagina, &frameBuscado);
 		if(frameBuscado!=0)
 			log_info("El frame encontrado es %d en la TLB", frameBuscado);
@@ -84,16 +88,20 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 
 	// no hay TLB o es un TLB miss
 	if(estaActivadaTLB()==ERROR || frameBuscado==0){
-		log_info("se busca en la Tabla de Pagina la pagina: %d", posLogica->pagina);
+		if(estaActivadaTLB()==OK)
+			log_info("TLB MISS - PID: [%d] - Se busca en la Tabla de Pagina la pagina: %d", pid, posLogica->pagina);
+		else
+			log_info("PID: [%d] - Se busca en la Tabla de Pagina la pagina: %d", pid, posLogica->pagina);
 		buscarEnTabla(pid, posLogica->pagina, &frameBuscado);
 		if(frameBuscado!=0)
-			log_info("El frame encontrado es %d en la Tabla de pagina", frameBuscado);
+			log_debug("El frame encontrado es %d en la Tabla de pagina", frameBuscado);
 
 		// cargo en TLB la pagina obtenida ya que si esta activa no la encontro
 		if(estaActivadaTLB()== OK && frameBuscado!=0){
 			stTLB.pid = pid;
 			stTLB.pagina = posLogica->pagina;
 			stTLB.marco = frameBuscado;
+			imprimirTLB();
 			reemplazarValorTLB(stTLB);
 			log_info("TLB Reemplazo: pid[%d] pagina[%d] marco[%d] ", stTLB.pid, stTLB.pagina, stTLB.marco);
 		}
@@ -120,6 +128,7 @@ int leerBytes(void **buffer, stPosicion* posLogica, uint16_t pid){
 			stTLB.pid = pid;
 			stTLB.pagina = posLogica->pagina;
 			stTLB.marco = frameBuscado;
+			imprimirTLB();
 			reemplazarValorTLB(stTLB);
 			log_info("TLB Reemplazo: pid[%d] pagina[%d] marco[%d] ", stTLB.pid, stTLB.pagina, stTLB.marco);
 		}
@@ -142,13 +151,17 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 	/* si esta disponible cache*/
 	if (estaActivadaTLB()== OK){
 		log_info("se busca en la TLB la pagina: %d", unaEscritura->nroPagina);
+		imprimirTLB();
 		buscarEnTLB(pid, unaEscritura->nroPagina, &frameBuscado);
 		if(frameBuscado!=0)
 			log_info("El frame encontrado es %d en la TLB", frameBuscado);
 	}
 	// no hay TLB o es un TLB miss
 	if(estaActivadaTLB()==ERROR || frameBuscado==0){
-		log_info("se busca en la Tabla de Pagina la pagina: %d", unaEscritura->nroPagina);
+		if(estaActivadaTLB()==OK)
+			log_info("TLB MISS - PID: [%d] - Se busca en la Tabla de Pagina la pagina: %d", pid, unaEscritura->nroPagina);
+		else
+			log_info("PID: [%d] - Se busca en la Tabla de Pagina la pagina: %d", pid, unaEscritura->nroPagina);
 		buscarEnTabla(pid, unaEscritura->nroPagina, &frameBuscado);
 		if(frameBuscado!=0)
 			log_info("El frame encontrado es %d en la Tabla de pagina", frameBuscado);
@@ -159,6 +172,7 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 			stTLB.pid = pid;
 			stTLB.pagina = unaEscritura->nroPagina;
 			stTLB.marco = frameBuscado;
+			imprimirTLB();
 			reemplazarValorTLB(stTLB);
 			log_info("TLB Reemplazo: pid[%d] pagina[%d] marco[%d] ", stTLB.pid, stTLB.pagina, stTLB.marco);
 		}
@@ -186,6 +200,7 @@ int escribirBytes(stEscrituraPagina* unaEscritura, uint16_t pid){
 			stTLB.pid = pid;
 			stTLB.pagina = unaEscritura->nroPagina;
 			stTLB.marco = frameBuscado;
+			imprimirTLB();
 			reemplazarValorTLB(stTLB);
 			log_info("TLB Reemplazo: pid[%d] pagina[%d] marco[%d] ", stTLB.pid, stTLB.pagina, stTLB.marco);
 		}
@@ -212,20 +227,20 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	stNodoListaTP *tablaPaginas;
 	void *paginaLeidaSwap;
 
-	log_info("Page Fault Pagina[%d]", pagina);
+	log_info("PID: [%d] - Page Fault Pagina[%d]", pid, pagina);
 
 	// acceder a swap con las pagina que necesito
 	paginaLeidaSwap = recibirPagina(pid, pagina);
 
 	if(paginaLeidaSwap==NULL){
-		log_info("Fallo Page Fault");
+		log_error("Fallo Page Fault");
 		return EXIT_FAILURE;
 	}
 
 	/* Obtiene Tabla de Paginas de PID */
 	tablaPaginas = buscarPID(pid);
 	if(tablaPaginas==NULL){ // valido que exista
-		log_info("No hay tabla de paginas para el pid %d solicitado", pid);
+		log_error("No hay tabla de paginas para el pid %d solicitado", pid);
 		return EXIT_FAILURE;
 	}
 	/* Obtengo presencias en MP de la tabla de PID */
@@ -233,7 +248,7 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 
 	// - si es un nuevo proceso, tengo que reemplazarlo y no hay memoria-> rechazo el pedido.
 	if(0 == presencias && 0 == hayMarcoLibre()){
-		log_info("Se rechaza por presencias %d", presencias);
+		log_error("Se rechaza por presencias %d", presencias);
 		return EXIT_FAILURE;
 	}
 	// Reemplazo dentro de los marcos
@@ -250,7 +265,7 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	// Me las arreglo con los marcos que tengo (que no puede ser 0 )
 	else if(presencias >= losParametros.frameByProc){
 		if(0 == presencias ){  // por las dudas avisarlo... (error de configuracion)
-			log_info("Marcos por proceso esta en 0");
+			log_error("Marcos por proceso esta en 0");
 			return EXIT_FAILURE;
 		}
 		log_info("Pid[%d] Marcos[%d/%d] reemplazo...", pid, presencias, losParametros.frameByProc);
@@ -258,13 +273,13 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	}
 
 	if(0 == frameNuevo){
-		log_info("frameNuevo es 0, no hay marco libre");
+		log_error("frameNuevo es 0, no hay marco libre");
 		return EXIT_FAILURE;
 	}
 	// cargo en memoria la pagina obtenida
 	if(escribirMemoria(paginaLeidaSwap, frameNuevo, 0, losParametros.frameSize)){
 		free(paginaLeidaSwap);
-		log_info("error al escribir en memoria - pagina de swap: %d, frameNuevo: %d", paginaLeidaSwap, frameNuevo);
+		log_error("error al escribir en memoria - pagina de swap: %d, frameNuevo: %d", paginaLeidaSwap, frameNuevo);
 		return EXIT_FAILURE;
 	}
 	free(paginaLeidaSwap);
@@ -272,7 +287,7 @@ int ejecutarPageFault(uint16_t pid, uint16_t pagina, uint16_t *pframeNuevo){
 	// Devuelvo la referencia del frame nuevo que necesito
 	*pframeNuevo = frameNuevo;
 
-	log_info("Page Fault OK Pagina[%d]--> Marco[%d]", pagina, frameNuevo);
+	log_info("PID: [%d] - Page Fault OK Pagina[%d]--> Marco[%d]", pid, pagina, frameNuevo);
 
 	return EXIT_SUCCESS;
 }
@@ -293,7 +308,7 @@ void *finalizarProgramaNucleo(uint32_t pid){
     	log_error("Finalizar programa: fallo la respuesta de confirmacion del Swap");
     }
 
-	log_info("finalizando el pid[%d]", pid);
+    log_info("finalizando el pid[%d]", pid);
 	return NULL;
 }
 
@@ -362,13 +377,11 @@ void realizarAccionCPU(uint32_t unSocket){
 
 		case READ_BTYES_PAGE:
 
-			log_info("Thread socket[%d] Pedido de lectura:", unSocket);
-
 			recv(unSocket, &(posR.pagina), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posR.size), sizeof(uint16_t),0);
 
-			log_info("Thread socket[%d] Pagina[%d] Offset[%d] Size[%d]", unSocket, posR.pagina, posR.offset, posR.size);
+			log_debug("Pedido Lectura - Thread socket[%d] Pagina[%d] Offset[%d] Size[%d]", unSocket, posR.pagina, posR.offset, posR.size);
 
 			// Valido pedidos nulos
 			if(posR.size == 0){
@@ -412,13 +425,11 @@ void realizarAccionCPU(uint32_t unSocket){
 
 		case WRITE_BYTES_PAGE:
 
-			log_info("Thread socket[%d] Pedido de escritura:", unSocket);
-
 			recv(unSocket, &(posW.nroPagina), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.offset), sizeof(uint16_t),0);
 			recv(unSocket, &(posW.tamanio), sizeof(uint16_t),0);
 
-			log_info("Thread socket[%d] Pagina[%d] Offset[%d] Size[%d]", unSocket, posW.nroPagina, posW.offset, posW.tamanio);
+			log_debug("Pedido Escritura - Thread socket[%d] Pagina[%d] Offset[%d] Size[%d]", unSocket, posW.nroPagina, posW.offset, posW.tamanio);
 
 			// Valido pedidos nulos
 			if(posW.tamanio == 0){
@@ -462,13 +473,11 @@ void realizarAccionCPU(uint32_t unSocket){
 				log_error("Thread socket[%d] No se pudo enviar el WRITE_BYTES_PAGE", unSocket);
 			}
 
-			log_info("Thread socket[%d], fin escribir.", unSocket);
+			log_debug("Thread socket[%d], fin escribir.", unSocket);
 
 			break;
 
 		case CAMBIOCONTEXTO:
-
-			log_info("Thread socket[%d] Cambio de contexto:", unSocket);
 
 			/* recibo el contenido */
 			unMensaje.contenido = malloc(unMensaje.header.largo);
@@ -483,7 +492,7 @@ void realizarAccionCPU(uint32_t unSocket){
 			if(0 == pidActivo)
 				log_info("Thread socket[%d]: Confirma al CPU que no se atiende el pid enviado", unSocket);
 			else{
-				log_info("Thread socket[%d] atiende Pid[%d]:", unSocket, pidActivo);
+				log_info("Thread socket[%d] atiende Cambio de contexto Pid[%d]:", unSocket, pidActivo);
 				unHeader->tipo = OK;
 				unHeader->largo = pidActivo;  // Confirmo con el pid que envio, alcanza solo el OK / ERROR
 			}
@@ -498,7 +507,7 @@ void realizarAccionCPU(uint32_t unSocket){
 			break;
 
 		default:
-			log_info("Se recibio una peticion con un codigo desconocido...%i", unMensaje.header.tipo);
+			log_debug("Se recibio una peticion con un codigo desconocido...%i", unMensaje.header.tipo);
 			/*enviarMensajeIPC(unSocket,nuevoHeaderIPC(OK),"UMC: Solicitud recibida.");*/
 			/*enviarMensajeIPC(elEstadoActual.sockSwap,nuevoHeaderIPC(OK),"UMC: Confirmar recepcion.");*/
 			break;
@@ -534,10 +543,10 @@ void loguear_buffer(void *buffer, uint16_t size, int unSocket){
 	memcpy(buffer_log, buffer, size);
 	buffer_log[size]='\0';
 
-	log_info("Thread socket[%d] Buffer[%s]\n", unSocket, buffer_log);
+	log_debug("Thread socket[%d] Buffer[%s]\n", unSocket, buffer_log);
 
 	if(size == sizeof(uint32_t)){
-		log_info("Thread socket[%d] Buffer entero[%ld]\n", unSocket, *(int*)buffer);
+		log_debug("Thread socket[%d] Buffer entero[%ld]\n", unSocket, *(int*)buffer);
 	}
 	free(buffer_log);
 }
