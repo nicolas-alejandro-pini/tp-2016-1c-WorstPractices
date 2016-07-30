@@ -101,13 +101,11 @@ int loadInfo(stEstado* info, char inotify) {
 			info->quantum = config_get_int_value(otraConf, "QUANTUM");
 			info->quantumSleep = config_get_int_value(otraConf, "QUANTUM_SLEEP");
 		} else {
-			log_error("Parametros no actualizados desde el archivo de configuracion");
 			return EXIT_FAILURE;
 		}
 		config_destroy(otraConf);
-		log_info("Quantum [%d], Quantum Sleep [%d]", info->quantum, info->quantumSleep);
+		log_debug("Quantum [%d], Quantum Sleep [%d]", info->quantum, info->quantumSleep);
 		return EXIT_SUCCESS;
-
 	}
 }
 

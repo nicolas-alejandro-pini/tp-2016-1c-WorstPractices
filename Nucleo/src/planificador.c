@@ -20,7 +20,7 @@ void *ready_productor(void* arg) {
 
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	queue_push(colaReady, pcb_to_produce);
-	log_info("Ingresa el PCB [PID - %d] a la cola de READY, Cantidad de procesos que quedan en la cola de READY [%d]",pcb_to_produce->pid,queue_size(colaReady));
+	log_info("Ingreso el PCB [PID - %d] a la cola de READY - Cantidad de procesos que quedan en la cola de READY [%d]",pcb_to_produce->pid,queue_size(colaReady));
 	log_info(imprimir_cola());
 	numInQ++;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
@@ -36,7 +36,7 @@ stPCB *ready_consumidor() {
 
 	pthread_mutex_lock(&mutex);		// Se lockea el acceso a la cola
 	pcb_aux = queue_pop(colaReady);
-	log_info("Se va a procesar el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",pcb_aux->pid,queue_size(colaReady));
+	log_info("Sale de la cola de READY el PCB [PID - %d] - Cantidad de procesos que quedan en la cola de READY [%d]",pcb_aux->pid,queue_size(colaReady));
 	log_info(imprimir_cola());
 	numInQ--;
 	pthread_mutex_unlock(&mutex);	// Se desbloquea el acceso a la cola
