@@ -229,7 +229,8 @@ void asignar(t_puntero direccion_variable, t_valor_variable valor ){
 			else{
 				imprimirTexto("Error de segmentación al asignar.");
 				log_error ("Error de segmentacion al asignar");
-				configuracionInicial.salir = 1;
+				//configuracionInicial.salir = 1;
+				unPCB->pc = unPCB->metadata_program->instrucciones_size + 1; // Simula fin de programa por stackoverflow.
 				quantum = 0;
 			}
 		liberarHeaderIPC(unHeader);
@@ -1143,7 +1144,7 @@ int main(void) {
 									configuracionInicial.salir = 1;
 									break;
 								}
-								log_info("Se devolvio PCB al nucleo por signal");
+								log_info("Se devolvio PCB al nucleo.");
 
 							}else
 								log_info("Error en lectura ANSIPROG...");
