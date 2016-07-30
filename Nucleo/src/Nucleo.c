@@ -505,10 +505,10 @@ int main(int argc, char *argv[]) {
 
 						// Desconexion de una consola
    						pid_desconectado = borrar_consola(unSocket);
-						if (pid_desconectado != 0) {
-							log_info("Se desconecto la consola asignada al PCB [PID - %d]", pid_desconectado);
-							eliminar_pcb_ready(pid_desconectado);
-						}
+//						if (pid_desconectado != 0) {
+//							log_info("Se desconecto la consola asignada al PCB [PID - %d]", pid_desconectado);
+//							eliminar_pcb_ready(pid_desconectado);
+//						}
 
 						// Desconexion de la UMC
 						if (unSocket == elEstadoActual.sockUmc) {

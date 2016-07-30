@@ -53,6 +53,7 @@ void eliminar_pcb_ready(int pid){
 			unPCB = list_remove(colaReady->elements,i);
 			log_info("Se elimina el PCB [PID - %d], Cantidad de procesos que quedan en la cola de READY [%d]",unPCB->pid,queue_size(colaReady));
 			pcb_destroy(unPCB);
+			numInQ--;
 			break;
 		}
 	}
